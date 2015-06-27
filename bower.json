@@ -1,0 +1,20 @@
+{
+  "name": "aurelia-ui-virtualization",
+  "version": "0.1.0",
+  "description": "A plugin that provides a virtualized repeater and other virtualization services.",
+  "keywords": [
+    "aurelia",
+    "virtualization",
+    "plugin"
+  ],
+  "homepage": "http://aurelia.io",
+  "license": "MIT",
+  "authors": [
+    "Rob Eisenberg <rob@bluespire.com> (http://robeisenberg.com/)"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/aurelia/ui-virtualization"
+  },
+  "dependencies": { }
+}
