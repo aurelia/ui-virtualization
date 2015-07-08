@@ -24,11 +24,11 @@
     "directories": {
       "lib": "dist/amd"
     },
-    "dependencies": { },
-    "devDependencies": {
-      "babel": "npm:babel-core@^5.1.13",
-      "babel-runtime": "npm:babel-runtime@^5.1.13",
-      "core-js": "npm:core-js@^0.9.5"
+    "dependencies": {
+      "aurelia-binding": "^0.8.0",
+      "aurelia-dependency-injection": "^0.9.0",
+      "aurelia-templating": "^0.13.1",
+      "core-js": "^0.9.18"
     }
   },
   "devDependencies": {

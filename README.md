@@ -7,13 +7,38 @@ This library is part of the [Aurelia](http://www.aurelia.io/) platform and conta
 
 > To keep up to date on [Aurelia](http://www.aurelia.io/), please visit and subscribe to [the official blog](http://blog.durandal.io/). If you have questions, we invite you to [join us on Gitter](https://gitter.im/aurelia/discuss). If you would like to have deeper insight into our development process, please install the [ZenHub](https://zenhub.io) Chrome Extension and visit any of our repository's boards. You can get an overview of all Aurelia work by visiting [the framework board](https://github.com/aurelia/framework#boards).
 
+## Installation
+
+Install via JSPM
+
+```javascript
+jspm install github:aurelia/ui-virtualization
+```
+
+Load the plugin
+
+```javascript
+export function configure(aurelia) {
+  aurelia.use
+    .standardConfiguration()
+    .developmentLogging()
+    .plugin('aurelia-ui-virtualization'); // Add this line to load the plugin
+
+  aurelia.start().then(a => a.setRoot());
+}
+```
+
+## [Demo](http://martingust.github.io/virtual-list/)
+
 ## Polyfills
 
 * None
 
 ## Dependencies
 
-* None
+* [aurelia-templating](https://github.com/aurelia/templating)
+* [aurelia-dependency-injection](https://github.com/aurelia/dependency-injection)
+* [aurelia-binding](https://github.com/aurelia/binding)
 
 ## Used By
 
