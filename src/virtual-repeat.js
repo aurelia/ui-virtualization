@@ -28,7 +28,7 @@ export class VirtualRepeat {
 
   bind(executionContext){
     this.executionContext = executionContext;
-    this.virtualScrollInner = this.element.parentElement;
+    this.virtualScrollInner = this.element.parentNode;
     this.virtualScroll = this.virtualScrollInner.parentElement;
     this.createScrollIndicator();
     this.virtualScroll.style.overflow = 'hidden';
