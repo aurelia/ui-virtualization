@@ -12,7 +12,7 @@ This library is part of the [Aurelia](http://www.aurelia.io/) platform and conta
 Install via JSPM
 
 ```javascript
-jspm install aurelia-ui-virtualization=github:aurelia/ui-virtualization
+jspm install aurelia-ui-virtualization
 ```
 
 Load the plugin
