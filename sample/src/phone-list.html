@@ -1,0 +1,24 @@
+<template>
+    <div class="contact-list">
+        <div>
+            <div virtual-repeat.for="item of objectArray" class="contact-list-item">
+                <div class="contact-item">
+                    <div class="avatar" style="background-color: ${item.color}">${item.firstLetter}</div>
+                    <div class="name">
+                        ${$index} ${item.name}
+                    </div>
+                    <div class="content">
+                        <strong>Phone:</strong> ${item.phone} <br />
+                        <strong>Country:</strong> ${item.country} <br />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="array-actions">
+        <button class="btn btn-primary" click.delegate="addItem()">Add 1</button>
+        <button class="btn btn-primary" click.delegate="addItems(1000)">Add 1000</button>
+        <button class="btn btn-primary" click.delegate="addItemFirst()">Add 1 at top</button>
+        <button class="btn btn-primary" click.delegate="removeItems(1)">Remove 1 at top</button>
+    </div>
+</template>

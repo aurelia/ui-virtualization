@@ -1,8 +1,8 @@
 import {VirtualRepeat} from './virtual-repeat';
 import {VirtualList} from './virtual-list';
 
-export function configure(aurelia){
-  aurelia.globalizeResources(
+export function configure(config){
+  config.globalResources(
     './virtual-repeat',
     './virtual-list'
   );

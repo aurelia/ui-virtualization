@@ -1,0 +1,30 @@
+{
+  "jspm": {
+    "dependencies": {
+      "aurelia-animator-css": "github:aurelia/animator-css@^0.17.0",
+      "aurelia-binding": "github:aurelia/binding@^0.9.1",
+      "aurelia-bootstrapper": "github:aurelia/bootstrapper@^0.18.0",
+      "aurelia-dependency-injection": "github:aurelia/dependency-injection@^0.11.2",
+      "aurelia-framework": "github:aurelia/framework@^0.16.0",
+      "aurelia-http-client": "github:aurelia/http-client@^0.11.0",
+      "aurelia-logging-console": "github:aurelia/logging-console@^0.8.0",
+      "aurelia-metadata": "github:aurelia/metadata@^0.8.0",
+      "aurelia-path": "github:aurelia/path@^0.10.0",
+      "aurelia-templating": "github:aurelia/templating@^0.16.0",
+      "bootstrap": "github:twbs/bootstrap@^3.3.5",
+      "css": "github:systemjs/plugin-css@^0.1.19",
+      "font-awesome": "npm:font-awesome@^4.4.0",
+      "json": "github:systemjs/plugin-json@^0.1.0",
+      "systemjs/plugin-css": "github:systemjs/plugin-css@^0.1.17",
+      "twbs/bootstrap": "github:twbs/bootstrap@3.3.5"
+    },
+    "devDependencies": {
+      "babel": "npm:babel-core@^5.8.22",
+      "babel-runtime": "npm:babel-runtime@^5.8.20",
+      "core-js": "npm:core-js@^1.1.0"
+    }
+  },
+  "devDependencies": {
+    "jspm": "^0.16.2"
+  }
+}

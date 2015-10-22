@@ -26,9 +26,9 @@ export class VirtualRepeat {
     this.indicatorMinHeight = 15;
   }
 
-  bind(executionContext){
-    this.executionContext = executionContext;
-    this.virtualScrollInner = this.element.parentElement;
+  bind(bindingContext){
+    this.bindingContext = bindingContext;
+    this.virtualScrollInner = this.element.parentNode;
     this.virtualScroll = this.virtualScrollInner.parentElement;
     this.createScrollIndicator();
     this.virtualScroll.style.overflow = 'hidden';
@@ -48,7 +48,7 @@ export class VirtualRepeat {
     window.onresize = () => { this.handleContainerResize(); };
 
     // create first item to get the heights
-    var row = this.createFullExecutionContext(this.items[0], 0, 1);
+    var row = this.createFullBindingContext(this.items[0], 0, 1);
     var view = this.viewFactory.create(row);
     this.viewSlot.add(view);
   }
@@ -72,7 +72,7 @@ export class VirtualRepeat {
     this.numberOfDomElements = Math.ceil(this.virtualScrollHeight / this.itemHeight) + 1;
 
     for(var i = 1, ii = this.numberOfDomElements; i < ii; ++i){
-      row = this.createFullExecutionContext(this.items[i], i, ii);
+      row = this.createFullBindingContext(this.items[i], i, ii);
       view = this.viewFactory.create(row);
       this.viewSlot.add(view);
     }
@@ -104,8 +104,8 @@ export class VirtualRepeat {
     this.numberOfDomElements = Math.ceil(this.virtualScrollHeight / this.itemHeight) + 1;
 
     if(this.numberOfDomElements > childrenLength){
-      addIndex = children[childrenLength - 1].executionContext.$index + 1;
-      row = this.createFullExecutionContext(this.items[addIndex], addIndex, this.items.length);
+      addIndex = children[childrenLength - 1].bindingContext.$index + 1;
+      row = this.createFullBindingContext(this.items[addIndex], addIndex, this.items.length);
       view = this.viewFactory.create(row);
       this.viewSlot.insert(childrenLength, view);
     }else if (this.numberOfDomElements < childrenLength){
@@ -142,8 +142,8 @@ export class VirtualRepeat {
       this.previousFirst = first;
 
       view = viewSlot.children[0];
-      view.executionContext = this.updateExecutionContext(view.executionContext, first + numberOfDomElements - 1, items.length);
-      view.executionContext[this.local] = items[first + numberOfDomElements - 1];
+      view.bindingContext = this.updateBindingContext(view.bindingContext, first + numberOfDomElements - 1, items.length);
+      view.bindingContext[this.local] = items[first + numberOfDomElements - 1];
       viewSlot.children.push(viewSlot.children.shift());
 
       viewStart = VirtualRepeat.getNthNode(childNodes, 1, 8);
@@ -161,8 +161,8 @@ export class VirtualRepeat {
 
       view = viewSlot.children[numberOfDomElements - 1];
       if(view) {
-        view.executionContext[this.local] = items[first];
-        view.executionContext = this.updateExecutionContext(view.executionContext, first, items.length);
+        view.bindingContext[this.local] = items[first];
+        view.bindingContext = this.updateBindingContext(view.bindingContext, first, items.length);
         viewSlot.children.unshift(viewSlot.children.splice(-1,1)[0]);
 
         viewStart = VirtualRepeat.getNthNode(childNodes, 1, 8, true);
@@ -200,23 +200,23 @@ export class VirtualRepeat {
     this.indicator.style.transform = indicatorTranslateStyle;
   }
 
-  createBaseExecutionContext(data){
+  createBaseBindingContext(data){
     var context = {};
     context[this.local] = data;
     return context;
   }
 
-  createFullExecutionContext(data, index, length){
-    var context = this.createBaseExecutionContext(data);
-    return this.updateExecutionContext(context, index, length);
+  createFullBindingContext(data, index, length){
+    var context = this.createBaseBindingContext(data);
+    return this.updateBindingContext(context, index, length);
   }
 
-  updateExecutionContext(context, index, length){
+  updateBindingContext(context, index, length){
     var first = (index === 0),
       last = (index === length - 1),
       even = index % 2 === 0;
 
-    context.$parent = this.executionContext;
+    context.$parent = this.bindingContext;
     context.$index = index;
     context.$first = first;
     context.$last = last;
@@ -237,8 +237,8 @@ export class VirtualRepeat {
 
     for(i = 0, ii = viewSlot.children.length; i < ii; ++i){
       view = viewSlot.children[i];
-      view.executionContext[this.local] = items[this.first + i];
-      view.executionContext = this.updateExecutionContext(view.executionContext, this.first + i, items.length);
+      view.bindingContext[this.local] = items[this.first + i];
+      view.bindingContext = this.updateBindingContext(view.bindingContext, this.first + i, items.length);
     }
 
     for(i = 0, ii = splices.length; i < ii; ++i){

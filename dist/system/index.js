@@ -5,8 +5,8 @@ System.register(['./virtual-repeat', './virtual-list'], function (_export) {
 
   _export('configure', configure);
 
-  function configure(aurelia) {
-    aurelia.globalizeResources('./virtual-repeat', './virtual-list');
+  function configure(config) {
+    config.globalResources('./virtual-repeat', './virtual-list');
   }
 
   return {
