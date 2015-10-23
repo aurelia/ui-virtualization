@@ -48,11 +48,11 @@ System.register([], function (_export) {
           this.view = view;
 
           if (this.hasWheelEvent) {
-            view.addEventListener('wheel', this.wheelListener);
+            view.addEventListener("wheel", this.wheelListener);
           }
 
           if (this.hasMouseWheelEvent) {
-            view.addEventListener('mousewheel', this.mouseWheelListener);
+            view.addEventListener("mousewheel", this.mouseWheelListener);
           }
 
           if (typeof window.ontouchstart !== 'undefined') {
@@ -62,7 +62,7 @@ System.register([], function (_export) {
           }
 
           if (this.hasKeyDown) {
-            view.addEventListener('keydown', this.keyDownListener, false);
+            view.addEventListener("keydown", this.keyDownListener, false);
           }
 
           this.offset = 0;
@@ -70,12 +70,12 @@ System.register([], function (_export) {
         };
 
         ScrollHandler.prototype.dispose = function dispose() {
-          this.view.addEventListener('wheel', this.wheelListener);
-          this.view.addEventListener('mousewheel', this.mouseWheelListener);
-          this.view.addEventListener('touchstart', this.touchStartListener);
-          this.view.addEventListener('touchmove', this.touchMoveListener);
-          this.view.addEventListener('touchend', this.touchEndListener);
-          this.view.addEventListener('keydown', this.keyDownListener);
+          this.view.addEventListener("wheel", this.wheelListener);
+          this.view.addEventListener("mousewheel", this.mouseWheelListener);
+          this.view.addEventListener("touchstart", this.touchStartListener);
+          this.view.addEventListener("touchmove", this.touchMoveListener);
+          this.view.addEventListener("touchend", this.touchEndListener);
+          this.view.addEventListener("keydown", this.keyDownListener);
         };
 
         ScrollHandler.prototype.ypos = function ypos(event) {

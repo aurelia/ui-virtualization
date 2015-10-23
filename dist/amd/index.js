@@ -4,8 +4,8 @@ define(['exports', './virtual-repeat', './virtual-list'], function (exports, _vi
   exports.__esModule = true;
   exports.configure = configure;
 
-  function configure(aurelia) {
-    aurelia.globalizeResources('./virtual-repeat', './virtual-list');
+  function configure(config) {
+    config.globalResources('./virtual-repeat', './virtual-list');
   }
 
   exports.VirtualRepeat = _virtualRepeat.VirtualRepeat;

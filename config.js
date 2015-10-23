@@ -15,6 +15,7 @@ System.config({
   map: {
     "aurelia-binding": "github:aurelia/binding@0.10.0",
     "aurelia-dependency-injection": "github:aurelia/dependency-injection@0.11.0",
+    "aurelia-task-queue": "github:aurelia/task-queue@0.8.0",
     "aurelia-templating": "github:aurelia/templating@0.16.0",
     "babel": "npm:babel-core@5.8.25",
     "babel-runtime": "npm:babel-runtime@5.8.25",
