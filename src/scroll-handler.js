@@ -4,6 +4,7 @@ export class ScrollHandler{
     this.firefoxMultitude = 30;
     this.mouseMultitude = 1;
     this.keyStep = 120;
+    this.pageStep = this.keyStep * 100;
     this.isFirefox = navigator.userAgent.indexOf('Firefox') > -1;
     this.hasKeyDown = 'onkeydown' in document;
     this.hasWheelEvent = 'onwheel' in document;
@@ -153,10 +154,22 @@ export class ScrollHandler{
   keyDown(event) {
     var delta = 0;
     switch(event.keyCode) {
-      case 38:
+      case 36: // Home key
+        delta = Number.POSITIVE_INFINITY;
+        break;
+      case 35: // End key
+        delta = Number.NEGATIVE_INFINITY;
+        break;
+      case 33: // Page up
+        delta = this.pageStep;
+        break;
+      case 34: // Page down
+        delta = -this.pageStep;
+        break;
+      case 38: // Up arrow
         delta = this.keyStep;
         break;
-      case 40:
+      case 40: // Down arrow
         delta = -this.keyStep;
         break;
     }
