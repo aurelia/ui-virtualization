@@ -16,5 +16,15 @@
     "type": "git",
     "url": "http://github.com/aurelia/ui-virtualization"
   },
-  "dependencies": { }
+  "dependencies": {
+    "aurelia-binding": "^0.11.0",
+    "aurelia-dependency-injection": "^0.12.0",
+    "aurelia-framework": "^0.18.0",
+    "aurelia-logging": "^0.9.0",
+    "aurelia-logging-console": "^0.9.0",
+    "aurelia-path": "^0.11.0",
+    "aurelia-task-queue": "^0.9.0",
+    "aurelia-templating": "^0.17.0",
+    "core-js": "zloirock/core-js"
+  }
 }
