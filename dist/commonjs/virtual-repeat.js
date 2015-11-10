@@ -81,7 +81,8 @@ var VirtualRepeat = (function () {
     };
 
     var row = this.createFullBindingContext(this.items[0], 0, 1);
-    var view = this.viewFactory.create(row);
+    var view = this.viewFactory.create();
+    view.bind(row);
     this.viewSlot.add(view);
   };
 
@@ -110,7 +111,8 @@ var VirtualRepeat = (function () {
 
     for (var i = 1, ii = this.numberOfDomElements; i < ii; ++i) {
       row = this.createFullBindingContext(this.items[i], i, ii);
-      view = this.viewFactory.create(row);
+      view = this.viewFactory.create();
+      view.bind(row);
       this.viewSlot.add(view);
     }
 
@@ -145,7 +147,8 @@ var VirtualRepeat = (function () {
     if (this.numberOfDomElements > childrenLength) {
       addIndex = children[childrenLength - 1].bindingContext.$index + 1;
       row = this.createFullBindingContext(this.items[addIndex], addIndex, this.items.length);
-      view = this.viewFactory.create(row);
+      view = this.viewFactory.create();
+      view.bind(row);
       this.viewSlot.insert(childrenLength, view);
     } else if (this.numberOfDomElements < childrenLength) {
       this.numberOfDomElements = childrenLength;

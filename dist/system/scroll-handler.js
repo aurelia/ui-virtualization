@@ -18,6 +18,7 @@ System.register([], function (_export) {
           this.firefoxMultitude = 30;
           this.mouseMultitude = 1;
           this.keyStep = 120;
+          this.pageStep = this.keyStep * 100;
           this.isFirefox = navigator.userAgent.indexOf('Firefox') > -1;
           this.hasKeyDown = 'onkeydown' in document;
           this.hasWheelEvent = 'onwheel' in document;
@@ -191,6 +192,18 @@ System.register([], function (_export) {
         ScrollHandler.prototype.keyDown = function keyDown(event) {
           var delta = 0;
           switch (event.keyCode) {
+            case 36:
+              delta = Number.POSITIVE_INFINITY;
+              break;
+            case 35:
+              delta = Number.NEGATIVE_INFINITY;
+              break;
+            case 33:
+              delta = this.pageStep;
+              break;
+            case 34:
+              delta = -this.pageStep;
+              break;
             case 38:
               delta = this.keyStep;
               break;
