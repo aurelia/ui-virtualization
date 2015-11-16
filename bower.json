@@ -1,6 +1,6 @@
 {
   "name": "aurelia-ui-virtualization",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A plugin that provides a virtualized repeater and other virtualization services.",
   "keywords": [
     "aurelia",
@@ -17,14 +17,14 @@
     "url": "http://github.com/aurelia/ui-virtualization"
   },
   "dependencies": {
-    "aurelia-binding": "^0.11.0",
-    "aurelia-dependency-injection": "^0.12.0",
-    "aurelia-framework": "^0.18.0",
-    "aurelia-logging": "^0.9.0",
-    "aurelia-logging-console": "^0.9.0",
-    "aurelia-path": "^0.11.0",
-    "aurelia-task-queue": "^0.9.0",
-    "aurelia-templating": "^0.17.0",
+    "aurelia-binding": "^1.0.0-beta.1.0.1",
+    "aurelia-dependency-injection": "^1.0.0-beta.1",
+    "aurelia-framework": "^1.0.0-beta.1",
+    "aurelia-logging": "^1.0.0-beta.1",
+    "aurelia-logging-console": "^1.0.0-beta.1",
+    "aurelia-path": "^1.0.0-beta.1",
+    "aurelia-task-queue": "^1.0.0-beta.1",
+    "aurelia-templating": "^1.0.0-beta.1",
     "core-js": "zloirock/core-js"
   }
 }
