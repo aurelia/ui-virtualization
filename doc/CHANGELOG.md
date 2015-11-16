@@ -1,3 +1,11 @@
+### 0.3.1 (2015-11-16)
+
+
+#### Features
+
+* **all:** update to use override context ([0e0f3e65](http://github.com/aurelia/ui-virtualization/commit/0e0f3e65529d455544f820e96e940bf084c8ce84))
+
+
 ## 0.3.0 (2015-11-16)
 
 

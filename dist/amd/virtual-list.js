@@ -18,8 +18,8 @@ define(['exports', 'aurelia-templating'], function (exports, _aureliaTemplating)
             _defineDecoratedPropertyDescriptor(this, 'items', _instanceInitializers);
         }
 
-        VirtualList.prototype.bind = function bind(context) {
-            this.$parent = context;
+        VirtualList.prototype.bind = function bind(bindingContext, overrideContext) {
+            this.$parent = bindingContext;
         };
 
         _createDecoratedClass(VirtualList, [{

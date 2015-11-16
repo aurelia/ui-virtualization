@@ -1,7 +1,7 @@
 System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-templating', './scroll-handler'], function (_export) {
   'use strict';
 
-  var inject, ObserverLocator, calcSplices, getChangeRecords, BoundViewFactory, ViewSlot, customAttribute, bindable, templateController, ScrollHandler, VirtualRepeat;
+  var inject, ObserverLocator, calcSplices, getChangeRecords, createOverrideContext, BoundViewFactory, ViewSlot, customAttribute, bindable, templateController, ScrollHandler, VirtualRepeat;
 
   var _createDecoratedClass = (function () { function defineProperties(target, descriptors, initializers) { for (var i = 0; i < descriptors.length; i++) { var descriptor = descriptors[i]; var decorators = descriptor.decorators; var key = descriptor.key; delete descriptor.key; delete descriptor.decorators; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor || descriptor.initializer) descriptor.writable = true; if (decorators) { for (var f = 0; f < decorators.length; f++) { var decorator = decorators[f]; if (typeof decorator === 'function') { descriptor = decorator(target, key, descriptor) || descriptor; } else { throw new TypeError('The decorator for method ' + descriptor.key + ' is of the invalid type ' + typeof decorator); } } if (descriptor.initializer !== undefined) { initializers[key] = descriptor; continue; } } Object.defineProperty(target, key, descriptor); } } return function (Constructor, protoProps, staticProps, protoInitializers, staticInitializers) { if (protoProps) defineProperties(Constructor.prototype, protoProps, protoInitializers); if (staticProps) defineProperties(Constructor, staticProps, staticInitializers); return Constructor; }; })();
 
@@ -16,6 +16,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-tem
       ObserverLocator = _aureliaBinding.ObserverLocator;
       calcSplices = _aureliaBinding.calcSplices;
       getChangeRecords = _aureliaBinding.getChangeRecords;
+      createOverrideContext = _aureliaBinding.createOverrideContext;
     }, function (_aureliaTemplating) {
       BoundViewFactory = _aureliaTemplating.BoundViewFactory;
       ViewSlot = _aureliaTemplating.ViewSlot;
@@ -64,10 +65,11 @@ System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-tem
           this.indicatorMinHeight = 15;
         }
 
-        VirtualRepeat.prototype.bind = function bind(bindingContext) {
+        VirtualRepeat.prototype.bind = function bind(bindingContext, overrideContext) {
           var _this = this;
 
           this.bindingContext = bindingContext;
+          this.overrideContext = overrideContext;
           this.virtualScrollInner = this.element.parentNode;
           this.virtualScroll = this.virtualScrollInner.parentElement;
           this.createScrollIndicator();
@@ -90,9 +92,9 @@ System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-tem
             _this.handleContainerResize();
           };
 
-          var row = this.createFullBindingContext(this.items[0], 0, 1);
+          var overrideContext = this.createFullOverrideContext(this.items[0], 0, 1);
           var view = this.viewFactory.create();
-          view.bind(row);
+          view.bind(overrideContext.bindingContext, overrideContext);
           this.viewSlot.add(view);
         };
 
@@ -110,7 +112,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-tem
 
           var items = this.items,
               observer,
-              row,
+              overrideContext,
               view,
               node;
 
@@ -120,9 +122,9 @@ System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-tem
           this.numberOfDomElements = Math.ceil(this.virtualScrollHeight / this.itemHeight) + 1;
 
           for (var i = 1, ii = this.numberOfDomElements; i < ii; ++i) {
-            row = this.createFullBindingContext(this.items[i], i, ii);
+            overrideContext = this.createFullOverrideContext(this.items[i], i, ii);
             view = this.viewFactory.create();
-            view.bind(row);
+            view.bind(overrideContext.bindingContext, overrideContext);
             this.viewSlot.add(view);
           }
 
@@ -147,7 +149,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-tem
         VirtualRepeat.prototype.handleContainerResize = function handleContainerResize() {
           var children = this.viewSlot.children,
               childrenLength = children.length,
-              row,
+              overrideContext,
               view,
               addIndex;
 
@@ -155,10 +157,10 @@ System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-tem
           this.numberOfDomElements = Math.ceil(this.virtualScrollHeight / this.itemHeight) + 1;
 
           if (this.numberOfDomElements > childrenLength) {
-            addIndex = children[childrenLength - 1].bindingContext.$index + 1;
-            row = this.createFullBindingContext(this.items[addIndex], addIndex, this.items.length);
+            addIndex = children[childrenLength - 1].overrideContext.$index + 1;
+            overrideContext = this.createFullOverrideContext(this.items[addIndex], addIndex, this.items.length);
             view = this.viewFactory.create();
-            view.bind(row);
+            view.bind(overrideContext.bindingContext, overrideContext);
             this.viewSlot.insert(childrenLength, view);
           } else if (this.numberOfDomElements < childrenLength) {
             this.numberOfDomElements = childrenLength;
@@ -204,7 +206,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-tem
             this.previousFirst = first;
 
             view = viewSlot.children[0];
-            view.bindingContext = this.updateBindingContext(view.bindingContext, first + numberOfDomElements - 1, items.length);
+            view.overrideContext = this.updateOverrideContext(view.overrideContext, first + numberOfDomElements - 1, items.length);
             view.bindingContext[this.local] = items[first + numberOfDomElements - 1];
             viewSlot.children.push(viewSlot.children.shift());
 
@@ -224,7 +226,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-tem
             view = viewSlot.children[numberOfDomElements - 1];
             if (view) {
               view.bindingContext[this.local] = items[first];
-              view.bindingContext = this.updateBindingContext(view.bindingContext, first, items.length);
+              view.overrideContext = this.updateOverrideContext(view.overrideContext, first, items.length);
               viewSlot.children.unshift(viewSlot.children.splice(-1, 1)[0]);
 
               viewStart = VirtualRepeat.getNthNode(childNodes, 1, 8, true);
@@ -263,31 +265,32 @@ System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-tem
           this.indicator.style.transform = indicatorTranslateStyle;
         };
 
-        VirtualRepeat.prototype.createBaseBindingContext = function createBaseBindingContext(data) {
-          var context = {};
-          context[this.local] = data;
-          return context;
+        VirtualRepeat.prototype.createBaseOverrideContext = function createBaseOverrideContext(data) {
+          var bindingContext = {};
+          var overrideContext = createOverrideContext(bindingContext, this.overrideContext);
+          bindingContext[this.local] = data;
+          return overrideContext;
         };
 
-        VirtualRepeat.prototype.createFullBindingContext = function createFullBindingContext(data, index, length) {
-          var context = this.createBaseBindingContext(data);
-          return this.updateBindingContext(context, index, length);
+        VirtualRepeat.prototype.createFullOverrideContext = function createFullOverrideContext(data, index, length) {
+          var overrideContext = this.createBaseOverrideContext(data);
+          this.updateOverrideContext(overrideContext, index, length);
+          return overrideContext;
         };
 
-        VirtualRepeat.prototype.updateBindingContext = function updateBindingContext(context, index, length) {
+        VirtualRepeat.prototype.updateOverrideContext = function updateOverrideContext(overrideContext, index, length) {
           var first = index === 0,
               last = index === length - 1,
               even = index % 2 === 0;
 
-          context.$parent = this.bindingContext;
-          context.$index = index;
-          context.$first = first;
-          context.$last = last;
-          context.$middle = !(first || last);
-          context.$odd = !even;
-          context.$even = even;
+          overrideContext.$index = index;
+          overrideContext.$first = first;
+          overrideContext.$last = last;
+          overrideContext.$middle = !(first || last);
+          overrideContext.$odd = !even;
+          overrideContext.$even = even;
 
-          return context;
+          return overrideContext;
         };
 
         VirtualRepeat.prototype.handleSplices = function handleSplices(items, splices) {
@@ -309,7 +312,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-tem
           for (i = 0, ii = viewSlot.children.length; i < ii; ++i) {
             view = viewSlot.children[i];
             view.bindingContext[this.local] = items[this.first + i];
-            view.bindingContext = this.updateBindingContext(view.bindingContext, this.first + i, items.length);
+            view.overrideContext = this.updateOverrideContext(view.overrideContext, this.first + i, items.length);
           }
 
           for (i = 0, ii = splices.length; i < ii; ++i) {
