@@ -1,9 +1,9 @@
 import {inject} from 'aurelia-dependency-injection';
 import {ObserverLocator, calcSplices, getChangeRecords, createOverrideContext} from 'aurelia-binding';
 import {BoundViewFactory, ViewSlot, customAttribute, bindable, templateController} from 'aurelia-templating';
-import {updateOverrideContext, createFullOverrideContext} from 'aurelia-templating-resources/repeat-utilities';
+import {updateOverrideContext, createFullOverrideContext, updateOverrideContexts} from 'aurelia-templating-resources/repeat-utilities';
 import {ScrollHandler} from './scroll-handler';
-import {calcScrollHeight, calcOuterHeight, getNthNode} from './utilities';
+import {calcScrollHeight, calcOuterHeight, getNthNode, moveViewFirst, moveViewLast} from './utilities';
 
 @customAttribute('virtual-repeat')
 @templateController
@@ -95,7 +95,7 @@ export class VirtualRepeat {
     }
 
     this.disposeSubscription = observer.subscribe(splices => {
-      this.handleSplices(items, splices);
+      this.instanceMutated(items, splices);
     });
 
     this.scroll();
@@ -136,7 +136,6 @@ export class VirtualRepeat {
     this.currentY = Math.round(this.currentY);
 
     if(this.currentY === this.previousY){
-
       requestAnimationFrame(() => this.scroll());
       return;
     }
@@ -153,13 +152,7 @@ export class VirtualRepeat {
       view.bindingContext[this.local] = items[first + numberOfDomElements - 1];
       viewSlot.children.push(viewSlot.children.shift());
 
-      viewStart = getNthNode(childNodes, 1, 8);
-      element = getNthNode(childNodes, 1, 1);
-      viewEnd = getNthNode(childNodes, 2, 8);
-
-      scrollView.insertBefore(viewEnd, scrollView.children[numberOfDomElements]);
-      scrollView.insertBefore(element, viewEnd);
-      scrollView.insertBefore(viewStart, element);
+      moveViewLast(view, scrollView, numberOfDomElements);
 
       marginTop = itemHeight * first + "px";
       scrollView.style.marginTop = marginTop;
@@ -172,13 +165,7 @@ export class VirtualRepeat {
         updateOverrideContext(view.overrideContext, first, items.length);
         viewSlot.children.unshift(viewSlot.children.splice(-1,1)[0]);
 
-        viewStart = getNthNode(childNodes, 1, 8, true);
-        element = getNthNode(childNodes, 1, 1, true);
-        viewEnd = getNthNode(childNodes, 2, 8, true);
-
-        scrollView.insertBefore(viewEnd, scrollView.childNodes[1]);
-        scrollView.insertBefore(element, viewEnd);
-        scrollView.insertBefore(viewStart, element);
+        moveViewFirst(view, scrollView);
 
         marginTop = itemHeight * first + "px";
         scrollView.style.marginTop = marginTop;
@@ -207,7 +194,89 @@ export class VirtualRepeat {
     this.indicator.style.transform = indicatorTranslateStyle;
   }
 
-  handleSplices(items, splices){
+  instanceMutated(array, splices) {
+    let removeDelta = 0;
+    let viewSlot = this.viewSlot;
+    let rmPromises = [];
+
+    for (let i = 0, ii = splices.length; i < ii; ++i) {
+      let splice = splices[i];
+      let removed = splice.removed;
+
+      if (this._isIndexInDom(splice.index)) {
+        for (let j = 0, jj = removed.length; j < jj; ++j) {
+          let viewOrPromise = viewSlot.removeAt(splice.index + removeDelta + rmPromises.length, true);
+
+          // TODO Create view without trigger view lifecycle
+          let length = viewSlot.children.length;
+          let overrideContext = createFullOverrideContext(this, this.items[length], length, this.items.length);
+          let view = this.viewFactory.create();
+          view.bind(overrideContext.bindingContext, overrideContext);
+          this.viewSlot.isAttached = false;
+          this.viewSlot.add(view);
+          this.viewSlot.isAttached = true;
+
+          if (viewOrPromise instanceof Promise) {
+            rmPromises.push(viewOrPromise);
+          }
+        }
+        removeDelta -= splice.addedCount;
+      }
+    }
+
+    if (rmPromises.length > 0) {
+      Promise.all(rmPromises).then(() => {
+        this._handleAddedSplices(array, splices);
+        this._updateViews(array, splices);
+        this._updateSizes();
+      });
+    } else {
+      this._handleAddedSplices(array, splices);
+      this._updateViews(array, splices);
+      this._updateSizes();
+    }
+  }
+
+  _handleAddedSplices(array, splices) {
+    let spliceIndex;
+    let spliceIndexLow;
+    let arrayLength = array.length;
+    let viewSlot = this.viewSlot;
+
+    for (let i = 0, ii = splices.length; i < ii; ++i) {
+      let splice = splices[i];
+      let addIndex = spliceIndex = splice.index;
+      let end = splice.index + splice.addedCount;
+
+      if (this._isIndexInDom(spliceIndex)) {
+        for (; addIndex < end; ++addIndex) {
+          let overrideContext = createFullOverrideContext(this, array[addIndex], addIndex, arrayLength);
+          let view = this.viewFactory.create();
+          view.bind(overrideContext.bindingContext, overrideContext);
+          this.viewSlot.insert(addIndex, view);
+
+          // TODO Remove view without trigger view lifecycle
+          viewSlot.removeAt(0, true, true);
+        }
+      }
+    }
+  }
+
+  _isIndexInDom(index: number) {
+    let viewSlot = this.viewSlot;
+    let indexLow = viewSlot.children[0].overrideContext.$index;
+    let indexHi = viewSlot.children[viewSlot.children.length - 1].overrideContext.$index;
+
+    return index >= indexLow && index <= indexHi;
+  }
+
+  _updateSizes() {
+    this.calcScrollViewHeight();
+    this.calcIndicatorHeight();
+    this.scrollIndicator();
+  }
+
+  _updateViews(items, splices) {
     var numberOfDomElements = this.numberOfDomElements,
       viewSlot = this.viewSlot,
       first = this.first,

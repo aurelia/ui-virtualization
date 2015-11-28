@@ -14,30 +14,27 @@ export function calcScrollHeight(element){
   return height;
 }
 
-export function getNthNode(nodes, n, nodeType, fromBottom) {
-  var foundCount = 0, i = 0, found, node, lastIndex;
-
-  lastIndex = nodes.length - 1;
-
-  if(fromBottom){ i = lastIndex; }
-
-  do{
-    node = nodes[i];
-    if(node.nodeType === nodeType){
-      ++foundCount;
-      if(foundCount === n){
-        found = true;
-      }
-    }
-    if(fromBottom){ --i; } else { ++i; }
-  } while(!found || i === lastIndex || i === 0);
-
-  return node;
-}
-
 function getStyleValue(element, style){
   var currentStyle, styleValue;
   currentStyle = element.currentStyle || window.getComputedStyle(element);
   styleValue = parseInt(currentStyle[style]);
   return Number.isNaN(styleValue) ? 0 : styleValue;
+}
+
+export function moveViewFirst(view, scrollView) {
+  insertBeforeNode(view, scrollView, scrollView.childNodes[1]);
+}
+
+export function moveViewLast(view, scrollView, numberOfDomElements) {
+  insertBeforeNode(view, scrollView, scrollView.children[numberOfDomElements]);
+}
+
+function insertBeforeNode(view, scrollView, node) {
+  let viewStart = view.firstChild;
+  let element = viewStart.nextSibling;
+  let viewEnd = view.lastChild;
+
+  scrollView.insertBefore(viewEnd, node);
+  scrollView.insertBefore(element, viewEnd);
+  scrollView.insertBefore(viewStart, element);
 }
