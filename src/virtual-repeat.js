@@ -1,6 +1,7 @@
 import {inject} from 'aurelia-dependency-injection';
 import {ObserverLocator, calcSplices, getChangeRecords, createOverrideContext} from 'aurelia-binding';
 import {BoundViewFactory, ViewSlot, customAttribute, bindable, templateController} from 'aurelia-templating';
+import {updateOverrideContext, createFullOverrideContext} from 'aurelia-templating-resources/repeat-utilities';
 import {ScrollHandler} from './scroll-handler';
 
 @customAttribute('virtual-repeat')
@@ -27,8 +28,7 @@ export class VirtualRepeat {
   }
 
   bind(bindingContext, overrideContext){
-    this.bindingContext = bindingContext;
-    this.overrideContext = overrideContext;
+    this.scope = { bindingContext, overrideContext };
     this.virtualScrollInner = this.element.parentNode;
     this.virtualScroll = this.virtualScrollInner.parentElement;
     this.createScrollIndicator();
@@ -49,7 +49,7 @@ export class VirtualRepeat {
     window.onresize = () => { this.handleContainerResize(); };
 
     // create first item to get the heights
-    var overrideContext = this.createFullOverrideContext(this.items[0], 0, 1);
+    var overrideContext = createFullOverrideContext(this, this.items[0], 0, 1);
     var view = this.viewFactory.create();
     view.bind(overrideContext.bindingContext, overrideContext);
     this.viewSlot.add(view);
@@ -62,6 +62,8 @@ export class VirtualRepeat {
       this.disposeSubscription();
       this.disposeSubscription = null;
     }
+
+    // TODO Null out properties
   }
 
   attached(){
@@ -74,7 +76,7 @@ export class VirtualRepeat {
     this.numberOfDomElements = Math.ceil(this.virtualScrollHeight / this.itemHeight) + 1;
 
     for(var i = 1, ii = this.numberOfDomElements; i < ii; ++i){
-      overrideContext = this.createFullOverrideContext(this.items[i], i, ii);
+      overrideContext = createFullOverrideContext(this, this.items[i], i, ii);
       view = this.viewFactory.create();
       view.bind(overrideContext.bindingContext, overrideContext);
       this.viewSlot.add(view);
@@ -108,7 +110,7 @@ export class VirtualRepeat {
 
     if(this.numberOfDomElements > childrenLength){
       addIndex = children[childrenLength - 1].overrideContext.$index + 1;
-      overrideContext = this.createFullOverrideContext(this.items[addIndex], addIndex, this.items.length);
+      overrideContext = createFullOverrideContext(this, this.items[addIndex], addIndex, this.items.length);
       view = this.viewFactory.create();
       view.bind(overrideContext.bindingContext, overrideContext);
       this.viewSlot.insert(childrenLength, view);
@@ -146,7 +148,7 @@ export class VirtualRepeat {
       this.previousFirst = first;
 
       view = viewSlot.children[0];
-      view.overrideContext = this.updateOverrideContext(view.overrideContext, first + numberOfDomElements - 1, items.length);
+      updateOverrideContext(view.overrideContext, first + numberOfDomElements - 1, items.length);
       view.bindingContext[this.local] = items[first + numberOfDomElements - 1];
       viewSlot.children.push(viewSlot.children.shift());
 
@@ -166,7 +168,7 @@ export class VirtualRepeat {
       view = viewSlot.children[numberOfDomElements - 1];
       if(view) {
         view.bindingContext[this.local] = items[first];
-        view.overrideContext = this.updateOverrideContext(view.overrideContext, first, items.length);
+        updateOverrideContext(view.overrideContext, first, items.length);
         viewSlot.children.unshift(viewSlot.children.splice(-1,1)[0]);
 
         viewStart = VirtualRepeat.getNthNode(childNodes, 1, 8, true);
@@ -204,34 +206,6 @@ export class VirtualRepeat {
     this.indicator.style.transform = indicatorTranslateStyle;
   }
 
-  createBaseOverrideContext(data){
-    let bindingContext = {};
-    let overrideContext = createOverrideContext(bindingContext, this.overrideContext);
-    bindingContext[this.local] = data;
-    return overrideContext;
-  }
-
-  createFullOverrideContext(data, index, length){
-    var overrideContext = this.createBaseOverrideContext(data);
-    this.updateOverrideContext(overrideContext, index, length);
-    return overrideContext;
-  }
-
-  updateOverrideContext(overrideContext, index, length){
-    var first = (index === 0),
-      last = (index === length - 1),
-      even = index % 2 === 0;
-
-    overrideContext.$index = index;
-    overrideContext.$first = first;
-    overrideContext.$last = last;
-    overrideContext.$middle = !(first || last);
-    overrideContext.$odd = !even;
-    overrideContext.$even = even;
-
-    return overrideContext;
-  }
-
   handleSplices(items, splices){
     var numberOfDomElements = this.numberOfDomElements,
       viewSlot = this.viewSlot,
@@ -243,7 +217,7 @@ export class VirtualRepeat {
     for(i = 0, ii = viewSlot.children.length; i < ii; ++i){
       view = viewSlot.children[i];
       view.bindingContext[this.local] = items[this.first + i];
-      view.overrideContext = this.updateOverrideContext(view.overrideContext, this.first + i, items.length);
+      updateOverrideContext(view.overrideContext, this.first + i, items.length);
     }
 
     for(i = 0, ii = splices.length; i < ii; ++i){
