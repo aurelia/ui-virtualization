@@ -3,6 +3,7 @@ import {ObserverLocator, calcSplices, getChangeRecords, createOverrideContext} f
 import {BoundViewFactory, ViewSlot, customAttribute, bindable, templateController} from 'aurelia-templating';
 import {updateOverrideContext, createFullOverrideContext} from 'aurelia-templating-resources/repeat-utilities';
 import {ScrollHandler} from './scroll-handler';
+import {calcScrollHeight, calcOuterHeight, getNthNode} from './utilities';
 
 @customAttribute('virtual-repeat')
 @templateController
@@ -71,8 +72,8 @@ export class VirtualRepeat {
       observer, overrideContext, view, node;
 
     this.listItems = this.virtualScrollInner.children;
-    this.itemHeight = VirtualRepeat.calcOuterHeight(this.listItems[0]);
-    this.virtualScrollHeight = VirtualRepeat.calcScrollHeight(this.virtualScroll);
+    this.itemHeight = calcOuterHeight(this.listItems[0]);
+    this.virtualScrollHeight = calcScrollHeight(this.virtualScroll);
     this.numberOfDomElements = Math.ceil(this.virtualScrollHeight / this.itemHeight) + 1;
 
     for(var i = 1, ii = this.numberOfDomElements; i < ii; ++i){
@@ -105,7 +106,7 @@ export class VirtualRepeat {
       childrenLength = children.length,
       overrideContext, view, addIndex;
 
-    this.virtualScrollHeight = VirtualRepeat.calcScrollHeight(this.virtualScroll);
+    this.virtualScrollHeight = calcScrollHeight(this.virtualScroll);
     this.numberOfDomElements = Math.ceil(this.virtualScrollHeight / this.itemHeight) + 1;
 
     if(this.numberOfDomElements > childrenLength){
@@ -152,9 +153,9 @@ export class VirtualRepeat {
       view.bindingContext[this.local] = items[first + numberOfDomElements - 1];
       viewSlot.children.push(viewSlot.children.shift());
 
-      viewStart = VirtualRepeat.getNthNode(childNodes, 1, 8);
-      element = VirtualRepeat.getNthNode(childNodes, 1, 1);
-      viewEnd = VirtualRepeat.getNthNode(childNodes, 2, 8);
+      viewStart = getNthNode(childNodes, 1, 8);
+      element = getNthNode(childNodes, 1, 1);
+      viewEnd = getNthNode(childNodes, 2, 8);
 
       scrollView.insertBefore(viewEnd, scrollView.children[numberOfDomElements]);
       scrollView.insertBefore(element, viewEnd);
@@ -171,9 +172,9 @@ export class VirtualRepeat {
         updateOverrideContext(view.overrideContext, first, items.length);
         viewSlot.children.unshift(viewSlot.children.splice(-1,1)[0]);
 
-        viewStart = VirtualRepeat.getNthNode(childNodes, 1, 8, true);
-        element = VirtualRepeat.getNthNode(childNodes, 1, 1, true);
-        viewEnd = VirtualRepeat.getNthNode(childNodes, 2, 8, true);
+        viewStart = getNthNode(childNodes, 1, 8, true);
+        element = getNthNode(childNodes, 1, 1, true);
+        viewEnd = getNthNode(childNodes, 2, 8, true);
 
         scrollView.insertBefore(viewEnd, scrollView.childNodes[1]);
         scrollView.insertBefore(element, viewEnd);
@@ -276,49 +277,5 @@ export class VirtualRepeat {
     indicator.style.width = '4px';
     indicator.style.position = 'absolute';
     indicator.style.opacity = '0.6'
-  }
-
-  static getStyleValue(element, style){
-    var currentStyle, styleValue;
-    currentStyle = element.currentStyle || window.getComputedStyle(element);
-    styleValue = parseInt(currentStyle[style]);
-    return Number.isNaN(styleValue) ? 0 : styleValue;
-  }
-
-  static calcOuterHeight(element){
-    var height;
-    height = element.getBoundingClientRect().height;
-    height += VirtualRepeat.getStyleValue(element, 'marginTop');
-    height += VirtualRepeat.getStyleValue(element, 'marginBottom');
-    return height;
-  }
-
-  static calcScrollHeight(element){
-    var height;
-    height = element.getBoundingClientRect().height;
-    height -= VirtualRepeat.getStyleValue(element, 'borderTopWidth');
-    height -= VirtualRepeat.getStyleValue(element, 'borderBottomWidth');
-    return height;
-  }
-
-  static getNthNode(nodes, n, nodeType, fromBottom) {
-    var foundCount = 0, i = 0, found, node, lastIndex;
-
-    lastIndex = nodes.length - 1;
-
-    if(fromBottom){ i = lastIndex; }
-
-    do{
-      node = nodes[i];
-      if(node.nodeType === nodeType){
-        ++foundCount;
-        if(foundCount === n){
-          found = true;
-        }
-      }
-      if(fromBottom){ --i; } else { ++i; }
-    } while(!found || i === lastIndex || i === 0);
-
-    return node;
   }
 }

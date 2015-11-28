@@ -1,4 +1,4 @@
-define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-templating', './scroll-handler'], function (exports, _aureliaDependencyInjection, _aureliaBinding, _aureliaTemplating, _scrollHandler) {
+define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-templating', 'aurelia-templating-resources/repeat-utilities', './scroll-handler', './utilities'], function (exports, _aureliaDependencyInjection, _aureliaBinding, _aureliaTemplating, _aureliaTemplatingResourcesRepeatUtilities, _scrollHandler, _utilities) {
   'use strict';
 
   exports.__esModule = true;
@@ -50,8 +50,7 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
     VirtualRepeat.prototype.bind = function bind(bindingContext, overrideContext) {
       var _this = this;
 
-      this.bindingContext = bindingContext;
-      this.overrideContext = overrideContext;
+      this.scope = { bindingContext: bindingContext, overrideContext: overrideContext };
       this.virtualScrollInner = this.element.parentNode;
       this.virtualScroll = this.virtualScrollInner.parentElement;
       this.createScrollIndicator();
@@ -74,7 +73,7 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
         _this.handleContainerResize();
       };
 
-      var overrideContext = this.createFullOverrideContext(this.items[0], 0, 1);
+      var overrideContext = _aureliaTemplatingResourcesRepeatUtilities.createFullOverrideContext(this, this.items[0], 0, 1);
       var view = this.viewFactory.create();
       view.bind(overrideContext.bindingContext, overrideContext);
       this.viewSlot.add(view);
@@ -99,12 +98,12 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
           node;
 
       this.listItems = this.virtualScrollInner.children;
-      this.itemHeight = VirtualRepeat.calcOuterHeight(this.listItems[0]);
-      this.virtualScrollHeight = VirtualRepeat.calcScrollHeight(this.virtualScroll);
+      this.itemHeight = _utilities.calcOuterHeight(this.listItems[0]);
+      this.virtualScrollHeight = _utilities.calcScrollHeight(this.virtualScroll);
       this.numberOfDomElements = Math.ceil(this.virtualScrollHeight / this.itemHeight) + 1;
 
       for (var i = 1, ii = this.numberOfDomElements; i < ii; ++i) {
-        overrideContext = this.createFullOverrideContext(this.items[i], i, ii);
+        overrideContext = _aureliaTemplatingResourcesRepeatUtilities.createFullOverrideContext(this, this.items[i], i, ii);
         view = this.viewFactory.create();
         view.bind(overrideContext.bindingContext, overrideContext);
         this.viewSlot.add(view);
@@ -135,12 +134,12 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
           view,
           addIndex;
 
-      this.virtualScrollHeight = VirtualRepeat.calcScrollHeight(this.virtualScroll);
+      this.virtualScrollHeight = _utilities.calcScrollHeight(this.virtualScroll);
       this.numberOfDomElements = Math.ceil(this.virtualScrollHeight / this.itemHeight) + 1;
 
       if (this.numberOfDomElements > childrenLength) {
         addIndex = children[childrenLength - 1].overrideContext.$index + 1;
-        overrideContext = this.createFullOverrideContext(this.items[addIndex], addIndex, this.items.length);
+        overrideContext = _aureliaTemplatingResourcesRepeatUtilities.createFullOverrideContext(this, this.items[addIndex], addIndex, this.items.length);
         view = this.viewFactory.create();
         view.bind(overrideContext.bindingContext, overrideContext);
         this.viewSlot.insert(childrenLength, view);
@@ -188,13 +187,13 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
         this.previousFirst = first;
 
         view = viewSlot.children[0];
-        view.overrideContext = this.updateOverrideContext(view.overrideContext, first + numberOfDomElements - 1, items.length);
+        _aureliaTemplatingResourcesRepeatUtilities.updateOverrideContext(view.overrideContext, first + numberOfDomElements - 1, items.length);
         view.bindingContext[this.local] = items[first + numberOfDomElements - 1];
         viewSlot.children.push(viewSlot.children.shift());
 
-        viewStart = VirtualRepeat.getNthNode(childNodes, 1, 8);
-        element = VirtualRepeat.getNthNode(childNodes, 1, 1);
-        viewEnd = VirtualRepeat.getNthNode(childNodes, 2, 8);
+        viewStart = _utilities.getNthNode(childNodes, 1, 8);
+        element = _utilities.getNthNode(childNodes, 1, 1);
+        viewEnd = _utilities.getNthNode(childNodes, 2, 8);
 
         scrollView.insertBefore(viewEnd, scrollView.children[numberOfDomElements]);
         scrollView.insertBefore(element, viewEnd);
@@ -208,12 +207,12 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
         view = viewSlot.children[numberOfDomElements - 1];
         if (view) {
           view.bindingContext[this.local] = items[first];
-          view.overrideContext = this.updateOverrideContext(view.overrideContext, first, items.length);
+          _aureliaTemplatingResourcesRepeatUtilities.updateOverrideContext(view.overrideContext, first, items.length);
           viewSlot.children.unshift(viewSlot.children.splice(-1, 1)[0]);
 
-          viewStart = VirtualRepeat.getNthNode(childNodes, 1, 8, true);
-          element = VirtualRepeat.getNthNode(childNodes, 1, 1, true);
-          viewEnd = VirtualRepeat.getNthNode(childNodes, 2, 8, true);
+          viewStart = _utilities.getNthNode(childNodes, 1, 8, true);
+          element = _utilities.getNthNode(childNodes, 1, 1, true);
+          viewEnd = _utilities.getNthNode(childNodes, 2, 8, true);
 
           scrollView.insertBefore(viewEnd, scrollView.childNodes[1]);
           scrollView.insertBefore(element, viewEnd);
@@ -247,34 +246,6 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
       this.indicator.style.transform = indicatorTranslateStyle;
     };
 
-    VirtualRepeat.prototype.createBaseOverrideContext = function createBaseOverrideContext(data) {
-      var bindingContext = {};
-      var overrideContext = _aureliaBinding.createOverrideContext(bindingContext, this.overrideContext);
-      bindingContext[this.local] = data;
-      return overrideContext;
-    };
-
-    VirtualRepeat.prototype.createFullOverrideContext = function createFullOverrideContext(data, index, length) {
-      var overrideContext = this.createBaseOverrideContext(data);
-      this.updateOverrideContext(overrideContext, index, length);
-      return overrideContext;
-    };
-
-    VirtualRepeat.prototype.updateOverrideContext = function updateOverrideContext(overrideContext, index, length) {
-      var first = index === 0,
-          last = index === length - 1,
-          even = index % 2 === 0;
-
-      overrideContext.$index = index;
-      overrideContext.$first = first;
-      overrideContext.$last = last;
-      overrideContext.$middle = !(first || last);
-      overrideContext.$odd = !even;
-      overrideContext.$even = even;
-
-      return overrideContext;
-    };
-
     VirtualRepeat.prototype.handleSplices = function handleSplices(items, splices) {
       var numberOfDomElements = this.numberOfDomElements,
           viewSlot = this.viewSlot,
@@ -294,7 +265,7 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
       for (i = 0, ii = viewSlot.children.length; i < ii; ++i) {
         view = viewSlot.children[i];
         view.bindingContext[this.local] = items[this.first + i];
-        view.overrideContext = this.updateOverrideContext(view.overrideContext, this.first + i, items.length);
+        _aureliaTemplatingResourcesRepeatUtilities.updateOverrideContext(view.overrideContext, this.first + i, items.length);
       }
 
       for (i = 0, ii = splices.length; i < ii; ++i) {
@@ -353,60 +324,6 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
       indicator.style.width = '4px';
       indicator.style.position = 'absolute';
       indicator.style.opacity = '0.6';
-    };
-
-    VirtualRepeat.getStyleValue = function getStyleValue(element, style) {
-      var currentStyle, styleValue;
-      currentStyle = element.currentStyle || window.getComputedStyle(element);
-      styleValue = parseInt(currentStyle[style]);
-      return Number.isNaN(styleValue) ? 0 : styleValue;
-    };
-
-    VirtualRepeat.calcOuterHeight = function calcOuterHeight(element) {
-      var height;
-      height = element.getBoundingClientRect().height;
-      height += VirtualRepeat.getStyleValue(element, 'marginTop');
-      height += VirtualRepeat.getStyleValue(element, 'marginBottom');
-      return height;
-    };
-
-    VirtualRepeat.calcScrollHeight = function calcScrollHeight(element) {
-      var height;
-      height = element.getBoundingClientRect().height;
-      height -= VirtualRepeat.getStyleValue(element, 'borderTopWidth');
-      height -= VirtualRepeat.getStyleValue(element, 'borderBottomWidth');
-      return height;
-    };
-
-    VirtualRepeat.getNthNode = function getNthNode(nodes, n, nodeType, fromBottom) {
-      var foundCount = 0,
-          i = 0,
-          found,
-          node,
-          lastIndex;
-
-      lastIndex = nodes.length - 1;
-
-      if (fromBottom) {
-        i = lastIndex;
-      }
-
-      do {
-        node = nodes[i];
-        if (node.nodeType === nodeType) {
-          ++foundCount;
-          if (foundCount === n) {
-            found = true;
-          }
-        }
-        if (fromBottom) {
-          --i;
-        } else {
-          ++i;
-        }
-      } while (!found || i === lastIndex || i === 0);
-
-      return node;
     };
 
     var _VirtualRepeat = VirtualRepeat;
