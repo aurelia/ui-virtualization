@@ -30,12 +30,63 @@ export class VirtualRepeat {
 
   bind(bindingContext, overrideContext){
     this.scope = { bindingContext, overrideContext };
+
+    // TODO Fix this
+    window.onresize = () => { this.handleContainerResize(); };
+  }
+
+  unbind(){
+    this.scope = null;
+    this.items = null;
+  }
+
+  attached(){
+    this.isAttached = true;
     this.virtualScrollInner = this.element.parentNode;
     this.virtualScroll = this.virtualScrollInner.parentElement;
-    this.createScrollIndicator();
     this.virtualScroll.style.overflow = 'hidden';
     this.virtualScroll.tabIndex = '-1';
+    this.itemsChanged();
+  }
 
+  detached() {
+    this.isAttached = false;
+    this._destroy();
+    this.numberOfDomElements = null;
+    this.virtualScrollInner = null;
+    this.virtualScroll = null;
+    this.virtualScrollHeight = null;
+    this.targetY = null;
+    this.previousY = null;
+    this.itemHeight = null;
+    this.first = null;
+    this.previousFirst = null;
+  }
+
+  _destroy() {
+    this.viewSlot.removeAll(true);
+    this._destroyScrollIndicator();
+
+    if(this.scrollHandler) {
+      this.scrollHandler.dispose();
+    }
+
+    if(this.disposeSubscription){
+      this.disposeSubscription();
+      this.disposeSubscription = null;
+    }
+  }
+
+  itemsChanged() {
+    if (this.items === null) {
+      return;
+    }
+
+    this._destroy();
+
+    this.createScrollIndicator();
+
+    // TODO Remove this?
     this.virtualScroll.addEventListener('touchmove', function(e) { e.preventDefault(); });
 
     this.scrollHandler.initialize(this.virtualScroll,  (deltaY, useEase) => {
@@ -46,33 +97,17 @@ export class VirtualRepeat {
       return this.targetY;
     });
 
-    // TODO Fix this
-    window.onresize = () => { this.handleContainerResize(); };
-
-    // create first item to get the heights
+    // create first item to calculate the heights
     var overrideContext = createFullOverrideContext(this, this.items[0], 0, 1);
     var view = this.viewFactory.create();
     view.bind(overrideContext.bindingContext, overrideContext);
     this.viewSlot.add(view);
-  }
 
-  unbind(){
-    this.scrollHandler.dispose();
-
-    if(this.disposeSubscription){
-      this.disposeSubscription();
-      this.disposeSubscription = null;
-    }
-
-    // TODO Null out properties
-  }
-
-  attached(){
     var items = this.items,
       observer, overrideContext, view, node;
 
-    this.listItems = this.virtualScrollInner.children;
-    this.itemHeight = calcOuterHeight(this.listItems[0]);
+    let listItems = this.virtualScrollInner.children;
+    this.itemHeight = calcOuterHeight(listItems[0]);
     this.virtualScrollHeight = calcScrollHeight(this.virtualScroll);
     this.numberOfDomElements = Math.ceil(this.virtualScrollHeight / this.itemHeight) + 1;
 
@@ -123,6 +158,10 @@ export class VirtualRepeat {
   }
 
   scroll() {
+    if (this.isAttached === false) {
+      return;
+    }
+
     var scrollView = this.virtualScrollInner,
       childNodes = scrollView.childNodes,
       itemHeight = this.itemHeight,
@@ -141,8 +180,7 @@ export class VirtualRepeat {
     }
 
     this.previousY = this.currentY;
-    this.first = Math.ceil(this.currentY / itemHeight) * -1;
-    first = this.first;
+    first = this.first = Math.ceil(this.currentY / itemHeight) * -1;
 
     if(first > this.previousFirst && first + numberOfDomElements - 1 <= items.length){
       this.previousFirst = first;
@@ -156,7 +194,7 @@ export class VirtualRepeat {
 
       marginTop = itemHeight * first + "px";
       scrollView.style.marginTop = marginTop;
-    }else if (first < this.previousFirst){
+    }else if (first < this.previousFirst && !Object.is(first, -0)){
       this.previousFirst = first;
 
       view = viewSlot.children[numberOfDomElements - 1];
@@ -179,10 +217,15 @@ export class VirtualRepeat {
 
     // TODO make scroll indicator optional
     this.scrollIndicator();
+
     requestAnimationFrame(() => this.scroll());
   }
 
   scrollIndicator(){
+    if(!this.indicator) {
+      return;
+    }
+
     var scrolledPercentage, indicatorTranslateStyle;
 
     scrolledPercentage = (-this.currentY) / ((this.items.length * this.itemHeight) - this.virtualScrollHeight);
@@ -264,6 +307,11 @@ export class VirtualRepeat {
 
   _isIndexInDom(index: number) {
     let viewSlot = this.viewSlot;
+
+    if(viewSlot.children.length === 0) {
+      return false;
+    }
+
     let indexLow = viewSlot.children[0].overrideContext.$index;
     let indexHi = viewSlot.children[viewSlot.children.length - 1].overrideContext.$index;
 
@@ -321,6 +369,10 @@ export class VirtualRepeat {
   }
 
   calcIndicatorHeight(){
+    if(!this.indicator) {
+      return;
+    }
+
     this.indicatorHeight = this.virtualScrollHeight * (this.virtualScrollHeight / this.scrollViewHeight);
     if(this.indicatorHeight < this.indicatorMinHeight){
       this.indicatorHeight = this.indicatorMinHeight;
@@ -346,5 +398,12 @@ export class VirtualRepeat {
     indicator.style.width = '4px';
     indicator.style.position = 'absolute';
     indicator.style.opacity = '0.6'
+  }
+
+  _destroyScrollIndicator() {
+    if (this.virtualScroll && this.indicator) {
+      this.virtualScroll.removeChild(this.indicator);
+      this.indicator = null;
+    }        
   }
 }
