@@ -1,4 +1,4 @@
-define(['exports'], function (exports) {
+define(['exports', 'aurelia-framework'], function (exports, _aureliaFramework) {
   'use strict';
 
   exports.__esModule = true;
@@ -9,7 +9,7 @@ define(['exports'], function (exports) {
     function ScrollHandler() {
       var _this = this;
 
-      _classCallCheck(this, ScrollHandler);
+      _classCallCheck(this, _ScrollHandler);
 
       this.timeConstant = 325;
       this.firefoxMultitude = 30;
@@ -68,12 +68,14 @@ define(['exports'], function (exports) {
     };
 
     ScrollHandler.prototype.dispose = function dispose() {
-      this.view.addEventListener("wheel", this.wheelListener);
-      this.view.addEventListener("mousewheel", this.mouseWheelListener);
-      this.view.addEventListener("touchstart", this.touchStartListener);
-      this.view.addEventListener("touchmove", this.touchMoveListener);
-      this.view.addEventListener("touchend", this.touchEndListener);
-      this.view.addEventListener("keydown", this.keyDownListener);
+      if (this.view) {
+        this.view.removeEventListener("wheel", this.wheelListener);
+        this.view.removeEventListener("mousewheel", this.mouseWheelListener);
+        this.view.removeEventListener("touchstart", this.touchStartListener);
+        this.view.removeEventListener("touchmove", this.touchMoveListener);
+        this.view.removeEventListener("touchend", this.touchEndListener);
+        this.view.removeEventListener("keydown", this.keyDownListener);
+      }
     };
 
     ScrollHandler.prototype.ypos = function ypos(event) {
@@ -212,6 +214,8 @@ define(['exports'], function (exports) {
       this.offset = this.listener(delta);
     };
 
+    var _ScrollHandler = ScrollHandler;
+    ScrollHandler = _aureliaFramework.transient()(ScrollHandler) || ScrollHandler;
     return ScrollHandler;
   })();
 

@@ -4,11 +4,13 @@ exports.__esModule = true;
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
+var _aureliaFramework = require('aurelia-framework');
+
 var ScrollHandler = (function () {
   function ScrollHandler() {
     var _this = this;
 
-    _classCallCheck(this, ScrollHandler);
+    _classCallCheck(this, _ScrollHandler);
 
     this.timeConstant = 325;
     this.firefoxMultitude = 30;
@@ -67,12 +69,14 @@ var ScrollHandler = (function () {
   };
 
   ScrollHandler.prototype.dispose = function dispose() {
-    this.view.addEventListener("wheel", this.wheelListener);
-    this.view.addEventListener("mousewheel", this.mouseWheelListener);
-    this.view.addEventListener("touchstart", this.touchStartListener);
-    this.view.addEventListener("touchmove", this.touchMoveListener);
-    this.view.addEventListener("touchend", this.touchEndListener);
-    this.view.addEventListener("keydown", this.keyDownListener);
+    if (this.view) {
+      this.view.removeEventListener("wheel", this.wheelListener);
+      this.view.removeEventListener("mousewheel", this.mouseWheelListener);
+      this.view.removeEventListener("touchstart", this.touchStartListener);
+      this.view.removeEventListener("touchmove", this.touchMoveListener);
+      this.view.removeEventListener("touchend", this.touchEndListener);
+      this.view.removeEventListener("keydown", this.keyDownListener);
+    }
   };
 
   ScrollHandler.prototype.ypos = function ypos(event) {
@@ -211,6 +215,8 @@ var ScrollHandler = (function () {
     this.offset = this.listener(delta);
   };
 
+  var _ScrollHandler = ScrollHandler;
+  ScrollHandler = _aureliaFramework.transient()(ScrollHandler) || ScrollHandler;
   return ScrollHandler;
 })();
 

@@ -1,18 +1,20 @@
-System.register([], function (_export) {
+System.register(['aurelia-framework'], function (_export) {
   'use strict';
 
-  var ScrollHandler;
+  var transient, ScrollHandler;
 
   function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
   return {
-    setters: [],
+    setters: [function (_aureliaFramework) {
+      transient = _aureliaFramework.transient;
+    }],
     execute: function () {
       ScrollHandler = (function () {
         function ScrollHandler() {
           var _this = this;
 
-          _classCallCheck(this, ScrollHandler);
+          _classCallCheck(this, _ScrollHandler);
 
           this.timeConstant = 325;
           this.firefoxMultitude = 30;
@@ -71,12 +73,14 @@ System.register([], function (_export) {
         };
 
         ScrollHandler.prototype.dispose = function dispose() {
-          this.view.addEventListener("wheel", this.wheelListener);
-          this.view.addEventListener("mousewheel", this.mouseWheelListener);
-          this.view.addEventListener("touchstart", this.touchStartListener);
-          this.view.addEventListener("touchmove", this.touchMoveListener);
-          this.view.addEventListener("touchend", this.touchEndListener);
-          this.view.addEventListener("keydown", this.keyDownListener);
+          if (this.view) {
+            this.view.removeEventListener("wheel", this.wheelListener);
+            this.view.removeEventListener("mousewheel", this.mouseWheelListener);
+            this.view.removeEventListener("touchstart", this.touchStartListener);
+            this.view.removeEventListener("touchmove", this.touchMoveListener);
+            this.view.removeEventListener("touchend", this.touchEndListener);
+            this.view.removeEventListener("keydown", this.keyDownListener);
+          }
         };
 
         ScrollHandler.prototype.ypos = function ypos(event) {
@@ -215,6 +219,8 @@ System.register([], function (_export) {
           this.offset = this.listener(delta);
         };
 
+        var _ScrollHandler = ScrollHandler;
+        ScrollHandler = transient()(ScrollHandler) || ScrollHandler;
         return ScrollHandler;
       })();
 

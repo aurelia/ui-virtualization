@@ -1,0 +1,12 @@
+import {RepeatStrategyLocator} from 'aurelia-templating-resources/repeat-strategy-locator';
+import {ArrayVirtualRepeatStrategy} from './array-virtual-repeat-strategy';
+
+export class VirtualRepeatStrategyLocator extends RepeatStrategyLocator {
+  constructor() {
+    super();
+    this.matchers = [];
+    this.strategies = [];
+
+    this.addStrategy(items => items instanceof Array, new ArrayVirtualRepeatStrategy());
+  }
+}

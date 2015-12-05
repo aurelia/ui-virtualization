@@ -1,22 +1,51 @@
 import {inject} from 'aurelia-dependency-injection';
-import {ObserverLocator, calcSplices, getChangeRecords, createOverrideContext} from 'aurelia-binding';
-import {BoundViewFactory, ViewSlot, customAttribute, bindable, templateController} from 'aurelia-templating';
-import {updateOverrideContext, createFullOverrideContext, updateOverrideContexts} from 'aurelia-templating-resources/repeat-utilities';
+import {
+  ObserverLocator,
+  calcSplices,
+  getChangeRecords,
+  createOverrideContext
+} from 'aurelia-binding';
+import {
+  BoundViewFactory,
+  ViewSlot,
+  TargetInstruction,
+  customAttribute,
+  bindable,
+  templateController
+} from 'aurelia-templating';
+import {
+  updateOverrideContext,
+  createFullOverrideContext,
+  updateOverrideContexts,
+  getItemsSourceExpression,
+  isOneTime,
+  unwrapExpression
+} from 'aurelia-templating-resources/repeat-utilities';
+import {viewsRequireLifecycle} from 'aurelia-templating-resources/analyze-view-factory';
 import {ScrollHandler} from './scroll-handler';
-import {calcScrollHeight, calcOuterHeight, getNthNode, moveViewFirst, moveViewLast} from './utilities';
+import {
+  calcScrollHeight,
+  calcOuterHeight,
+  getNthNode,
+  moveViewFirst,
+  moveViewLast
+} from './utilities';
+import {VirtualRepeatStrategyLocator} from './virtual-repeat-strategy-locator';
 
 @customAttribute('virtual-repeat')
 @templateController
-@inject(Element, BoundViewFactory, ViewSlot, ObserverLocator, ScrollHandler)
+@inject(Element, BoundViewFactory, TargetInstruction, ViewSlot, ObserverLocator, ScrollHandler, VirtualRepeatStrategyLocator)
 export class VirtualRepeat {
   @bindable items
   @bindable local
-  constructor(element, viewFactory, viewSlot, observerLocator, scrollHandler){
+  constructor(element, viewFactory, instruction, viewSlot, observerLocator, scrollHandler, strategyLocator){
     this.element = element;
     this.viewFactory = viewFactory;
+    this.instruction = instruction;
     this.viewSlot = viewSlot;
     this.observerLocator = observerLocator;
     this.scrollHandler = scrollHandler;
+    this.strategyLocator = strategyLocator;
     this.local = 'item';
     this.useEase = false;
     this.targetY = 0;
@@ -26,18 +55,9 @@ export class VirtualRepeat {
     this.previousFirst = 0;
     this.numberOfDomElements = 0;
     this.indicatorMinHeight = 15;
-  }
-
-  bind(bindingContext, overrideContext){
-    this.scope = { bindingContext, overrideContext };
-
-    // TODO Fix this
-    window.onresize = () => { this.handleContainerResize(); };
-  }
-
-  unbind(){
-    this.scope = null;
-    this.items = null;
+    this.sourceExpression = getItemsSourceExpression(this.instruction, 'virtual-repeat.for');
+    this.isOneTime = isOneTime(this.sourceExpression);
+    this.viewsRequireLifecycle = viewsRequireLifecycle(viewFactory);
   }
 
   attached(){
@@ -46,48 +66,6 @@ export class VirtualRepeat {
     this.virtualScroll = this.virtualScrollInner.parentElement;
     this.virtualScroll.style.overflow = 'hidden';
     this.virtualScroll.tabIndex = '-1';
-    this.itemsChanged();
-  }
-
-  detached() {
-    this.isAttached = false;
-    this._destroy();
-    this.numberOfDomElements = null;
-    this.virtualScrollInner = null;
-    this.virtualScroll = null;
-    this.virtualScrollHeight = null;
-    this.targetY = null;
-    this.previousY = null;
-    this.itemHeight = null;
-    this.first = null;
-    this.previousFirst = null;
-  }
-
-  _destroy() {
-    this.viewSlot.removeAll(true);
-    this._destroyScrollIndicator();
-
-    if(this.scrollHandler) {
-      this.scrollHandler.dispose();
-    }
-
-    if(this.disposeSubscription){
-      this.disposeSubscription();
-      this.disposeSubscription = null;
-    }
-  }
-
-  itemsChanged() {
-    if (this.items === null) {
-      return;
-    }
-
-    this._destroy();
-
-    this.createScrollIndicator();
-
-    // TODO Remove this?
-    this.virtualScroll.addEventListener('touchmove', function(e) { e.preventDefault(); });
 
     this.scrollHandler.initialize(this.virtualScroll,  (deltaY, useEase) => {
       this.useEase = useEase;
@@ -97,43 +75,70 @@ export class VirtualRepeat {
       return this.targetY;
     });
 
-    // create first item to calculate the heights
-    var overrideContext = createFullOverrideContext(this, this.items[0], 0, 1);
-    var view = this.viewFactory.create();
-    view.bind(overrideContext.bindingContext, overrideContext);
-    this.viewSlot.add(view);
+    this.itemsChanged();
+  }
 
-    var items = this.items,
-      observer, overrideContext, view, node;
+  bind(bindingContext, overrideContext){
+    this.scope = { bindingContext, overrideContext };
 
-    let listItems = this.virtualScrollInner.children;
-    this.itemHeight = calcOuterHeight(listItems[0]);
-    this.virtualScrollHeight = calcScrollHeight(this.virtualScroll);
-    this.numberOfDomElements = Math.ceil(this.virtualScrollHeight / this.itemHeight) + 1;
+    // TODO Fix this
+    window.onresize = () => { this.handleContainerResize(); };
+  }
 
-    for(var i = 1, ii = this.numberOfDomElements; i < ii; ++i){
-      overrideContext = createFullOverrideContext(this, this.items[i], i, ii);
-      view = this.viewFactory.create();
-      view.bind(overrideContext.bindingContext, overrideContext);
-      this.viewSlot.add(view);
+  call(context, changes) {
+    this[context](this.items, changes);
+  }
+
+  detached() {
+    this.isAttached = false;
+    this._removeScrollIndicator();
+    this.virtualScrollInner = null;
+    this.virtualScroll = null;
+    this.numberOfDomElements = null;
+    this.virtualScrollHeight = null;
+    this.targetY = null;
+    this.previousY = null;
+    this.itemHeight = null;
+    this.first = null;
+    this.previousFirst = null;
+    this.viewSlot.removeAll(true);
+    if(this.scrollHandler) {
+      this.scrollHandler.dispose();
+    }
+    this._unsubscribeCollection();
+  }
+
+  itemsChanged() {
+    this._unsubscribeCollection();
+
+    // still bound?
+    if (!this.scope) {
+      return;
     }
 
-    this.calcScrollViewHeight();
-    this.calcIndicatorHeight();
+    // TODO Skip if already created and list height is same
+    this._createScrollIndicator();
 
-    observer = this.observerLocator.getArrayObserver(items);
+    let items = this.items;
+    this.strategy = this.strategyLocator.getStrategy(items);
+    this.strategy.createFirstItem(this);
+    this._calcInitialHeights();
 
-    for(i = 0, ii = this.virtualScrollInner.children.length; i < ii; ++i){
-      node  = this.virtualScrollInner.children[i];
-      // fix weird rendering behavior in Chrome on some Android devices
-      node.style['-webkit-backface-visibility'] = 'hidden';
+    if (!this.isOneTime && !this._observeInnerCollection()) {
+      this._observeCollection();
     }
 
-    this.disposeSubscription = observer.subscribe(splices => {
-      this.instanceMutated(items, splices);
-    });
+    this.strategy.instanceChanged(this, items, this.numberOfDomElements);
+    this._calcScrollViewHeight();
+    this._calcIndicatorHeight();
 
+    // TODO Call this on scrolling
     this.scroll();
+  }
+
+  unbind(){
+    this.scope = null;
+    this.items = null;
   }
 
   handleContainerResize(){
@@ -154,7 +159,7 @@ export class VirtualRepeat {
       this.numberOfDomElements = childrenLength;
     }
 
-    this.calcScrollViewHeight();
+    this._calcScrollViewHeight();
   }
 
   scroll() {
@@ -237,138 +242,50 @@ export class VirtualRepeat {
     this.indicator.style.transform = indicatorTranslateStyle;
   }
 
-  instanceMutated(array, splices) {
-    let removeDelta = 0;
-    let viewSlot = this.viewSlot;
-    let rmPromises = [];
+  handleCollectionMutated(collection, changes) {
+    this.strategy.instanceMutated(this, collection, changes);
+  }
 
-    for (let i = 0, ii = splices.length; i < ii; ++i) {
-      let splice = splices[i];
-      let removed = splice.removed;
-
-      if (this._isIndexInDom(splice.index)) {
-        for (let j = 0, jj = removed.length; j < jj; ++j) {
-          let viewOrPromise = viewSlot.removeAt(splice.index + removeDelta + rmPromises.length, true);
-
-          // TODO Create view without trigger view lifecycle
-          let length = viewSlot.children.length;
-          let overrideContext = createFullOverrideContext(this, this.items[length], length, this.items.length);
-          let view = this.viewFactory.create();
-          view.bind(overrideContext.bindingContext, overrideContext);
-          this.viewSlot.isAttached = false;
-          this.viewSlot.add(view);
-          this.viewSlot.isAttached = true;
-
-          if (viewOrPromise instanceof Promise) {
-            rmPromises.push(viewOrPromise);
-          }
-        }
-        removeDelta -= splice.addedCount;
-      }
+  handleInnerCollectionMutated(collection, changes) {
+    // guard against source expressions that have observable side-effects that could
+    // cause an infinite loop- eg a value converter that mutates the source array.
+    if (this.ignoreMutation) {
+      return;
     }
+    this.ignoreMutation = true;
+    let newItems = this.sourceExpression.evaluate(this.scope, this.lookupFunctions);
+    this.observerLocator.taskQueue.queueMicroTask(() => this.ignoreMutation = false);
 
-    if (rmPromises.length > 0) {
-      Promise.all(rmPromises).then(() => {
-        this._handleAddedSplices(array, splices);
-        this._updateViews(array, splices);
-        this._updateSizes();
-      });
+    // call itemsChanged...
+    if (newItems === this.items) {
+      // call itemsChanged directly.
+      this.itemsChanged();
     } else {
-      this._handleAddedSplices(array, splices);
-      this._updateViews(array, splices);
-      this._updateSizes();
+      // call itemsChanged indirectly by assigning the new collection value to
+      // the items property, which will trigger the self-subscriber to call itemsChanged.
+      this.items = newItems;
     }
   }
 
-  _handleAddedSplices(array, splices) {
-    let spliceIndex;
-    let spliceIndexLow;
-    let arrayLength = array.length;
-    let viewSlot = this.viewSlot;
-
-    for (let i = 0, ii = splices.length; i < ii; ++i) {
-      let splice = splices[i];
-      let addIndex = spliceIndex = splice.index;
-      let end = splice.index + splice.addedCount;
-
-      if (this._isIndexInDom(spliceIndex)) {
-        for (; addIndex < end; ++addIndex) {
-          let overrideContext = createFullOverrideContext(this, array[addIndex], addIndex, arrayLength);
-          let view = this.viewFactory.create();
-          view.bind(overrideContext.bindingContext, overrideContext);
-          this.viewSlot.insert(addIndex, view);
-
-          // TODO Remove view without trigger view lifecycle
-          viewSlot.removeAt(0, true, true);
-        }
-      }
+  _unsubscribeCollection() {
+    if (this.collectionObserver) {
+      this.collectionObserver.unsubscribe(this.callContext, this);
+      this.collectionObserver = null;
+      this.callContext = null;
     }
-  }
-
-  _isIndexInDom(index: number) {
-    let viewSlot = this.viewSlot;
-
-    if(viewSlot.children.length === 0) {
-      return false;
-    }
-
-    let indexLow = viewSlot.children[0].overrideContext.$index;
-    let indexHi = viewSlot.children[viewSlot.children.length - 1].overrideContext.$index;
-
-    return index >= indexLow && index <= indexHi;
   }
 
   _updateSizes() {
-    this.calcScrollViewHeight();
-    this.calcIndicatorHeight();
+    this._calcScrollViewHeight();
+    this._calcIndicatorHeight();
     this.scrollIndicator();
   }
 
-  _updateViews(items, splices) {
-    var numberOfDomElements = this.numberOfDomElements,
-      viewSlot = this.viewSlot,
-      first = this.first,
-      totalAdded = 0,
-      view, i, ii, j, marginTop, addIndex, splice, end, atBottom;
-    this.items = items;
-
-    for(i = 0, ii = viewSlot.children.length; i < ii; ++i){
-      view = viewSlot.children[i];
-      view.bindingContext[this.local] = items[this.first + i];
-      updateOverrideContext(view.overrideContext, this.first + i, items.length);
-    }
-
-    for(i = 0, ii = splices.length; i < ii; ++i){
-      splice = splices[0];
-      addIndex = splices[i].index;
-      end = splice.index + splice.addedCount;
-      totalAdded += splice.addedCount;
-
-      for (; addIndex < end; ++addIndex) {
-        if(addIndex < first + numberOfDomElements && !atBottom){
-          marginTop = this.itemHeight * first + "px";
-          this.virtualScrollInner.style.marginTop = marginTop;
-        }
-      }
-    }
-
-    if(items.length < numberOfDomElements){
-      var limit = numberOfDomElements - (numberOfDomElements - items.length) - 1;
-      for(j = 0; j < numberOfDomElements; ++j){
-        this.virtualScrollInner.children[j].style.display = j >= limit ? 'none' : 'block';
-      }
-    }
-
-    this.calcScrollViewHeight();
-    this.calcIndicatorHeight();
-    this.scrollIndicator();
-  }
-
-  calcScrollViewHeight(){
+  _calcScrollViewHeight(){
     this.scrollViewHeight = (this.items.length * this.itemHeight) - this.virtualScrollHeight;
   }
 
-  calcIndicatorHeight(){
+  _calcIndicatorHeight(){
     if(!this.indicator) {
       return;
     }
@@ -387,7 +304,7 @@ export class VirtualRepeat {
     this.indicator.style.height = this.indicatorHeight + 'px';
   }
 
-  createScrollIndicator(){
+  _createScrollIndicator(){
     var indicator;
     indicator = this.indicator = document.createElement('div');
     this.virtualScroll.appendChild(this.indicator);
@@ -400,10 +317,49 @@ export class VirtualRepeat {
     indicator.style.opacity = '0.6'
   }
 
-  _destroyScrollIndicator() {
+  _removeScrollIndicator() {
     if (this.virtualScroll && this.indicator) {
       this.virtualScroll.removeChild(this.indicator);
       this.indicator = null;
-    }        
+    }
+  }
+
+  _calcInitialHeights() {
+    let listItems = this.virtualScrollInner.children;
+    this.itemHeight = calcOuterHeight(listItems[0]);
+    this.virtualScrollHeight = calcScrollHeight(this.virtualScroll);
+    this.numberOfDomElements = Math.ceil(this.virtualScrollHeight / this.itemHeight) + 1;
+  }
+
+  _observeInnerCollection() {
+    let items = this._getInnerCollection();
+    let strategy = this.strategyLocator.getStrategy(items);
+    if (!strategy) {
+      return false;
+    }
+    this.collectionObserver = strategy.getCollectionObserver(this.observerLocator, items);
+    if (!this.collectionObserver) {
+      return false;
+    }
+    this.callContext = 'handleInnerCollectionMutated';
+    this.collectionObserver.subscribe(this.callContext, this);
+    return true;
+  }
+
+  _getInnerCollection() {
+    let expression = unwrapExpression(this.sourceExpression);
+    if (!expression) {
+      return null;
+    }
+    return expression.evaluate(this.scope, null);
+  }
+
+  _observeCollection() {
+    let items = this.items;
+    this.collectionObserver = this.strategy.getCollectionObserver(this.observerLocator, items);
+    if (this.collectionObserver) {
+      this.callContext = 'handleCollectionMutated';
+      this.collectionObserver.subscribe(this.callContext, this);
+    }
   }
 }

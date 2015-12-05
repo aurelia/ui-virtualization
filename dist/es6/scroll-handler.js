@@ -1,3 +1,6 @@
+import {transient} from 'aurelia-framework';
+
+@transient()
 export class ScrollHandler{
   constructor(){
     this.timeConstant = 325;
@@ -45,12 +48,14 @@ export class ScrollHandler{
   }
 
   dispose(){
-    this.view.addEventListener("wheel", this.wheelListener);
-    this.view.addEventListener("mousewheel", this.mouseWheelListener);
-    this.view.addEventListener("touchstart", this.touchStartListener);
-    this.view.addEventListener("touchmove", this.touchMoveListener);
-    this.view.addEventListener("touchend", this.touchEndListener);
-    this.view.addEventListener("keydown", this.keyDownListener);
+    if (this.view) {
+      this.view.removeEventListener("wheel", this.wheelListener);
+      this.view.removeEventListener("mousewheel", this.mouseWheelListener);
+      this.view.removeEventListener("touchstart", this.touchStartListener);
+      this.view.removeEventListener("touchmove", this.touchMoveListener);
+      this.view.removeEventListener("touchend", this.touchEndListener);
+      this.view.removeEventListener("keydown", this.keyDownListener);
+    }
   }
 
   ypos(event){
