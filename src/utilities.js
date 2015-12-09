@@ -22,10 +22,18 @@ function getStyleValue(element, style){
 }
 
 export function moveViewFirst(view, scrollView) {
+  // TODO Better support for table
+  if(scrollView.localName === 'table') {
+    scrollView = scrollView.firstElementChild;
+  }
   insertBeforeNode(view, scrollView, scrollView.childNodes[1]);
 }
 
 export function moveViewLast(view, scrollView, numberOfDomElements) {
+  // TODO Better support for table
+  if(scrollView.localName === 'table') {
+    scrollView = scrollView.firstElementChild;
+  }
   insertBeforeNode(view, scrollView, scrollView.children[numberOfDomElements]);
 }
 

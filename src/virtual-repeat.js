@@ -62,7 +62,13 @@ export class VirtualRepeat {
 
   attached(){
     this.isAttached = true;
-    this.virtualScrollInner = this.element.parentNode;
+
+    if (this.element.parentNode.localName === 'tbody') {
+      this.virtualScrollInner = this.element.parentNode.parentNode;
+    } else {
+      this.virtualScrollInner = this.element.parentNode;
+    }
+
     this.virtualScroll = this.virtualScrollInner.parentElement;
     this.virtualScroll.style.overflow = 'hidden';
     this.virtualScroll.tabIndex = '-1';
@@ -76,6 +82,7 @@ export class VirtualRepeat {
     });
 
     this.itemsChanged();
+    this.scroll();
   }
 
   bind(bindingContext, overrideContext){
@@ -131,9 +138,6 @@ export class VirtualRepeat {
     this.strategy.instanceChanged(this, items, this.numberOfDomElements);
     this._calcScrollViewHeight();
     this._calcIndicatorHeight();
-
-    // TODO Call this on scrolling
-    this.scroll();
   }
 
   unbind(){
@@ -176,6 +180,11 @@ export class VirtualRepeat {
       ease = this.useEase ? 0.1 : 1,
       element, viewStart, viewEnd, marginTop, translateStyle, view, first;
 
+    // TODO Better solution for table support - strategy?
+    if (scrollView.localName === 'table') {
+      childNodes = scrollView.childNodes.firstElementChild;
+    }
+
     this.currentY += (this.targetY - this.currentY) * ease;
     this.currentY = Math.round(this.currentY);
 
@@ -188,6 +197,11 @@ export class VirtualRepeat {
     first = this.first = Math.ceil(this.currentY / itemHeight) * -1;
 
     if(first > this.previousFirst && first + numberOfDomElements - 1 <= items.length){
+      if((first - this.previousFirst) > 1){
+        first = this.first = this.previousFirst + 1;
+        this.currentY = this.currentY + itemHeight;
+      }
+
       this.previousFirst = first;
 
       view = viewSlot.children[0];
@@ -199,7 +213,12 @@ export class VirtualRepeat {
 
       marginTop = itemHeight * first + "px";
       scrollView.style.marginTop = marginTop;
-    }else if (first < this.previousFirst && !Object.is(first, -0)){
+    }else if (first < this.previousFirst){
+      if((this.previousFirst - first) > 1){
+        first = this.first = this.previousFirst - 1;
+        this.currentY = this.currentY - itemHeight;
+      }
+
       this.previousFirst = first;
 
       view = viewSlot.children[numberOfDomElements - 1];
@@ -227,16 +246,16 @@ export class VirtualRepeat {
   }
 
   scrollIndicator(){
-    if(!this.indicator) {
+    if (!this.indicator) {
       return;
     }
 
     var scrolledPercentage, indicatorTranslateStyle;
 
-    scrolledPercentage = (-this.currentY) / ((this.items.length * this.itemHeight) - this.virtualScrollHeight);
+    scrolledPercentage = -this.currentY / (this.items.length * this.itemHeight - this.virtualScrollHeight);
     this.indicatorY = (this.virtualScrollHeight - this.indicatorHeight) * scrolledPercentage;
 
-    indicatorTranslateStyle = "translate3d(0px," + this.indicatorY  + "px,0px)";
+    indicatorTranslateStyle = "translate3d(0px," + this.indicatorY + "px,0px)";
     this.indicator.style.webkitTransform = indicatorTranslateStyle;
     this.indicator.style.msTransform = indicatorTranslateStyle;
     this.indicator.style.transform = indicatorTranslateStyle;
@@ -305,9 +324,19 @@ export class VirtualRepeat {
   }
 
   _createScrollIndicator(){
+    if(this.indicator) {
+      return;
+    }
     var indicator;
     indicator = this.indicator = document.createElement('div');
-    this.virtualScroll.appendChild(this.indicator);
+
+    // TODO Better table support - maybe strategy?
+    if (this.virtualScroll.localName === 'table') {
+      this.virtualScroll.firstElementChild.appendChild(this.indicator);
+    } else {
+      this.virtualScroll.appendChild(this.indicator);
+    }
+
     indicator.classList.add('au-scroll-indicator');
     indicator.style.backgroundColor = '#cccccc';
     indicator.style.top = '0px';
@@ -325,6 +354,9 @@ export class VirtualRepeat {
   }
 
   _calcInitialHeights() {
+    if (this.numberOfDomElements > 0) {
+      return;
+    }
     let listItems = this.virtualScrollInner.children;
     this.itemHeight = calcOuterHeight(listItems[0]);
     this.virtualScrollHeight = calcScrollHeight(this.virtualScroll);

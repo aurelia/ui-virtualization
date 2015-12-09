@@ -1,5 +1,5 @@
 import {ArrayRepeatStrategy} from 'aurelia-templating-resources/array-repeat-strategy';
-import {createFullOverrideContext, updateOverrideContexts, refreshBinding} from 'aurelia-templating-resources/repeat-utilities';
+import {createFullOverrideContext, updateOverrideContexts, updateOverrideContext, refreshBinding} from 'aurelia-templating-resources/repeat-utilities';
 
 /**
 * A strategy for repeating a template over an array.
@@ -42,6 +42,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
   _inPlaceProcessItems(repeat, items) {
     let itemsLength = items.length;
     let viewsLength = repeat.viewSlot.children.length;
+    let first = repeat.first;
     // remove unneeded views.
     while (viewsLength > repeat.numberOfDomElements) {
       viewsLength--;
@@ -55,14 +56,14 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
       let last = i === itemsLength - 1;
       let middle = i !== 0 && !last;
       // any changes to the binding context?
-      if (view.bindingContext[local] === items[i]
+      if (view.bindingContext[local] === items[i + first]
         && view.overrideContext.$middle === middle
         && view.overrideContext.$last === last) {
         // no changes. continue...
         continue;
       }
       // update the binding context and refresh the bindings.
-      view.bindingContext[local] = items[i];
+      view.bindingContext[local] = items[i + first];
       view.overrideContext.$middle = middle;
       view.overrideContext.$last = last;
       let j = view.bindings.length;
@@ -100,8 +101,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
       this._standardProcessInstanceMutated(repeat, array, splices);
       return;
     }
-    repeat._updateViews(repeat.items, splices);
-    //this._inPlaceProcessItems(repeat, array);
+    this._updateViews(repeat, repeat.items, splices);
   }
 
   _standardProcessInstanceMutated(repeat, array, splices) {
@@ -137,12 +137,12 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
     if (rmPromises.length > 0) {
       Promise.all(rmPromises).then(() => {
         this._handleAddedSplices(array, splices);
-        repeat._updateViews(array, splices);
+        repeat._updateViews(repeat, array, splices);
         repeat._updateSizes();
       });
     } else {
       this._handleAddedSplices(array, splices);
-      repeat._updateViews(array, splices);
+      this._updateViews(repeat, array, splices);
       repeat._updateSizes();
     }
   }
