@@ -31,14 +31,15 @@ import {
   moveViewLast
 } from './utilities';
 import {VirtualRepeatStrategyLocator} from './virtual-repeat-strategy-locator';
+import {DomStrategyLocator} from './dom-strategy';
 
 @customAttribute('virtual-repeat')
 @templateController
-@inject(Element, BoundViewFactory, TargetInstruction, ViewSlot, ObserverLocator, ScrollHandler, VirtualRepeatStrategyLocator)
+@inject(Element, BoundViewFactory, TargetInstruction, ViewSlot, ObserverLocator, ScrollHandler, VirtualRepeatStrategyLocator, DomStrategyLocator)
 export class VirtualRepeat {
   @bindable items
   @bindable local
-  constructor(element, viewFactory, instruction, viewSlot, observerLocator, scrollHandler, strategyLocator){
+  constructor(element, viewFactory, instruction, viewSlot, observerLocator, scrollHandler, strategyLocator, domStrategyLocator){
     this.element = element;
     this.viewFactory = viewFactory;
     this.instruction = instruction;
@@ -46,6 +47,7 @@ export class VirtualRepeat {
     this.observerLocator = observerLocator;
     this.scrollHandler = scrollHandler;
     this.strategyLocator = strategyLocator;
+    this.domStrategyLocator = domStrategyLocator;
     this.local = 'item';
     this.useEase = false;
     this.targetY = 0;
@@ -63,13 +65,12 @@ export class VirtualRepeat {
   attached(){
     this.isAttached = true;
 
-    if (this.element.parentNode.localName === 'tbody') {
-      this.virtualScrollInner = this.element.parentNode.parentNode;
-    } else {
-      this.virtualScrollInner = this.element.parentNode;
-    }
+    let element = this.element;
 
-    this.virtualScroll = this.virtualScrollInner.parentElement;
+    this.domStrategy = this.domStrategyLocator.getStrategy(element);
+    this.virtualScrollInner = this.domStrategy.getScrollElement(element);
+
+    this.virtualScroll = this.domStrategy.getWrapperElement(element);
     this.virtualScroll.style.overflow = 'hidden';
     this.virtualScroll.tabIndex = '-1';
 
@@ -172,18 +173,12 @@ export class VirtualRepeat {
     }
 
     var scrollView = this.virtualScrollInner,
-      childNodes = scrollView.childNodes,
       itemHeight = this.itemHeight,
       items = this.items,
       viewSlot = this.viewSlot,
       numberOfDomElements =  this.numberOfDomElements,
       ease = this.useEase ? 0.1 : 1,
       element, viewStart, viewEnd, marginTop, translateStyle, view, first;
-
-    // TODO Better solution for table support - strategy?
-    if (scrollView.localName === 'table') {
-      childNodes = scrollView.childNodes.firstElementChild;
-    }
 
     this.currentY += (this.targetY - this.currentY) * ease;
     this.currentY = Math.round(this.currentY);
@@ -209,7 +204,7 @@ export class VirtualRepeat {
       view.bindingContext[this.local] = items[first + numberOfDomElements - 1];
       viewSlot.children.push(viewSlot.children.shift());
 
-      moveViewLast(view, scrollView, numberOfDomElements);
+      this.domStrategy.moveViewLast(view, scrollView, numberOfDomElements);
 
       marginTop = itemHeight * first + "px";
       scrollView.style.marginTop = marginTop;
@@ -227,7 +222,7 @@ export class VirtualRepeat {
         updateOverrideContext(view.overrideContext, first, items.length);
         viewSlot.children.unshift(viewSlot.children.splice(-1,1)[0]);
 
-        moveViewFirst(view, scrollView);
+        this.domStrategy.moveViewFirst(view, scrollView);
 
         marginTop = itemHeight * first + "px";
         scrollView.style.marginTop = marginTop;
@@ -330,12 +325,7 @@ export class VirtualRepeat {
     var indicator;
     indicator = this.indicator = document.createElement('div');
 
-    // TODO Better table support - maybe strategy?
-    if (this.virtualScroll.localName === 'table') {
-      this.virtualScroll.firstElementChild.appendChild(this.indicator);
-    } else {
-      this.virtualScroll.appendChild(this.indicator);
-    }
+    this.virtualScroll.appendChild(this.indicator);
 
     indicator.classList.add('au-scroll-indicator');
     indicator.style.backgroundColor = '#cccccc';
