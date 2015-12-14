@@ -186,15 +186,15 @@ export class VirtualRepeat {
     this.previousY = this.currentY;
     first = this.first = Math.ceil(this.currentY / itemHeight) * -1;
 
-    if(this._isScrollingDown(first, this.previousFirst, items)){
-      if((first - this.previousFirst) > 1){
+    if (this._isScrollingDown(first, this.previousFirst, items)){
+      if ((first - this.previousFirst) > 1) {
         first = this.first = this.previousFirst + 1;
         this.currentY = this.currentY + itemHeight;
       }
       this.previousFirst = first;
       this._rebindAndMoveToBottom();
-    }else if (this._isScrollingUp(first, this.previousFirst)){
-      if((this.previousFirst - first) > 1){
+    } else if (this._isScrollingUp(first, this.previousFirst)){
+      if ((this.previousFirst - first) > 1) {
         first = this.first = this.previousFirst - 1;
         this.currentY = this.currentY - itemHeight;
       }
@@ -338,7 +338,7 @@ export class VirtualRepeat {
     view.bindingContext[this.local] = items[index];
     viewSlot.children.push(viewSlot.children.shift());
     this.domStrategy.moveViewLast(view, virtualScrollInner, childrenLength);
-    let marginTop = this.itemHeight * first + "px";
+    let marginTop = -this.currentY + "px";
     virtualScrollInner.style.marginTop = marginTop;
   }
 
@@ -354,7 +354,7 @@ export class VirtualRepeat {
       updateOverrideContext(view.overrideContext, first, items.length);
       viewSlot.children.unshift(viewSlot.children.splice(-1,1)[0]);
       this.domStrategy.moveViewFirst(view, virtualScrollInner);
-      let marginTop = this.itemHeight * first + "px";
+      let marginTop = -this.currentY + "px";
       virtualScrollInner.style.marginTop = marginTop;
     }
   }
