@@ -1,24 +1,74 @@
 <template>
-    <div class="contact-list">
-        <div>
-            <div virtual-repeat.for="item of objectArray" class="contact-list-item">
-                <div class="contact-item">
-                    <div class="avatar" style="background-color: ${item.color}">${item.firstLetter}</div>
-                    <div class="name">
-                        ${$index} ${item.name}
-                    </div>
-                    <div class="content">
-                        <strong>Phone:</strong> ${item.phone} <br />
-                        <strong>Country:</strong> ${item.country} <br />
-                    </div>
-                </div>
+    <div class="contact-list" if.bind="viewStrategy === 'div'">
+        <div if.bind="isVisible">
+            <div virtual-repeat.for="item of objectArray" class="contact-list-item ${item.name}">
+              <div class="contact-item">
+                  <div class="avatar" click.delegate="click()" css="background-color: ${item.color}">${item.firstLetter}</div>
+                  <div class="name">
+                      ${item.name}
+                  </div>
+                  <div class="content">
+                      <strong>Phone:</strong> ${item.phone} <br />
+                      <strong>Country:</strong> ${item.country} <br />
+                  </div>
+              </div>
             </div>
         </div>
     </div>
+
+    <div class="contact-list" if.bind="viewStrategy === 'table'">
+      <table if.bind="isVisible">
+        <tr virtual-repeat.for="item of objectArray" class="contact-list-item ${item.name}">
+          <td width="85">
+            <div class="avatar" click.delegate="click()" css="background-color: ${item.color}">${item.firstLetter}</div>
+          </td>
+          <td>
+            <div class="contact-item">
+
+              <div class="name">
+                  ${item.name}
+              </div>
+              <div class="content">
+                  <strong>Phone:</strong> ${item.phone} <br />
+                  <strong>Country:</strong> ${item.country} <br />
+              </div>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="contact-list" if.bind="viewStrategy === 'ul'">
+      <ul if.bind="isVisible">
+          <li virtual-repeat.for="item of objectArray" class="contact-list-item ${item.name}">
+            <div class="contact-item">
+                <div class="avatar" click.delegate="click()" css="background-color: ${item.color}">${item.firstLetter}</div>
+                <div class="name">
+                    ${item.name}
+                </div>
+                <div class="content">
+                    <strong>Phone:</strong> ${item.phone} <br />
+                    <strong>Country:</strong> ${item.country} <br />
+                </div>
+            </div>
+          </li>
+      </ul>
+  </div>
+
     <div class="array-actions">
-        <button class="btn btn-primary" click.delegate="addItem()">Add 1</button>
         <button class="btn btn-primary" click.delegate="addItems(1000)">Add 1000</button>
+        <button class="btn btn-primary" click.delegate="addItems(10000)">Add 10 000</button>
         <button class="btn btn-primary" click.delegate="addItemFirst()">Add 1 at top</button>
+        <button class="btn btn-primary" click.delegate="addItemLast()">Add 1 at bottom</button>
         <button class="btn btn-primary" click.delegate="removeItems(1)">Remove 1 at top</button>
+        <button class="btn btn-primary" click.delegate="removeLast()">Remove 1 at bottom</button>
+        <button class="btn btn-primary" click.delegate="toggle()">Toggle visibility</button>
+        <button class="btn btn-primary" click.delegate="swap()">Swap</button>
+
+        <br /><br />
+
+        <button class="btn ${viewStrategy === 'div' ? 'btn-danger' : ''}" click.trigger="setViewStrategy('div')">Div</button>
+        <button class="btn ${viewStrategy === 'table' ? 'btn-danger' : ''}" click.trigger="setViewStrategy('table')">Table</button>
+        <button class="btn ${viewStrategy === 'ul' ? 'btn-danger' : ''}" click.trigger="setViewStrategy('ul')">UL</button>
     </div>
 </template>
