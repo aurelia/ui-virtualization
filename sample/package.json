@@ -1,16 +1,16 @@
 {
   "jspm": {
     "dependencies": {
-      "aurelia-animator-css": "github:aurelia/animator-css@^0.17.0",
-      "aurelia-binding": "github:aurelia/binding@^0.9.1",
-      "aurelia-bootstrapper": "github:aurelia/bootstrapper@^0.18.0",
-      "aurelia-dependency-injection": "github:aurelia/dependency-injection@^0.11.2",
-      "aurelia-framework": "github:aurelia/framework@^0.16.0",
-      "aurelia-http-client": "github:aurelia/http-client@^0.11.0",
-      "aurelia-logging-console": "github:aurelia/logging-console@^0.8.0",
-      "aurelia-metadata": "github:aurelia/metadata@^0.8.0",
-      "aurelia-path": "github:aurelia/path@^0.10.0",
-      "aurelia-templating": "github:aurelia/templating@^0.16.0",
+      "aurelia-animator-css": "npm:aurelia-animator-css@^1.0.0-beta.1.0.1",
+      "aurelia-binding": "npm:aurelia-binding@^1.0.0-beta.1.0.2",
+      "aurelia-bootstrapper": "npm:aurelia-bootstrapper@^1.0.0-beta.1",
+      "aurelia-dependency-injection": "npm:aurelia-dependency-injection@^1.0.0-beta.1",
+      "aurelia-framework": "npm:aurelia-framework@^1.0.0-beta.1.0.3",
+      "aurelia-http-client": "npm:aurelia-http-client@^1.0.0-beta.1",
+      "aurelia-logging-console": "npm:aurelia-logging-console@^1.0.0-beta.1",
+      "aurelia-metadata": "npm:aurelia-metadata@^1.0.0-beta.1",
+      "aurelia-path": "npm:aurelia-path@^1.0.0-beta.1",
+      "aurelia-templating": "npm:aurelia-templating@^1.0.0-beta.1.0.1",
       "bootstrap": "github:twbs/bootstrap@^3.3.5",
       "css": "github:systemjs/plugin-css@^0.1.19",
       "font-awesome": "npm:font-awesome@^4.4.0",
@@ -21,7 +21,9 @@
     "devDependencies": {
       "babel": "npm:babel-core@^5.8.22",
       "babel-runtime": "npm:babel-runtime@^5.8.20",
-      "core-js": "npm:core-js@^1.1.0"
+      "core-js": "npm:core-js@^1.1.0",
+      "traceur": "github:jmcriffey/bower-traceur@0.0.91",
+      "traceur-runtime": "github:jmcriffey/bower-traceur-runtime@0.0.91"
     }
   },
   "devDependencies": {

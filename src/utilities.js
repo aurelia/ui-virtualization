@@ -17,7 +17,7 @@ export function calcScrollHeight(element){
 export function insertBeforeNode(view, scrollView, node) {
   let viewStart = view.firstChild;
   let element = viewStart.nextSibling;
-  let viewEnd = view.lastChild;
+  let viewEnd = view.lastChild;  
 
   scrollView.insertBefore(viewEnd, node);
   scrollView.insertBefore(element, viewEnd);

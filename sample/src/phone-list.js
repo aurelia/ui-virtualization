@@ -2,19 +2,34 @@ export class PhoneList {
 
   constructor() {
     this.objectArray = [];
-    this.numberOfItems = 20;
+    this.objectArray2 = [];
+    this.numberOfItems = 100;
     this.isSelected = false;
+    this.isVisible = true;
+    this.viewStrategy = 'div';
+  }
+
+  setViewStrategy(strategy){
+    this.viewStrategy = strategy;
+  }
+
+  toggle() {
+    this.isVisible = !this.isVisible;
+  }
+
+  click(){
+    console.log('click');
   }
 
   setIsSelected(){
     this.isSelected = true;
   }
 
-  createItem(){
+  createItem(index){
     var name = faker.name.findName();
     return {
       firstLetter: name.charAt(0),
-      name: name,
+      name: index + ' ' + name,
       color: faker.internet.color(),
       //image: faker.image.avatar(),
       //email: faker.internet.email(),
@@ -27,13 +42,23 @@ export class PhoneList {
     var name;
     for (var i = 0; i < this.numberOfItems; ++i) {
       name = faker.name.findName();
-      this.objectArray.push(this.createItem());
+      this.objectArray.push(this.createItem(i));
     }
+
+    for (var i = 0; i < this.numberOfItems; ++i) {
+      name = faker.name.findName();
+      this.objectArray2.push(this.createItem());
+    }
+  }
+
+  swap(){
+    this.objectArray = this.objectArray2;
   }
 
   addItems(count){
     for (var i = 0; i < count; ++i) {
-      this.objectArray.push(this.createItem());
+      this.objectArray.push(this.createItem(i));
+      console.log(i);
     }
 
     this.numberOfItems = this.objectArray.length;
@@ -42,10 +67,6 @@ export class PhoneList {
   addItem2(){
     var item = this.createItem();
     this.objectArray.splice(1, 0, item);
-  }
-
-  addItem(){
-    this.objectArray.push(this.createItem());
   }
 
   addItemFirst(){
@@ -58,5 +79,13 @@ export class PhoneList {
 
   unshift5(){
     this.objectArray.unshift(this.createItem(),this.createItem(),this.createItem(),this.createItem(),this.createItem());
+  }
+
+  addItemLast(){
+    this.objectArray.push(this.createItem());
+  }
+
+  removeLast() {
+    this.objectArray.pop();
   }
 }
