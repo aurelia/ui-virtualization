@@ -18,15 +18,6 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
   * @param items The new array instance.
   */
   instanceChanged(repeat, items) {
-    if (repeat.viewsRequireLifecycle) {
-      let removePromise = repeat.viewSlot.removeAll(true);
-      if (removePromise instanceof Promise) {
-        removePromise.then(() => this._standardProcessInstanceChanged(repeat, items));
-        return;
-      }
-      this._standardProcessInstanceChanged(repeat, items);
-      return;
-    }
     this._inPlaceProcessItems(repeat, items);
   }
 
@@ -93,10 +84,6 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
   * @param splices Records of array changes.
   */
   instanceMutated(repeat, array, splices) {
-    if (repeat.viewsRequireLifecycle) {
-      this._standardProcessInstanceMutated(repeat, array, splices);
-      return;
-    }
     this._updateViews(repeat, repeat.items, splices);
   }
 
