@@ -3,7 +3,7 @@
 [![ZenHub](https://raw.githubusercontent.com/ZenHubIO/support/master/zenhub-badge.png)](https://zenhub.io)
 [![Join the chat at https://gitter.im/aurelia/discuss](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/aurelia/discuss?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-This library is part of the [Aurelia](http://www.aurelia.io/) platform and contains a plugin that provides a virtualized repeater and other virtualization services. With the virtualized repeater you can have a huge array of items, but in the view only as many items that fit in the container will be rendered plus a couple above and below. When the user scrolls the repeater will simulate scroll by animating the views with CSS transform, move them around and re-bind. This results in a repeater with very good performance on large lists and on mobile devices.
+This library is part of the [Aurelia](http://www.aurelia.io/) platform and contains a plugin that provides a virtualized repeater and other virtualization services. This plugin enables "virtualization" of list through a new `virtual-repeat.for`. When used, the list "virtually" as tens or hundred of thousands of rows, but the DOM only actually has rows for what is visible. It could be only tens or of items. This allows rendering of massive lists of data with amazing performance. It works like repeat.for, it just creates a scrolling area and manages the list using UI virtualization techniques.
 
 > To keep up to date on [Aurelia](http://www.aurelia.io/), please visit and subscribe to [the official blog](http://blog.durandal.io/). If you have questions, we invite you to [join us on Gitter](https://gitter.im/aurelia/discuss). If you would like to have deeper insight into our development process, please install the [ZenHub](https://zenhub.io) Chrome Extension and visit any of our repository's boards. You can get an overview of all Aurelia work by visiting [the framework board](https://github.com/aurelia/framework#boards).
 
@@ -54,6 +54,8 @@ The container, in this case the `VirtualList` element, needs to have a defined h
 virtual-list {
   height: 500px;
   display: block;
+  overflow: scroll;
+  -webkit-overflow-scrolling: touch; /* for momentum scroll on iOS */
 }
 ```
 
@@ -68,6 +70,7 @@ virtual-list {
 * [aurelia-templating](https://github.com/aurelia/templating)
 * [aurelia-dependency-injection](https://github.com/aurelia/dependency-injection)
 * [aurelia-binding](https://github.com/aurelia/binding)
+* [aurelia-templating-resource](https://github.com/aurelia/templating-resources)
 
 ## Used By
 
