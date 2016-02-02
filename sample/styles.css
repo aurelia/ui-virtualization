@@ -58,7 +58,7 @@ section {
 
 }
 
-.contact-list {
+.contact-list, virtual-list {
   width: 100%;
   background-color: #000;
   color: #808080;
@@ -70,7 +70,8 @@ section {
   -webkit-overflow-scrolling: touch;
   overflow-y: scroll;
   overflow-x: hidden;
-  z-index: 0
+  z-index: 0;
+  display:inline-block;
 }
 
 .contact-list table {
