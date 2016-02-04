@@ -1,5 +1,5 @@
 import {ArrayRepeatStrategy} from 'aurelia-templating-resources/array-repeat-strategy';
-import {createFullOverrideContext, updateOverrideContexts, updateOverrideContext, refreshBinding} from 'aurelia-templating-resources/repeat-utilities';
+import {createFullOverrideContext, updateOverrideContexts, updateOverrideContext, updateOneTimeBinding} from 'aurelia-templating-resources/repeat-utilities';
 
 /**
 * A strategy for repeating a template over an array.
@@ -57,14 +57,14 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
       view.overrideContext.$last = last;
       let j = view.bindings.length;
       while (j--) {
-        refreshBinding(view.bindings[j]);
+        updateOneTimeBinding(view.bindings[j]);
       }
       j = view.controllers.length;
       while (j--) {
         let k = view.controllers[j].boundProperties.length;
         while (k--) {
           let binding = view.controllers[j].boundProperties[k].binding;
-          refreshBinding(binding);
+          updateOneTimeBinding(binding);
         }
       }
     }
