@@ -59,7 +59,7 @@ virtual-list {
 }
 ```
 
-## [Demo](http://martingust.github.io/virtual-list/)
+## [Demo](http://martingust.github.io/ui-virtualization/)
 
 ## Polyfills
 
