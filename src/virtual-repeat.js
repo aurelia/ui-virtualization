@@ -89,6 +89,9 @@ export class VirtualRepeat {
 
   detached() {
     this.viewStrategy.removeBufferElements(this.scrollList, this.topBuffer, this.bottomBuffer);
+    this._lastRebind = 0;
+    this._topBufferHeight = 0;
+    this._bottomBufferHeight = 0;
     this._isAttached = false;
     this.scrollList = null;
     this.scrollContainer = null;
