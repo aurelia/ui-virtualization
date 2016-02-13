@@ -78,6 +78,7 @@ export class VirtualRepeat {
 
   bind(bindingContext, overrideContext){
     this.scope = { bindingContext, overrideContext };
+    this._itemsLength = this.items.length;
 
     // TODO Fix this
     window.onresize = () => { this._handleResize(); };
@@ -112,17 +113,14 @@ export class VirtualRepeat {
 
   itemsChanged() {
     this._unsubscribeCollection();
-
     // still bound?
     if (!this.scope) {
       return;
     }
-
     let items = this.items;
     this.strategy = this.strategyLocator.getStrategy(items);
     this.strategy.createFirstItem(this);
     this._calcInitialHeights();
-
     if (!this.isOneTime && !this._observeInnerCollection()) {
       this._observeCollection();
     }
@@ -133,9 +131,11 @@ export class VirtualRepeat {
   unbind(){
     this.scope = null;
     this.items = null;
+    this._itemsLength = null;
   }
 
   handleCollectionMutated(collection, changes) {
+    this._itemsLength = collection.length;
     this.strategy.instanceMutated(this, collection, changes);
   }
 
@@ -164,7 +164,6 @@ export class VirtualRepeat {
     if (!this._isAttached) {
       return;
     }
-
     let itemHeight = this.itemHeight;
     let scrollTop = this.scrollContainer.scrollTop;
     this._first = Math.floor(scrollTop / itemHeight);
@@ -327,9 +326,10 @@ export class VirtualRepeat {
   }
 
   _calcInitialHeights() {
-    if (this._viewsLength > 0) {
+    if (this._viewsLength > 0 && this._itemsLength == this.items.length) {
       return;
     }
+    this._itemsLength = this.items.length;
     let listItems = this.scrollList.children;
     this.itemHeight = calcOuterHeight(listItems[1]);
     this.scrollContainerHeight = calcScrollHeight(this.scrollContainer);
@@ -337,6 +337,11 @@ export class VirtualRepeat {
     this._viewsLength = (this.elementsInView * 2) + this._bufferSize;
     this._bottomBufferHeight = this.itemHeight * this.items.length - this.itemHeight * this._viewsLength;
     this.bottomBuffer.setAttribute("style", `height: ${this._bottomBufferHeight}px`);
+    this._topBufferHeight = 0;
+    this.topBuffer.setAttribute("style", `height: ${this._topBufferHeight}px`);
+    // TODO This will cause scrolling back to top when swapping collection instances that have different lengths - instead should keep the scroll position
+    this.scrollContainer.scrollTop = 0;
+    this._first = 0;
   }
 
   _observeInnerCollection() {
