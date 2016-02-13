@@ -92,6 +92,7 @@ export class VirtualRepeat {
     this._lastRebind = 0;
     this._topBufferHeight = 0;
     this._bottomBufferHeight = 0;
+    this.isLastIndex = false;
     this._isAttached = false;
     this.scrollList = null;
     this.scrollContainer = null;
@@ -167,6 +168,7 @@ export class VirtualRepeat {
     this._checkScrolling();
     // TODO if and else paths do almost same thing, refactor?
     // move views down?
+
     if(this._isScrolling && this._scrollingDown && (this._hasScrolledDownTheBuffer() || (this._switchedDirection && this._hasScrolledDownTheBufferFromTop()))) {
       let viewsToMove = this._first - this._lastRebind;
       if(this._switchedDirection) {
@@ -314,7 +316,6 @@ export class VirtualRepeat {
     let children = this.viewSlot.children;
     return children[children.length - 1].overrideContext.$index;
   }
-
 
   _getIndexOfFirstView(){
     let children = this.viewSlot.children;
