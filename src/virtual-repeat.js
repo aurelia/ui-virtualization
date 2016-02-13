@@ -88,18 +88,21 @@ export class VirtualRepeat {
   }
 
   detached() {
-    this.viewStrategy.removeBufferElements(this.scrollList, this.topBuffer, this.bottomBuffer);
+    this._first = 0;
+    this._previousFirst = 0;
+    this._viewsLength = 0;
     this._lastRebind = 0;
     this._topBufferHeight = 0;
     this._bottomBufferHeight = 0;
-    this.isLastIndex = false;
+    this._scrollingDown = false;
+    this._scrollingUp = false;
+    this._switchedDirection = false;
     this._isAttached = false;
+    this.viewStrategy.removeBufferElements(this.scrollList, this.topBuffer, this.bottomBuffer);
+    this.isLastIndex = false;
     this.scrollList = null;
     this.scrollContainer = null;
-    this._viewsLength = null;
     this.scrollContainerHeight = null;
-    this._first = null;
-    this._previousFirst = null;
     this.viewSlot.removeAll(true);
     if(this.scrollHandler) {
       this.scrollHandler.dispose();
@@ -168,7 +171,6 @@ export class VirtualRepeat {
     this._checkScrolling();
     // TODO if and else paths do almost same thing, refactor?
     // move views down?
-
     if(this._isScrolling && this._scrollingDown && (this._hasScrolledDownTheBuffer() || (this._switchedDirection && this._hasScrolledDownTheBufferFromTop()))) {
       let viewsToMove = this._first - this._lastRebind;
       if(this._switchedDirection) {
@@ -255,7 +257,9 @@ export class VirtualRepeat {
   }
 
   _hasScrolledDownTheBuffer() {
-    return this._first - this._lastRebind >= this._bufferSize;
+    let atBottom = (this._first + this._viewsLength) >= this.items.length;
+    let itemsAddedWhileAtBottom = atBottom && this._first > this._lastRebind;
+    return this._first - this._lastRebind >= this._bufferSize || itemsAddedWhileAtBottom;
   }
 
   _hasScrolledDownTheBufferFromTop() {
