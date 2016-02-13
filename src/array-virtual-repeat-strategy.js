@@ -33,7 +33,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
   _inPlaceProcessItems(repeat, items) {
     let itemsLength = items.length;
     let viewsLength = repeat.viewSlot.children.length;
-    let first = repeat._first;
+    let first = repeat._getIndexOfFirstView();
     // remove unneeded views.
     while (viewsLength > repeat._viewsLength) {
       viewsLength--;
