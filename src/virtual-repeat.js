@@ -47,6 +47,7 @@ export class VirtualRepeat {
   _scrollingUp = false;
   _switchedDirection = false;
   _isAttached = false;
+  _ticking = false;
 
   @bindable items
   @bindable local
@@ -73,15 +74,16 @@ export class VirtualRepeat {
     this.topBuffer = this.viewStrategy.createTopBufferElement(this.scrollList, element);
     this.bottomBuffer = this.viewStrategy.createBottomBufferElement(this.scrollList, element);
     this.itemsChanged();
-    this._handleScroll();
-  }
+    this.scrollListener = () => this._onScroll();
+    this.scrollContainer.addEventListener('scroll', this.scrollListener);    
+  }  
 
   bind(bindingContext, overrideContext){
     this.scope = { bindingContext, overrideContext };
     this._itemsLength = this.items.length;
 
     // TODO Fix this
-    window.onresize = () => { this._handleResize(); };
+    window.onresize = () => { this._handleResize(); };    
   }
 
   call(context, changes) {
@@ -89,6 +91,7 @@ export class VirtualRepeat {
   }
 
   detached() {
+    this.scrollContainer.removeEventListener('scroll');
     this._first = 0;
     this._previousFirst = 0;
     this._viewsLength = 0;
@@ -109,6 +112,7 @@ export class VirtualRepeat {
       this.scrollHandler.dispose();
     }
     this._unsubscribeCollection();
+    
   }
 
   itemsChanged() {
@@ -159,10 +163,17 @@ export class VirtualRepeat {
       this.items = newItems;
     }
   }
+  
+  _onScroll() {
+    if(!this._ticking) {
+      requestAnimationFrame(() => this._handleScroll());
+      this._ticking = true;      
+    }
+  }
 
-  _handleScroll() {
+  _handleScroll() {        
     if (!this._isAttached) {
-      return;
+      return;      
     }
     let itemHeight = this.itemHeight;
     let scrollTop = this.scrollContainer.scrollTop;
@@ -170,7 +181,7 @@ export class VirtualRepeat {
     this._checkScrolling();
     // TODO if and else paths do almost same thing, refactor?
     // move views down?
-    if(this._isScrolling && this._scrollingDown && (this._hasScrolledDownTheBuffer() || (this._switchedDirection && this._hasScrolledDownTheBufferFromTop()))) {
+    if(this._isScrolling && this._scrollingDown && (this._hasScrolledDownTheBuffer() || (this._switchedDirection && this._hasScrolledDownTheBufferFromTop()))) {    
       let viewsToMove = this._first - this._lastRebind;
       if(this._switchedDirection) {
         viewsToMove = this.isAtTop ? this._first : this._bufferSize - (this._lastRebind - this._first);
@@ -179,6 +190,7 @@ export class VirtualRepeat {
       this._lastRebind = this._first;
       let movedViewsCount = this._moveViews(viewsToMove);
       let adjustHeight = movedViewsCount < viewsToMove ? this._bottomBufferHeight : itemHeight * movedViewsCount;
+      var test = 0
       this._switchedDirection = false;
       this._topBufferHeight = this._topBufferHeight + adjustHeight;
       this._bottomBufferHeight = this._bottomBufferHeight - adjustHeight;
@@ -209,7 +221,7 @@ export class VirtualRepeat {
     }
     this._previousFirst = this._first;
 
-    requestAnimationFrame(() => this._handleScroll());
+    this._ticking = false;
   }
 
   _handleResize() {
@@ -335,7 +347,7 @@ export class VirtualRepeat {
     this.scrollContainerHeight = calcScrollHeight(this.scrollContainer);
     this.elementsInView = Math.ceil(this.scrollContainerHeight / this.itemHeight) + 1;
     this._viewsLength = (this.elementsInView * 2) + this._bufferSize;
-    this._bottomBufferHeight = this.itemHeight * this.items.length - this.itemHeight * this._viewsLength;
+    this._bottomBufferHeight = this.itemHeight * this.items.length - this.itemHeight * this._viewsLength;    
     this.bottomBuffer.setAttribute("style", `height: ${this._bottomBufferHeight}px`);
     this._topBufferHeight = 0;
     this.topBuffer.setAttribute("style", `height: ${this._topBufferHeight}px`);
