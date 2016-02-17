@@ -91,7 +91,7 @@ export class VirtualRepeat {
   }
 
   detached() {
-    this.scrollContainer.removeEventListener('scroll');
+    this.scrollContainer.removeEventListener('scroll', this.scrollListener);
     this._first = 0;
     this._previousFirst = 0;
     this._viewsLength = 0;
@@ -102,6 +102,7 @@ export class VirtualRepeat {
     this._scrollingUp = false;
     this._switchedDirection = false;
     this._isAttached = false;
+    this._ticking = false;
     this.viewStrategy.removeBufferElements(this.scrollList, this.topBuffer, this.bottomBuffer);
     this.isLastIndex = false;
     this.scrollList = null;
@@ -112,7 +113,7 @@ export class VirtualRepeat {
       this.scrollHandler.dispose();
     }
     this._unsubscribeCollection();
-    
+        
   }
 
   itemsChanged() {
@@ -164,8 +165,8 @@ export class VirtualRepeat {
     }
   }
   
-  _onScroll() {
-    if(!this._ticking) {
+  _onScroll() { 
+    if(!this._ticking) {   
       requestAnimationFrame(() => this._handleScroll());
       this._ticking = true;      
     }
@@ -181,7 +182,7 @@ export class VirtualRepeat {
     this._checkScrolling();
     // TODO if and else paths do almost same thing, refactor?
     // move views down?
-    if(this._isScrolling && this._scrollingDown && (this._hasScrolledDownTheBuffer() || (this._switchedDirection && this._hasScrolledDownTheBufferFromTop()))) {    
+    if(this._scrollingDown && (this._hasScrolledDownTheBuffer() || (this._switchedDirection && this._hasScrolledDownTheBufferFromTop()))) { 
       let viewsToMove = this._first - this._lastRebind;
       if(this._switchedDirection) {
         viewsToMove = this.isAtTop ? this._first : this._bufferSize - (this._lastRebind - this._first);
@@ -198,7 +199,7 @@ export class VirtualRepeat {
         this._adjustBufferHeights();
       }
     // move view up?
-  } else if (this._isScrolling && this._scrollingUp && (this._hasScrolledUpTheBuffer() || (this._switchedDirection && this._hasScrolledUpTheBufferFromBottom()))) {
+  } else if (this._scrollingUp && (this._hasScrolledUpTheBuffer() || (this._switchedDirection && this._hasScrolledUpTheBufferFromBottom()))) {
       let viewsToMove = this._lastRebind - this._first;
       if(this._switchedDirection) {
           if(this.isLastIndex) {
