@@ -1,5 +1,6 @@
 import {ArrayRepeatStrategy} from 'aurelia-templating-resources/array-repeat-strategy';
-import {createFullOverrideContext, updateOverrideContexts, updateOverrideContext, updateOneTimeBinding} from 'aurelia-templating-resources/repeat-utilities';
+import {createFullOverrideContext, updateOverrideContext, refreshBinding} from 'aurelia-templating-resources/repeat-utilities';
+import {updateOverrideContexts, rebindAndMoveView} from './utilities';
 
 /**
 * A strategy for repeating a template over an array.
@@ -57,14 +58,14 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
       view.overrideContext.$last = last;
       let j = view.bindings.length;
       while (j--) {
-        updateOneTimeBinding(view.bindings[j]);
+        refreshBinding(view.bindings[j]);
       }
       j = view.controllers.length;
       while (j--) {
         let k = view.controllers[j].boundProperties.length;
         while (k--) {
           let binding = view.controllers[j].boundProperties[k].binding;
-          updateOneTimeBinding(binding);
+          refreshBinding(binding);
         }
       }
     }
@@ -83,8 +84,8 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
   * @param array The modified array.
   * @param splices Records of array changes.
   */
-  instanceMutated(repeat, array, splices) {
-    this._updateViews(repeat, repeat.items, splices);
+  instanceMutated(repeat, array, splices) {    
+    this._standardProcessInstanceMutated(repeat, array, splices);
   }
 
   _standardProcessInstanceMutated(repeat, array, splices) {
@@ -94,95 +95,105 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
 
     for (let i = 0, ii = splices.length; i < ii; ++i) {
       let splice = splices[i];
-      let removed = splice.removed;
-      let viewIndex = this._getViewIndex(repeat, viewSlot, splice.index);
-      if (viewIndex >= 0) {
-        for (let j = 0, jj = removed.length; j < jj; ++j) {
-          let viewOrPromise = viewSlot.removeAt(viewIndex + removeDelta + rmPromises.length, true);
-
-          // TODO Create view without trigger view lifecycle - or better solution
-          let length = viewSlot.children.length;
-          let overrideContext = createFullOverrideContext(repeat, repeat.items[length], length, repeat.items.length);
-          let view = repeat.viewFactory.create();
-          view.bind(overrideContext.bindingContext, overrideContext);
-          repeat.viewSlot.isAttached = false;
-          repeat.viewSlot.add(view);
-          repeat.viewSlot.isAttached = true;
-
-          if (viewOrPromise instanceof Promise) {
-            rmPromises.push(viewOrPromise);
-          }
+      let removed = splice.removed;      
+      for (let j = 0, jj = removed.length; j < jj; ++j) {     
+        let viewOrPromise = this._removeViewAt(repeat, splice.index + removeDelta + rmPromises.length, true);      
+        if (viewOrPromise instanceof Promise) {
+          rmPromises.push(viewOrPromise);
         }
-        removeDelta -= splice.addedCount;
-       }
+      }
+      removeDelta -= splice.addedCount;  
     }
 
     if (rmPromises.length > 0) {
       Promise.all(rmPromises).then(() => {
-        this._handleAddedSplices(repeat, array, splices);
-        this._updateViews(repeat, array, splices);
+        this._handleAddedSplices(repeat, array, splices); 
+        updateOverrideContexts(repeat, 0);    
       });
     } else {
       this._handleAddedSplices(repeat, array, splices);
-      this._updateViews(repeat, array, splices);
+      updateOverrideContexts(repeat, 0);
     }
   }
-
-  _updateViews(repeat, items, splices) {
-    let totalAdded = 0;
-    let totalRemoved = 0;
-    repeat.items = items;
-
-    for(let i = 0, ii = splices.length; i < ii; ++i){
-      let splice = splices[0];
-      totalAdded += splice.addedCount;
-      totalRemoved += splice.removed.length;
+  
+  _removeViewAt(repeat, collectionIndex, returnToCache){
+    let viewOrPromise;
+    let view;
+    let viewSlot = repeat.viewSlot;
+    let viewIndex = this._getViewIndex(repeat, viewSlot, collectionIndex);     
+    
+    if(viewIndex >= 0 && viewIndex <= viewSlot.children.length -1){
+      viewOrPromise = viewSlot.removeAt(viewIndex, returnToCache);
+      if(repeat.items >= viewSlot.children && repeat._bottomBufferHeight > repeat.itemHeight) {
+        // TODO: do not trigger view lifecycle here        
+        let index = repeat._getIndexOfLastView() + 1;
+        let overrideContext = createFullOverrideContext(repeat, repeat.items[index], index, repeat.items.length);
+        view = repeat.viewFactory.create();
+        view.bind(overrideContext.bindingContext, overrideContext);    
+        repeat._bottomBufferHeight = repeat._bottomBufferHeight - (repeat.itemHeight);                 
+      } else {
+        return viewOrPromise;
+      }     
+    } else if (viewIndex < 0) {
+      // this is to correctly update override context      
+      if(repeat._bottomBufferHeight > 0) {
+        repeat._bottomBufferHeight = repeat._bottomBufferHeight - (repeat.itemHeight);
+        rebindAndMoveView(repeat, viewSlot.children[0], viewSlot.children[0].overrideContext.$index, true);       
+      } else { 
+        repeat._topBufferHeight = repeat._topBufferHeight - (repeat.itemHeight);
+      }      
     }
-
-    let index = repeat._getIndexOfFirstView() - totalRemoved;
-
-    if(index < 0) {
-      index = 0;
-    }
-
-    let  viewSlot = repeat.viewSlot;
-
-    for(let i = 0, ii = viewSlot.children.length; i < ii; ++i){
-      let view = viewSlot.children[i];
-      let nextIndex = index + i;
-      let itemsLength = items.length;
-      if((nextIndex) <= itemsLength - 1) {
-        view.bindingContext[repeat.local] = items[nextIndex];
-        updateOverrideContext(view.overrideContext, nextIndex, itemsLength);
-      }
-    }
-
-    let bufferDelta = repeat.itemHeight * totalAdded + repeat.itemHeight * -totalRemoved;
-
-    if(repeat._bottomBufferHeight + bufferDelta < 0) {
-      repeat._topBufferHeight = repeat._topBufferHeight + bufferDelta;
+    
+    if (viewOrPromise instanceof Promise) {
+      viewOrPromise.then(() => {
+        repeat.viewSlot.add(view);
+        this._adjustBufferHeight(repeat); 
+      });           
+      return;      
+    } else if(view) {         
+      repeat.viewSlot.add(view);         
+    } 
+    
+    this._adjustBufferHeight(repeat);       
+  }
+  
+  _adjustBufferHeight(repeat) {
+    /*if(repeat._bottomBufferHeight > 0) {      
+      repeat._bottomBufferHeight = repeat._bottomBufferHeight - repeat.itemHeight;
     } else {
-      repeat._bottomBufferHeight = repeat._bottomBufferHeight + bufferDelta;
-    }
-
-    if(repeat._bottomBufferHeight > 0) {
-      repeat.isLastIndex = false;
-    }
-
-    repeat._adjustBufferHeights();
+      repeat._topBufferHeight = repeat._topBufferHeight - repeat.itemHeight;
+    }  */
+    
+    repeat._adjustBufferHeights(); 
   }
+    
+  _getViewIndex(repeat, viewSlot, index) {
+    if(viewSlot.children.length === 0) {
+      return -1;
+    }
+    let indexLow = viewSlot.children[0].overrideContext.$index;
+    let viewIndex = index - indexLow;
+    if(viewIndex > repeat._viewsLength - 1 || viewIndex < 0) {
+      viewIndex = -1;
+    }
+    return viewIndex;
+  }
+  
+  _isIndexInDom(viewSlot, index) {
+    if(viewSlot.children.length === 0) {
+      return false;
+    }
+    let indexLow = viewSlot.children[0].overrideContext.$index;
+    let indexHi = viewSlot.children[viewSlot.children.length - 1].overrideContext.$index;
+    return index >= indexLow && index <= indexHi;
+  }  
 
-  _handleAddedSplices(repeat, array, splices) {
-    let spliceIndexLow;
+  _handleAddedSplices(repeat, array, splices) {   
     let arrayLength = array.length;
     for (let i = 0, ii = splices.length; i < ii; ++i) {
       let splice = splices[i];
       let addIndex = splice.index;
       let end = splice.index + splice.addedCount;
-
-      if (typeof spliceIndexLow === 'undefined' || spliceIndexLow === null || spliceIndexLow > splice.index) {
-        spliceIndexLow = addIndex;
-      }
 
       for (; addIndex < end; ++addIndex) {
         let overrideContext = createFullOverrideContext(repeat, array[addIndex], addIndex, arrayLength);
@@ -191,30 +202,5 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
         repeat.viewSlot.insert(addIndex, view);
       }
     }
-
-    return spliceIndexLow;
-  }
-
-  _isIndexInDom(viewSlot, index) {
-    if(viewSlot.children.length === 0) {
-      return false;
-    }
-
-    let indexLow = viewSlot.children[0].overrideContext.$index;
-    let indexHi = viewSlot.children[viewSlot.children.length - 1].overrideContext.$index;
-
-    return index >= indexLow && index <= indexHi;
-  }
-
-  _getViewIndex(repeat, viewSlot, index) {
-    if(viewSlot.children.length === 0) {
-      return -1;
-    }
-    let indexLow = viewSlot.children[0].overrideContext.$index;
-    let viewIndex = index - indexLow;
-    if(viewIndex > repeat._viewsLength - 1) {
-      viewIndex = -1;
-    }
-    return viewIndex;
-  }
+  } 
 }
