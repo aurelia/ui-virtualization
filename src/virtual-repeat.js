@@ -92,6 +92,9 @@ export class VirtualRepeat {
   }
 
   detached() {
+    // TODO Fix this
+    window.onresize = null;
+
     this.scrollContainer.removeEventListener('scroll', this.scrollListener);
     this._first = 0;
     this._previousFirst = 0;
