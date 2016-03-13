@@ -141,8 +141,8 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
         let data = repeat.items[collectionAddIndex];
         if(data) {
           let overrideContext = createFullOverrideContext(repeat, repeat.items[collectionAddIndex], collectionAddIndex, repeat.items.length);
-        view = repeat.viewFactory.create();
-        view.bind(overrideContext.bindingContext, overrideContext);
+          view = repeat.viewFactory.create();
+          view.bind(overrideContext.bindingContext, overrideContext);
         }                                       
       } else {
         return viewOrPromise;
@@ -192,17 +192,33 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
 
   _handleAddedSplices(repeat, array, splices) {   
     let arrayLength = array.length;
+    let viewSlot = repeat.viewSlot;
     for (let i = 0, ii = splices.length; i < ii; ++i) {
       let splice = splices[i];
       let addIndex = splice.index;
       let end = splice.index + splice.addedCount;
 
       for (; addIndex < end; ++addIndex) {
-        let overrideContext = createFullOverrideContext(repeat, array[addIndex], addIndex, arrayLength);
-        let view = repeat.viewFactory.create();
-        view.bind(overrideContext.bindingContext, overrideContext);
-        repeat.viewSlot.insert(addIndex, view);
+        if(!this._isIndexBeforeViewSlot(repeat, viewSlot, addIndex) && !this._isIndexAfterViewSlot(repeat, viewSlot, addIndex)){
+          let viewIndex = this._getViewIndex(repeat, viewSlot, addIndex);
+          let overrideContext = createFullOverrideContext(repeat, array[addIndex], addIndex, arrayLength);
+          let view = repeat.viewFactory.create();
+          view.bind(overrideContext.bindingContext, overrideContext);
+          repeat.viewSlot.insert(addIndex, view);          
+          repeat.viewSlot.removeAt(repeat.viewSlot.children.length - 1, true, true); 
+          repeat._bottomBufferHeight = repeat._bottomBufferHeight + repeat.itemHeight;             
+        } else if(this._isIndexBeforeViewSlot(repeat, viewSlot, addIndex)) {
+          repeat._topBufferHeight = repeat._topBufferHeight + repeat.itemHeight;          
+        } else if(this._isIndexAfterViewSlot(repeat, viewSlot, addIndex)) {  
+          repeat._bottomBufferHeight = repeat._bottomBufferHeight + repeat.itemHeight;
+          repeat.isLastIndex = false;
+          console.log(repeat.first, repeat._lastRebind);
+          if(repeat._lastRebind > repeat.elementsInView){
+            repeat._lastRebind--;  
+          }          
+        }
       }
     }
+    repeat._adjustBufferHeights();
   } 
 }
