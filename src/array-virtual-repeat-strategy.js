@@ -204,15 +204,16 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
           let overrideContext = createFullOverrideContext(repeat, array[addIndex], addIndex, arrayLength);
           let view = repeat.viewFactory.create();
           view.bind(overrideContext.bindingContext, overrideContext);
-          repeat.viewSlot.insert(addIndex, view);          
-          repeat.viewSlot.removeAt(repeat.viewSlot.children.length - 1, true, true); 
-          repeat._bottomBufferHeight = repeat._bottomBufferHeight + repeat.itemHeight;             
+          repeat.viewSlot.insert(addIndex, view);
+          if(repeat.viewSlot.children.length > repeat._viewsLength) {
+            repeat.viewSlot.removeAt(repeat.viewSlot.children.length - 1, true, true); 
+            repeat._bottomBufferHeight = repeat._bottomBufferHeight + repeat.itemHeight;
+          }                          
         } else if(this._isIndexBeforeViewSlot(repeat, viewSlot, addIndex)) {
           repeat._topBufferHeight = repeat._topBufferHeight + repeat.itemHeight;          
-        } else if(this._isIndexAfterViewSlot(repeat, viewSlot, addIndex)) {  
+        } else if(this._isIndexAfterViewSlot(repeat, viewSlot, addIndex)) {
           repeat._bottomBufferHeight = repeat._bottomBufferHeight + repeat.itemHeight;
           repeat.isLastIndex = false;
-          console.log(repeat.first, repeat._lastRebind);
           if(repeat._lastRebind > repeat.elementsInView){
             repeat._lastRebind--;  
           }          
