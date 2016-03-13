@@ -3,10 +3,10 @@ export class PhoneList {
   constructor() {
     this.objectArray = [];
     this.objectArray2 = [];
-    this.numberOfItems = 100;
+    this.numberOfItems = 30;
     this.isSelected = false;
     this.isVisible = true;
-    this.viewStrategy = 'div_';
+    this.viewStrategy = 'div';
   }
 
   setViewStrategy(strategy){
@@ -14,7 +14,7 @@ export class PhoneList {
   }
 
   toggle() {
-    this.isVisible = !this.isVisible;
+    this.isVisible = !this.isVisible;	   
   }
 
   click(){
@@ -29,7 +29,7 @@ export class PhoneList {
     var name = faker.name.findName();
     return {
       firstLetter: name.charAt(0),
-      name: index + ' ' + name,
+      name: name,
       color: faker.internet.color(),
       //image: faker.image.avatar(),
       //email: faker.internet.email(),
@@ -49,6 +49,7 @@ export class PhoneList {
       name = faker.name.findName();
       this.objectArray2.push(this.createItem());
     }
+    console.log('activate done');
   }
 
   swap(){
