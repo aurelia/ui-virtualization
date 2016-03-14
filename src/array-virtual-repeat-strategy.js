@@ -1,5 +1,5 @@
 import {ArrayRepeatStrategy} from 'aurelia-templating-resources/array-repeat-strategy';
-import {createFullOverrideContext, updateOverrideContext, refreshBinding} from 'aurelia-templating-resources/repeat-utilities';
+import {createFullOverrideContext, updateOverrideContext, updateOneTimeBinding} from 'aurelia-templating-resources/repeat-utilities';
 import {updateOverrideContexts, rebindAndMoveView} from './utilities';
 
 /**
@@ -58,14 +58,14 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
       view.overrideContext.$last = last;
       let j = view.bindings.length;
       while (j--) {
-        refreshBinding(view.bindings[j]);
+        updateOneTimeBinding(view.bindings[j]);
       }
       j = view.controllers.length;
       while (j--) {
         let k = view.controllers[j].boundProperties.length;
         while (k--) {
           let binding = view.controllers[j].boundProperties[k].binding;
-          refreshBinding(binding);
+          updateOneTimeBinding(binding);
         }
       }
     }
@@ -87,8 +87,37 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
   instanceMutated(repeat, array, splices) {    
     this._standardProcessInstanceMutated(repeat, array, splices);
   }
-
+  
   _standardProcessInstanceMutated(repeat, array, splices) {
+    if (repeat.__queuedSplices) {
+      for (let i = 0, ii = splices.length; i < ii; ++i) {
+        let {index, removed, addedCount} = splices[i];
+        mergeSplice(repeat.__queuedSplices, index, removed, addedCount);
+      }
+      repeat.__array = array.slice(0);
+      return;
+    }
+
+    let maybePromise = this._runSplices(repeat, array.slice(0), splices);
+    if (maybePromise instanceof Promise) {
+      let queuedSplices = repeat.__queuedSplices = [];
+
+      let runQueuedSplices = () => {
+        if (! queuedSplices.length) {
+          delete repeat.__queuedSplices;
+          delete repeat.__array;
+          return;
+        }
+
+        let nextPromise = this._runSplices(repeat, repeat.__array, queuedSplices) || Promise.resolve();
+        nextPromise.then(runQueuedSplices);
+      };
+
+      maybePromise.then(runQueuedSplices);
+    }
+  }
+
+  _runSplices(repeat, array, splices) {
     let removeDelta = 0;
     let viewSlot = repeat.viewSlot;
     let rmPromises = [];
@@ -106,7 +135,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
     }
 
     if (rmPromises.length > 0) {
-      Promise.all(rmPromises).then(() => {
+      return Promise.all(rmPromises).then(() => {
         this._handleAddedSplices(repeat, array, splices); 
         updateOverrideContexts(repeat, 0);    
       });
