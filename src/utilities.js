@@ -8,14 +8,6 @@ export function calcOuterHeight(element){
   return height;
 }
 
-export function calcScrollHeight(element){
-  var height;
-  height = element.getBoundingClientRect().height;
-  height -= getStyleValue(element, 'borderTopWidth');
-  height -= getStyleValue(element, 'borderBottomWidth');
-  return height;
-}
-
 export function insertBeforeNode(view, scrollView, node) {
   let viewStart = view.firstChild;
   let element = viewStart.nextSibling;
@@ -60,7 +52,7 @@ export function rebindAndMoveView(repeat: VirtualRepeat, view: View, index: numb
   }
 }
 
-function getStyleValue(element, style){
+export function getStyleValue(element, style){
   var currentStyle, styleValue;
   currentStyle = element.currentStyle || window.getComputedStyle(element);
   styleValue = parseInt(currentStyle[style]);

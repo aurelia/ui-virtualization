@@ -23,7 +23,7 @@ import {
 } from 'aurelia-templating-resources/repeat-utilities';
 import {viewsRequireLifecycle} from 'aurelia-templating-resources/analyze-view-factory';
 import {
-  calcScrollHeight,
+  getStyleValue,
   calcOuterHeight,
   getNthNode,
   moveViewFirst,
@@ -49,6 +49,7 @@ export class VirtualRepeat {
   _switchedDirection = false;
   _isAttached = false;
   _ticking = false;
+  _fixedHeightContainer = false;
 
   @bindable items
   @bindable local
@@ -76,7 +77,13 @@ export class VirtualRepeat {
     this.bottomBuffer = this.viewStrategy.createBottomBufferElement(this.scrollList, element);
     this.itemsChanged();
     this.scrollListener = () => this._onScroll();
-    this.scrollContainer.addEventListener('scroll', this.scrollListener);    
+    let containerStyle = this.scrollContainer.style;    
+    if (containerStyle.overflowY === 'scroll' || containerStyle.overflow === 'scroll' || containerStyle.overflowY === 'auto' || containerStyle.overflow === 'auto'){
+      this._fixedHeightContainer = true;
+      this.scrollContainer.addEventListener('scroll', this.scrollListener);
+    } else {
+      document.addEventListener('scroll', this.scrollListener);
+    }   
   }  
 
   bind(bindingContext, overrideContext){
@@ -186,8 +193,9 @@ export class VirtualRepeat {
       return;      
     }
     let itemHeight = this.itemHeight;
-    let scrollTop = this.scrollContainer.scrollTop;
+    let scrollTop = this._fixedHeightContainer ? this.scrollContainer.scrollTop : pageYOffset - this.scrollContainer.offsetTop;
     this._first = Math.floor(scrollTop / itemHeight);
+    this._first = this._first < 0 ? 0 : this._first;
     this._checkScrolling();
     // TODO if and else paths do almost same thing, refactor?
     // move views down?
@@ -207,7 +215,7 @@ export class VirtualRepeat {
         this._adjustBufferHeights();
       }
     // move view up?
-  } else if (this._scrollingUp && (this._hasScrolledUpTheBuffer() || (this._switchedDirection && this._hasScrolledUpTheBufferFromBottom()))) {      
+    } else if (this._scrollingUp && (this._hasScrolledUpTheBuffer() || this._switchedDirection)) {
       let viewsToMove = this._lastRebind - this._first;
       if(this._switchedDirection) {
           if(this.isLastIndex) {
@@ -288,11 +296,7 @@ export class VirtualRepeat {
 
   _hasScrolledUpTheBuffer() {
     return this._lastRebind - this._first >= this._bufferSize;
-  }
-
-  _hasScrolledUpTheBufferFromBottom() {
-    return this._first + this._bufferSize < this.items.length;
-  }
+  } 
 
   _adjustBufferHeights() {
     this.topBuffer.setAttribute('style', `height:  ${this._topBufferHeight}px`);
@@ -345,7 +349,7 @@ export class VirtualRepeat {
     this._itemsLength = this.items.length;
     let listItems = this.scrollList.children;
     this.itemHeight = calcOuterHeight(listItems[1]);
-    this.scrollContainerHeight = calcScrollHeight(this.scrollContainer);
+    this.scrollContainerHeight = this._fixedHeightContainer ? this._calcScrollHeight(this.scrollContainer) : document.documentElement.clientHeight - this.scrollContainer.offsetTop;
     this.elementsInView = Math.ceil(this.scrollContainerHeight / this.itemHeight) + 1;
     this._viewsLength = (this.elementsInView * 2) + this._bufferSize;
     this._bottomBufferHeight = this.itemHeight * this.items.length - this.itemHeight * this._viewsLength;    
@@ -356,6 +360,14 @@ export class VirtualRepeat {
     this.scrollContainer.scrollTop = 0;
     this._first = 0;
   }
+  
+  _calcScrollHeight(element){
+    var height;
+    height = element.getBoundingClientRect().height;
+    height -= getStyleValue(element, 'borderTopWidth');
+    height -= getStyleValue(element, 'borderBottomWidth');
+    return height;
+}
 
   _observeInnerCollection() {
     let items = this._getInnerCollection();
