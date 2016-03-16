@@ -68,24 +68,24 @@ export class DefaultStrategy {
     insertBeforeNode(view, bottomBuffer);
   }
 
-  createTopBufferElement(scrollList, element) {
-    let elementName = scrollList.localName === 'ul' ? 'li' : 'div';
+  createTopBufferElement(element) {
+    let elementName = element.parentElement.localName === 'ul' ? 'li' : 'div';
     let buffer = document.createElement(elementName);
     buffer.setAttribute("style","height: 0px");
-    scrollList.insertBefore(buffer, element);
+    element.parentElement.insertBefore(buffer, element);
     return buffer;
   }
 
-  createBottomBufferElement(scrollList, element) {
-    let elementName = scrollList.localName === 'ul' ? 'li' : 'div';
+  createBottomBufferElement(element) {
+    let elementName = element.parentElement.localName === 'ul' ? 'li' : 'div';
     let buffer = document.createElement(elementName);
     buffer.setAttribute("style","height: 0px");
     element.parentNode.insertBefore(buffer, element.nextSibling);
     return buffer;
   }
 
-  removeBufferElements(scrollList, topBuffer, bottomBuffer) {
-    scrollList.removeChild(topBuffer);
-    scrollList.removeChild(bottomBuffer);
+  removeBufferElements(element, topBuffer, bottomBuffer) {
+    element.removeChild(topBuffer);
+    element.removeChild(bottomBuffer);
   }
 }

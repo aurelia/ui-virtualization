@@ -71,10 +71,9 @@ export class VirtualRepeat {
     this._isAttached = true;
     let element = this.element;
     this.viewStrategy = this.viewStrategyLocator.getStrategy(element);
-    this.scrollList = this.viewStrategy.getScrollList(element);
     this.scrollContainer = this.viewStrategy.getScrollContainer(element);
-    this.topBuffer = this.viewStrategy.createTopBufferElement(this.scrollList, element);
-    this.bottomBuffer = this.viewStrategy.createBottomBufferElement(this.scrollList, element);
+    this.topBuffer = this.viewStrategy.createTopBufferElement(element);
+    this.bottomBuffer = this.viewStrategy.createBottomBufferElement(element);
     this.itemsChanged();
     this.scrollListener = () => this._onScroll();
     let containerStyle = this.scrollContainer.style;    
@@ -114,9 +113,8 @@ export class VirtualRepeat {
     this._switchedDirection = false;
     this._isAttached = false;
     this._ticking = false;
-    this.viewStrategy.removeBufferElements(this.scrollList, this.topBuffer, this.bottomBuffer);
+    this.viewStrategy.removeBufferElements(this.element, this.topBuffer, this.bottomBuffer);
     this.isLastIndex = false;
-    this.scrollList = null;
     this.scrollContainer = null;
     this.scrollContainerHeight = null;
     this.viewSlot.removeAll(true);
@@ -124,7 +122,6 @@ export class VirtualRepeat {
       this.scrollHandler.dispose();
     }
     this._unsubscribeCollection();
-        
   }
 
   itemsChanged() {
@@ -322,7 +319,6 @@ export class VirtualRepeat {
     let childrenLength = viewSlot.children.length;
     let viewIndex = this._scrollingDown ? 0 : childrenLength - 1;
     let items = this.items;
-    let scrollList = this.scrollList;
     let index = this._scrollingDown ? this._getIndexOfLastView() + 1 : this._getIndexOfFirstView() - 1;
     let i = 0;
     while(i < length && !isAtFirstOrLastIndex()) {
@@ -351,9 +347,13 @@ export class VirtualRepeat {
       return;
     }
     this._itemsLength = this.items.length;
-    let listItems = this.scrollList.children;
-    this.itemHeight = calcOuterHeight(listItems[1]);
+    let firstViewElement = this.viewSlot.children[0].firstChild.nextElementSibling;
+    this.itemHeight = calcOuterHeight(firstViewElement);
+    if(this.itemHeight <= 0) {
+      throw new Error('Could not calculate item height');
+    }
     this.scrollContainerHeight = this._fixedHeightContainer ? this._calcScrollHeight(this.scrollContainer) : document.documentElement.clientHeight - this.topBuffer.offsetTop;
+    
     this.elementsInView = Math.ceil(this.scrollContainerHeight / this.itemHeight) + 1;
     this._viewsLength = (this.elementsInView * 2) + this._bufferSize;
     this._bottomBufferHeight = this.itemHeight * this.items.length - this.itemHeight * this._viewsLength;    
