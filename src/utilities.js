@@ -8,14 +8,15 @@ export function calcOuterHeight(element){
   return height;
 }
 
-export function insertBeforeNode(view, scrollView, node) {
+export function insertBeforeNode(view, bottomBuffer) {
   let viewStart = view.firstChild;
   let element = viewStart.nextSibling;
   let viewEnd = view.lastChild;  
+  let parentElement = bottomBuffer.parentElement;
 
-  scrollView.insertBefore(viewEnd, node);
-  scrollView.insertBefore(element, viewEnd);
-  scrollView.insertBefore(viewStart, element);
+  parentElement.insertBefore(viewEnd, bottomBuffer);
+  parentElement.insertBefore(element, viewEnd);
+  parentElement.insertBefore(viewStart, element);
 }
 
 /**
@@ -45,10 +46,10 @@ export function rebindAndMoveView(repeat: VirtualRepeat, view: View, index: numb
   view.bindingContext[repeat.local] = items[index];
   if(moveToBottom) {
     viewSlot.children.push(viewSlot.children.shift());
-    repeat.viewStrategy.moveViewLast(view, repeat.scrollList, viewSlot.children.length);    
+    repeat.viewStrategy.moveViewLast(view, repeat.bottomBuffer);    
   } else {
     viewSlot.children.unshift(viewSlot.children.splice(-1,1)[0]);
-    repeat.viewStrategy.moveViewFirst(view, repeat.scrollList);
+    repeat.viewStrategy.moveViewFirst(view, repeat.topBuffer);
   }
 }
 

@@ -193,7 +193,7 @@ export class VirtualRepeat {
       return;      
     }
     let itemHeight = this.itemHeight;
-    let scrollTop = this._fixedHeightContainer ? this.scrollContainer.scrollTop : pageYOffset - this.scrollContainer.offsetTop;
+    let scrollTop = this._fixedHeightContainer ? this.topBuffer.scrollTop : pageYOffset - this.scrollContainer.offsetTop;
     this._first = Math.floor(scrollTop / itemHeight);
     this._first = this._first < 0 ? 0 : this._first;
     this._checkScrolling();
@@ -215,7 +215,7 @@ export class VirtualRepeat {
         this._adjustBufferHeights();
       }
     // move view up?
-    } else if (this._scrollingUp && (this._hasScrolledUpTheBuffer() || this._switchedDirection)) {
+    } else if (this._scrollingUp && (this._hasScrolledUpTheBuffer() || (this._switchedDirection && this._hasScrolledUpTheBufferFromBottom()))) { 
       let viewsToMove = this._lastRebind - this._first;
       if(this._switchedDirection) {
           if(this.isLastIndex) {
@@ -297,6 +297,10 @@ export class VirtualRepeat {
   _hasScrolledUpTheBuffer() {
     return this._lastRebind - this._first >= this._bufferSize;
   } 
+  
+  _hasScrolledUpTheBufferFromBottom() {
+    return this._first + this._bufferSize < this.items.length;
+  }
 
   _adjustBufferHeights() {
     this.topBuffer.setAttribute('style', `height:  ${this._topBufferHeight}px`);
@@ -349,7 +353,7 @@ export class VirtualRepeat {
     this._itemsLength = this.items.length;
     let listItems = this.scrollList.children;
     this.itemHeight = calcOuterHeight(listItems[1]);
-    this.scrollContainerHeight = this._fixedHeightContainer ? this._calcScrollHeight(this.scrollContainer) : document.documentElement.clientHeight - this.scrollContainer.offsetTop;
+    this.scrollContainerHeight = this._fixedHeightContainer ? this._calcScrollHeight(this.scrollContainer) : document.documentElement.clientHeight - this.topBuffer.offsetTop;
     this.elementsInView = Math.ceil(this.scrollContainerHeight / this.itemHeight) + 1;
     this._viewsLength = (this.elementsInView * 2) + this._bufferSize;
     this._bottomBufferHeight = this.itemHeight * this.items.length - this.itemHeight * this._viewsLength;    
@@ -367,7 +371,7 @@ export class VirtualRepeat {
     height -= getStyleValue(element, 'borderTopWidth');
     height -= getStyleValue(element, 'borderBottomWidth');
     return height;
-}
+  }
 
   _observeInnerCollection() {
     let items = this._getInnerCollection();

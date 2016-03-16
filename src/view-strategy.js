@@ -60,12 +60,12 @@ export class DefaultStrategy {
     return this.getScrollList(element).parentElement;
   }
 
-  moveViewFirst(view, scrollElement) {
-    insertBeforeNode(view, scrollElement, scrollElement.childNodes[2]);
+  moveViewFirst(view, topBuffer) {
+    insertBeforeNode(view, topBuffer.nextElementSibling.previousSibling);
   }
 
-  moveViewLast(view, scrollElement, childrenLength) {
-    insertBeforeNode(view, scrollElement, scrollElement.children[childrenLength + 1]);
+  moveViewLast(view, bottomBuffer) {
+    insertBeforeNode(view, bottomBuffer);
   }
 
   createTopBufferElement(scrollList, element) {
