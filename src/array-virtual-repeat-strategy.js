@@ -1,6 +1,6 @@
 import {ArrayRepeatStrategy} from 'aurelia-templating-resources/array-repeat-strategy';
 import {createFullOverrideContext, updateOverrideContext, updateOneTimeBinding} from 'aurelia-templating-resources/repeat-utilities';
-import {updateOverrideContexts, rebindAndMoveView} from './utilities';
+import {updateVirtualOverrideContexts, rebindAndMoveView} from './utilities';
 
 /**
 * A strategy for repeating a template over an array.
@@ -137,11 +137,11 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
     if (rmPromises.length > 0) {
       return Promise.all(rmPromises).then(() => {
         this._handleAddedSplices(repeat, array, splices); 
-        updateOverrideContexts(repeat, 0);    
+        updateVirtualOverrideContexts(repeat, 0);    
       });
     } else {
       this._handleAddedSplices(repeat, array, splices);
-      updateOverrideContexts(repeat, 0);
+      updateVirtualOverrideContexts(repeat, 0);
     }
   }
   
