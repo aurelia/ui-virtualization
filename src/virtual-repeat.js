@@ -190,7 +190,7 @@ export class VirtualRepeat {
       return;      
     }
     let itemHeight = this.itemHeight;
-    let scrollTop = this._fixedHeightContainer ? this.topBuffer.scrollTop : pageYOffset - this.scrollContainer.offsetTop;
+    let scrollTop = this._fixedHeightContainer ? this.topBuffer.scrollTop : pageYOffset - this.topBuffer.offsetTop;
     this._first = Math.floor(scrollTop / itemHeight);
     this._first = this._first < 0 ? 0 : this._first;
     this._checkScrolling();
@@ -212,7 +212,7 @@ export class VirtualRepeat {
         this._adjustBufferHeights();
       }
     // move view up?
-    } else if (this._scrollingUp && (this._hasScrolledUpTheBuffer() || (this._switchedDirection && this._hasScrolledUpTheBufferFromBottom()))) { 
+    } else if (this._scrollingUp && (this._hasScrolledUpTheBuffer() || (this._switchedDirection && this._hasScrolledUpTheBufferFromBottom()))) {   
       let viewsToMove = this._lastRebind - this._first;
       if(this._switchedDirection) {
           if(this.isLastIndex) {
@@ -352,8 +352,7 @@ export class VirtualRepeat {
     if(this.itemHeight <= 0) {
       throw new Error('Could not calculate item height');
     }
-    this.scrollContainerHeight = this._fixedHeightContainer ? this._calcScrollHeight(this.scrollContainer) : document.documentElement.clientHeight - this.topBuffer.offsetTop;
-    
+    this.scrollContainerHeight = this._fixedHeightContainer ? this._calcScrollHeight(this.scrollContainer) : document.documentElement.clientHeight;    
     this.elementsInView = Math.ceil(this.scrollContainerHeight / this.itemHeight) + 1;
     this._viewsLength = (this.elementsInView * 2) + this._bufferSize;
     this._bottomBufferHeight = this.itemHeight * this.items.length - this.itemHeight * this._viewsLength;    
