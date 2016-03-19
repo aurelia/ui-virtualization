@@ -23,7 +23,7 @@ export function insertBeforeNode(view, bottomBuffer) {
 * Update the override context.
 * @param startIndex index in collection where to start updating.
 */
-export function updateOverrideContexts(repeat, startIndex) {  
+export function updateVirtualOverrideContexts(repeat, startIndex) {  
   let views = repeat.viewSlot.children;
   let viewLength = views.length;
   let collectionLength = repeat.items.length;
