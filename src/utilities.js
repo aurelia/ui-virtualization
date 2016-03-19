@@ -1,7 +1,7 @@
 import {updateOverrideContext} from 'aurelia-templating-resources/repeat-utilities';
 
-export function calcOuterHeight(element){
-  var height;
+export function calcOuterHeight(element) {
+  let height;
   height = element.getBoundingClientRect().height;
   height += getStyleValue(element, 'marginTop');
   height += getStyleValue(element, 'marginBottom');
@@ -11,7 +11,7 @@ export function calcOuterHeight(element){
 export function insertBeforeNode(view, bottomBuffer) {
   let viewStart = view.firstChild;
   let element = viewStart.nextSibling;
-  let viewEnd = view.lastChild;  
+  let viewEnd = view.lastChild;
   let parentElement = bottomBuffer.parentElement;
 
   parentElement.insertBefore(viewEnd, bottomBuffer);
@@ -23,11 +23,11 @@ export function insertBeforeNode(view, bottomBuffer) {
 * Update the override context.
 * @param startIndex index in collection where to start updating.
 */
-export function updateVirtualOverrideContexts(repeat, startIndex) {  
+export function updateVirtualOverrideContexts(repeat, startIndex) {
   let views = repeat.viewSlot.children;
   let viewLength = views.length;
   let collectionLength = repeat.items.length;
-  
+
   if (startIndex > 0) {
     startIndex = startIndex - 1;
   }
@@ -35,27 +35,28 @@ export function updateVirtualOverrideContexts(repeat, startIndex) {
   let delta = repeat._topBufferHeight / repeat.itemHeight;
 
   for (; startIndex < viewLength; ++startIndex) {
-      updateOverrideContext(views[startIndex].overrideContext, startIndex + delta, collectionLength);
+    updateOverrideContext(views[startIndex].overrideContext, startIndex + delta, collectionLength);
   }
 }
 
-export function rebindAndMoveView(repeat: VirtualRepeat, view: View, index: number, moveToBottom: boolean): void {  
+export function rebindAndMoveView(repeat: VirtualRepeat, view: View, index: number, moveToBottom: boolean): void {
   let items = repeat.items;
   let viewSlot = repeat.viewSlot;
   updateOverrideContext(view.overrideContext, index, items.length);
   view.bindingContext[repeat.local] = items[index];
-  if(moveToBottom) {
+  if (moveToBottom) {
     viewSlot.children.push(viewSlot.children.shift());
-    repeat.viewStrategy.moveViewLast(view, repeat.bottomBuffer);    
+    repeat.viewStrategy.moveViewLast(view, repeat.bottomBuffer);
   } else {
-    viewSlot.children.unshift(viewSlot.children.splice(-1,1)[0]);
+    viewSlot.children.unshift(viewSlot.children.splice(-1, 1)[0]);
     repeat.viewStrategy.moveViewFirst(view, repeat.topBuffer);
   }
 }
 
-export function getStyleValue(element, style){
-  var currentStyle, styleValue;
+export function getStyleValue(element, style) {
+  let currentStyle;
+  let styleValue;
   currentStyle = element.currentStyle || window.getComputedStyle(element);
-  styleValue = parseInt(currentStyle[style]);
+  styleValue = parseInt(currentStyle[style], 10);
   return Number.isNaN(styleValue) ? 0 : styleValue;
 }

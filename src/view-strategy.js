@@ -4,9 +4,8 @@ export class ViewStrategyLocator {
   getStrategy(element) {
     if (element.parentNode.localName === 'tbody') {
       return new TableStrategy();
-    } else {
-      return new DefaultStrategy();
     }
+    return new DefaultStrategy();
   }
 }
 
@@ -30,7 +29,7 @@ export class TableStrategy {
   createTopBufferElement(scrollList, element) {
     let tr = document.createElement('tr');
     let buffer = document.createElement('td');
-    buffer.setAttribute("style","height: 0px");
+    buffer.setAttribute('style', 'height: 0px');
     tr.appendChild(buffer);
     scrollList.insertBefore(tr, element);
     return buffer;
@@ -39,7 +38,7 @@ export class TableStrategy {
   createBottomBufferElement(scrollList, element) {
     let tr = document.createElement('tr');
     let buffer = document.createElement('td');
-    buffer.setAttribute("style","height: 0px");
+    buffer.setAttribute('style', 'height: 0px');
     tr.appendChild(buffer);
     element.parentNode.insertBefore(tr, element.nextSibling);
     return buffer;
@@ -71,7 +70,7 @@ export class DefaultStrategy {
   createTopBufferElement(element) {
     let elementName = element.parentElement.localName === 'ul' ? 'li' : 'div';
     let buffer = document.createElement(elementName);
-    buffer.setAttribute("style","height: 0px");
+    buffer.setAttribute('style', 'height: 0px');
     element.parentElement.insertBefore(buffer, element);
     return buffer;
   }
@@ -79,7 +78,7 @@ export class DefaultStrategy {
   createBottomBufferElement(element) {
     let elementName = element.parentElement.localName === 'ul' ? 'li' : 'div';
     let buffer = document.createElement(elementName);
-    buffer.setAttribute("style","height: 0px");
+    buffer.setAttribute('style', 'height: 0px');
     element.parentNode.insertBefore(buffer, element.nextSibling);
     return buffer;
   }
