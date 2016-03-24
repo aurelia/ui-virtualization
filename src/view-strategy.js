@@ -17,25 +17,25 @@ export class TableStrategy {
   getScrollContainer(element) {
     return this.getScrollList(element).parentElement.parentElement;
   }
-
-  moveViewFirst(view, scrollElement) {
-    insertBeforeNode(view, scrollElement, scrollElement.childNodes[2]);
+  
+  moveViewFirst(view, topBuffer) {
+    insertBeforeNode(view, topBuffer.parentElement.nextElementSibling.previousSibling);
   }
 
-  moveViewLast(view, scrollElement, childrenLength) {
-    insertBeforeNode(view, scrollElement, scrollElement.children[childrenLength + 1]);
+  moveViewLast(view, bottomBuffer) {
+    insertBeforeNode(view, bottomBuffer.parentElement);
   }
 
-  createTopBufferElement(scrollList, element) {
+  createTopBufferElement(element) {
     let tr = document.createElement('tr');
     let buffer = document.createElement('td');
     buffer.setAttribute('style', 'height: 0px');
     tr.appendChild(buffer);
-    scrollList.insertBefore(tr, element);
+    element.parentElement.insertBefore(tr, element);    
     return buffer;
-  }
+  } 
 
-  createBottomBufferElement(scrollList, element) {
+  createBottomBufferElement(element) {
     let tr = document.createElement('tr');
     let buffer = document.createElement('td');
     buffer.setAttribute('style', 'height: 0px');
