@@ -39,6 +39,7 @@ export class VirtualRepeat {
   _isAttached = false;
   _ticking = false;
   _fixedHeightContainer = false;
+  _hasCalculatedSizes = false;
 
   @bindable items
   @bindable local
@@ -102,6 +103,7 @@ export class VirtualRepeat {
     this._switchedDirection = false;
     this._isAttached = false;
     this._ticking = false;
+    this._hasCalculatedSizes = false;
     this.viewStrategy.removeBufferElements(this.element, this.topBuffer, this.bottomBuffer);
     this.isLastIndex = false;
     this.scrollContainer = null;
@@ -121,8 +123,10 @@ export class VirtualRepeat {
     }
     let items = this.items;
     this.strategy = this.strategyLocator.getStrategy(items);
-    this.strategy.createFirstItem(this);
-    this._calcInitialHeights();
+    if (items.length > 0) {
+      this.strategy.createFirstItem(this);
+    }
+    this._calcInitialHeights(items.length);
     if (!this.isOneTime && !this._observeInnerCollection()) {
       this._observeCollection();
     }
@@ -330,14 +334,15 @@ export class VirtualRepeat {
 
   _getIndexOfFirstView() {
     let children = this.viewSlot.children;
-    return children[0].overrideContext.$index;
+    return children[0] ? children[0].overrideContext.$index : -1;
   }
 
-  _calcInitialHeights() {
-    if (this._viewsLength > 0 && this._itemsLength === this.items.length) {
+  _calcInitialHeights(itemsLength: number) {
+    if (this._viewsLength > 0 && this._itemsLength === itemsLength || itemsLength <= 0) {
       return;
     }
-    this._itemsLength = this.items.length;
+    this._hasCalculatedSizes = true;
+    this._itemsLength = itemsLength;
     let firstViewElement = this.viewSlot.children[0].firstChild.nextElementSibling;
     this.itemHeight = calcOuterHeight(firstViewElement);
     if (this.itemHeight <= 0) {
@@ -346,7 +351,10 @@ export class VirtualRepeat {
     this.scrollContainerHeight = this._fixedHeightContainer ? this._calcScrollHeight(this.scrollContainer) : document.documentElement.clientHeight;
     this.elementsInView = Math.ceil(this.scrollContainerHeight / this.itemHeight) + 1;
     this._viewsLength = (this.elementsInView * 2) + this._bufferSize;
-    this._bottomBufferHeight = this.itemHeight * this.items.length - this.itemHeight * this._viewsLength;
+    this._bottomBufferHeight = this.itemHeight * itemsLength - this.itemHeight * this._viewsLength;
+    if (this._bottomBufferHeight < 0) {
+      this._bottomBufferHeight = 0;
+    }
     this.bottomBuffer.setAttribute('style', `height: ${this._bottomBufferHeight}px`);
     this._topBufferHeight = 0;
     this.topBuffer.setAttribute('style', `height: ${this._topBufferHeight}px`);

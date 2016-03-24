@@ -70,7 +70,8 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
       }
     }
     // add new views
-    for (let i = viewsLength; i < repeat._viewsLength; i++) {
+    let minLength = Math.min(repeat._viewsLength, items.length);
+    for (let i = viewsLength; i < minLength; i++) {
       let overrideContext = createFullOverrideContext(repeat, items[i], i, itemsLength);
       let view = repeat.viewFactory.create();
       view.bind(overrideContext.bindingContext, overrideContext);
@@ -225,12 +226,14 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
       let end = splice.index + splice.addedCount;
 
       for (; addIndex < end; ++addIndex) {
-        if (!this._isIndexBeforeViewSlot(repeat, viewSlot, addIndex) && !this._isIndexAfterViewSlot(repeat, viewSlot, addIndex)) {
+        if (viewSlot.children.length === 0 || !this._isIndexBeforeViewSlot(repeat, viewSlot, addIndex) && !this._isIndexAfterViewSlot(repeat, viewSlot, addIndex)) {
           let overrideContext = createFullOverrideContext(repeat, array[addIndex], addIndex, arrayLength);
           let view = repeat.viewFactory.create();
           view.bind(overrideContext.bindingContext, overrideContext);
           repeat.viewSlot.insert(addIndex, view);
-          if (repeat.viewSlot.children.length > repeat._viewsLength) {
+          if (!repeat._hasCalculatedSizes) {
+            repeat._calcInitialHeights(1);
+          } else if (repeat.viewSlot.children.length > repeat._viewsLength) {
             repeat.viewSlot.removeAt(repeat.viewSlot.children.length - 1, true, true);
             repeat._bottomBufferHeight = repeat._bottomBufferHeight + repeat.itemHeight;
           }
