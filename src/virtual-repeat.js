@@ -1,10 +1,5 @@
 import {inject} from 'aurelia-dependency-injection';
-import {
-  ObserverLocator,
-  calcSplices,
-  getChangeRecords,
-  createOverrideContext
-} from 'aurelia-binding';
+import {ObserverLocator} from 'aurelia-binding';
 import {
   BoundViewFactory,
   ViewSlot,
@@ -14,9 +9,6 @@ import {
   templateController
 } from 'aurelia-templating';
 import {
-  updateOverrideContext,
-  createFullOverrideContext,
-  updateOverrideContexts,
   getItemsSourceExpression,
   isOneTime,
   unwrapExpression
@@ -25,9 +17,6 @@ import {viewsRequireLifecycle} from 'aurelia-templating-resources/analyze-view-f
 import {
   getStyleValue,
   calcOuterHeight,
-  getNthNode,
-  moveViewFirst,
-  moveViewLast,
   rebindAndMoveView
 } from './utilities';
 import {VirtualRepeatStrategyLocator} from './virtual-repeat-strategy-locator';
@@ -53,7 +42,7 @@ export class VirtualRepeat {
 
   @bindable items
   @bindable local
-  constructor(element, viewFactory, instruction, viewSlot, observerLocator, strategyLocator, viewStrategyLocator){
+  constructor(element, viewFactory, instruction, viewSlot, observerLocator, strategyLocator, viewStrategyLocator) {
     this.element = element;
     this.viewFactory = viewFactory;
     this.instruction = instruction;
@@ -67,7 +56,7 @@ export class VirtualRepeat {
     this.viewsRequireLifecycle = viewsRequireLifecycle(viewFactory);
   }
 
-  attached(){
+  attached() {
     this._isAttached = true;
     let element = this.element;
     this.viewStrategy = this.viewStrategyLocator.getStrategy(element);
@@ -76,21 +65,21 @@ export class VirtualRepeat {
     this.bottomBuffer = this.viewStrategy.createBottomBufferElement(element);
     this.itemsChanged();
     this.scrollListener = () => this._onScroll();
-    let containerStyle = this.scrollContainer.style;    
-    if (containerStyle.overflowY === 'scroll' || containerStyle.overflow === 'scroll' || containerStyle.overflowY === 'auto' || containerStyle.overflow === 'auto'){
+    let containerStyle = this.scrollContainer.style;
+    if (containerStyle.overflowY === 'scroll' || containerStyle.overflow === 'scroll' || containerStyle.overflowY === 'auto' || containerStyle.overflow === 'auto') {
       this._fixedHeightContainer = true;
       this.scrollContainer.addEventListener('scroll', this.scrollListener);
     } else {
       document.addEventListener('scroll', this.scrollListener);
-    }   
-  }  
+    }
+  }
 
-  bind(bindingContext, overrideContext){
+  bind(bindingContext, overrideContext) {
     this.scope = { bindingContext, overrideContext };
     this._itemsLength = this.items.length;
 
     // TODO Fix this
-    window.onresize = () => { this._handleResize(); };    
+    window.onresize = () => { this._handleResize(); };
   }
 
   call(context, changes) {
@@ -118,7 +107,7 @@ export class VirtualRepeat {
     this.scrollContainer = null;
     this.scrollContainerHeight = null;
     this.viewSlot.removeAll(true);
-    if(this.scrollHandler) {
+    if (this.scrollHandler) {
       this.scrollHandler.dispose();
     }
     this._unsubscribeCollection();
@@ -141,7 +130,7 @@ export class VirtualRepeat {
     this.strategy.instanceChanged(this, items, this._viewsLength);
   }
 
-  unbind(){
+  unbind() {
     this.scope = null;
     this.items = null;
     this._itemsLength = null;
@@ -173,21 +162,21 @@ export class VirtualRepeat {
       this.items = newItems;
     }
   }
-  
-  _onScroll() {     
-    if(!this._ticking && !this._handlingMutations) {  
+
+  _onScroll() {
+    if (!this._ticking && !this._handlingMutations) {
       requestAnimationFrame(() => this._handleScroll());
-      this._ticking = true;      
+      this._ticking = true;
     }
-    
-    if(this._handlingMutations){
+
+    if (this._handlingMutations) {
       this._handlingMutations = false;
-    } 
+    }
   }
 
-  _handleScroll() {      
+  _handleScroll() {
     if (!this._isAttached) {
-      return;      
+      return;
     }
     let itemHeight = this.itemHeight;
     let scrollTop = this._fixedHeightContainer ? this.topBuffer.scrollTop : pageYOffset - this.topBuffer.offsetTop;
@@ -196,15 +185,15 @@ export class VirtualRepeat {
     this._checkScrolling();
     // TODO if and else paths do almost same thing, refactor?
     // move views down?
-    if(this._scrollingDown && (this._hasScrolledDownTheBuffer() || (this._switchedDirection && this._hasScrolledDownTheBufferFromTop()))) {   
+    if (this._scrollingDown && (this._hasScrolledDownTheBuffer() || (this._switchedDirection && this._hasScrolledDownTheBufferFromTop()))) {
       let viewsToMove = this._first - this._lastRebind;
-      if(this._switchedDirection) {
+      if (this._switchedDirection) {
         viewsToMove = this.isAtTop ? this._first : this._bufferSize - (this._lastRebind - this._first);
       }
       this.isAtTop = false;
       this._lastRebind = this._first;
       let movedViewsCount = this._moveViews(viewsToMove);
-      let adjustHeight = movedViewsCount < viewsToMove ? this._bottomBufferHeight : itemHeight * movedViewsCount;    
+      let adjustHeight = movedViewsCount < viewsToMove ? this._bottomBufferHeight : itemHeight * movedViewsCount;
       this._switchedDirection = false;
       this._topBufferHeight = this._topBufferHeight + adjustHeight;
       this._bottomBufferHeight = this._bottomBufferHeight - adjustHeight;
@@ -212,14 +201,14 @@ export class VirtualRepeat {
         this._adjustBufferHeights();
       }
     // move view up?
-    } else if (this._scrollingUp && (this._hasScrolledUpTheBuffer() || (this._switchedDirection && this._hasScrolledUpTheBufferFromBottom()))) {   
+    } else if (this._scrollingUp && (this._hasScrolledUpTheBuffer() || (this._switchedDirection && this._hasScrolledUpTheBufferFromBottom()))) {
       let viewsToMove = this._lastRebind - this._first;
-      if(this._switchedDirection) {
-          if(this.isLastIndex) {
-            viewsToMove = this.items.length - this._first - this.elementsInView;
-          } else {
-            viewsToMove = this._bufferSize - (this._first - this._lastRebind);
-          }
+      if (this._switchedDirection) {
+        if (this.isLastIndex) {
+          viewsToMove = this.items.length - this._first - this.elementsInView;
+        } else {
+          viewsToMove = this._bufferSize - (this._first - this._lastRebind);
+        }
       }
       this.isLastIndex = false;
       this._lastRebind = this._first;
@@ -239,20 +228,22 @@ export class VirtualRepeat {
   }
 
   _handleResize() {
-    var children = this.viewSlot.children,
-      childrenLength = children.length,
-      overrideContext, view, addIndex;
+    let children = this.viewSlot.children;
+    let childrenLength = children.length;
+    let overrideContext;
+    let view;
+    let addIndex;
 
     this.scrollContainerHeight = calcScrollHeight(this.scrollContainer);
     this._viewsLength = Math.ceil(this.scrollContainerHeight / this.itemHeight) + 1;
 
-    if(this._viewsLength > childrenLength){
+    if (this._viewsLength > childrenLength) {
       addIndex = children[childrenLength - 1].overrideContext.$index + 1;
       overrideContext = createFullOverrideContext(this, this.items[addIndex], addIndex, this.items.length);
       view = this.viewFactory.create();
       view.bind(overrideContext.bindingContext, overrideContext);
       this.viewSlot.insert(childrenLength, view);
-    }else if (this._viewsLength < childrenLength){
+    } else if (this._viewsLength < childrenLength) {
       this._viewsLength = childrenLength;
     }
   }
@@ -293,15 +284,15 @@ export class VirtualRepeat {
 
   _hasScrolledUpTheBuffer() {
     return this._lastRebind - this._first >= this._bufferSize;
-  } 
-  
+  }
+
   _hasScrolledUpTheBufferFromBottom() {
     return this._first + this._bufferSize < this.items.length;
   }
 
   _adjustBufferHeights() {
     this.topBuffer.setAttribute('style', `height:  ${this._topBufferHeight}px`);
-    this.bottomBuffer.setAttribute("style", `height: ${this._bottomBufferHeight}px`);
+    this.bottomBuffer.setAttribute('style', `height: ${this._bottomBufferHeight}px`);
   }
 
   _unsubscribeCollection() {
@@ -321,51 +312,51 @@ export class VirtualRepeat {
     let items = this.items;
     let index = this._scrollingDown ? this._getIndexOfLastView() + 1 : this._getIndexOfFirstView() - 1;
     let i = 0;
-    while(i < length && !isAtFirstOrLastIndex()) {
+    while (i < length && !isAtFirstOrLastIndex()) {
       let view = viewSlot.children[viewIndex];
       let nextIndex = getNextIndex(index, i);
       rebindAndMoveView(this, view, nextIndex, this._scrollingDown);
       this.isLastIndex = nextIndex >= items.length - 1;
-      this.isAtTop = nextIndex <= 0;    
+      this.isAtTop = nextIndex <= 0;
       i++;
     }
     return length - (length - i);
   }
 
-  _getIndexOfLastView(){
+  _getIndexOfLastView() {
     let children = this.viewSlot.children;
     return children[children.length - 1].overrideContext.$index;
   }
 
-  _getIndexOfFirstView(){
+  _getIndexOfFirstView() {
     let children = this.viewSlot.children;
     return children[0].overrideContext.$index;
   }
 
   _calcInitialHeights() {
-    if (this._viewsLength > 0 && this._itemsLength == this.items.length) {
+    if (this._viewsLength > 0 && this._itemsLength === this.items.length) {
       return;
     }
     this._itemsLength = this.items.length;
     let firstViewElement = this.viewSlot.children[0].firstChild.nextElementSibling;
     this.itemHeight = calcOuterHeight(firstViewElement);
-    if(this.itemHeight <= 0) {
+    if (this.itemHeight <= 0) {
       throw new Error('Could not calculate item height');
     }
-    this.scrollContainerHeight = this._fixedHeightContainer ? this._calcScrollHeight(this.scrollContainer) : document.documentElement.clientHeight;    
+    this.scrollContainerHeight = this._fixedHeightContainer ? this._calcScrollHeight(this.scrollContainer) : document.documentElement.clientHeight;
     this.elementsInView = Math.ceil(this.scrollContainerHeight / this.itemHeight) + 1;
     this._viewsLength = (this.elementsInView * 2) + this._bufferSize;
-    this._bottomBufferHeight = this.itemHeight * this.items.length - this.itemHeight * this._viewsLength;    
-    this.bottomBuffer.setAttribute("style", `height: ${this._bottomBufferHeight}px`);
+    this._bottomBufferHeight = this.itemHeight * this.items.length - this.itemHeight * this._viewsLength;
+    this.bottomBuffer.setAttribute('style', `height: ${this._bottomBufferHeight}px`);
     this._topBufferHeight = 0;
-    this.topBuffer.setAttribute("style", `height: ${this._topBufferHeight}px`);
+    this.topBuffer.setAttribute('style', `height: ${this._topBufferHeight}px`);
     // TODO This will cause scrolling back to top when swapping collection instances that have different lengths - instead should keep the scroll position
     this.scrollContainer.scrollTop = 0;
     this._first = 0;
   }
-  
-  _calcScrollHeight(element){
-    var height;
+
+  _calcScrollHeight(element) {
+    let height;
     height = element.getBoundingClientRect().height;
     height -= getStyleValue(element, 'borderTopWidth');
     height -= getStyleValue(element, 'borderBottomWidth');
