@@ -10,12 +10,8 @@ export class ViewStrategyLocator {
 }
 
 export class TableStrategy {
-  getScrollList(element) {
-    return element.parentNode;
-  }
-
   getScrollContainer(element) {
-    return this.getScrollList(element).parentElement.parentElement;
+    return element.parentNode;
   }
 
   moveViewFirst(view, topBuffer) {
@@ -51,12 +47,8 @@ export class TableStrategy {
 }
 
 export class DefaultStrategy {
-  getScrollList(element) {
-    return element.parentNode;
-  }
-
   getScrollContainer(element) {
-    return this.getScrollList(element).parentElement;
+    return element.parentNode;
   }
 
   moveViewFirst(view, topBuffer) {

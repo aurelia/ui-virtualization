@@ -183,7 +183,7 @@ export class VirtualRepeat {
       return;
     }
     let itemHeight = this.itemHeight;
-    let scrollTop = this._fixedHeightContainer ? this.topBuffer.scrollTop : pageYOffset - this.topBuffer.offsetTop;
+    let scrollTop = this._fixedHeightContainer ? this.scrollContainer.scrollTop : pageYOffset - this.topBuffer.offsetTop;
     this._first = Math.floor(scrollTop / itemHeight);
     this._first = this._first < 0 ? 0 : this._first;
     this._checkScrolling();
