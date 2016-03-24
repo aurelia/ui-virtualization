@@ -319,10 +319,12 @@ export class VirtualRepeat {
     while (i < length && !isAtFirstOrLastIndex()) {
       let view = viewSlot.children[viewIndex];
       let nextIndex = getNextIndex(index, i);
-      rebindAndMoveView(this, view, nextIndex, this._scrollingDown);
       this.isLastIndex = nextIndex >= items.length - 1;
       this.isAtTop = nextIndex <= 0;
-      i++;
+      if (!isAtFirstOrLastIndex()) {
+        rebindAndMoveView(this, view, nextIndex, this._scrollingDown);             
+        i++;
+      }      
     }
     return length - (length - i);
   }
