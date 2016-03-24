@@ -322,9 +322,9 @@ export class VirtualRepeat {
       this.isLastIndex = nextIndex >= items.length - 1;
       this.isAtTop = nextIndex <= 0;
       if (!isAtFirstOrLastIndex()) {
-        rebindAndMoveView(this, view, nextIndex, this._scrollingDown);             
+        rebindAndMoveView(this, view, nextIndex, this._scrollingDown);
         i++;
-      }      
+      }
     }
     return length - (length - i);
   }

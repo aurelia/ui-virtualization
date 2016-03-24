@@ -17,7 +17,7 @@ export class TableStrategy {
   getScrollContainer(element) {
     return this.getScrollList(element).parentElement.parentElement;
   }
-  
+
   moveViewFirst(view, topBuffer) {
     insertBeforeNode(view, topBuffer.parentElement.nextElementSibling.previousSibling);
   }
@@ -31,9 +31,9 @@ export class TableStrategy {
     let buffer = document.createElement('td');
     buffer.setAttribute('style', 'height: 0px');
     tr.appendChild(buffer);
-    element.parentElement.insertBefore(tr, element);    
+    element.parentElement.insertBefore(tr, element);
     return buffer;
-  } 
+  }
 
   createBottomBufferElement(element) {
     let tr = document.createElement('tr');
