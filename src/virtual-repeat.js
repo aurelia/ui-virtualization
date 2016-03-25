@@ -180,6 +180,9 @@ export class VirtualRepeat {
     let scrollTop = this._fixedHeightContainer ? this.scrollContainer.scrollTop : pageYOffset - this.topBuffer.offsetTop;
     this._first = Math.floor(scrollTop / itemHeight);
     this._first = this._first < 0 ? 0 : this._first;
+    if (this._first > this.items.length - this._viewsLength) {
+      this._first = this.items.length - this._viewsLength;
+    }
     this._checkScrolling();
     // TODO if and else paths do almost same thing, refactor?
     // move views down?
