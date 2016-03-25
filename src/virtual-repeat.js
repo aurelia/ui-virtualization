@@ -42,6 +42,7 @@ export class VirtualRepeat extends AbstractRepeater {
   _ticking = false;
   _fixedHeightContainer = false;
   _hasCalculatedSizes = false;
+  _isAtTop = true;
 
   @bindable items
   @bindable local
@@ -194,9 +195,9 @@ export class VirtualRepeat extends AbstractRepeater {
     if (this._scrollingDown && (this._hasScrolledDownTheBuffer() || (this._switchedDirection && this._hasScrolledDownTheBufferFromTop()))) {
       let viewsToMove = this._first - this._lastRebind;
       if (this._switchedDirection) {
-        viewsToMove = this.isAtTop ? this._first : this._bufferSize - (this._lastRebind - this._first);
+        viewsToMove = this._isAtTop ? this._first : this._bufferSize - (this._lastRebind - this._first);
       }
-      this.isAtTop = false;
+      this._isAtTop = false;
       this._lastRebind = this._first;
       let movedViewsCount = this._moveViews(viewsToMove);
       let adjustHeight = movedViewsCount < viewsToMove ? this._bottomBufferHeight : itemHeight * movedViewsCount;
@@ -243,7 +244,7 @@ export class VirtualRepeat extends AbstractRepeater {
         this._switchedDirection = false;
       }
       this._isScrolling = true;
-    } else if (this._first < this._previousFirst && (this._topBufferHeight >= 0 || !this.isAtTop)) {
+    } else if (this._first < this._previousFirst && (this._topBufferHeight >= 0 || !this._isAtTop)) {
       if (!this._scrollingUp) {
         this._scrollingDown = false;
         this._scrollingUp = true;
@@ -290,7 +291,7 @@ export class VirtualRepeat extends AbstractRepeater {
 
   _moveViews(length) {
     let getNextIndex = this._scrollingDown ? (index, i) =>  index + i : (index, i) =>  index - i;
-    let isAtFirstOrLastIndex = () => this._scrollingDown ? this.isLastIndex : this.isAtTop;
+    let isAtFirstOrLastIndex = () => this._scrollingDown ? this.isLastIndex : this._isAtTop;
     let childrenLength = this.viewCount();
     let viewIndex = this._scrollingDown ? 0 : childrenLength - 1;
     let items = this.items;
@@ -300,7 +301,7 @@ export class VirtualRepeat extends AbstractRepeater {
       let view = this.view(viewIndex);
       let nextIndex = getNextIndex(index, i);
       this.isLastIndex = nextIndex >= items.length - 1;
-      this.isAtTop = nextIndex <= 0;
+      this._isAtTop = nextIndex <= 0;
       if (!(isAtFirstOrLastIndex() && childrenLength >= items.length)) {
         rebindAndMoveView(this, view, nextIndex, this._scrollingDown);
         i++;
