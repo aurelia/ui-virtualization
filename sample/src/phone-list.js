@@ -3,7 +3,7 @@ export class PhoneList {
   constructor() {
     this.objectArray = [];
     this.objectArray2 = [];
-    this.numberOfItems = 30;
+    this.numberOfItems = 100;
     this.isSelected = false;
     this.isVisible = true;
     this.viewStrategy = 'div';
@@ -14,7 +14,7 @@ export class PhoneList {
   }
 
   toggle() {
-    this.isVisible = !this.isVisible;	   
+    this.isVisible = !this.isVisible;
   }
 
   click(){
@@ -31,8 +31,6 @@ export class PhoneList {
       firstLetter: name.charAt(0),
       name: name,
       color: faker.internet.color(),
-      //image: faker.image.avatar(),
-      //email: faker.internet.email(),
       phone: faker.phone.phoneNumber(),
       country: faker.address.country()
     };
@@ -49,7 +47,6 @@ export class PhoneList {
       name = faker.name.findName();
       this.objectArray2.push(this.createItem());
     }
-    console.log('activate done');
   }
 
   swap(){
@@ -57,11 +54,11 @@ export class PhoneList {
   }
 
   addItems(count){
+    console.log(`adding ${count} items...`);
     for (var i = 0; i < count; ++i) {
       this.objectArray.push(this.createItem(i));
-      console.log(i);
     }
-
+    console.log(`finsihed adding ${count} items`);
     this.numberOfItems = this.objectArray.length;
   }
 
