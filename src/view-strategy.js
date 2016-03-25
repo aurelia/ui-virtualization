@@ -40,9 +40,9 @@ export class TableStrategy {
     return buffer;
   }
 
-  removeBufferElements(scrollList, topBuffer, bottomBuffer) {
-    scrollList.removeChild(topBuffer.parentElement);
-    scrollList.removeChild(bottomBuffer.parentElement);
+  removeBufferElements(element, topBuffer, bottomBuffer) {
+    element.parentElement.removeChild(topBuffer.parentElement);
+    element.parentElement.removeChild(bottomBuffer.parentElement);
   }
 }
 
@@ -76,7 +76,7 @@ export class DefaultStrategy {
   }
 
   removeBufferElements(element, topBuffer, bottomBuffer) {
-    element.removeChild(topBuffer);
-    element.removeChild(bottomBuffer);
+    element.parentElement.removeChild(topBuffer);
+    element.parentElement.removeChild(bottomBuffer);
   }
 }
