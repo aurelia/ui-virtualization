@@ -294,8 +294,7 @@ export class VirtualRepeat {
       let nextIndex = getNextIndex(index, i);
       this.isLastIndex = nextIndex >= items.length - 1;
       this.isAtTop = nextIndex <= 0;
-
-      if(!(isAtFirstOrLastIndex() && childrenLength >= items.length)) {
+      if (!(isAtFirstOrLastIndex() && childrenLength >= items.length)) {
         rebindAndMoveView(this, view, nextIndex, this._scrollingDown);
         i++;
       }

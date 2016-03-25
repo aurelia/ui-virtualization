@@ -56,7 +56,9 @@ export class DefaultStrategy {
   }
 
   moveViewLast(view, bottomBuffer) {
-    insertBeforeNode(view, bottomBuffer);
+    let previousSibling = bottomBuffer.previousSibling;
+    let referenceNode = previousSibling.nodeType === 8 && previousSibling.data === 'anchor' ? previousSibling : bottomBuffer;
+    insertBeforeNode(view, referenceNode);
   }
 
   createTopBufferElement(element) {
