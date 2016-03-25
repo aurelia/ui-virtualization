@@ -186,13 +186,12 @@ export class VirtualRepeat extends AbstractRepeater {
     let scrollTop = this._fixedHeightContainer ? this.scrollContainer.scrollTop : pageYOffset - this.topBuffer.offsetTop;
     this._first = Math.floor(scrollTop / itemHeight);
     this._first = this._first < 0 ? 0 : this._first;
-    if (this._first > this.items.length - this._viewsLength) {
-      this._first = this.items.length - this._viewsLength;
+    if (this._first > this.items.length - this.elementsInView) {
+      this._first = this.items.length - this.elementsInView;
     }
     this._checkScrolling();
     // TODO if and else paths do almost same thing, refactor?
-    // move views down?
-    if (this._scrollingDown && (this._hasScrolledDownTheBuffer() || (this._switchedDirection && this._hasScrolledDownTheBufferFromTop()))) {
+    if (this._scrollingDown) {
       let viewsToMove = this._first - this._lastRebind;
       if (this._switchedDirection) {
         viewsToMove = this._isAtTop ? this._first : this._bufferSize - (this._lastRebind - this._first);
@@ -207,8 +206,7 @@ export class VirtualRepeat extends AbstractRepeater {
       if (this._bottomBufferHeight >= 0) {
         this._adjustBufferHeights();
       }
-    // move view up?
-    } else if (this._scrollingUp && (this._hasScrolledUpTheBuffer() || (this._switchedDirection && this._hasScrolledUpTheBufferFromBottom()))) {
+    } else if (this._scrollingUp) {
       let viewsToMove = this._lastRebind - this._first;
       if (this._switchedDirection) {
         if (this.isLastIndex) {
@@ -258,24 +256,6 @@ export class VirtualRepeat extends AbstractRepeater {
     }
   }
 
-  _hasScrolledDownTheBuffer() {
-    let atBottom = (this._first + this._viewsLength) >= this.items.length;
-    let itemsAddedWhileAtBottom = atBottom && this._first > this._lastRebind;
-    return this._first - this._lastRebind >= this._bufferSize || itemsAddedWhileAtBottom;
-  }
-
-  _hasScrolledDownTheBufferFromTop() {
-    return this._first - this._bufferSize > 0;
-  }
-
-  _hasScrolledUpTheBuffer() {
-    return this._lastRebind - this._first >= this._bufferSize;
-  }
-
-  _hasScrolledUpTheBufferFromBottom() {
-    return this._first + this._bufferSize < this.items.length;
-  }
-
   _adjustBufferHeights() {
     this.topBuffer.setAttribute('style', `height:  ${this._topBufferHeight}px`);
     this.bottomBuffer.setAttribute('style', `height: ${this._bottomBufferHeight}px`);
@@ -307,6 +287,7 @@ export class VirtualRepeat extends AbstractRepeater {
         i++;
       }
     }
+
     return length - (length - i);
   }
 
