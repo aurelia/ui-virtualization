@@ -8,10 +8,12 @@ import {
   bindable,
   templateController
 } from 'aurelia-templating';
+import {AbstractRepeater} from 'aurelia-templating-resources';
 import {
   getItemsSourceExpression,
   isOneTime,
-  unwrapExpression
+  unwrapExpression,
+  updateOneTimeBinding
 } from 'aurelia-templating-resources/repeat-utilities';
 import {viewsRequireLifecycle} from 'aurelia-templating-resources/analyze-view-factory';
 import {
@@ -25,7 +27,7 @@ import {ViewStrategyLocator} from './view-strategy';
 @customAttribute('virtual-repeat')
 @templateController
 @inject(Element, BoundViewFactory, TargetInstruction, ViewSlot, ObserverLocator, VirtualRepeatStrategyLocator, ViewStrategyLocator)
-export class VirtualRepeat {
+export class VirtualRepeat extends AbstractRepeater {
   _first = 0;
   _previousFirst = 0;
   _viewsLength = 0;
@@ -44,6 +46,11 @@ export class VirtualRepeat {
   @bindable items
   @bindable local
   constructor(element, viewFactory, instruction, viewSlot, observerLocator, strategyLocator, viewStrategyLocator) {
+    super({
+      local: 'item',
+      viewsRequireLifecycle: viewsRequireLifecycle(viewFactory)
+    });
+
     this.element = element;
     this.viewFactory = viewFactory;
     this.instruction = instruction;
@@ -51,10 +58,8 @@ export class VirtualRepeat {
     this.observerLocator = observerLocator;
     this.strategyLocator = strategyLocator;
     this.viewStrategyLocator = viewStrategyLocator;
-    this.local = 'item';
     this.sourceExpression = getItemsSourceExpression(this.instruction, 'virtual-repeat.for');
     this.isOneTime = isOneTime(this.sourceExpression);
-    this.viewsRequireLifecycle = viewsRequireLifecycle(viewFactory);
   }
 
   attached() {
@@ -102,7 +107,7 @@ export class VirtualRepeat {
     this.isLastIndex = false;
     this.scrollContainer = null;
     this.scrollContainerHeight = null;
-    this.viewSlot.removeAll(true);
+    this.removeAllViews(true);
     if (this.scrollHandler) {
       this.scrollHandler.dispose();
     }
@@ -286,14 +291,13 @@ export class VirtualRepeat {
   _moveViews(length) {
     let getNextIndex = this._scrollingDown ? (index, i) =>  index + i : (index, i) =>  index - i;
     let isAtFirstOrLastIndex = () => this._scrollingDown ? this.isLastIndex : this.isAtTop;
-    let viewSlot = this.viewSlot;
-    let childrenLength = viewSlot.children.length;
+    let childrenLength = this.viewCount();
     let viewIndex = this._scrollingDown ? 0 : childrenLength - 1;
     let items = this.items;
     let index = this._scrollingDown ? this._getIndexOfLastView() + 1 : this._getIndexOfFirstView() - 1;
     let i = 0;
     while (i < length && !isAtFirstOrLastIndex()) {
-      let view = viewSlot.children[viewIndex];
+      let view = this.view(viewIndex);
       let nextIndex = getNextIndex(index, i);
       this.isLastIndex = nextIndex >= items.length - 1;
       this.isAtTop = nextIndex <= 0;
@@ -306,13 +310,11 @@ export class VirtualRepeat {
   }
 
   _getIndexOfLastView() {
-    let children = this.viewSlot.children;
-    return children[children.length - 1].overrideContext.$index;
+    return this.view(this.viewCount() - 1).overrideContext.$index;
   }
 
   _getIndexOfFirstView() {
-    let children = this.viewSlot.children;
-    return children[0] ? children[0].overrideContext.$index : -1;
+    return this.view(0) ? this.view(0).overrideContext.$index : -1;
   }
 
   _calcInitialHeights(itemsLength: number) {
@@ -321,7 +323,7 @@ export class VirtualRepeat {
     }
     this._hasCalculatedSizes = true;
     this._itemsLength = itemsLength;
-    let firstViewElement = this.viewSlot.children[0].firstChild.nextElementSibling;
+    let firstViewElement = this.view(0).firstChild.nextElementSibling;
     this.itemHeight = calcOuterHeight(firstViewElement);
     if (this.itemHeight <= 0) {
       throw new Error('Could not calculate item height');
@@ -378,6 +380,46 @@ export class VirtualRepeat {
     if (this.collectionObserver) {
       this.callContext = 'handleCollectionMutated';
       this.collectionObserver.subscribe(this.callContext, this);
+    }
+  }
+
+  // @override AbstractRepeater
+  viewCount() { return this.viewSlot.children.length; }
+  views() { return this.viewSlot.children; }
+  view(index) { return this.viewSlot.children[index]; }
+
+  addView(bindingContext, overrideContext) {
+    let view = this.viewFactory.create();
+    view.bind(bindingContext, overrideContext);
+    this.viewSlot.add(view);
+  }
+
+  insertView(index, bindingContext, overrideContext) {
+    let view = this.viewFactory.create();
+    view.bind(bindingContext, overrideContext);
+    this.viewSlot.insert(index, view);
+  }
+
+  removeAllViews(returnToCache, skipAnimation) {
+    return this.viewSlot.removeAll(returnToCache, skipAnimation);
+  }
+
+  removeView(index, returnToCache, skipAnimation) {
+    return this.viewSlot.removeAt(index, returnToCache, skipAnimation);
+  }
+
+  updateBindings(view: View) {
+    let j = view.bindings.length;
+    while (j--) {
+      updateOneTimeBinding(view.bindings[j]);
+    }
+    j = view.controllers.length;
+    while (j--) {
+      let k = view.controllers[j].boundProperties.length;
+      while (k--) {
+        let binding = view.controllers[j].boundProperties[k].binding;
+        updateOneTimeBinding(binding);
+      }
     }
   }
 }
