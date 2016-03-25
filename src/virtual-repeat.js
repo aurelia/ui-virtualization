@@ -78,9 +78,6 @@ export class VirtualRepeat {
   bind(bindingContext, overrideContext) {
     this.scope = { bindingContext, overrideContext };
     this._itemsLength = this.items.length;
-
-    // TODO Fix this
-    window.onresize = () => { this._handleResize(); };
   }
 
   call(context, changes) {
@@ -88,9 +85,6 @@ export class VirtualRepeat {
   }
 
   detached() {
-    // TODO Fix this
-    window.onresize = null;
-
     this.scrollContainer.removeEventListener('scroll', this.scrollListener);
     this._first = 0;
     this._previousFirst = 0;
@@ -229,27 +223,6 @@ export class VirtualRepeat {
     this._previousFirst = this._first;
 
     this._ticking = false;
-  }
-
-  _handleResize() {
-    let children = this.viewSlot.children;
-    let childrenLength = children.length;
-    let overrideContext;
-    let view;
-    let addIndex;
-
-    this.scrollContainerHeight = calcScrollHeight(this.scrollContainer);
-    this._viewsLength = Math.ceil(this.scrollContainerHeight / this.itemHeight) + 1;
-
-    if (this._viewsLength > childrenLength) {
-      addIndex = children[childrenLength - 1].overrideContext.$index + 1;
-      overrideContext = createFullOverrideContext(this, this.items[addIndex], addIndex, this.items.length);
-      view = this.viewFactory.create();
-      view.bind(overrideContext.bindingContext, overrideContext);
-      this.viewSlot.insert(childrenLength, view);
-    } else if (this._viewsLength < childrenLength) {
-      this._viewsLength = childrenLength;
-    }
   }
 
   _checkScrolling() {

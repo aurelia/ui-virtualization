@@ -227,7 +227,7 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
         return;
       }
       var itemHeight = this.itemHeight;
-      var scrollTop = this._fixedHeightContainer ? this.topBuffer.scrollTop : pageYOffset - this.topBuffer.offsetTop;
+      var scrollTop = this._fixedHeightContainer ? this.scrollContainer.scrollTop : pageYOffset - this.topBuffer.offsetTop;
       this._first = Math.floor(scrollTop / itemHeight);
       this._first = this._first < 0 ? 0 : this._first;
       this._checkScrolling();
