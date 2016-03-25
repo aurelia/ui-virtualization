@@ -4,88 +4,81 @@ export class ViewStrategyLocator {
   getStrategy(element) {
     if (element.parentNode.localName === 'tbody') {
       return new TableStrategy();
-    } else {
-      return new DefaultStrategy();
     }
+    return new DefaultStrategy();
   }
 }
 
 export class TableStrategy {
-  getScrollList(element) {
+  getScrollContainer(element) {
     return element.parentNode;
   }
 
-  getScrollContainer(element) {
-    return this.getScrollList(element).parentElement.parentElement;
+  moveViewFirst(view, topBuffer) {
+    insertBeforeNode(view, topBuffer.parentElement.nextElementSibling.previousSibling);
   }
 
-  moveViewFirst(view, scrollElement) {
-    insertBeforeNode(view, scrollElement, scrollElement.childNodes[2]);
+  moveViewLast(view, bottomBuffer) {
+    insertBeforeNode(view, bottomBuffer.parentElement);
   }
 
-  moveViewLast(view, scrollElement, childrenLength) {
-    insertBeforeNode(view, scrollElement, scrollElement.children[childrenLength + 1]);
-  }
-
-  createTopBufferElement(scrollList, element) {
+  createTopBufferElement(element) {
     let tr = document.createElement('tr');
     let buffer = document.createElement('td');
-    buffer.setAttribute("style","height: 0px");
+    buffer.setAttribute('style', 'height: 0px');
     tr.appendChild(buffer);
-    scrollList.insertBefore(tr, element);
+    element.parentElement.insertBefore(tr, element);
     return buffer;
   }
 
-  createBottomBufferElement(scrollList, element) {
+  createBottomBufferElement(element) {
     let tr = document.createElement('tr');
     let buffer = document.createElement('td');
-    buffer.setAttribute("style","height: 0px");
+    buffer.setAttribute('style', 'height: 0px');
     tr.appendChild(buffer);
     element.parentNode.insertBefore(tr, element.nextSibling);
     return buffer;
   }
 
-  removeBufferElements(scrollList, topBuffer, bottomBuffer) {
-    scrollList.removeChild(topBuffer.parentElement);
-    scrollList.removeChild(bottomBuffer.parentElement);
+  removeBufferElements(element, topBuffer, bottomBuffer) {
+    element.parentElement.removeChild(topBuffer.parentElement);
+    element.parentElement.removeChild(bottomBuffer.parentElement);
   }
 }
 
 export class DefaultStrategy {
-  getScrollList(element) {
+  getScrollContainer(element) {
     return element.parentNode;
   }
 
-  getScrollContainer(element) {
-    return this.getScrollList(element).parentElement;
+  moveViewFirst(view, topBuffer) {
+    insertBeforeNode(view, topBuffer.nextElementSibling.previousSibling);
   }
 
-  moveViewFirst(view, scrollElement) {
-    insertBeforeNode(view, scrollElement, scrollElement.childNodes[2]);
+  moveViewLast(view, bottomBuffer) {
+    let previousSibling = bottomBuffer.previousSibling;
+    let referenceNode = previousSibling.nodeType === 8 && previousSibling.data === 'anchor' ? previousSibling : bottomBuffer;
+    insertBeforeNode(view, referenceNode);
   }
 
-  moveViewLast(view, scrollElement, childrenLength) {
-    insertBeforeNode(view, scrollElement, scrollElement.children[childrenLength + 1]);
-  }
-
-  createTopBufferElement(scrollList, element) {
-    let elementName = scrollList.localName === 'ul' ? 'li' : 'div';
+  createTopBufferElement(element) {
+    let elementName = element.parentElement.localName === 'ul' ? 'li' : 'div';
     let buffer = document.createElement(elementName);
-    buffer.setAttribute("style","height: 0px");
-    scrollList.insertBefore(buffer, element);
+    buffer.setAttribute('style', 'height: 0px');
+    element.parentElement.insertBefore(buffer, element);
     return buffer;
   }
 
-  createBottomBufferElement(scrollList, element) {
-    let elementName = scrollList.localName === 'ul' ? 'li' : 'div';
+  createBottomBufferElement(element) {
+    let elementName = element.parentElement.localName === 'ul' ? 'li' : 'div';
     let buffer = document.createElement(elementName);
-    buffer.setAttribute("style","height: 0px");
+    buffer.setAttribute('style', 'height: 0px');
     element.parentNode.insertBefore(buffer, element.nextSibling);
     return buffer;
   }
 
-  removeBufferElements(scrollList, topBuffer, bottomBuffer) {
-    scrollList.removeChild(topBuffer);
-    scrollList.removeChild(bottomBuffer);
+  removeBufferElements(element, topBuffer, bottomBuffer) {
+    element.parentElement.removeChild(topBuffer);
+    element.parentElement.removeChild(bottomBuffer);
   }
 }

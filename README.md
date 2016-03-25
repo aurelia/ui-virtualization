@@ -30,33 +30,56 @@ export function configure(aurelia) {
 
 ## Use the plugin
 
-To get started use the provided CustomElement `VirtualList` and bind an array to its `items` attribute. Inside of the `VirtualList` you use `template-parts` in order to provide the virtual repeater with your template
+Simply bind an array to `virtual-repeat` like you would with the standard `repeat`. The repeated rows need to have equal height throughout the list, and one items per row.
 
+#### div
 ```html
 <template>
-  <virtual-list items.bind="myList">
-    <template replace-part="item-template">      
-          ${$index} ${item}        
-    </template>
-  </virtual-list>  
+  <div virtual-repeat="item of items">
+    ${$index} ${item}
+  </div>
+</template>
+```
+
+#### unordered list
+```html
+<template>
+  <ul>
+    <li virtual-repeat="item of items">
+    ${$index} ${item}
+    </li>
+  </ul>
+</template>
+```
+
+#### table
+```html
+<template>
+  <table>
+    <tr virtual-repeat="item of items">
+      <td>${$index}</td>
+      <td>${item}</td>
+    </tr>
+  </table>
 </template>
 ```
 
 ```javascript
 export class MyVirtualList {
-    myList = ['Foo', 'Bar', 'Baz'];
+    items = ['Foo', 'Bar', 'Baz'];
 }
 ```
 
-The container, in this case the `VirtualList` element, needs to have a defined height and block position. Also the repeated rows need to have equal height throughout the list
+With a surrounding fixed height container with overflow scroll. Note that `overflow: scroll` styling needs to be inline on the elemenet.
 
-```css
-virtual-list {
-  height: 500px;
-  display: block;
-  overflow: scroll;
-  -webkit-overflow-scrolling: touch; /* for momentum scroll on iOS */
-}
+```html
+<template>
+  <div style="overflow: scroll; height: 90vh">
+    <div virtual-repeat="item of items">
+      ${$index} ${item}
+    </div>
+  </div>
+</template>
 ```
 
 ## [Demo](http://martingust.github.io/ui-virtualization/)
