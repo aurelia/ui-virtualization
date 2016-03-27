@@ -60,3 +60,7 @@ export function getStyleValue(element, style) {
   styleValue = parseInt(currentStyle[style], 10);
   return Number.isNaN(styleValue) ? 0 : styleValue;
 }
+
+export function getElementDistanceToBottomViewPort(element) {
+  return document.documentElement.clientHeight - element.getBoundingClientRect().bottom;
+}

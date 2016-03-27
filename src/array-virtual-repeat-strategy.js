@@ -1,6 +1,6 @@
 import {ArrayRepeatStrategy} from 'aurelia-templating-resources/array-repeat-strategy';
 import {createFullOverrideContext} from 'aurelia-templating-resources/repeat-utilities';
-import {updateVirtualOverrideContexts, rebindAndMoveView} from './utilities';
+import {updateVirtualOverrideContexts, rebindAndMoveView, getElementDistanceToBottomViewPort} from './utilities';
 
 /**
 * A strategy for repeating a template over an array.
@@ -204,30 +204,32 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
   _handleAddedSplices(repeat, array, splices) {
     let arrayLength = array.length;
     let viewSlot = repeat.viewSlot;
-    let viewCount = repeat.viewCount();
     for (let i = 0, ii = splices.length; i < ii; ++i) {
       let splice = splices[i];
       let addIndex = splice.index;
       let end = splice.index + splice.addedCount;
-
       for (; addIndex < end; ++addIndex) {
-        if (viewCount === 0 || !this._isIndexBeforeViewSlot(repeat, viewSlot, addIndex) && !this._isIndexAfterViewSlot(repeat, viewSlot, addIndex)) {
+        let hasDistanceToBottomViewPort = getElementDistanceToBottomViewPort(repeat.bottomBuffer.previousElementSibling) > 0;
+        if (repeat.viewCount() === 0 || (!this._isIndexBeforeViewSlot(repeat, viewSlot, addIndex) && !this._isIndexAfterViewSlot(repeat, viewSlot, addIndex)) || hasDistanceToBottomViewPort)  {
           let overrideContext = createFullOverrideContext(repeat, array[addIndex], addIndex, arrayLength);
           repeat.insertView(addIndex, overrideContext.bindingContext, overrideContext);
           if (!repeat._hasCalculatedSizes) {
             repeat._calcInitialHeights(1);
-          } else if (viewCount > repeat._viewsLength) {
-            repeat.removeView(viewCount - 1, true, true);
-            repeat._bottomBufferHeight = repeat._bottomBufferHeight + repeat.itemHeight;
+          } else if (repeat.viewCount() > repeat._viewsLength) {
+            if (hasDistanceToBottomViewPort) {
+              repeat.removeView(0, true, true);
+              repeat._topBufferHeight = repeat._topBufferHeight + repeat.itemHeight;
+              repeat._adjustBufferHeights();
+            } else {
+              repeat.removeView(repeat.viewCount() - 1, true, true);
+              repeat._bottomBufferHeight = repeat._bottomBufferHeight + repeat.itemHeight;
+            }
           }
         } else if (this._isIndexBeforeViewSlot(repeat, viewSlot, addIndex)) {
           repeat._topBufferHeight = repeat._topBufferHeight + repeat.itemHeight;
         } else if (this._isIndexAfterViewSlot(repeat, viewSlot, addIndex)) {
           repeat._bottomBufferHeight = repeat._bottomBufferHeight + repeat.itemHeight;
           repeat.isLastIndex = false;
-          if (repeat._lastRebind > repeat.elementsInView) {
-            repeat._lastRebind--;
-          }
         }
       }
     }
