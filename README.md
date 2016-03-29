@@ -35,7 +35,7 @@ Simply bind an array to `virtual-repeat` like you would with the standard `repea
 #### div
 ```html
 <template>
-  <div virtual-repeat="item of items">
+  <div virtual-repeat.for="item of items">
     ${$index} ${item}
   </div>
 </template>
@@ -45,7 +45,7 @@ Simply bind an array to `virtual-repeat` like you would with the standard `repea
 ```html
 <template>
   <ul>
-    <li virtual-repeat="item of items">
+    <li virtual-repeat.for="item of items">
     ${$index} ${item}
     </li>
   </ul>
@@ -56,7 +56,7 @@ Simply bind an array to `virtual-repeat` like you would with the standard `repea
 ```html
 <template>
   <table>
-    <tr virtual-repeat="item of items">
+    <tr virtual-repeat.for="item of items">
       <td>${$index}</td>
       <td>${item}</td>
     </tr>
