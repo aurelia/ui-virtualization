@@ -75,7 +75,7 @@ With a surrounding fixed height container with overflow scroll. Note that `overf
 ```html
 <template>
   <div style="overflow: scroll; height: 90vh">
-    <div virtual-repeat="item of items">
+    <div virtual-repeat.for="item of items">
       ${$index} ${item}
     </div>
   </div>
