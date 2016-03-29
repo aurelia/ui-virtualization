@@ -1,13 +1,14 @@
-define(['exports', './virtual-repeat', './virtual-list'], function (exports, _virtualRepeat, _virtualList) {
+define(['exports', './virtual-repeat'], function (exports, _virtualRepeat) {
   'use strict';
 
-  exports.__esModule = true;
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.VirtualRepeat = undefined;
   exports.configure = configure;
-
   function configure(config) {
-    config.globalResources('./virtual-repeat', './virtual-list');
+    config.globalResources('./virtual-repeat');
   }
 
   exports.VirtualRepeat = _virtualRepeat.VirtualRepeat;
-  exports.VirtualList = _virtualList.VirtualList;
 });

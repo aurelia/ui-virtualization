@@ -1,3 +1,40 @@
+## 0.4.0 (2016-03-29)
+
+
+#### Bug Fixes
+
+* **array-virtual-repeat-strategy:**
+  * add new items to the distance to bottom view port ([60383100](http://github.com/aurelia/ui-virtualization/commit/603831008f43fb1fb67a538b9191483c3a1259fc))
+  * queue changes when animating ([c4fff68b](http://github.com/aurelia/ui-virtualization/commit/c4fff68b6403eca9a3802653f77d250ce749a1ab))
+  * do not remove views when less than max rendered ([312f4caf](http://github.com/aurelia/ui-virtualization/commit/312f4caf2dac668225404e8d5dfa7602ffb87762))
+  * handel added items when scrolled to bottom ([ed3b014c](http://github.com/aurelia/ui-virtualization/commit/ed3b014c63bcafc4df5f52ea72b4426c5f057260))
+  * handle remove from bottom and top ([46c8ba71](http://github.com/aurelia/ui-virtualization/commit/46c8ba711c0455a5ba461fe2134f1f14c7af4c9d))
+* **utilities:** rename updateOverrideContexts to updateVirtualOverrideContexts ([c879a08f](http://github.com/aurelia/ui-virtualization/commit/c879a08f6f6b693fe0e4e0ba74302199c64cd6ef))
+* **view-strategy:**
+  * keep anchor node at bottom ([7857725f](http://github.com/aurelia/ui-virtualization/commit/7857725f9293b05a3a3672d6ca4902a0f050218f))
+  * handle detached ([4f10fcc5](http://github.com/aurelia/ui-virtualization/commit/4f10fcc5ed3a62cd6ea2b9a72327117c111221cc))
+* **virtual-repeat:**
+  * initialize scroll at top to true ([7264d3d6](http://github.com/aurelia/ui-virtualization/commit/7264d3d6930293dc5bb869dd47ff464f070a333f))
+  * stop updating when scrolling passed the list ([b7c19e6f](http://github.com/aurelia/ui-virtualization/commit/b7c19e6f111e4fa594d2f37d7b999039dd272a8b))
+  * move views at top and bottom when virtualised ([7775796e](http://github.com/aurelia/ui-virtualization/commit/7775796eb2586bf27c3ed08ac8e5a420db97c6e0))
+  * remove resize handling ([029e6efb](http://github.com/aurelia/ui-virtualization/commit/029e6efb21910c79a28ae6fe3c3968a39968da42))
+  * support fixed height container ([80704074](http://github.com/aurelia/ui-virtualization/commit/807040741d900e503ed205c7f2cd971110b42aeb))
+  * do not move view when at top or bottom ([dce3107a](http://github.com/aurelia/ui-virtualization/commit/dce3107a519c3d65a768b4c4221b8fa80f25b651))
+  * handle bind with less items than whats fits in view port ([9e6f121a](http://github.com/aurelia/ui-virtualization/commit/9e6f121a26c5995ea4aa5ac262274e006db17683), closes [#39](http://github.com/aurelia/ui-virtualization/issues/39))
+  * remove scrollList ([05ecd2ff](http://github.com/aurelia/ui-virtualization/commit/05ecd2ff8371c46e448af12ef9c3a5bb2cd73029))
+  * handle remove items from list ([498296b1](http://github.com/aurelia/ui-virtualization/commit/498296b1b785cbbaa0476ec0c6e932daaa00643f))
+
+
+#### Features
+
+* **TableStrategy:** remove need for surrounding container ([617d7570](http://github.com/aurelia/ui-virtualization/commit/617d7570627ae4b3ff63049a09237446f0623d52))
+* **virtual-list:** remove VirtualList ([d52201c2](http://github.com/aurelia/ui-virtualization/commit/d52201c2cee28c25728fb1e00a9f6f90f9f8fc61))
+* **virtual-repeat:**
+  * support multiple virtual-repeat after each other ([5e99c07e](http://github.com/aurelia/ui-virtualization/commit/5e99c07e3a3a382f787d90eef27c0e39750e330a))
+  * no need for surrounding container ([37c68bbd](http://github.com/aurelia/ui-virtualization/commit/37c68bbd2c5fc1b141aa97a16e40f94fcc95368e))
+  * support inline virtualization ([4805482c](http://github.com/aurelia/ui-virtualization/commit/4805482ce46199abfef694a935e3f5e092dfcc80))
+
+
 ### 0.3.2 (2016-03-01)
 
 

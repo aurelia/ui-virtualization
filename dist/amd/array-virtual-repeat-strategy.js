@@ -1,26 +1,53 @@
-define(['exports', 'aurelia-templating-resources/array-repeat-strategy', 'aurelia-templating-resources/repeat-utilities'], function (exports, _aureliaTemplatingResourcesArrayRepeatStrategy, _aureliaTemplatingResourcesRepeatUtilities) {
+define(['exports', 'aurelia-templating-resources/array-repeat-strategy', 'aurelia-templating-resources/repeat-utilities', './utilities'], function (exports, _arrayRepeatStrategy, _repeatUtilities, _utilities) {
   'use strict';
 
-  exports.__esModule = true;
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.ArrayVirtualRepeatStrategy = undefined;
 
-  function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  }
 
-  function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+  function _possibleConstructorReturn(self, call) {
+    if (!self) {
+      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+    }
 
-  var ArrayVirtualRepeatStrategy = (function (_ArrayRepeatStrategy) {
+    return call && (typeof call === "object" || typeof call === "function") ? call : self;
+  }
+
+  function _inherits(subClass, superClass) {
+    if (typeof superClass !== "function" && superClass !== null) {
+      throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
+    }
+
+    subClass.prototype = Object.create(superClass && superClass.prototype, {
+      constructor: {
+        value: subClass,
+        enumerable: false,
+        writable: true,
+        configurable: true
+      }
+    });
+    if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+  }
+
+  var ArrayVirtualRepeatStrategy = exports.ArrayVirtualRepeatStrategy = function (_ArrayRepeatStrategy) {
     _inherits(ArrayVirtualRepeatStrategy, _ArrayRepeatStrategy);
 
     function ArrayVirtualRepeatStrategy() {
       _classCallCheck(this, ArrayVirtualRepeatStrategy);
 
-      _ArrayRepeatStrategy.apply(this, arguments);
+      return _possibleConstructorReturn(this, _ArrayRepeatStrategy.apply(this, arguments));
     }
 
     ArrayVirtualRepeatStrategy.prototype.createFirstItem = function createFirstItem(repeat) {
-      var overrideContext = _aureliaTemplatingResourcesRepeatUtilities.createFullOverrideContext(repeat, repeat.items[0], 0, 1);
-      var view = repeat.viewFactory.create();
-      view.bind(overrideContext.bindingContext, overrideContext);
-      repeat.viewSlot.add(view);
+      var overrideContext = (0, _repeatUtilities.createFullOverrideContext)(repeat, repeat.items[0], 0, 1);
+      repeat.addView(overrideContext.bindingContext, overrideContext);
     };
 
     ArrayVirtualRepeatStrategy.prototype.instanceChanged = function instanceChanged(repeat, items) {
@@ -29,27 +56,25 @@ define(['exports', 'aurelia-templating-resources/array-repeat-strategy', 'aureli
 
     ArrayVirtualRepeatStrategy.prototype._standardProcessInstanceChanged = function _standardProcessInstanceChanged(repeat, items) {
       for (var i = 1, ii = repeat._viewsLength; i < ii; ++i) {
-        var overrideContext = _aureliaTemplatingResourcesRepeatUtilities.createFullOverrideContext(repeat, items[i], i, ii);
-        var view = repeat.viewFactory.create();
-        view.bind(overrideContext.bindingContext, overrideContext);
-        repeat.viewSlot.add(view);
+        var overrideContext = (0, _repeatUtilities.createFullOverrideContext)(repeat, items[i], i, ii);
+        repeat.addView(overrideContext.bindingContext, overrideContext);
       }
     };
 
     ArrayVirtualRepeatStrategy.prototype._inPlaceProcessItems = function _inPlaceProcessItems(repeat, items) {
       var itemsLength = items.length;
-      var viewsLength = repeat.viewSlot.children.length;
+      var viewsLength = repeat.viewCount();
       var first = repeat._getIndexOfFirstView();
 
       while (viewsLength > repeat._viewsLength) {
         viewsLength--;
-        repeat.viewSlot.removeAt(viewsLength, true);
+        repeat.removeView(viewsLength, true);
       }
 
       var local = repeat.local;
 
       for (var i = 0; i < viewsLength; i++) {
-        var view = repeat.viewSlot.children[i];
+        var view = repeat.view(i);
         var last = i === itemsLength - 1;
         var middle = i !== 0 && !last;
 
@@ -60,166 +85,193 @@ define(['exports', 'aurelia-templating-resources/array-repeat-strategy', 'aureli
         view.bindingContext[local] = items[i + first];
         view.overrideContext.$middle = middle;
         view.overrideContext.$last = last;
-        var j = view.bindings.length;
-        while (j--) {
-          _aureliaTemplatingResourcesRepeatUtilities.updateOneTimeBinding(view.bindings[j]);
-        }
-        j = view.controllers.length;
-        while (j--) {
-          var k = view.controllers[j].boundProperties.length;
-          while (k--) {
-            var binding = view.controllers[j].boundProperties[k].binding;
-            _aureliaTemplatingResourcesRepeatUtilities.updateOneTimeBinding(binding);
-          }
-        }
+        repeat.updateBindings(view);
       }
 
-      for (var i = viewsLength; i < repeat._viewsLength; i++) {
-        var overrideContext = _aureliaTemplatingResourcesRepeatUtilities.createFullOverrideContext(repeat, items[i], i, itemsLength);
-        var view = repeat.viewFactory.create();
-        view.bind(overrideContext.bindingContext, overrideContext);
-        repeat.viewSlot.add(view);
+      var minLength = Math.min(repeat._viewsLength, items.length);
+      for (var _i = viewsLength; _i < minLength; _i++) {
+        var overrideContext = (0, _repeatUtilities.createFullOverrideContext)(repeat, items[_i], _i, itemsLength);
+        repeat.addView(overrideContext.bindingContext, overrideContext);
       }
     };
 
     ArrayVirtualRepeatStrategy.prototype.instanceMutated = function instanceMutated(repeat, array, splices) {
-      this._updateViews(repeat, repeat.items, splices);
+      this._standardProcessInstanceMutated(repeat, array, splices);
     };
 
     ArrayVirtualRepeatStrategy.prototype._standardProcessInstanceMutated = function _standardProcessInstanceMutated(repeat, array, splices) {
-      var _this = this;
+      var _this2 = this;
+
+      if (repeat.__queuedSplices) {
+        for (var i = 0, ii = splices.length; i < ii; ++i) {
+          var _splices$i = splices[i];
+          var index = _splices$i.index;
+          var removed = _splices$i.removed;
+          var addedCount = _splices$i.addedCount;
+
+          mergeSplice(repeat.__queuedSplices, index, removed, addedCount);
+        }
+        repeat.__array = array.slice(0);
+        return;
+      }
+
+      var maybePromise = this._runSplices(repeat, array.slice(0), splices);
+      if (maybePromise instanceof Promise) {
+        (function () {
+          var queuedSplices = repeat.__queuedSplices = [];
+
+          var runQueuedSplices = function runQueuedSplices() {
+            if (!queuedSplices.length) {
+              delete repeat.__queuedSplices;
+              delete repeat.__array;
+              return;
+            }
+
+            var nextPromise = _this2._runSplices(repeat, repeat.__array, queuedSplices) || Promise.resolve();
+            nextPromise.then(runQueuedSplices);
+          };
+
+          maybePromise.then(runQueuedSplices);
+        })();
+      }
+    };
+
+    ArrayVirtualRepeatStrategy.prototype._runSplices = function _runSplices(repeat, array, splices) {
+      var _this3 = this;
 
       var removeDelta = 0;
-      var viewSlot = repeat.viewSlot;
       var rmPromises = [];
 
       for (var i = 0, ii = splices.length; i < ii; ++i) {
         var splice = splices[i];
         var removed = splice.removed;
-        var viewIndex = this._getViewIndex(repeat, viewSlot, splice.index);
-        if (viewIndex >= 0) {
-          for (var j = 0, jj = removed.length; j < jj; ++j) {
-            var viewOrPromise = viewSlot.removeAt(viewIndex + removeDelta + rmPromises.length, true);
-
-            var _length = viewSlot.children.length;
-            var overrideContext = _aureliaTemplatingResourcesRepeatUtilities.createFullOverrideContext(repeat, repeat.items[_length], _length, repeat.items.length);
-            var view = repeat.viewFactory.create();
-            view.bind(overrideContext.bindingContext, overrideContext);
-            repeat.viewSlot.isAttached = false;
-            repeat.viewSlot.add(view);
-            repeat.viewSlot.isAttached = true;
-
-            if (viewOrPromise instanceof Promise) {
-              rmPromises.push(viewOrPromise);
-            }
+        for (var j = 0, jj = removed.length; j < jj; ++j) {
+          var viewOrPromise = this._removeViewAt(repeat, splice.index + removeDelta + rmPromises.length, true);
+          if (viewOrPromise instanceof Promise) {
+            rmPromises.push(viewOrPromise);
           }
-          removeDelta -= splice.addedCount;
         }
+        removeDelta -= splice.addedCount;
       }
 
       if (rmPromises.length > 0) {
-        Promise.all(rmPromises).then(function () {
-          _this._handleAddedSplices(repeat, array, splices);
-          _this._updateViews(repeat, array, splices);
+        return Promise.all(rmPromises).then(function () {
+          _this3._handleAddedSplices(repeat, array, splices);
+          (0, _utilities.updateVirtualOverrideContexts)(repeat, 0);
         });
-      } else {
-        this._handleAddedSplices(repeat, array, splices);
-        this._updateViews(repeat, array, splices);
       }
+      this._handleAddedSplices(repeat, array, splices);
+      (0, _utilities.updateVirtualOverrideContexts)(repeat, 0);
     };
 
-    ArrayVirtualRepeatStrategy.prototype._updateViews = function _updateViews(repeat, items, splices) {
-      var totalAdded = 0;
-      var totalRemoved = 0;
-      repeat.items = items;
-
-      for (var i = 0, ii = splices.length; i < ii; ++i) {
-        var splice = splices[0];
-        totalAdded += splice.addedCount;
-        totalRemoved += splice.removed.length;
-      }
-
-      var index = repeat._getIndexOfFirstView() - totalRemoved;
-
-      if (index < 0) {
-        index = 0;
-      }
-
+    ArrayVirtualRepeatStrategy.prototype._removeViewAt = function _removeViewAt(repeat, collectionIndex, returnToCache) {
+      var viewOrPromise = void 0;
+      var view = void 0;
       var viewSlot = repeat.viewSlot;
+      var viewCount = repeat.viewCount();
+      var viewAddIndex = void 0;
 
-      for (var i = 0, ii = viewSlot.children.length; i < ii; ++i) {
-        var view = viewSlot.children[i];
-        var nextIndex = index + i;
-        var itemsLength = items.length;
-        if (nextIndex <= itemsLength - 1) {
-          view.bindingContext[repeat.local] = items[nextIndex];
-          _aureliaTemplatingResourcesRepeatUtilities.updateOverrideContext(view.overrideContext, nextIndex, itemsLength);
+      if (!this._isIndexBeforeViewSlot(repeat, viewSlot, collectionIndex) && !this._isIndexAfterViewSlot(repeat, viewSlot, collectionIndex)) {
+        var viewIndex = this._getViewIndex(repeat, viewSlot, collectionIndex);
+        viewOrPromise = repeat.removeView(viewIndex, returnToCache);
+        if (repeat.items.length > viewCount) {
+          var collectionAddIndex = void 0;
+          if (repeat._bottomBufferHeight > repeat.itemHeight) {
+            viewAddIndex = viewCount;
+            collectionAddIndex = repeat._getIndexOfLastView() + 1;
+            repeat._bottomBufferHeight = repeat._bottomBufferHeight - repeat.itemHeight;
+          } else if (repeat._topBufferHeight > 0) {
+            viewAddIndex = 0;
+            collectionAddIndex = repeat._getIndexOfFirstView() - 1;
+            repeat._topBufferHeight = repeat._topBufferHeight - repeat.itemHeight;
+          }
+          var data = repeat.items[collectionAddIndex];
+          if (data) {
+            var overrideContext = (0, _repeatUtilities.createFullOverrideContext)(repeat, repeat.items[collectionAddIndex], collectionAddIndex, repeat.items.length);
+            view = repeat.viewFactory.create();
+            view.bind(overrideContext.bindingContext, overrideContext);
+          }
+        } else {
+          return viewOrPromise;
         }
+      } else if (this._isIndexBeforeViewSlot(repeat, viewSlot, collectionIndex)) {
+        if (repeat._bottomBufferHeight > 0) {
+          repeat._bottomBufferHeight = repeat._bottomBufferHeight - repeat.itemHeight;
+          (0, _utilities.rebindAndMoveView)(repeat, repeat.view(0), repeat.view(0).overrideContext.$index, true);
+        } else {
+          repeat._topBufferHeight = repeat._topBufferHeight - repeat.itemHeight;
+        }
+      } else if (this._isIndexAfterViewSlot(repeat, viewSlot, collectionIndex)) {
+        repeat._bottomBufferHeight = repeat._bottomBufferHeight - repeat.itemHeight;
       }
 
-      var bufferDelta = repeat.itemHeight * totalAdded + repeat.itemHeight * -totalRemoved;
-
-      if (repeat._bottomBufferHeight + bufferDelta < 0) {
-        repeat._topBufferHeight = repeat._topBufferHeight + bufferDelta;
-      } else {
-        repeat._bottomBufferHeight = repeat._bottomBufferHeight + bufferDelta;
-      }
-
-      if (repeat._bottomBufferHeight > 0) {
-        repeat.isLastIndex = false;
+      if (viewOrPromise instanceof Promise) {
+        viewOrPromise.then(function () {
+          repeat.viewSlot.insert(viewAddIndex, view);
+          repeat._adjustBufferHeights();
+        });
+        return undefined;
+      } else if (view) {
+        repeat.viewSlot.insert(viewAddIndex, view);
       }
 
       repeat._adjustBufferHeights();
     };
 
+    ArrayVirtualRepeatStrategy.prototype._isIndexBeforeViewSlot = function _isIndexBeforeViewSlot(repeat, viewSlot, index) {
+      var viewIndex = this._getViewIndex(repeat, viewSlot, index);
+      return viewIndex < 0;
+    };
+
+    ArrayVirtualRepeatStrategy.prototype._isIndexAfterViewSlot = function _isIndexAfterViewSlot(repeat, viewSlot, index) {
+      var viewIndex = this._getViewIndex(repeat, viewSlot, index);
+      return viewIndex > repeat._viewsLength - 1;
+    };
+
+    ArrayVirtualRepeatStrategy.prototype._getViewIndex = function _getViewIndex(repeat, viewSlot, index) {
+      if (repeat.viewCount() === 0) {
+        return -1;
+      }
+
+      var topBufferItems = repeat._topBufferHeight / repeat.itemHeight;
+      return index - topBufferItems;
+    };
+
     ArrayVirtualRepeatStrategy.prototype._handleAddedSplices = function _handleAddedSplices(repeat, array, splices) {
-      var spliceIndexLow = undefined;
       var arrayLength = array.length;
+      var viewSlot = repeat.viewSlot;
       for (var i = 0, ii = splices.length; i < ii; ++i) {
         var splice = splices[i];
         var addIndex = splice.index;
         var end = splice.index + splice.addedCount;
-
-        if (typeof spliceIndexLow === 'undefined' || spliceIndexLow === null || spliceIndexLow > splice.index) {
-          spliceIndexLow = addIndex;
-        }
-
         for (; addIndex < end; ++addIndex) {
-          var overrideContext = _aureliaTemplatingResourcesRepeatUtilities.createFullOverrideContext(repeat, array[addIndex], addIndex, arrayLength);
-          var view = repeat.viewFactory.create();
-          view.bind(overrideContext.bindingContext, overrideContext);
-          repeat.viewSlot.insert(addIndex, view);
+          var hasDistanceToBottomViewPort = (0, _utilities.getElementDistanceToBottomViewPort)(repeat.bottomBuffer.previousElementSibling) > 0;
+          if (repeat.viewCount() === 0 || !this._isIndexBeforeViewSlot(repeat, viewSlot, addIndex) && !this._isIndexAfterViewSlot(repeat, viewSlot, addIndex) || hasDistanceToBottomViewPort) {
+            var overrideContext = (0, _repeatUtilities.createFullOverrideContext)(repeat, array[addIndex], addIndex, arrayLength);
+            repeat.insertView(addIndex, overrideContext.bindingContext, overrideContext);
+            if (!repeat._hasCalculatedSizes) {
+              repeat._calcInitialHeights(1);
+            } else if (repeat.viewCount() > repeat._viewsLength) {
+              if (hasDistanceToBottomViewPort) {
+                repeat.removeView(0, true, true);
+                repeat._topBufferHeight = repeat._topBufferHeight + repeat.itemHeight;
+                repeat._adjustBufferHeights();
+              } else {
+                repeat.removeView(repeat.viewCount() - 1, true, true);
+                repeat._bottomBufferHeight = repeat._bottomBufferHeight + repeat.itemHeight;
+              }
+            }
+          } else if (this._isIndexBeforeViewSlot(repeat, viewSlot, addIndex)) {
+            repeat._topBufferHeight = repeat._topBufferHeight + repeat.itemHeight;
+          } else if (this._isIndexAfterViewSlot(repeat, viewSlot, addIndex)) {
+            repeat._bottomBufferHeight = repeat._bottomBufferHeight + repeat.itemHeight;
+            repeat.isLastIndex = false;
+          }
         }
       }
-
-      return spliceIndexLow;
-    };
-
-    ArrayVirtualRepeatStrategy.prototype._isIndexInDom = function _isIndexInDom(viewSlot, index) {
-      if (viewSlot.children.length === 0) {
-        return false;
-      }
-
-      var indexLow = viewSlot.children[0].overrideContext.$index;
-      var indexHi = viewSlot.children[viewSlot.children.length - 1].overrideContext.$index;
-
-      return index >= indexLow && index <= indexHi;
-    };
-
-    ArrayVirtualRepeatStrategy.prototype._getViewIndex = function _getViewIndex(repeat, viewSlot, index) {
-      if (viewSlot.children.length === 0) {
-        return -1;
-      }
-      var indexLow = viewSlot.children[0].overrideContext.$index;
-      var viewIndex = index - indexLow;
-      if (viewIndex > repeat._viewsLength - 1) {
-        viewIndex = -1;
-      }
-      return viewIndex;
+      repeat._adjustBufferHeights();
     };
 
     return ArrayVirtualRepeatStrategy;
-  })(_aureliaTemplatingResourcesArrayRepeatStrategy.ArrayRepeatStrategy);
-
-  exports.ArrayVirtualRepeatStrategy = ArrayVirtualRepeatStrategy;
+  }(_arrayRepeatStrategy.ArrayRepeatStrategy);
 });

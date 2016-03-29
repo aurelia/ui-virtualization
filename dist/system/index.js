@@ -1,24 +1,19 @@
-System.register(['./virtual-repeat', './virtual-list'], function (_export) {
-  'use strict';
+'use strict';
 
-  var VirtualRepeat, VirtualList;
-
-  _export('configure', configure);
-
-  function configure(config) {
-    config.globalResources('./virtual-repeat', './virtual-list');
-  }
-
+System.register(['./virtual-repeat'], function (_export, _context) {
+  var VirtualRepeat;
   return {
     setters: [function (_virtualRepeat) {
       VirtualRepeat = _virtualRepeat.VirtualRepeat;
-    }, function (_virtualList) {
-      VirtualList = _virtualList.VirtualList;
     }],
     execute: function () {
-      _export('VirtualRepeat', VirtualRepeat);
+      function configure(config) {
+        config.globalResources('./virtual-repeat');
+      }
 
-      _export('VirtualList', VirtualList);
+      _export('configure', configure);
+
+      _export('VirtualRepeat', VirtualRepeat);
     }
   };
 });

@@ -1,15 +1,15 @@
 'use strict';
 
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.VirtualRepeat = undefined;
 exports.configure = configure;
 
 var _virtualRepeat = require('./virtual-repeat');
 
-var _virtualList = require('./virtual-list');
-
 function configure(config) {
-  config.globalResources('./virtual-repeat', './virtual-list');
+  config.globalResources('./virtual-repeat');
 }
 
 exports.VirtualRepeat = _virtualRepeat.VirtualRepeat;
-exports.VirtualList = _virtualList.VirtualList;

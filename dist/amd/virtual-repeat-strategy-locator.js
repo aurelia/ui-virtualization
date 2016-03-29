@@ -1,29 +1,58 @@
-define(['exports', 'aurelia-templating-resources/repeat-strategy-locator', './array-virtual-repeat-strategy'], function (exports, _aureliaTemplatingResourcesRepeatStrategyLocator, _arrayVirtualRepeatStrategy) {
+define(['exports', 'aurelia-templating-resources/repeat-strategy-locator', './array-virtual-repeat-strategy'], function (exports, _repeatStrategyLocator, _arrayVirtualRepeatStrategy) {
   'use strict';
 
-  exports.__esModule = true;
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.VirtualRepeatStrategyLocator = undefined;
 
-  function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  }
 
-  function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+  function _possibleConstructorReturn(self, call) {
+    if (!self) {
+      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+    }
 
-  var VirtualRepeatStrategyLocator = (function (_RepeatStrategyLocator) {
-    _inherits(VirtualRepeatStrategyLocator, _RepeatStrategyLocator);
+    return call && (typeof call === "object" || typeof call === "function") ? call : self;
+  }
+
+  function _inherits(subClass, superClass) {
+    if (typeof superClass !== "function" && superClass !== null) {
+      throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
+    }
+
+    subClass.prototype = Object.create(superClass && superClass.prototype, {
+      constructor: {
+        value: subClass,
+        enumerable: false,
+        writable: true,
+        configurable: true
+      }
+    });
+    if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+  }
+
+  var VirtualRepeatStrategyLocator = exports.VirtualRepeatStrategyLocator = function (_RepeatStrategyLocato) {
+    _inherits(VirtualRepeatStrategyLocator, _RepeatStrategyLocato);
 
     function VirtualRepeatStrategyLocator() {
       _classCallCheck(this, VirtualRepeatStrategyLocator);
 
-      _RepeatStrategyLocator.call(this);
-      this.matchers = [];
-      this.strategies = [];
+      var _this = _possibleConstructorReturn(this, _RepeatStrategyLocato.call(this));
 
-      this.addStrategy(function (items) {
+      _this.matchers = [];
+      _this.strategies = [];
+
+      _this.addStrategy(function (items) {
         return items instanceof Array;
       }, new _arrayVirtualRepeatStrategy.ArrayVirtualRepeatStrategy());
+      return _this;
     }
 
     return VirtualRepeatStrategyLocator;
-  })(_aureliaTemplatingResourcesRepeatStrategyLocator.RepeatStrategyLocator);
-
-  exports.VirtualRepeatStrategyLocator = VirtualRepeatStrategyLocator;
+  }(_repeatStrategyLocator.RepeatStrategyLocator);
 });

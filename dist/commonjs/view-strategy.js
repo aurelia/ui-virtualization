@@ -59,9 +59,9 @@ var TableStrategy = exports.TableStrategy = function () {
     return buffer;
   };
 
-  TableStrategy.prototype.removeBufferElements = function removeBufferElements(scrollList, topBuffer, bottomBuffer) {
-    scrollList.removeChild(topBuffer.parentElement);
-    scrollList.removeChild(bottomBuffer.parentElement);
+  TableStrategy.prototype.removeBufferElements = function removeBufferElements(element, topBuffer, bottomBuffer) {
+    element.parentElement.removeChild(topBuffer.parentElement);
+    element.parentElement.removeChild(bottomBuffer.parentElement);
   };
 
   return TableStrategy;
@@ -81,7 +81,9 @@ var DefaultStrategy = exports.DefaultStrategy = function () {
   };
 
   DefaultStrategy.prototype.moveViewLast = function moveViewLast(view, bottomBuffer) {
-    (0, _utilities.insertBeforeNode)(view, bottomBuffer);
+    var previousSibling = bottomBuffer.previousSibling;
+    var referenceNode = previousSibling.nodeType === 8 && previousSibling.data === 'anchor' ? previousSibling : bottomBuffer;
+    (0, _utilities.insertBeforeNode)(view, referenceNode);
   };
 
   DefaultStrategy.prototype.createTopBufferElement = function createTopBufferElement(element) {
@@ -101,8 +103,8 @@ var DefaultStrategy = exports.DefaultStrategy = function () {
   };
 
   DefaultStrategy.prototype.removeBufferElements = function removeBufferElements(element, topBuffer, bottomBuffer) {
-    element.removeChild(topBuffer);
-    element.removeChild(bottomBuffer);
+    element.parentElement.removeChild(topBuffer);
+    element.parentElement.removeChild(bottomBuffer);
   };
 
   return DefaultStrategy;
