@@ -27,16 +27,16 @@ body {
   margin-top: 50px;
 }
 
+.page-host {
+  margin-top: 70px;
+}
+
 section {
   margin: 0 20px;
 }
 
 .navbar-nav li.loader {
   margin: 12px 24px 0 6px;
-}
-
-.pictureDetail {
-  max-width: 425px;
 }
 
 
@@ -121,4 +121,8 @@ section {
   color: #fff;
   text-align: center;
   line-height: 65px;
+}
+
+table {
+  width: 100%;
 }
