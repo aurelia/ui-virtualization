@@ -82,7 +82,9 @@ With a surrounding fixed height container with overflow scroll. Note that `overf
 </template>
 ```
 
-## [Demo](http://martingust.github.io/ui-virtualization/)
+If you are running the plugin in the `skeleton-naviagion` project, make sure to remove `overflow-x: hidden;` and `overflow-y: auto;` from `.page-host` in `styles.css`.
+
+## [Demo](http://aurelia.io/ui-virtualization/)
 
 ## Polyfills
 
