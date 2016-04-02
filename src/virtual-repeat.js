@@ -19,7 +19,8 @@ import {viewsRequireLifecycle} from 'aurelia-templating-resources/analyze-view-f
 import {
   getStyleValue,
   calcOuterHeight,
-  rebindAndMoveView
+  rebindAndMoveView,
+  getElementDistanceToTopViewPort
 } from './utilities';
 import {VirtualRepeatStrategyLocator} from './virtual-repeat-strategy-locator';
 import {ViewStrategyLocator} from './view-strategy';
@@ -72,6 +73,7 @@ export class VirtualRepeat extends AbstractRepeater {
     this.bottomBuffer = this.viewStrategy.createBottomBufferElement(element);
     this.itemsChanged();
     this.scrollListener = () => this._onScroll();
+    this.distanceToTop = getElementDistanceToTopViewPort(this.topBuffer.nextElementSibling);
     let containerStyle = this.scrollContainer.style;
     if (containerStyle.overflowY === 'scroll' || containerStyle.overflow === 'scroll' || containerStyle.overflowY === 'auto' || containerStyle.overflow === 'auto') {
       this._fixedHeightContainer = true;
@@ -108,6 +110,7 @@ export class VirtualRepeat extends AbstractRepeater {
     this.isLastIndex = false;
     this.scrollContainer = null;
     this.scrollContainerHeight = null;
+    this.distanceToTop = null;
     this.removeAllViews(true);
     if (this.scrollHandler) {
       this.scrollHandler.dispose();
@@ -183,7 +186,7 @@ export class VirtualRepeat extends AbstractRepeater {
       return;
     }
     let itemHeight = this.itemHeight;
-    let scrollTop = this._fixedHeightContainer ? this.scrollContainer.scrollTop : pageYOffset - this.topBuffer.offsetTop;
+    let scrollTop = this._fixedHeightContainer ? this.scrollContainer.scrollTop : pageYOffset - this.distanceToTop;
     this._first = Math.floor(scrollTop / itemHeight);
     this._first = this._first < 0 ? 0 : this._first;
     if (this._first > this.items.length - this.elementsInView) {
