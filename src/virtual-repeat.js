@@ -280,17 +280,19 @@ export class VirtualRepeat extends AbstractRepeater {
     let items = this.items;
     let index = this._scrollingDown ? this._getIndexOfLastView() + 1 : this._getIndexOfFirstView() - 1;
     let i = 0;
+    let viewToMoveLimit = length - (childrenLength * 2);
     while (i < length && !isAtFirstOrLastIndex()) {
       let view = this.view(viewIndex);
       let nextIndex = getNextIndex(index, i);
       this.isLastIndex = nextIndex >= items.length - 1;
       this._isAtTop = nextIndex <= 0;
       if (!(isAtFirstOrLastIndex() && childrenLength >= items.length)) {
-        rebindAndMoveView(this, view, nextIndex, this._scrollingDown);
+        if (i > viewToMoveLimit) {
+          rebindAndMoveView(this, view, nextIndex, this._scrollingDown);
+        }
         i++;
       }
     }
-
     return length - (length - i);
   }
 
