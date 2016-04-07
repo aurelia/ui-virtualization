@@ -25,6 +25,7 @@ System.config({
     "aurelia-http-client": "npm:aurelia-http-client@1.0.0-beta.1.2.0",
     "aurelia-logging-console": "npm:aurelia-logging-console@1.0.0-beta.1.2.0",
     "aurelia-metadata": "npm:aurelia-metadata@1.0.0-beta.1.2.0",
+    "aurelia-pal": "npm:aurelia-pal@1.0.0-beta.1.2.0",
     "aurelia-path": "npm:aurelia-path@1.0.0-beta.1.2.0",
     "aurelia-templating": "npm:aurelia-templating@1.0.0-beta.1.2.0",
     "aurelia-templating-resources": "npm:aurelia-templating-resources@1.0.0-beta.1.2.0",
