@@ -1,7 +1,7 @@
 'use strict';
 
 System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-templating', 'aurelia-templating-resources', 'aurelia-templating-resources/repeat-utilities', 'aurelia-templating-resources/analyze-view-factory', './utilities', './virtual-repeat-strategy-locator', './view-strategy'], function (_export, _context) {
-  var inject, ObserverLocator, BoundViewFactory, ViewSlot, TargetInstruction, customAttribute, bindable, templateController, AbstractRepeater, getItemsSourceExpression, isOneTime, unwrapExpression, updateOneTimeBinding, viewsRequireLifecycle, getStyleValue, calcOuterHeight, rebindAndMoveView, VirtualRepeatStrategyLocator, ViewStrategyLocator, _dec, _dec2, _class, _desc, _value, _class2, _descriptor, _descriptor2, VirtualRepeat;
+  var inject, ObserverLocator, BoundViewFactory, ViewSlot, TargetInstruction, customAttribute, bindable, templateController, AbstractRepeater, getItemsSourceExpression, isOneTime, unwrapExpression, updateOneTimeBinding, viewsRequireLifecycle, getStyleValue, calcOuterHeight, rebindAndMoveView, getElementDistanceToTopViewPort, VirtualRepeatStrategyLocator, ViewStrategyLocator, _dec, _dec2, _class, _desc, _value, _class2, _descriptor, _descriptor2, VirtualRepeat;
 
   function _initDefineProp(target, property, descriptor, context) {
     if (!descriptor) return;
@@ -101,6 +101,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-tem
       getStyleValue = _utilities.getStyleValue;
       calcOuterHeight = _utilities.calcOuterHeight;
       rebindAndMoveView = _utilities.rebindAndMoveView;
+      getElementDistanceToTopViewPort = _utilities.getElementDistanceToTopViewPort;
     }, function (_virtualRepeatStrategyLocator) {
       VirtualRepeatStrategyLocator = _virtualRepeatStrategyLocator.VirtualRepeatStrategyLocator;
     }, function (_viewStrategy) {
@@ -163,6 +164,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-tem
           this.scrollListener = function () {
             return _this2._onScroll();
           };
+          this.distanceToTop = getElementDistanceToTopViewPort(this.topBuffer.nextElementSibling);
           var containerStyle = this.scrollContainer.style;
           if (containerStyle.overflowY === 'scroll' || containerStyle.overflow === 'scroll' || containerStyle.overflowY === 'auto' || containerStyle.overflow === 'auto') {
             this._fixedHeightContainer = true;
@@ -199,6 +201,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-tem
           this.isLastIndex = false;
           this.scrollContainer = null;
           this.scrollContainerHeight = null;
+          this.distanceToTop = null;
           this.removeAllViews(true);
           if (this.scrollHandler) {
             this.scrollHandler.dispose();
@@ -214,7 +217,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-tem
           }
           var items = this.items;
           this.strategy = this.strategyLocator.getStrategy(items);
-          if (items.length > 0) {
+          if (items.length > 0 && this.viewCount() === 0) {
             this.strategy.createFirstItem(this);
           }
           this._calcInitialHeights(items.length);
@@ -276,7 +279,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-tem
             return;
           }
           var itemHeight = this.itemHeight;
-          var scrollTop = this._fixedHeightContainer ? this.scrollContainer.scrollTop : pageYOffset - this.topBuffer.offsetTop;
+          var scrollTop = this._fixedHeightContainer ? this.scrollContainer.scrollTop : pageYOffset - this.distanceToTop;
           this._first = Math.floor(scrollTop / itemHeight);
           this._first = this._first < 0 ? 0 : this._first;
           if (this._first > this.items.length - this.elementsInView) {
@@ -378,17 +381,19 @@ System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-tem
           var items = this.items;
           var index = this._scrollingDown ? this._getIndexOfLastView() + 1 : this._getIndexOfFirstView() - 1;
           var i = 0;
+          var viewToMoveLimit = length - childrenLength * 2;
           while (i < length && !isAtFirstOrLastIndex()) {
             var view = this.view(viewIndex);
             var nextIndex = getNextIndex(index, i);
             this.isLastIndex = nextIndex >= items.length - 1;
             this._isAtTop = nextIndex <= 0;
             if (!(isAtFirstOrLastIndex() && childrenLength >= items.length)) {
-              rebindAndMoveView(this, view, nextIndex, this._scrollingDown);
+              if (i > viewToMoveLimit) {
+                rebindAndMoveView(this, view, nextIndex, this._scrollingDown);
+              }
               i++;
             }
           }
-
           return length - (length - i);
         };
 

@@ -9,6 +9,7 @@ exports.updateVirtualOverrideContexts = updateVirtualOverrideContexts;
 exports.rebindAndMoveView = rebindAndMoveView;
 exports.getStyleValue = getStyleValue;
 exports.getElementDistanceToBottomViewPort = getElementDistanceToBottomViewPort;
+exports.getElementDistanceToTopViewPort = getElementDistanceToTopViewPort;
 
 var _repeatUtilities = require('aurelia-templating-resources/repeat-utilities');
 
@@ -71,4 +72,8 @@ function getStyleValue(element, style) {
 
 function getElementDistanceToBottomViewPort(element) {
   return document.documentElement.clientHeight - element.getBoundingClientRect().bottom;
+}
+
+function getElementDistanceToTopViewPort(element) {
+  return element.getBoundingClientRect().top;
 }

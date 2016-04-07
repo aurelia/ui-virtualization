@@ -44,6 +44,7 @@ declare module 'aurelia-ui-virtualization' {
   export function rebindAndMoveView(repeat: VirtualRepeat, view: View, index: number, moveToBottom: boolean): void;
   export function getStyleValue(element: any, style: any): any;
   export function getElementDistanceToBottomViewPort(element: any): any;
+  export function getElementDistanceToTopViewPort(element: any): any;
   
   /**
   * A strategy for repeating a template over an array.

@@ -1,6 +1,6 @@
 {
   "name": "aurelia-ui-virtualization",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "A plugin that provides a virtualized repeater and other virtualization services.",
   "keywords": [
     "aurelia",

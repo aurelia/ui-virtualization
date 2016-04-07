@@ -10,6 +10,7 @@ define(['exports', 'aurelia-templating-resources/repeat-utilities'], function (e
   exports.rebindAndMoveView = rebindAndMoveView;
   exports.getStyleValue = getStyleValue;
   exports.getElementDistanceToBottomViewPort = getElementDistanceToBottomViewPort;
+  exports.getElementDistanceToTopViewPort = getElementDistanceToTopViewPort;
   function calcOuterHeight(element) {
     var height = void 0;
     height = element.getBoundingClientRect().height;
@@ -69,5 +70,9 @@ define(['exports', 'aurelia-templating-resources/repeat-utilities'], function (e
 
   function getElementDistanceToBottomViewPort(element) {
     return document.documentElement.clientHeight - element.getBoundingClientRect().bottom;
+  }
+
+  function getElementDistanceToTopViewPort(element) {
+    return element.getBoundingClientRect().top;
   }
 });

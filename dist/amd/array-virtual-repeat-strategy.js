@@ -66,7 +66,7 @@ define(['exports', 'aurelia-templating-resources/array-repeat-strategy', 'aureli
       var viewsLength = repeat.viewCount();
       var first = repeat._getIndexOfFirstView();
 
-      while (viewsLength > repeat._viewsLength) {
+      while (viewsLength > itemsLength) {
         viewsLength--;
         repeat.removeView(viewsLength, true);
       }
