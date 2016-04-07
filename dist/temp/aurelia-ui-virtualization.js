@@ -13,6 +13,7 @@ exports.updateVirtualOverrideContexts = updateVirtualOverrideContexts;
 exports.rebindAndMoveView = rebindAndMoveView;
 exports.getStyleValue = getStyleValue;
 exports.getElementDistanceToBottomViewPort = getElementDistanceToBottomViewPort;
+exports.getElementDistanceToTopViewPort = getElementDistanceToTopViewPort;
 
 var _repeatUtilities = require('aurelia-templating-resources/repeat-utilities');
 
@@ -140,6 +141,10 @@ function getElementDistanceToBottomViewPort(element) {
   return document.documentElement.clientHeight - element.getBoundingClientRect().bottom;
 }
 
+function getElementDistanceToTopViewPort(element) {
+  return element.getBoundingClientRect().top;
+}
+
 var ArrayVirtualRepeatStrategy = exports.ArrayVirtualRepeatStrategy = function (_ArrayRepeatStrategy) {
   _inherits(ArrayVirtualRepeatStrategy, _ArrayRepeatStrategy);
 
@@ -170,7 +175,7 @@ var ArrayVirtualRepeatStrategy = exports.ArrayVirtualRepeatStrategy = function (
     var viewsLength = repeat.viewCount();
     var first = repeat._getIndexOfFirstView();
 
-    while (viewsLength > repeat._viewsLength) {
+    while (viewsLength > itemsLength) {
       viewsLength--;
       repeat.removeView(viewsLength, true);
     }
@@ -556,6 +561,7 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec = (0, _aureliaTemplating.custo
     this.scrollListener = function () {
       return _this6._onScroll();
     };
+    this.distanceToTop = getElementDistanceToTopViewPort(this.topBuffer.nextElementSibling);
     var containerStyle = this.scrollContainer.style;
     if (containerStyle.overflowY === 'scroll' || containerStyle.overflow === 'scroll' || containerStyle.overflowY === 'auto' || containerStyle.overflow === 'auto') {
       this._fixedHeightContainer = true;
@@ -592,6 +598,7 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec = (0, _aureliaTemplating.custo
     this.isLastIndex = false;
     this.scrollContainer = null;
     this.scrollContainerHeight = null;
+    this.distanceToTop = null;
     this.removeAllViews(true);
     if (this.scrollHandler) {
       this.scrollHandler.dispose();
@@ -607,7 +614,7 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec = (0, _aureliaTemplating.custo
     }
     var items = this.items;
     this.strategy = this.strategyLocator.getStrategy(items);
-    if (items.length > 0) {
+    if (items.length > 0 && this.viewCount() === 0) {
       this.strategy.createFirstItem(this);
     }
     this._calcInitialHeights(items.length);
@@ -669,7 +676,7 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec = (0, _aureliaTemplating.custo
       return;
     }
     var itemHeight = this.itemHeight;
-    var scrollTop = this._fixedHeightContainer ? this.scrollContainer.scrollTop : pageYOffset - this.topBuffer.offsetTop;
+    var scrollTop = this._fixedHeightContainer ? this.scrollContainer.scrollTop : pageYOffset - this.distanceToTop;
     this._first = Math.floor(scrollTop / itemHeight);
     this._first = this._first < 0 ? 0 : this._first;
     if (this._first > this.items.length - this.elementsInView) {
@@ -771,17 +778,19 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec = (0, _aureliaTemplating.custo
     var items = this.items;
     var index = this._scrollingDown ? this._getIndexOfLastView() + 1 : this._getIndexOfFirstView() - 1;
     var i = 0;
+    var viewToMoveLimit = length - childrenLength * 2;
     while (i < length && !isAtFirstOrLastIndex()) {
       var view = this.view(viewIndex);
       var nextIndex = getNextIndex(index, i);
       this.isLastIndex = nextIndex >= items.length - 1;
       this._isAtTop = nextIndex <= 0;
       if (!(isAtFirstOrLastIndex() && childrenLength >= items.length)) {
-        rebindAndMoveView(this, view, nextIndex, this._scrollingDown);
+        if (i > viewToMoveLimit) {
+          rebindAndMoveView(this, view, nextIndex, this._scrollingDown);
+        }
         i++;
       }
     }
-
     return length - (length - i);
   };
 

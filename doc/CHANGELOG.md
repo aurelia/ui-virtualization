@@ -1,3 +1,12 @@
+### 0.4.1 (2016-04-07)
+
+
+#### Bug Fixes
+
+* **array-virtual-repeat-strategy:** handle instance changes with less items than in view slot ([4eb9ca00](http://github.com/aurelia/ui-virtualization/commit/4eb9ca00587739ecb9446d82d779913303a146c9), closes [#41](http://github.com/aurelia/ui-virtualization/issues/41))
+* **virtual-repeat:** calculate the list's distance to top ([7e9c0352](http://github.com/aurelia/ui-virtualization/commit/7e9c035255abc287a516624f0e4bb5b3901b7f5e))
+
+
 ## 0.4.0 (2016-03-29)
 
 

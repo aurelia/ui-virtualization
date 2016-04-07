@@ -74,7 +74,7 @@ System.register(['aurelia-templating-resources/array-repeat-strategy', 'aurelia-
           var viewsLength = repeat.viewCount();
           var first = repeat._getIndexOfFirstView();
 
-          while (viewsLength > repeat._viewsLength) {
+          while (viewsLength > itemsLength) {
             viewsLength--;
             repeat.removeView(viewsLength, true);
           }

@@ -79,6 +79,12 @@ System.register(['aurelia-templating-resources/repeat-utilities'], function (_ex
       }
 
       _export('getElementDistanceToBottomViewPort', getElementDistanceToBottomViewPort);
+
+      function getElementDistanceToTopViewPort(element) {
+        return element.getBoundingClientRect().top;
+      }
+
+      _export('getElementDistanceToTopViewPort', getElementDistanceToTopViewPort);
     }
   };
 });

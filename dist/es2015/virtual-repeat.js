@@ -49,7 +49,7 @@ import { BoundViewFactory, ViewSlot, TargetInstruction, customAttribute, bindabl
 import { AbstractRepeater } from 'aurelia-templating-resources';
 import { getItemsSourceExpression, isOneTime, unwrapExpression, updateOneTimeBinding } from 'aurelia-templating-resources/repeat-utilities';
 import { viewsRequireLifecycle } from 'aurelia-templating-resources/analyze-view-factory';
-import { getStyleValue, calcOuterHeight, rebindAndMoveView } from './utilities';
+import { getStyleValue, calcOuterHeight, rebindAndMoveView, getElementDistanceToTopViewPort } from './utilities';
 import { VirtualRepeatStrategyLocator } from './virtual-repeat-strategy-locator';
 import { ViewStrategyLocator } from './view-strategy';
 
@@ -100,6 +100,7 @@ export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
     this.bottomBuffer = this.viewStrategy.createBottomBufferElement(element);
     this.itemsChanged();
     this.scrollListener = () => this._onScroll();
+    this.distanceToTop = getElementDistanceToTopViewPort(this.topBuffer.nextElementSibling);
     let containerStyle = this.scrollContainer.style;
     if (containerStyle.overflowY === 'scroll' || containerStyle.overflow === 'scroll' || containerStyle.overflowY === 'auto' || containerStyle.overflow === 'auto') {
       this._fixedHeightContainer = true;
@@ -136,6 +137,7 @@ export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
     this.isLastIndex = false;
     this.scrollContainer = null;
     this.scrollContainerHeight = null;
+    this.distanceToTop = null;
     this.removeAllViews(true);
     if (this.scrollHandler) {
       this.scrollHandler.dispose();
@@ -151,7 +153,7 @@ export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
     }
     let items = this.items;
     this.strategy = this.strategyLocator.getStrategy(items);
-    if (items.length > 0) {
+    if (items.length > 0 && this.viewCount() === 0) {
       this.strategy.createFirstItem(this);
     }
     this._calcInitialHeights(items.length);
@@ -205,7 +207,7 @@ export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
       return;
     }
     let itemHeight = this.itemHeight;
-    let scrollTop = this._fixedHeightContainer ? this.scrollContainer.scrollTop : pageYOffset - this.topBuffer.offsetTop;
+    let scrollTop = this._fixedHeightContainer ? this.scrollContainer.scrollTop : pageYOffset - this.distanceToTop;
     this._first = Math.floor(scrollTop / itemHeight);
     this._first = this._first < 0 ? 0 : this._first;
     if (this._first > this.items.length - this.elementsInView) {
@@ -299,17 +301,19 @@ export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
     let items = this.items;
     let index = this._scrollingDown ? this._getIndexOfLastView() + 1 : this._getIndexOfFirstView() - 1;
     let i = 0;
+    let viewToMoveLimit = length - childrenLength * 2;
     while (i < length && !isAtFirstOrLastIndex()) {
       let view = this.view(viewIndex);
       let nextIndex = getNextIndex(index, i);
       this.isLastIndex = nextIndex >= items.length - 1;
       this._isAtTop = nextIndex <= 0;
       if (!(isAtFirstOrLastIndex() && childrenLength >= items.length)) {
-        rebindAndMoveView(this, view, nextIndex, this._scrollingDown);
+        if (i > viewToMoveLimit) {
+          rebindAndMoveView(this, view, nextIndex, this._scrollingDown);
+        }
         i++;
       }
     }
-
     return length - (length - i);
   }
 

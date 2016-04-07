@@ -60,3 +60,7 @@ export function getStyleValue(element, style) {
 export function getElementDistanceToBottomViewPort(element) {
   return document.documentElement.clientHeight - element.getBoundingClientRect().bottom;
 }
+
+export function getElementDistanceToTopViewPort(element) {
+  return element.getBoundingClientRect().top;
+}
