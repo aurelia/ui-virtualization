@@ -126,7 +126,7 @@ export class VirtualRepeat extends AbstractRepeater {
     }
     let items = this.items;
     this.strategy = this.strategyLocator.getStrategy(items);
-    if (items.length > 0) {
+    if (items.length > 0 && this.viewCount() === 0) {
       this.strategy.createFirstItem(this);
     }
     this._calcInitialHeights(items.length);

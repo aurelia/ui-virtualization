@@ -32,7 +32,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
     let viewsLength = repeat.viewCount();
     let first = repeat._getIndexOfFirstView();
     // remove unneeded views.
-    while (viewsLength > repeat._viewsLength) {
+    while (viewsLength > itemsLength) {
       viewsLength--;
       repeat.removeView(viewsLength, true);
     }
