@@ -1,3 +1,4 @@
+import {DOM} from 'aurelia-pal';
 import {insertBeforeNode} from './utilities';
 
 export class ViewStrategyLocator {
@@ -15,25 +16,25 @@ export class TableStrategy {
   }
 
   moveViewFirst(view, topBuffer) {
-    insertBeforeNode(view, topBuffer.parentElement.nextElementSibling.previousSibling);
+    insertBeforeNode(view, DOM.nextElementSibling(topBuffer.parentNode).previousSibling);
   }
 
   moveViewLast(view, bottomBuffer) {
-    insertBeforeNode(view, bottomBuffer.parentElement);
+    insertBeforeNode(view, bottomBuffer.parentNode);
   }
 
   createTopBufferElement(element) {
-    let tr = document.createElement('tr');
-    let buffer = document.createElement('td');
+    let tr = DOM.createElement('tr');
+    let buffer = DOM.createElement('td');
     buffer.setAttribute('style', 'height: 0px');
     tr.appendChild(buffer);
-    element.parentElement.insertBefore(tr, element);
+    element.parentNode.insertBefore(tr, element);
     return buffer;
   }
 
   createBottomBufferElement(element) {
-    let tr = document.createElement('tr');
-    let buffer = document.createElement('td');
+    let tr = DOM.createElement('tr');
+    let buffer = DOM.createElement('td');
     buffer.setAttribute('style', 'height: 0px');
     tr.appendChild(buffer);
     element.parentNode.insertBefore(tr, element.nextSibling);
@@ -41,8 +42,8 @@ export class TableStrategy {
   }
 
   removeBufferElements(element, topBuffer, bottomBuffer) {
-    element.parentElement.removeChild(topBuffer.parentElement);
-    element.parentElement.removeChild(bottomBuffer.parentElement);
+    element.parentNode.removeChild(topBuffer.parentNode);
+    element.parentNode.removeChild(bottomBuffer.parentNode);
   }
 }
 
@@ -52,7 +53,7 @@ export class DefaultStrategy {
   }
 
   moveViewFirst(view, topBuffer) {
-    insertBeforeNode(view, topBuffer.nextElementSibling.previousSibling);
+    insertBeforeNode(view, DOM.nextElementSibling(topBuffer).previousSibling);
   }
 
   moveViewLast(view, bottomBuffer) {
@@ -62,23 +63,23 @@ export class DefaultStrategy {
   }
 
   createTopBufferElement(element) {
-    let elementName = element.parentElement.localName === 'ul' ? 'li' : 'div';
-    let buffer = document.createElement(elementName);
+    let elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
+    let buffer = DOM.createElement(elementName);
     buffer.setAttribute('style', 'height: 0px');
-    element.parentElement.insertBefore(buffer, element);
+    element.parentNode.insertBefore(buffer, element);
     return buffer;
   }
 
   createBottomBufferElement(element) {
-    let elementName = element.parentElement.localName === 'ul' ? 'li' : 'div';
-    let buffer = document.createElement(elementName);
+    let elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
+    let buffer = DOM.createElement(elementName);
     buffer.setAttribute('style', 'height: 0px');
     element.parentNode.insertBefore(buffer, element.nextSibling);
     return buffer;
   }
 
   removeBufferElements(element, topBuffer, bottomBuffer) {
-    element.parentElement.removeChild(topBuffer);
-    element.parentElement.removeChild(bottomBuffer);
+    element.parentNode.removeChild(topBuffer);
+    element.parentNode.removeChild(bottomBuffer);
   }
 }

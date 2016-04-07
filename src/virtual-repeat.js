@@ -16,6 +16,7 @@ import {
   updateOneTimeBinding
 } from 'aurelia-templating-resources/repeat-utilities';
 import {viewsRequireLifecycle} from 'aurelia-templating-resources/analyze-view-factory';
+import {DOM} from 'aurelia-pal';
 import {
   getStyleValue,
   calcOuterHeight,
@@ -27,7 +28,7 @@ import {ViewStrategyLocator} from './view-strategy';
 
 @customAttribute('virtual-repeat')
 @templateController
-@inject(Element, BoundViewFactory, TargetInstruction, ViewSlot, ObserverLocator, VirtualRepeatStrategyLocator, ViewStrategyLocator)
+@inject(DOM.Element, BoundViewFactory, TargetInstruction, ViewSlot, ObserverLocator, VirtualRepeatStrategyLocator, ViewStrategyLocator)
 export class VirtualRepeat extends AbstractRepeater {
   _first = 0;
   _previousFirst = 0;
@@ -73,7 +74,7 @@ export class VirtualRepeat extends AbstractRepeater {
     this.bottomBuffer = this.viewStrategy.createBottomBufferElement(element);
     this.itemsChanged();
     this.scrollListener = () => this._onScroll();
-    this.distanceToTop = getElementDistanceToTopViewPort(this.topBuffer.nextElementSibling);
+    this.distanceToTop = getElementDistanceToTopViewPort(DOM.nextElementSibling(this.topBuffer));
     let containerStyle = this.scrollContainer.style;
     if (containerStyle.overflowY === 'scroll' || containerStyle.overflow === 'scroll' || containerStyle.overflowY === 'auto' || containerStyle.overflow === 'auto') {
       this._fixedHeightContainer = true;
@@ -310,7 +311,7 @@ export class VirtualRepeat extends AbstractRepeater {
     }
     this._hasCalculatedSizes = true;
     this._itemsLength = itemsLength;
-    let firstViewElement = this.view(0).firstChild.nextElementSibling;
+    let firstViewElement = DOM.nextElementSibling(this.view(0).firstChild);
     this.itemHeight = calcOuterHeight(firstViewElement);
     if (this.itemHeight <= 0) {
       throw new Error('Could not calculate item height');
