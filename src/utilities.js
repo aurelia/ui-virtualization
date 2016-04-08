@@ -1,6 +1,6 @@
 import {updateOverrideContext} from 'aurelia-templating-resources/repeat-utilities';
 
-export function calcOuterHeight(element) {
+export function calcOuterHeight(element: Element): number {
   let height;
   height = element.getBoundingClientRect().height;
   height += getStyleValue(element, 'marginTop');
@@ -8,7 +8,7 @@ export function calcOuterHeight(element) {
   return height;
 }
 
-export function insertBeforeNode(view, bottomBuffer) {
+export function insertBeforeNode(view: View, bottomBuffer: number): void {
   let viewStart = view.firstChild;
   let element = viewStart.nextSibling;
   let viewEnd = view.lastChild;
@@ -23,7 +23,7 @@ export function insertBeforeNode(view, bottomBuffer) {
 * Update the override context.
 * @param startIndex index in collection where to start updating.
 */
-export function updateVirtualOverrideContexts(repeat, startIndex) {
+export function updateVirtualOverrideContexts(repeat: VirtualRepeat, startIndex: number): void {
   let views = repeat.viewSlot.children;
   let viewLength = views.length;
   let collectionLength = repeat.items.length;
@@ -53,7 +53,7 @@ export function rebindAndMoveView(repeat: VirtualRepeat, view: View, index: numb
   }
 }
 
-export function getStyleValue(element, style) {
+export function getStyleValue(element: Element, style: string): any {
   let currentStyle;
   let styleValue;
   currentStyle = element.currentStyle || window.getComputedStyle(element);
@@ -61,10 +61,10 @@ export function getStyleValue(element, style) {
   return Number.isNaN(styleValue) ? 0 : styleValue;
 }
 
-export function getElementDistanceToBottomViewPort(element) {
+export function getElementDistanceToBottomViewPort(element: Element): number {
   return document.documentElement.clientHeight - element.getBoundingClientRect().bottom;
 }
 
-export function getElementDistanceToTopViewPort(element) {
+export function getElementDistanceToTopViewPort(element: Element): number {
   return element.getBoundingClientRect().top;
 }

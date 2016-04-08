@@ -48,7 +48,7 @@ export class VirtualRepeat extends AbstractRepeater {
 
   @bindable items
   @bindable local
-  constructor(element, viewFactory, instruction, viewSlot, observerLocator, strategyLocator, viewStrategyLocator) {
+  constructor(element: Element, viewFactory: BoundViewFactory, instruction: TargetInstruction, viewSlot: ViewSlot, observerLocator: ObserverLocator, strategyLocator: VirtualRepeatStrategyLocator, viewStrategyLocator: ViewStrategyLocator) {
     super({
       local: 'item',
       viewsRequireLifecycle: viewsRequireLifecycle(viewFactory)
@@ -65,7 +65,7 @@ export class VirtualRepeat extends AbstractRepeater {
     this.isOneTime = isOneTime(this.sourceExpression);
   }
 
-  attached() {
+  attached(): void {
     this._isAttached = true;
     let element = this.element;
     this.viewStrategy = this.viewStrategyLocator.getStrategy(element);
@@ -84,16 +84,16 @@ export class VirtualRepeat extends AbstractRepeater {
     }
   }
 
-  bind(bindingContext, overrideContext) {
+  bind(bindingContext, overrideContext): void {
     this.scope = { bindingContext, overrideContext };
     this._itemsLength = this.items.length;
   }
 
-  call(context, changes) {
+  call(context, changes): void {
     this[context](this.items, changes);
   }
 
-  detached() {
+  detached(): void {
     this.scrollContainer.removeEventListener('scroll', this.scrollListener);
     this._first = 0;
     this._previousFirst = 0;
@@ -119,7 +119,7 @@ export class VirtualRepeat extends AbstractRepeater {
     this._unsubscribeCollection();
   }
 
-  itemsChanged() {
+  itemsChanged(): void {
     this._unsubscribeCollection();
     // still bound?
     if (!this.scope) {
@@ -138,19 +138,19 @@ export class VirtualRepeat extends AbstractRepeater {
     this.strategy.instanceChanged(this, items, this._viewsLength);
   }
 
-  unbind() {
+  unbind(): void {
     this.scope = null;
     this.items = null;
     this._itemsLength = null;
   }
 
-  handleCollectionMutated(collection, changes) {
+  handleCollectionMutated(collection, changes): void {
     this._handlingMutations = true;
     this._itemsLength = collection.length;
     this.strategy.instanceMutated(this, collection, changes);
   }
 
-  handleInnerCollectionMutated(collection, changes) {
+  handleInnerCollectionMutated(collection, changes): void {
     // guard against source expressions that have observable side-effects that could
     // cause an infinite loop- eg a value converter that mutates the source array.
     if (this.ignoreMutation) {
@@ -171,7 +171,7 @@ export class VirtualRepeat extends AbstractRepeater {
     }
   }
 
-  _onScroll() {
+  _onScroll(): void {
     if (!this._ticking && !this._handlingMutations) {
       requestAnimationFrame(() => this._handleScroll());
       this._ticking = true;
@@ -182,7 +182,7 @@ export class VirtualRepeat extends AbstractRepeater {
     }
   }
 
-  _handleScroll() {
+  _handleScroll(): void {
     if (!this._isAttached) {
       return;
     }
@@ -236,7 +236,7 @@ export class VirtualRepeat extends AbstractRepeater {
     this._ticking = false;
   }
 
-  _checkScrolling() {
+  _checkScrolling(): void {
     if (this._first > this._previousFirst && (this._bottomBufferHeight > 0 || !this.isLastIndex)) {
       if (!this._scrollingDown) {
         this._scrollingDown = true;
@@ -260,12 +260,12 @@ export class VirtualRepeat extends AbstractRepeater {
     }
   }
 
-  _adjustBufferHeights() {
+  _adjustBufferHeights(): void {
     this.topBuffer.setAttribute('style', `height:  ${this._topBufferHeight}px`);
     this.bottomBuffer.setAttribute('style', `height: ${this._bottomBufferHeight}px`);
   }
 
-  _unsubscribeCollection() {
+  _unsubscribeCollection(): void {
     if (this.collectionObserver) {
       this.collectionObserver.unsubscribe(this.callContext, this);
       this.collectionObserver = null;
@@ -273,7 +273,7 @@ export class VirtualRepeat extends AbstractRepeater {
     }
   }
 
-  _moveViews(length) {
+  _moveViews(length: number): number {
     let getNextIndex = this._scrollingDown ? (index, i) =>  index + i : (index, i) =>  index - i;
     let isAtFirstOrLastIndex = () => this._scrollingDown ? this.isLastIndex : this._isAtTop;
     let childrenLength = this.viewCount();
@@ -297,11 +297,11 @@ export class VirtualRepeat extends AbstractRepeater {
     return length - (length - i);
   }
 
-  _getIndexOfLastView() {
+  _getIndexOfLastView(): number {
     return this.view(this.viewCount() - 1).overrideContext.$index;
   }
 
-  _getIndexOfFirstView() {
+  _getIndexOfFirstView(): number {
     return this.view(0) ? this.view(0).overrideContext.$index : -1;
   }
 
@@ -331,7 +331,7 @@ export class VirtualRepeat extends AbstractRepeater {
     this._first = 0;
   }
 
-  _calcScrollHeight(element) {
+  _calcScrollHeight(element: Element): number {
     let height;
     height = element.getBoundingClientRect().height;
     height -= getStyleValue(element, 'borderTopWidth');
@@ -339,7 +339,7 @@ export class VirtualRepeat extends AbstractRepeater {
     return height;
   }
 
-  _observeInnerCollection() {
+  _observeInnerCollection(): boolean {
     let items = this._getInnerCollection();
     let strategy = this.strategyLocator.getStrategy(items);
     if (!strategy) {
@@ -354,7 +354,7 @@ export class VirtualRepeat extends AbstractRepeater {
     return true;
   }
 
-  _getInnerCollection() {
+  _getInnerCollection(): any {
     let expression = unwrapExpression(this.sourceExpression);
     if (!expression) {
       return null;
@@ -362,7 +362,7 @@ export class VirtualRepeat extends AbstractRepeater {
     return expression.evaluate(this.scope, null);
   }
 
-  _observeCollection() {
+  _observeCollection(): void {
     let items = this.items;
     this.collectionObserver = this.strategy.getCollectionObserver(this.observerLocator, items);
     if (this.collectionObserver) {

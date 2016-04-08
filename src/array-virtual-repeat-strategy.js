@@ -7,7 +7,7 @@ import {updateVirtualOverrideContexts, rebindAndMoveView, getElementDistanceToBo
 */
 export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
   // create first item to calculate the heights
-  createFirstItem(repeat) {
+  createFirstItem(repeat: VirtualRepeat): void {
     let overrideContext = createFullOverrideContext(repeat, repeat.items[0], 0, 1);
     repeat.addView(overrideContext.bindingContext, overrideContext);
   }
@@ -16,18 +16,18 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
   * @param repeat The repeater instance.
   * @param items The new array instance.
   */
-  instanceChanged(repeat, items) {
+  instanceChanged(repeat: VirtualRepeat, items: Array<any>): void {
     this._inPlaceProcessItems(repeat, items);
   }
 
-  _standardProcessInstanceChanged(repeat, items) {
+  _standardProcessInstanceChanged(repeat: VirtualRepeat, items: Array): void {
     for (let i = 1, ii = repeat._viewsLength; i < ii; ++i) {
       let overrideContext = createFullOverrideContext(repeat, items[i], i, ii);
       repeat.addView(overrideContext.bindingContext, overrideContext);
     }
   }
 
-  _inPlaceProcessItems(repeat, items) {
+  _inPlaceProcessItems(repeat: VirtualRepeat, items: Array<any>): void {
     let itemsLength = items.length;
     let viewsLength = repeat.viewCount();
     let first = repeat._getIndexOfFirstView();
@@ -68,11 +68,11 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
   * @param array The modified array.
   * @param splices Records of array changes.
   */
-  instanceMutated(repeat, array, splices) {
+  instanceMutated(repeat: VirtualRepeat, array: Array<any>, splices: any): void {
     this._standardProcessInstanceMutated(repeat, array, splices);
   }
 
-  _standardProcessInstanceMutated(repeat, array, splices) {
+  _standardProcessInstanceMutated(repeat: VirtualRepeat, array: Array<any>, splices: any): void {
     if (repeat.__queuedSplices) {
       for (let i = 0, ii = splices.length; i < ii; ++i) {
         let {index, removed, addedCount} = splices[i];
@@ -101,7 +101,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
     }
   }
 
-  _runSplices(repeat, array, splices) {
+  _runSplices(repeat: VirtualRepeat, array: Array, splices: any): any {
     let removeDelta = 0;
     let rmPromises = [];
 
@@ -127,7 +127,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
     updateVirtualOverrideContexts(repeat, 0);
   }
 
-  _removeViewAt(repeat, collectionIndex, returnToCache) {
+  _removeViewAt(repeat: VirtualRepeat, collectionIndex: number, returnToCache: boolean): any {
     let viewOrPromise;
     let view;
     let viewSlot = repeat.viewSlot;
@@ -201,7 +201,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
     return index - topBufferItems;
   }
 
-  _handleAddedSplices(repeat, array, splices) {
+  _handleAddedSplices(repeat: VirtualRepeat, array: Array<any>, splices: any): void {
     let arrayLength = array.length;
     let viewSlot = repeat.viewSlot;
     for (let i = 0, ii = splices.length; i < ii; ++i) {
