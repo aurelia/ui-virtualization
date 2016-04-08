@@ -12,10 +12,10 @@ interface ViewStrategy {
 
 export class ViewStrategyLocator {
   getStrategy(element: Element): ViewStrategy {
-    if (element.parentNode.localName === 'tbody') {
+    if (element.parentNode && element.parentNode.localName === 'tbody') {
       return new TableStrategy();
     }
-    return new DefaultStrategy();
+    return new DefaultViewStrategy();
   }
 }
 
@@ -56,7 +56,7 @@ export class TableStrategy {
   }
 }
 
-export class DefaultStrategy {
+export class DefaultViewStrategy {
   getScrollContainer(element: Element): Element {
     return element.parentNode;
   }

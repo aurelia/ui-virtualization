@@ -20,15 +20,15 @@ import {DOM} from 'aurelia-pal';
 import {
   getStyleValue,
   calcOuterHeight,
-  rebindAndMoveView,
-  getElementDistanceToTopViewPort
+  rebindAndMoveView
 } from './utilities';
+import {DomHelper} from './dom-helper';
 import {VirtualRepeatStrategyLocator} from './virtual-repeat-strategy-locator';
 import {ViewStrategyLocator} from './view-strategy';
 
 @customAttribute('virtual-repeat')
 @templateController
-@inject(DOM.Element, BoundViewFactory, TargetInstruction, ViewSlot, ObserverLocator, VirtualRepeatStrategyLocator, ViewStrategyLocator)
+@inject(DOM.Element, BoundViewFactory, TargetInstruction, ViewSlot, ObserverLocator, VirtualRepeatStrategyLocator, ViewStrategyLocator, DomHelper)
 export class VirtualRepeat extends AbstractRepeater {
   _first = 0;
   _previousFirst = 0;
@@ -48,7 +48,15 @@ export class VirtualRepeat extends AbstractRepeater {
 
   @bindable items
   @bindable local
-  constructor(element: Element, viewFactory: BoundViewFactory, instruction: TargetInstruction, viewSlot: ViewSlot, observerLocator: ObserverLocator, strategyLocator: VirtualRepeatStrategyLocator, viewStrategyLocator: ViewStrategyLocator) {
+  constructor(
+    element: Element,
+    viewFactory: BoundViewFactory,
+    instruction: TargetInstruction,
+    viewSlot: ViewSlot,
+    observerLocator: ObserverLocator,
+    strategyLocator: VirtualRepeatStrategyLocator,
+    viewStrategyLocator: ViewStrategyLocator,
+    domHelper: DomHelper) {
     super({
       local: 'item',
       viewsRequireLifecycle: viewsRequireLifecycle(viewFactory)
@@ -63,20 +71,21 @@ export class VirtualRepeat extends AbstractRepeater {
     this.viewStrategyLocator = viewStrategyLocator;
     this.sourceExpression = getItemsSourceExpression(this.instruction, 'virtual-repeat.for');
     this.isOneTime = isOneTime(this.sourceExpression);
+    this.domHelper = domHelper;
   }
 
   attached(): void {
     this._isAttached = true;
     let element = this.element;
+    this._itemsLength = this.items.length;
     this.viewStrategy = this.viewStrategyLocator.getStrategy(element);
     this.scrollContainer = this.viewStrategy.getScrollContainer(element);
     this.topBuffer = this.viewStrategy.createTopBufferElement(element);
     this.bottomBuffer = this.viewStrategy.createBottomBufferElement(element);
     this.itemsChanged();
     this.scrollListener = () => this._onScroll();
-    this.distanceToTop = getElementDistanceToTopViewPort(DOM.nextElementSibling(this.topBuffer));
-    let containerStyle = this.scrollContainer.style;
-    if (containerStyle.overflowY === 'scroll' || containerStyle.overflow === 'scroll' || containerStyle.overflowY === 'auto' || containerStyle.overflow === 'auto') {
+    this.distanceToTop = this.domHelper.getElementDistanceToTopViewPort(DOM.nextElementSibling(this.topBuffer));
+    if (this.domHelper.hasOverflowScroll(this.scrollContainer)) {
       this._fixedHeightContainer = true;
       this.scrollContainer.addEventListener('scroll', this.scrollListener);
     } else {
@@ -86,7 +95,6 @@ export class VirtualRepeat extends AbstractRepeater {
 
   bind(bindingContext, overrideContext): void {
     this.scope = { bindingContext, overrideContext };
-    this._itemsLength = this.items.length;
   }
 
   call(context, changes): void {

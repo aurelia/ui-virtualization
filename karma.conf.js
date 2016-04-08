@@ -1,5 +1,6 @@
+var isparta = require('isparta');
+var paths = require('./build/paths');
 // Karma configuration
-// Generated on Fri Dec 05 2014 16:49:29 GMT-0500 (EST)
 
 module.exports = function(config) {
   config.set({
@@ -10,7 +11,7 @@ module.exports = function(config) {
 
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-    frameworks: ['jspm', 'jasmine-ajax', 'jasmine'],
+    frameworks: ['jspm', 'jasmine'],
 
     jspm: {
       // Edit this to your needs
@@ -32,7 +33,7 @@ module.exports = function(config) {
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
       'test/**/*.js': ['babel'],
-      'src/**/*.js': ['babel']
+      'src/**/*.js': ['babel', 'coverage'],
     },
     'babelPreprocessor': {
       options: {
@@ -50,8 +51,30 @@ module.exports = function(config) {
     // test results reporter to use
     // possible values: 'dots', 'progress'
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-    reporters: ['progress'],
+    reporters: ['coverage', 'progress'],
 
+    coverageReporter: {
+      instrumenters: {
+        isparta: isparta
+      },
+
+      instrumenter: {
+        [paths.source]: 'isparta'
+      },
+
+      dir: 'build/reports/coverage/',
+
+      reporters: [{
+        type: 'text-summary'
+      }, {
+        type: 'html',
+        subdir: 'html'
+      }, {
+        type: 'lcovonly',
+        subdir: 'lcov',
+        file: 'report-lcovonly.txt'
+      }]
+    },
 
     // web server port
     port: 9876,
