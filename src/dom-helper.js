@@ -7,5 +7,4 @@ export class DomHelper {
     let style = element.style;
     return style.overflowY === 'scroll' || style.overflow === 'scroll' || style.overflowY === 'auto' || style.overflow === 'auto';
   }
-
 }
