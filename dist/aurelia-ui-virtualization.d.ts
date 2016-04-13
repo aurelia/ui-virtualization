@@ -11,6 +11,9 @@ declare module 'aurelia-ui-virtualization' {
     ArrayRepeatStrategy
   } from 'aurelia-templating-resources/array-repeat-strategy';
   import {
+    DOM
+  } from 'aurelia-pal';
+  import {
     RepeatStrategyLocator
   } from 'aurelia-templating-resources/repeat-strategy-locator';
   import {
@@ -33,18 +36,30 @@ declare module 'aurelia-ui-virtualization' {
   import {
     viewsRequireLifecycle
   } from 'aurelia-templating-resources/analyze-view-factory';
-  export function calcOuterHeight(element: any): any;
-  export function insertBeforeNode(view: any, bottomBuffer: any): any;
+  export interface ViewStrategy {
+    getScrollContainer(element: Element): Element;
+    moveViewFirst(view: View, topBuffer: Element): void;
+    moveViewLast(view: View, bottomBuffer: Element): void;
+    createTopBufferElement(element: Element): Element;
+    createBottomBufferElement(element: Element): Element;
+    removeBufferElements(element: Element, topBuffer: Element, bottomBuffer: Element): void;
+  }
+  export class DomHelper {
+    getElementDistanceToTopViewPort(element: Element): number;
+    hasOverflowScroll(element: Element): boolean;
+  }
+  export function calcOuterHeight(element: Element): number;
+  export function insertBeforeNode(view: View, bottomBuffer: number): void;
   
   /**
   * Update the override context.
   * @param startIndex index in collection where to start updating.
   */
-  export function updateVirtualOverrideContexts(repeat: any, startIndex: any): any;
+  export function updateVirtualOverrideContexts(repeat: VirtualRepeat, startIndex: number): void;
   export function rebindAndMoveView(repeat: VirtualRepeat, view: View, index: number, moveToBottom: boolean): void;
-  export function getStyleValue(element: any, style: any): any;
-  export function getElementDistanceToBottomViewPort(element: any): any;
-  export function getElementDistanceToTopViewPort(element: any): any;
+  export function getStyleValue(element: Element, style: string): any;
+  export function getElementDistanceToBottomViewPort(element: Element): number;
+  export function getElementDistanceToTopViewPort(element: Element): number;
   
   /**
   * A strategy for repeating a template over an array.
@@ -52,14 +67,14 @@ declare module 'aurelia-ui-virtualization' {
   export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
     
     // create first item to calculate the heights
-    createFirstItem(repeat: any): any;
+    createFirstItem(repeat: VirtualRepeat): void;
     
     /**
       * Handle the repeat's collection instance changing.
       * @param repeat The repeater instance.
       * @param items The new array instance.
       */
-    instanceChanged(repeat: any, items: any): any;
+    instanceChanged(repeat: VirtualRepeat, items: Array<any>): void;
     
     /**
       * Handle the repeat's collection instance mutating.
@@ -67,26 +82,26 @@ declare module 'aurelia-ui-virtualization' {
       * @param array The modified array.
       * @param splices Records of array changes.
       */
-    instanceMutated(repeat: any, array: any, splices: any): any;
+    instanceMutated(repeat: VirtualRepeat, array: Array<any>, splices: any): void;
   }
   export class ViewStrategyLocator {
-    getStrategy(element: any): any;
+    getStrategy(element: Element): ViewStrategy;
   }
   export class TableStrategy {
-    getScrollContainer(element: any): any;
-    moveViewFirst(view: any, topBuffer: any): any;
-    moveViewLast(view: any, bottomBuffer: any): any;
-    createTopBufferElement(element: any): any;
-    createBottomBufferElement(element: any): any;
-    removeBufferElements(element: any, topBuffer: any, bottomBuffer: any): any;
+    getScrollContainer(element: Element): Element;
+    moveViewFirst(view: View, topBuffer: Element): void;
+    moveViewLast(view: View, bottomBuffer: Element): void;
+    createTopBufferElement(element: Element): Element;
+    createBottomBufferElement(element: Element): Element;
+    removeBufferElements(element: Element, topBuffer: Element, bottomBuffer: Element): void;
   }
-  export class DefaultStrategy {
-    getScrollContainer(element: any): any;
-    moveViewFirst(view: any, topBuffer: any): any;
-    moveViewLast(view: any, bottomBuffer: any): any;
-    createTopBufferElement(element: any): any;
-    createBottomBufferElement(element: any): any;
-    removeBufferElements(element: any, topBuffer: any, bottomBuffer: any): any;
+  export class DefaultViewStrategy {
+    getScrollContainer(element: Element): Element;
+    moveViewFirst(view: View, topBuffer: Element): void;
+    moveViewLast(view: View, bottomBuffer: Element): void;
+    createTopBufferElement(element: Element): Element;
+    createBottomBufferElement(element: Element): Element;
+    removeBufferElements(element: Element, topBuffer: Element, bottomBuffer: Element): void;
   }
   export class VirtualRepeatStrategyLocator extends RepeatStrategyLocator {
     constructor();
@@ -109,15 +124,15 @@ declare module 'aurelia-ui-virtualization' {
     _isAtTop: any;
     items: any;
     local: any;
-    constructor(element: any, viewFactory: any, instruction: any, viewSlot: any, observerLocator: any, strategyLocator: any, viewStrategyLocator: any);
-    attached(): any;
-    bind(bindingContext: any, overrideContext: any): any;
-    call(context: any, changes: any): any;
-    detached(): any;
-    itemsChanged(): any;
-    unbind(): any;
-    handleCollectionMutated(collection: any, changes: any): any;
-    handleInnerCollectionMutated(collection: any, changes: any): any;
+    constructor(element: Element, viewFactory: BoundViewFactory, instruction: TargetInstruction, viewSlot: ViewSlot, observerLocator: ObserverLocator, strategyLocator: VirtualRepeatStrategyLocator, viewStrategyLocator: ViewStrategyLocator, domHelper: DomHelper);
+    attached(): void;
+    bind(bindingContext: any, overrideContext: any): void;
+    call(context: any, changes: any): void;
+    detached(): void;
+    itemsChanged(): void;
+    unbind(): void;
+    handleCollectionMutated(collection: any, changes: any): void;
+    handleInnerCollectionMutated(collection: any, changes: any): void;
     
     // @override AbstractRepeater
     viewCount(): any;

@@ -1,3 +1,7 @@
+### 0.4.2 (2016-04-13)
+
+* refactoring, styling and cleanup
+
 ### 0.4.1 (2016-04-07)
 
 
@@ -106,4 +110,3 @@
   * handle home, end, pgup, pgdown keys ([9c27a091](http://github.com/aurelia/ui-virtualization/commit/9c27a0911cf3090bae6682e84b82dd554f4d4a81), closes [#10](http://github.com/aurelia/ui-virtualization/issues/10))
   * add initial implementation ([58cae757](http://github.com/aurelia/ui-virtualization/commit/58cae757f29abc0974ffdae3df32e85e15c8798d))
 * **sample:** add ui-virtualization demo ([644bbe33](http://github.com/aurelia/ui-virtualization/commit/644bbe33e74247086f58081dbcfee191bc196e69), closes [#17](http://github.com/aurelia/ui-virtualization/issues/17))
-

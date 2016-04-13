@@ -3,7 +3,9 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.DefaultStrategy = exports.TableStrategy = exports.ViewStrategyLocator = undefined;
+exports.DefaultViewStrategy = exports.TableStrategy = exports.ViewStrategyLocator = undefined;
+
+var _aureliaPal = require('aurelia-pal');
 
 var _utilities = require('./utilities');
 
@@ -15,10 +17,10 @@ var ViewStrategyLocator = exports.ViewStrategyLocator = function () {
   }
 
   ViewStrategyLocator.prototype.getStrategy = function getStrategy(element) {
-    if (element.parentNode.localName === 'tbody') {
+    if (element.parentNode && element.parentNode.localName === 'tbody') {
       return new TableStrategy();
     }
-    return new DefaultStrategy();
+    return new DefaultViewStrategy();
   };
 
   return ViewStrategyLocator;
@@ -34,25 +36,25 @@ var TableStrategy = exports.TableStrategy = function () {
   };
 
   TableStrategy.prototype.moveViewFirst = function moveViewFirst(view, topBuffer) {
-    (0, _utilities.insertBeforeNode)(view, topBuffer.parentElement.nextElementSibling.previousSibling);
+    (0, _utilities.insertBeforeNode)(view, _aureliaPal.DOM.nextElementSibling(topBuffer.parentNode).previousSibling);
   };
 
   TableStrategy.prototype.moveViewLast = function moveViewLast(view, bottomBuffer) {
-    (0, _utilities.insertBeforeNode)(view, bottomBuffer.parentElement);
+    (0, _utilities.insertBeforeNode)(view, bottomBuffer.parentNode);
   };
 
   TableStrategy.prototype.createTopBufferElement = function createTopBufferElement(element) {
-    var tr = document.createElement('tr');
-    var buffer = document.createElement('td');
+    var tr = _aureliaPal.DOM.createElement('tr');
+    var buffer = _aureliaPal.DOM.createElement('td');
     buffer.setAttribute('style', 'height: 0px');
     tr.appendChild(buffer);
-    element.parentElement.insertBefore(tr, element);
+    element.parentNode.insertBefore(tr, element);
     return buffer;
   };
 
   TableStrategy.prototype.createBottomBufferElement = function createBottomBufferElement(element) {
-    var tr = document.createElement('tr');
-    var buffer = document.createElement('td');
+    var tr = _aureliaPal.DOM.createElement('tr');
+    var buffer = _aureliaPal.DOM.createElement('td');
     buffer.setAttribute('style', 'height: 0px');
     tr.appendChild(buffer);
     element.parentNode.insertBefore(tr, element.nextSibling);
@@ -60,52 +62,52 @@ var TableStrategy = exports.TableStrategy = function () {
   };
 
   TableStrategy.prototype.removeBufferElements = function removeBufferElements(element, topBuffer, bottomBuffer) {
-    element.parentElement.removeChild(topBuffer.parentElement);
-    element.parentElement.removeChild(bottomBuffer.parentElement);
+    element.parentNode.removeChild(topBuffer.parentNode);
+    element.parentNode.removeChild(bottomBuffer.parentNode);
   };
 
   return TableStrategy;
 }();
 
-var DefaultStrategy = exports.DefaultStrategy = function () {
-  function DefaultStrategy() {
-    _classCallCheck(this, DefaultStrategy);
+var DefaultViewStrategy = exports.DefaultViewStrategy = function () {
+  function DefaultViewStrategy() {
+    _classCallCheck(this, DefaultViewStrategy);
   }
 
-  DefaultStrategy.prototype.getScrollContainer = function getScrollContainer(element) {
+  DefaultViewStrategy.prototype.getScrollContainer = function getScrollContainer(element) {
     return element.parentNode;
   };
 
-  DefaultStrategy.prototype.moveViewFirst = function moveViewFirst(view, topBuffer) {
-    (0, _utilities.insertBeforeNode)(view, topBuffer.nextElementSibling.previousSibling);
+  DefaultViewStrategy.prototype.moveViewFirst = function moveViewFirst(view, topBuffer) {
+    (0, _utilities.insertBeforeNode)(view, _aureliaPal.DOM.nextElementSibling(topBuffer).previousSibling);
   };
 
-  DefaultStrategy.prototype.moveViewLast = function moveViewLast(view, bottomBuffer) {
+  DefaultViewStrategy.prototype.moveViewLast = function moveViewLast(view, bottomBuffer) {
     var previousSibling = bottomBuffer.previousSibling;
     var referenceNode = previousSibling.nodeType === 8 && previousSibling.data === 'anchor' ? previousSibling : bottomBuffer;
     (0, _utilities.insertBeforeNode)(view, referenceNode);
   };
 
-  DefaultStrategy.prototype.createTopBufferElement = function createTopBufferElement(element) {
-    var elementName = element.parentElement.localName === 'ul' ? 'li' : 'div';
-    var buffer = document.createElement(elementName);
+  DefaultViewStrategy.prototype.createTopBufferElement = function createTopBufferElement(element) {
+    var elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
+    var buffer = _aureliaPal.DOM.createElement(elementName);
     buffer.setAttribute('style', 'height: 0px');
-    element.parentElement.insertBefore(buffer, element);
+    element.parentNode.insertBefore(buffer, element);
     return buffer;
   };
 
-  DefaultStrategy.prototype.createBottomBufferElement = function createBottomBufferElement(element) {
-    var elementName = element.parentElement.localName === 'ul' ? 'li' : 'div';
-    var buffer = document.createElement(elementName);
+  DefaultViewStrategy.prototype.createBottomBufferElement = function createBottomBufferElement(element) {
+    var elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
+    var buffer = _aureliaPal.DOM.createElement(elementName);
     buffer.setAttribute('style', 'height: 0px');
     element.parentNode.insertBefore(buffer, element.nextSibling);
     return buffer;
   };
 
-  DefaultStrategy.prototype.removeBufferElements = function removeBufferElements(element, topBuffer, bottomBuffer) {
-    element.parentElement.removeChild(topBuffer);
-    element.parentElement.removeChild(bottomBuffer);
+  DefaultViewStrategy.prototype.removeBufferElements = function removeBufferElements(element, topBuffer, bottomBuffer) {
+    element.parentNode.removeChild(topBuffer);
+    element.parentNode.removeChild(bottomBuffer);
   };
 
-  return DefaultStrategy;
+  return DefaultViewStrategy;
 }();
