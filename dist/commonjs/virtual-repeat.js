@@ -19,7 +19,11 @@ var _repeatUtilities = require('aurelia-templating-resources/repeat-utilities');
 
 var _analyzeViewFactory = require('aurelia-templating-resources/analyze-view-factory');
 
+var _aureliaPal = require('aurelia-pal');
+
 var _utilities = require('./utilities');
+
+var _domHelper = require('./dom-helper');
 
 var _virtualRepeatStrategyLocator = require('./virtual-repeat-strategy-locator');
 
@@ -74,10 +78,10 @@ function _initializerWarningHelper(descriptor, context) {
   throw new Error('Decorating class property failed. Please ensure that transform-class-properties is enabled.');
 }
 
-var VirtualRepeat = exports.VirtualRepeat = (_dec = (0, _aureliaTemplating.customAttribute)('virtual-repeat'), _dec2 = (0, _aureliaDependencyInjection.inject)(Element, _aureliaTemplating.BoundViewFactory, _aureliaTemplating.TargetInstruction, _aureliaTemplating.ViewSlot, _aureliaBinding.ObserverLocator, _virtualRepeatStrategyLocator.VirtualRepeatStrategyLocator, _viewStrategy.ViewStrategyLocator), _dec(_class = (0, _aureliaTemplating.templateController)(_class = _dec2(_class = (_class2 = function (_AbstractRepeater) {
+var VirtualRepeat = exports.VirtualRepeat = (_dec = (0, _aureliaTemplating.customAttribute)('virtual-repeat'), _dec2 = (0, _aureliaDependencyInjection.inject)(_aureliaPal.DOM.Element, _aureliaTemplating.BoundViewFactory, _aureliaTemplating.TargetInstruction, _aureliaTemplating.ViewSlot, _aureliaBinding.ObserverLocator, _virtualRepeatStrategyLocator.VirtualRepeatStrategyLocator, _viewStrategy.ViewStrategyLocator, _domHelper.DomHelper), _dec(_class = (0, _aureliaTemplating.templateController)(_class = _dec2(_class = (_class2 = function (_AbstractRepeater) {
   _inherits(VirtualRepeat, _AbstractRepeater);
 
-  function VirtualRepeat(element, viewFactory, instruction, viewSlot, observerLocator, strategyLocator, viewStrategyLocator) {
+  function VirtualRepeat(element, viewFactory, instruction, viewSlot, observerLocator, strategyLocator, viewStrategyLocator, domHelper) {
     _classCallCheck(this, VirtualRepeat);
 
     var _this = _possibleConstructorReturn(this, _AbstractRepeater.call(this, {
@@ -114,6 +118,7 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec = (0, _aureliaTemplating.custo
     _this.viewStrategyLocator = viewStrategyLocator;
     _this.sourceExpression = (0, _repeatUtilities.getItemsSourceExpression)(_this.instruction, 'virtual-repeat.for');
     _this.isOneTime = (0, _repeatUtilities.isOneTime)(_this.sourceExpression);
+    _this.domHelper = domHelper;
     return _this;
   }
 
@@ -122,6 +127,7 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec = (0, _aureliaTemplating.custo
 
     this._isAttached = true;
     var element = this.element;
+    this._itemsLength = this.items.length;
     this.viewStrategy = this.viewStrategyLocator.getStrategy(element);
     this.scrollContainer = this.viewStrategy.getScrollContainer(element);
     this.topBuffer = this.viewStrategy.createTopBufferElement(element);
@@ -130,9 +136,8 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec = (0, _aureliaTemplating.custo
     this.scrollListener = function () {
       return _this2._onScroll();
     };
-    this.distanceToTop = (0, _utilities.getElementDistanceToTopViewPort)(this.topBuffer.nextElementSibling);
-    var containerStyle = this.scrollContainer.style;
-    if (containerStyle.overflowY === 'scroll' || containerStyle.overflow === 'scroll' || containerStyle.overflowY === 'auto' || containerStyle.overflow === 'auto') {
+    this.distanceToTop = this.domHelper.getElementDistanceToTopViewPort(_aureliaPal.DOM.nextElementSibling(this.topBuffer));
+    if (this.domHelper.hasOverflowScroll(this.scrollContainer)) {
       this._fixedHeightContainer = true;
       this.scrollContainer.addEventListener('scroll', this.scrollListener);
     } else {
@@ -142,7 +147,6 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec = (0, _aureliaTemplating.custo
 
   VirtualRepeat.prototype.bind = function bind(bindingContext, overrideContext) {
     this.scope = { bindingContext: bindingContext, overrideContext: overrideContext };
-    this._itemsLength = this.items.length;
   };
 
   VirtualRepeat.prototype.call = function call(context, changes) {
@@ -377,7 +381,7 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec = (0, _aureliaTemplating.custo
     }
     this._hasCalculatedSizes = true;
     this._itemsLength = itemsLength;
-    var firstViewElement = this.view(0).firstChild.nextElementSibling;
+    var firstViewElement = _aureliaPal.DOM.nextElementSibling(this.view(0).firstChild);
     this.itemHeight = (0, _utilities.calcOuterHeight)(firstViewElement);
     if (this.itemHeight <= 0) {
       throw new Error('Could not calculate item height');

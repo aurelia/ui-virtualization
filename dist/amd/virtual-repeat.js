@@ -1,4 +1,4 @@
-define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-templating', 'aurelia-templating-resources', 'aurelia-templating-resources/repeat-utilities', 'aurelia-templating-resources/analyze-view-factory', './utilities', './virtual-repeat-strategy-locator', './view-strategy'], function (exports, _aureliaDependencyInjection, _aureliaBinding, _aureliaTemplating, _aureliaTemplatingResources, _repeatUtilities, _analyzeViewFactory, _utilities, _virtualRepeatStrategyLocator, _viewStrategy) {
+define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-templating', 'aurelia-templating-resources', 'aurelia-templating-resources/repeat-utilities', 'aurelia-templating-resources/analyze-view-factory', 'aurelia-pal', './utilities', './dom-helper', './virtual-repeat-strategy-locator', './view-strategy'], function (exports, _aureliaDependencyInjection, _aureliaBinding, _aureliaTemplating, _aureliaTemplatingResources, _repeatUtilities, _analyzeViewFactory, _aureliaPal, _utilities, _domHelper, _virtualRepeatStrategyLocator, _viewStrategy) {
   'use strict';
 
   Object.defineProperty(exports, "__esModule", {
@@ -81,10 +81,10 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
 
   var _dec, _dec2, _class, _desc, _value, _class2, _descriptor, _descriptor2;
 
-  var VirtualRepeat = exports.VirtualRepeat = (_dec = (0, _aureliaTemplating.customAttribute)('virtual-repeat'), _dec2 = (0, _aureliaDependencyInjection.inject)(Element, _aureliaTemplating.BoundViewFactory, _aureliaTemplating.TargetInstruction, _aureliaTemplating.ViewSlot, _aureliaBinding.ObserverLocator, _virtualRepeatStrategyLocator.VirtualRepeatStrategyLocator, _viewStrategy.ViewStrategyLocator), _dec(_class = (0, _aureliaTemplating.templateController)(_class = _dec2(_class = (_class2 = function (_AbstractRepeater) {
+  var VirtualRepeat = exports.VirtualRepeat = (_dec = (0, _aureliaTemplating.customAttribute)('virtual-repeat'), _dec2 = (0, _aureliaDependencyInjection.inject)(_aureliaPal.DOM.Element, _aureliaTemplating.BoundViewFactory, _aureliaTemplating.TargetInstruction, _aureliaTemplating.ViewSlot, _aureliaBinding.ObserverLocator, _virtualRepeatStrategyLocator.VirtualRepeatStrategyLocator, _viewStrategy.ViewStrategyLocator, _domHelper.DomHelper), _dec(_class = (0, _aureliaTemplating.templateController)(_class = _dec2(_class = (_class2 = function (_AbstractRepeater) {
     _inherits(VirtualRepeat, _AbstractRepeater);
 
-    function VirtualRepeat(element, viewFactory, instruction, viewSlot, observerLocator, strategyLocator, viewStrategyLocator) {
+    function VirtualRepeat(element, viewFactory, instruction, viewSlot, observerLocator, strategyLocator, viewStrategyLocator, domHelper) {
       _classCallCheck(this, VirtualRepeat);
 
       var _this = _possibleConstructorReturn(this, _AbstractRepeater.call(this, {
@@ -121,6 +121,7 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
       _this.viewStrategyLocator = viewStrategyLocator;
       _this.sourceExpression = (0, _repeatUtilities.getItemsSourceExpression)(_this.instruction, 'virtual-repeat.for');
       _this.isOneTime = (0, _repeatUtilities.isOneTime)(_this.sourceExpression);
+      _this.domHelper = domHelper;
       return _this;
     }
 
@@ -129,6 +130,7 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
 
       this._isAttached = true;
       var element = this.element;
+      this._itemsLength = this.items.length;
       this.viewStrategy = this.viewStrategyLocator.getStrategy(element);
       this.scrollContainer = this.viewStrategy.getScrollContainer(element);
       this.topBuffer = this.viewStrategy.createTopBufferElement(element);
@@ -137,9 +139,8 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
       this.scrollListener = function () {
         return _this2._onScroll();
       };
-      this.distanceToTop = (0, _utilities.getElementDistanceToTopViewPort)(this.topBuffer.nextElementSibling);
-      var containerStyle = this.scrollContainer.style;
-      if (containerStyle.overflowY === 'scroll' || containerStyle.overflow === 'scroll' || containerStyle.overflowY === 'auto' || containerStyle.overflow === 'auto') {
+      this.distanceToTop = this.domHelper.getElementDistanceToTopViewPort(_aureliaPal.DOM.nextElementSibling(this.topBuffer));
+      if (this.domHelper.hasOverflowScroll(this.scrollContainer)) {
         this._fixedHeightContainer = true;
         this.scrollContainer.addEventListener('scroll', this.scrollListener);
       } else {
@@ -149,7 +150,6 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
 
     VirtualRepeat.prototype.bind = function bind(bindingContext, overrideContext) {
       this.scope = { bindingContext: bindingContext, overrideContext: overrideContext };
-      this._itemsLength = this.items.length;
     };
 
     VirtualRepeat.prototype.call = function call(context, changes) {
@@ -384,7 +384,7 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
       }
       this._hasCalculatedSizes = true;
       this._itemsLength = itemsLength;
-      var firstViewElement = this.view(0).firstChild.nextElementSibling;
+      var firstViewElement = _aureliaPal.DOM.nextElementSibling(this.view(0).firstChild);
       this.itemHeight = (0, _utilities.calcOuterHeight)(firstViewElement);
       if (this.itemHeight <= 0) {
         throw new Error('Could not calculate item height');
