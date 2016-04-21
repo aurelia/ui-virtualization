@@ -3,6 +3,7 @@ import {ObserverLocator} from 'aurelia-binding';
 import {
   BoundViewFactory,
   ViewSlot,
+  ViewResources,
   TargetInstruction,
   customAttribute,
   bindable,
@@ -28,7 +29,7 @@ import {ViewStrategyLocator} from './view-strategy';
 
 @customAttribute('virtual-repeat')
 @templateController
-@inject(DOM.Element, BoundViewFactory, TargetInstruction, ViewSlot, ObserverLocator, VirtualRepeatStrategyLocator, ViewStrategyLocator, DomHelper)
+@inject(DOM.Element, BoundViewFactory, TargetInstruction, ViewSlot, ViewResources, ObserverLocator, VirtualRepeatStrategyLocator, ViewStrategyLocator, DomHelper)
 export class VirtualRepeat extends AbstractRepeater {
   _first = 0;
   _previousFirst = 0;
@@ -53,6 +54,7 @@ export class VirtualRepeat extends AbstractRepeater {
     viewFactory: BoundViewFactory,
     instruction: TargetInstruction,
     viewSlot: ViewSlot,
+    viewResources: ViewResources,
     observerLocator: ObserverLocator,
     strategyLocator: VirtualRepeatStrategyLocator,
     viewStrategyLocator: ViewStrategyLocator,
@@ -66,6 +68,7 @@ export class VirtualRepeat extends AbstractRepeater {
     this.viewFactory = viewFactory;
     this.instruction = instruction;
     this.viewSlot = viewSlot;
+    this.lookupFunctions = viewResources.lookupFunctions;
     this.observerLocator = observerLocator;
     this.strategyLocator = strategyLocator;
     this.viewStrategyLocator = viewStrategyLocator;

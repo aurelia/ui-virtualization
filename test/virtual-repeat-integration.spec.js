@@ -173,7 +173,7 @@ describe('VirtualRepeat Integration', () => {
         items.push('item' + i);
       }
       component = StageComponent
-        .withResources('src/virtual-repeat')
+        .withResources(['src/virtual-repeat', 'test/noop-value-converter'])
         .inView(`<table><tr style="height: ${itemHeight}px;" virtual-repeat.for="item of items"><td>\${item}</td></tr></table>`)
         .boundTo({ items: items });
 
@@ -189,6 +189,56 @@ describe('VirtualRepeat Integration', () => {
 
     it('handles push', done => {
       create.then(() => validatePush(done));
+    });
+  });
+
+  describe('value converters', () => {
+    beforeEach(() => {
+       items = [];
+      for(let i = 0; i < 1; ++i) {
+        items.push('item' + i);
+      }
+      component = StageComponent
+        .withResources(['src/virtual-repeat', 'test/noop-value-converter'])
+        .inView(`<div style="height: ${itemHeight}px;" virtual-repeat.for="item of items | noop">\${item}</div>`)
+        .boundTo({ items: items });
+
+      create = component.create().then(() => {
+        virtualRepeat = component.sut;
+        viewModel = component.viewModel;
+      });
+    });
+
+    afterEach(() => {
+      //component.cleanUp();
+    });
+
+    it('handles push', done => {
+      create.then(() => validatePush(done));
+    });
+
+    it('handles pop', done => {
+      create.then(() => validatePop(done));
+    });
+
+    it('handles unshift', done => {
+      create.then(() => {
+        viewModel.items.unshift('z');
+        nq(() => validateState());
+        nq(() => done());
+      });
+    });
+
+    it('handles shift', done => {
+      create.then(() => validateShift(done));
+    });
+
+    it('handles reverse', done => {
+      create.then(() => validateReverse(done));
+    });
+
+    it('handles splice', done => {
+      create.then(() => validateSplice(done));
     });
   });
 });
