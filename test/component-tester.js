@@ -11,6 +11,7 @@ export class ComponentTester {
   _resources: string | string[] = [];
   _bindingContext: any;
   _configure = aurelia => aurelia.use.standardConfiguration();
+  cleanUp;
   element;
   sut;
   viewModel;
@@ -43,12 +44,12 @@ export class ComponentTester {
         return aurelia.start().then(a => {
           let host = document.createElement('div');
           host.innerHTML = this._html;
-
           document.body.appendChild(host);
           let x = aurelia.enhance(this._bindingContext, host);
           this.sut = aurelia.root.controllers[0].viewModel;
           this.viewModel = aurelia.root.bindingContext;
           this.element = host.firstElementChild;
+          this.cleanUp = () => host.parentNode.removeChild(host);
         });
       });
     });

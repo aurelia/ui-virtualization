@@ -84,7 +84,7 @@ export class VirtualRepeat extends AbstractRepeater {
     this.bottomBuffer = this.viewStrategy.createBottomBufferElement(element);
     this.itemsChanged();
     this.scrollListener = () => this._onScroll();
-    this.distanceToTop = this.domHelper.getElementDistanceToTopViewPort(DOM.nextElementSibling(this.topBuffer));
+    this.distanceToTop = this.domHelper.getElementDistanceToTopViewPort(this.viewStrategy.getFirstElement(this.topBuffer));
     if (this.domHelper.hasOverflowScroll(this.scrollContainer)) {
       this._fixedHeightContainer = true;
       this.scrollContainer.addEventListener('scroll', this.scrollListener);
@@ -269,8 +269,8 @@ export class VirtualRepeat extends AbstractRepeater {
   }
 
   _adjustBufferHeights(): void {
-    this.topBuffer.setAttribute('style', `height:  ${this._topBufferHeight}px`);
-    this.bottomBuffer.setAttribute('style', `height: ${this._bottomBufferHeight}px`);
+    this.topBuffer.style.height = `${this._topBufferHeight}px`;
+    this.bottomBuffer.style.height = `${this._bottomBufferHeight}px`;
   }
 
   _unsubscribeCollection(): void {
@@ -331,9 +331,9 @@ export class VirtualRepeat extends AbstractRepeater {
     if (this._bottomBufferHeight < 0) {
       this._bottomBufferHeight = 0;
     }
-    this.bottomBuffer.setAttribute('style', `height: ${this._bottomBufferHeight}px`);
+    this.bottomBuffer.style.height = `${this._bottomBufferHeight}px`;
     this._topBufferHeight = 0;
-    this.topBuffer.setAttribute('style', `height: ${this._topBufferHeight}px`);
+    this.topBuffer.style.height = `${this._topBufferHeight}px`;
     // TODO This will cause scrolling back to top when swapping collection instances that have different lengths - instead should keep the scroll position
     this.scrollContainer.scrollTop = 0;
     this._first = 0;

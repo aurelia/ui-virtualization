@@ -8,6 +8,8 @@ interface ViewStrategy {
   createTopBufferElement(element: Element): Element;
   createBottomBufferElement(element: Element): Element;
   removeBufferElements(element: Element, topBuffer: Element, bottomBuffer: Element): void;
+  getFirstElement(topBuffer: Element): Element;
+  getLastView(bottomBuffer: Element): Element;
 }
 
 export class ViewStrategyLocator {
@@ -20,6 +22,19 @@ export class ViewStrategyLocator {
 }
 
 export class TableStrategy {
+  tableCssReset = '\
+    display: block;\
+    width: auto;\
+    height: auto;\
+    margin: 0;\
+    padding: 0;\
+    border: none;\
+    border-collapse: inherit;\
+    border-spacing: 0;\
+    background-color: transparent;\
+    -webkit-border-horizontal-spacing: 0;\
+    -webkit-border-vertical-spacing: 0;';
+
   getScrollContainer(element: Element): Element {
     return element.parentNode;
   }
@@ -34,8 +49,9 @@ export class TableStrategy {
 
   createTopBufferElement(element: Element): Element {
     let tr = DOM.createElement('tr');
+    tr.setAttribute('style', this.tableCssReset);
     let buffer = DOM.createElement('td');
-    buffer.setAttribute('style', 'height: 0px');
+    buffer.setAttribute('style', this.tableCssReset);
     tr.appendChild(buffer);
     element.parentNode.insertBefore(tr, element);
     return buffer;
@@ -43,8 +59,9 @@ export class TableStrategy {
 
   createBottomBufferElement(element: Element): Element {
     let tr = DOM.createElement('tr');
+    tr.setAttribute('style',this.tableCssReset);
     let buffer = DOM.createElement('td');
-    buffer.setAttribute('style', 'height: 0px');
+    buffer.setAttribute('style', this.tableCssReset);
     tr.appendChild(buffer);
     element.parentNode.insertBefore(tr, element.nextSibling);
     return buffer;
@@ -53,6 +70,15 @@ export class TableStrategy {
   removeBufferElements(element: Element, topBuffer: Element, bottomBuffer: Element): void {
     element.parentNode.removeChild(topBuffer.parentNode);
     element.parentNode.removeChild(bottomBuffer.parentNode);
+  }
+
+  getFirstElement(topBuffer: Element): Element {
+     let tr = topBuffer.parentNode;
+     return DOM.nextElementSibling(tr);
+  }
+
+  getLastElement(bottomBuffer: Element): Element {
+    return bottomBuffer.parentNode.previousElementSibling;
   }
 }
 
@@ -74,7 +100,6 @@ export class DefaultViewStrategy {
   createTopBufferElement(element: Element): Element {
     let elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
     let buffer = DOM.createElement(elementName);
-    buffer.setAttribute('style', 'height: 0px');
     element.parentNode.insertBefore(buffer, element);
     return buffer;
   }
@@ -82,7 +107,6 @@ export class DefaultViewStrategy {
   createBottomBufferElement(element: Element): Element {
     let elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
     let buffer = DOM.createElement(elementName);
-    buffer.setAttribute('style', 'height: 0px');
     element.parentNode.insertBefore(buffer, element.nextSibling);
     return buffer;
   }
@@ -90,5 +114,13 @@ export class DefaultViewStrategy {
   removeBufferElements(element: Element, topBuffer: Element, bottomBuffer: Element): void {
     element.parentNode.removeChild(topBuffer);
     element.parentNode.removeChild(bottomBuffer);
+  }
+
+  getFirstElement(topBuffer: Element): Element {
+     return DOM.nextElementSibling(topBuffer);
+  }
+
+  getLastElement(bottomBuffer: Element): Element {
+    return bottomBuffer.previousElementSibling;
   }
 }

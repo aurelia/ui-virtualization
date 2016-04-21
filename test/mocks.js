@@ -55,6 +55,8 @@ export class ViewStrategyMock {
   createTopBufferElement(element: Element) { }
   createBottomBufferElement(element: Element) { }
   removeBufferElements(element: Element, topBuffer: Element, bottomBuffer: Element) { }
+  getFirstElement(topBuffer: Element): Element {}
+  getLastElement(bottomBuffer: Element): Element {}
 }
 
 export const instructionMock = {

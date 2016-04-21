@@ -1,4 +1,5 @@
 import {StageComponent} from './component-tester';
+import {TableStrategy} from '../src/view-strategy';
 
 // async queue
 function createAssertionQueue() {
@@ -116,45 +117,78 @@ describe('VirtualRepeat Integration', () => {
       nq(() => done());
   }
 
-  beforeEach(() => {
-    items = [];
-    for(let i = 0; i < 100; ++i) {
-      items.push('item' + i);
-    }
-    component = StageComponent
-      .withResources('src/virtual-repeat')
-      .inView(`<div style="height: ${itemHeight}px;" virtual-repeat.for="item of items">\${item}</div>`)
-      .boundTo({ items: items });
+  describe('iterating div', () => {
+    beforeEach(() => {
+       items = [];
+      for(let i = 0; i < 1000; ++i) {
+        items.push('item' + i);
+      }
+      component = StageComponent
+        .withResources('src/virtual-repeat')
+        .inView(`<div style="height: ${itemHeight}px;" virtual-repeat.for="item of items">\${item}</div>`)
+        .boundTo({ items: items });
 
-    create = component.create().then(() => {
-      virtualRepeat = component.sut;
-      viewModel = component.viewModel;
+      create = component.create().then(() => {
+        virtualRepeat = component.sut;
+        viewModel = component.viewModel;
+      });
+    });
+
+    afterEach(() => {
+      component.cleanUp();
+    });
+
+    it('handles push', done => {
+      create.then(() => validatePush(done));
+    });
+
+    it('handles pop', done => {
+      create.then(() => validatePop(done));
+    });
+
+    it('handles unshift', done => {
+      create.then(() => validateUnshift(done));
+    });
+
+    // bug
+    xit('handles shift', done => {
+      create.then(() => validateShift(done));
+    });
+
+    // bug
+    xit('handles reverse', done => {
+      create.then(() => validateReverse(done));
+    });
+
+    it('handles splice', done => {
+      create.then(() => validateSplice(done));
     });
   });
 
-  it('handles push', done => {
-    create.then(() => validatePush(done));
-  });
+  describe('iterating table', () => {
+    beforeEach(() => {
 
-  it('handles pop', done => {
-    create.then(() => validatePop(done));
-  });
+      items = [];
+      for(let i = 0; i < 1000; ++i) {
+        items.push('item' + i);
+      }
+      component = StageComponent
+        .withResources('src/virtual-repeat')
+        .inView(`<table><tr style="height: ${itemHeight}px;" virtual-repeat.for="item of items"><td>\${item}</td></tr></table>`)
+        .boundTo({ items: items });
 
-  it('handles unshift', done => {
-    create.then(() => validateUnshift(done));
-  });
+      create = component.create().then(() => {
+        virtualRepeat = component.sut;
+        viewModel = component.viewModel;
+      });
+    });
 
-  // bug
-  xit('handles shift', done => {
-    create.then(() => validateShift(done));
-  });
+    afterEach(() => {
+      component.cleanUp();
+    });
 
-  // bug
-  xit('handles reverse', done => {
-    create.then(() => validateReverse(done));
-  });
-
-  it('handles splice', done => {
-    create.then(() => validateSplice(done));
+    it('handles push', done => {
+      create.then(() => validatePush(done));
+    });
   });
 });

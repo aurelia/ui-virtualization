@@ -46,6 +46,7 @@ describe('VirtualRepeat', () => {
       spyOn(viewStrategyMock, 'createTopBufferElement').and.callFake(() => topBuffer);
       spyOn(viewStrategyMock, 'createBottomBufferElement').and.callFake(() => topBuffer);
       spyOn(viewStrategyMock, 'getScrollContainer').and.callFake(() => scrollContainer);
+      spyOn(viewStrategyMock, 'getFirstElement').and.callFake(() => {});
       spyOn(domHelper, 'getElementDistanceToTopViewPort').and.callFake(() => undefined);
       spyOn(viewStrategyLocator, 'getStrategy').and.callFake(() => viewStrategyMock);
     });
