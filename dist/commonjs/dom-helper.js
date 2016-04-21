@@ -11,8 +11,13 @@ var DomHelper = exports.DomHelper = function () {
     _classCallCheck(this, DomHelper);
   }
 
-  DomHelper.prototype.getElementDistanceToTopViewPort = function getElementDistanceToTopViewPort(element) {
-    return element.getBoundingClientRect().top;
+  DomHelper.prototype.getElementDistanceToTopOfDocument = function getElementDistanceToTopOfDocument(element) {
+    var box = element.getBoundingClientRect();
+    var documentElement = document.documentElement;
+    var scrollTop = window.pageYOffset;
+    var clientTop = documentElement.clientTop;
+    var top = box.top + scrollTop - clientTop;
+    return Math.round(top);
   };
 
   DomHelper.prototype.hasOverflowScroll = function hasOverflowScroll(element) {

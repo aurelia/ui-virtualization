@@ -81,10 +81,10 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
 
   var _dec, _dec2, _class, _desc, _value, _class2, _descriptor, _descriptor2;
 
-  var VirtualRepeat = exports.VirtualRepeat = (_dec = (0, _aureliaTemplating.customAttribute)('virtual-repeat'), _dec2 = (0, _aureliaDependencyInjection.inject)(_aureliaPal.DOM.Element, _aureliaTemplating.BoundViewFactory, _aureliaTemplating.TargetInstruction, _aureliaTemplating.ViewSlot, _aureliaBinding.ObserverLocator, _virtualRepeatStrategyLocator.VirtualRepeatStrategyLocator, _viewStrategy.ViewStrategyLocator, _domHelper.DomHelper), _dec(_class = (0, _aureliaTemplating.templateController)(_class = _dec2(_class = (_class2 = function (_AbstractRepeater) {
+  var VirtualRepeat = exports.VirtualRepeat = (_dec = (0, _aureliaTemplating.customAttribute)('virtual-repeat'), _dec2 = (0, _aureliaDependencyInjection.inject)(_aureliaPal.DOM.Element, _aureliaTemplating.BoundViewFactory, _aureliaTemplating.TargetInstruction, _aureliaTemplating.ViewSlot, _aureliaTemplating.ViewResources, _aureliaBinding.ObserverLocator, _virtualRepeatStrategyLocator.VirtualRepeatStrategyLocator, _viewStrategy.ViewStrategyLocator, _domHelper.DomHelper), _dec(_class = (0, _aureliaTemplating.templateController)(_class = _dec2(_class = (_class2 = function (_AbstractRepeater) {
     _inherits(VirtualRepeat, _AbstractRepeater);
 
-    function VirtualRepeat(element, viewFactory, instruction, viewSlot, observerLocator, strategyLocator, viewStrategyLocator, domHelper) {
+    function VirtualRepeat(element, viewFactory, instruction, viewSlot, viewResources, observerLocator, strategyLocator, viewStrategyLocator, domHelper) {
       _classCallCheck(this, VirtualRepeat);
 
       var _this = _possibleConstructorReturn(this, _AbstractRepeater.call(this, {
@@ -116,6 +116,7 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
       _this.viewFactory = viewFactory;
       _this.instruction = instruction;
       _this.viewSlot = viewSlot;
+      _this.lookupFunctions = viewResources.lookupFunctions;
       _this.observerLocator = observerLocator;
       _this.strategyLocator = strategyLocator;
       _this.viewStrategyLocator = viewStrategyLocator;
@@ -139,7 +140,16 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
       this.scrollListener = function () {
         return _this2._onScroll();
       };
-      this.distanceToTop = this.domHelper.getElementDistanceToTopViewPort(_aureliaPal.DOM.nextElementSibling(this.topBuffer));
+
+      this.calcDistanceToTopInterval = setInterval(function () {
+        var distanceToTop = _this2.distanceToTop;
+        _this2.distanceToTop = _this2.domHelper.getElementDistanceToTopOfDocument(_this2.topBuffer);
+        if (distanceToTop !== _this2.distanceToTop) {
+          _this2._handleScroll();
+        }
+      }, 500);
+
+      this.distanceToTop = this.domHelper.getElementDistanceToTopOfDocument(this.viewStrategy.getFirstElement(this.topBuffer));
       if (this.domHelper.hasOverflowScroll(this.scrollContainer)) {
         this._fixedHeightContainer = true;
         this.scrollContainer.addEventListener('scroll', this.scrollListener);
@@ -180,6 +190,7 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
         this.scrollHandler.dispose();
       }
       this._unsubscribeCollection();
+      clearInterval(this.calcDistanceToTopInterval);
     };
 
     VirtualRepeat.prototype.itemsChanged = function itemsChanged() {
@@ -326,8 +337,8 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
     };
 
     VirtualRepeat.prototype._adjustBufferHeights = function _adjustBufferHeights() {
-      this.topBuffer.setAttribute('style', 'height:  ' + this._topBufferHeight + 'px');
-      this.bottomBuffer.setAttribute('style', 'height: ' + this._bottomBufferHeight + 'px');
+      this.topBuffer.style.height = this._topBufferHeight + 'px';
+      this.bottomBuffer.style.height = this._bottomBufferHeight + 'px';
     };
 
     VirtualRepeat.prototype._unsubscribeCollection = function _unsubscribeCollection() {
@@ -396,9 +407,9 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
       if (this._bottomBufferHeight < 0) {
         this._bottomBufferHeight = 0;
       }
-      this.bottomBuffer.setAttribute('style', 'height: ' + this._bottomBufferHeight + 'px');
+      this.bottomBuffer.style.height = this._bottomBufferHeight + 'px';
       this._topBufferHeight = 0;
-      this.topBuffer.setAttribute('style', 'height: ' + this._topBufferHeight + 'px');
+      this.topBuffer.style.height = this._topBufferHeight + 'px';
 
       this.scrollContainer.scrollTop = 0;
       this._first = 0;

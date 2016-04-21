@@ -45,7 +45,7 @@ function _initializerWarningHelper(descriptor, context) {
 
 import { inject } from 'aurelia-dependency-injection';
 import { ObserverLocator } from 'aurelia-binding';
-import { BoundViewFactory, ViewSlot, TargetInstruction, customAttribute, bindable, templateController } from 'aurelia-templating';
+import { BoundViewFactory, ViewSlot, ViewResources, TargetInstruction, customAttribute, bindable, templateController } from 'aurelia-templating';
 import { AbstractRepeater } from 'aurelia-templating-resources';
 import { getItemsSourceExpression, isOneTime, unwrapExpression, updateOneTimeBinding } from 'aurelia-templating-resources/repeat-utilities';
 import { viewsRequireLifecycle } from 'aurelia-templating-resources/analyze-view-factory';
@@ -55,8 +55,8 @@ import { DomHelper } from './dom-helper';
 import { VirtualRepeatStrategyLocator } from './virtual-repeat-strategy-locator';
 import { ViewStrategyLocator } from './view-strategy';
 
-export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = inject(DOM.Element, BoundViewFactory, TargetInstruction, ViewSlot, ObserverLocator, VirtualRepeatStrategyLocator, ViewStrategyLocator, DomHelper), _dec(_class = templateController(_class = _dec2(_class = (_class2 = class VirtualRepeat extends AbstractRepeater {
-  constructor(element, viewFactory, instruction, viewSlot, observerLocator, strategyLocator, viewStrategyLocator, domHelper) {
+export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = inject(DOM.Element, BoundViewFactory, TargetInstruction, ViewSlot, ViewResources, ObserverLocator, VirtualRepeatStrategyLocator, ViewStrategyLocator, DomHelper), _dec(_class = templateController(_class = _dec2(_class = (_class2 = class VirtualRepeat extends AbstractRepeater {
+  constructor(element, viewFactory, instruction, viewSlot, viewResources, observerLocator, strategyLocator, viewStrategyLocator, domHelper) {
     super({
       local: 'item',
       viewsRequireLifecycle: viewsRequireLifecycle(viewFactory)
@@ -86,6 +86,7 @@ export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
     this.viewFactory = viewFactory;
     this.instruction = instruction;
     this.viewSlot = viewSlot;
+    this.lookupFunctions = viewResources.lookupFunctions;
     this.observerLocator = observerLocator;
     this.strategyLocator = strategyLocator;
     this.viewStrategyLocator = viewStrategyLocator;
@@ -104,7 +105,16 @@ export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
     this.bottomBuffer = this.viewStrategy.createBottomBufferElement(element);
     this.itemsChanged();
     this.scrollListener = () => this._onScroll();
-    this.distanceToTop = this.domHelper.getElementDistanceToTopViewPort(DOM.nextElementSibling(this.topBuffer));
+
+    this.calcDistanceToTopInterval = setInterval(() => {
+      let distanceToTop = this.distanceToTop;
+      this.distanceToTop = this.domHelper.getElementDistanceToTopOfDocument(this.topBuffer);
+      if (distanceToTop !== this.distanceToTop) {
+        this._handleScroll();
+      }
+    }, 500);
+
+    this.distanceToTop = this.domHelper.getElementDistanceToTopOfDocument(this.viewStrategy.getFirstElement(this.topBuffer));
     if (this.domHelper.hasOverflowScroll(this.scrollContainer)) {
       this._fixedHeightContainer = true;
       this.scrollContainer.addEventListener('scroll', this.scrollListener);
@@ -145,6 +155,7 @@ export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
       this.scrollHandler.dispose();
     }
     this._unsubscribeCollection();
+    clearInterval(this.calcDistanceToTopInterval);
   }
 
   itemsChanged() {
@@ -283,8 +294,8 @@ export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
   }
 
   _adjustBufferHeights() {
-    this.topBuffer.setAttribute('style', `height:  ${ this._topBufferHeight }px`);
-    this.bottomBuffer.setAttribute('style', `height: ${ this._bottomBufferHeight }px`);
+    this.topBuffer.style.height = `${ this._topBufferHeight }px`;
+    this.bottomBuffer.style.height = `${ this._bottomBufferHeight }px`;
   }
 
   _unsubscribeCollection() {
@@ -345,9 +356,9 @@ export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
     if (this._bottomBufferHeight < 0) {
       this._bottomBufferHeight = 0;
     }
-    this.bottomBuffer.setAttribute('style', `height: ${ this._bottomBufferHeight }px`);
+    this.bottomBuffer.style.height = `${ this._bottomBufferHeight }px`;
     this._topBufferHeight = 0;
-    this.topBuffer.setAttribute('style', `height: ${ this._topBufferHeight }px`);
+    this.topBuffer.style.height = `${ this._topBufferHeight }px`;
 
     this.scrollContainer.scrollTop = 0;
     this._first = 0;

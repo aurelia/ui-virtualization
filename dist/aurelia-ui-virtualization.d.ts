@@ -25,6 +25,7 @@ declare module 'aurelia-ui-virtualization' {
   import {
     BoundViewFactory,
     ViewSlot,
+    ViewResources,
     TargetInstruction,
     customAttribute,
     bindable,
@@ -43,9 +44,11 @@ declare module 'aurelia-ui-virtualization' {
     createTopBufferElement(element: Element): Element;
     createBottomBufferElement(element: Element): Element;
     removeBufferElements(element: Element, topBuffer: Element, bottomBuffer: Element): void;
+    getFirstElement(topBuffer: Element): Element;
+    getLastView(bottomBuffer: Element): Element;
   }
   export class DomHelper {
-    getElementDistanceToTopViewPort(element: Element): number;
+    getElementDistanceToTopOfDocument(element: Element): number;
     hasOverflowScroll(element: Element): boolean;
   }
   export function calcOuterHeight(element: Element): number;
@@ -88,12 +91,15 @@ declare module 'aurelia-ui-virtualization' {
     getStrategy(element: Element): ViewStrategy;
   }
   export class TableStrategy {
+    tableCssReset: any;
     getScrollContainer(element: Element): Element;
     moveViewFirst(view: View, topBuffer: Element): void;
     moveViewLast(view: View, bottomBuffer: Element): void;
     createTopBufferElement(element: Element): Element;
     createBottomBufferElement(element: Element): Element;
     removeBufferElements(element: Element, topBuffer: Element, bottomBuffer: Element): void;
+    getFirstElement(topBuffer: Element): Element;
+    getLastElement(bottomBuffer: Element): Element;
   }
   export class DefaultViewStrategy {
     getScrollContainer(element: Element): Element;
@@ -102,6 +108,8 @@ declare module 'aurelia-ui-virtualization' {
     createTopBufferElement(element: Element): Element;
     createBottomBufferElement(element: Element): Element;
     removeBufferElements(element: Element, topBuffer: Element, bottomBuffer: Element): void;
+    getFirstElement(topBuffer: Element): Element;
+    getLastElement(bottomBuffer: Element): Element;
   }
   export class VirtualRepeatStrategyLocator extends RepeatStrategyLocator {
     constructor();
@@ -124,7 +132,7 @@ declare module 'aurelia-ui-virtualization' {
     _isAtTop: any;
     items: any;
     local: any;
-    constructor(element: Element, viewFactory: BoundViewFactory, instruction: TargetInstruction, viewSlot: ViewSlot, observerLocator: ObserverLocator, strategyLocator: VirtualRepeatStrategyLocator, viewStrategyLocator: ViewStrategyLocator, domHelper: DomHelper);
+    constructor(element: Element, viewFactory: BoundViewFactory, instruction: TargetInstruction, viewSlot: ViewSlot, viewResources: ViewResources, observerLocator: ObserverLocator, strategyLocator: VirtualRepeatStrategyLocator, viewStrategyLocator: ViewStrategyLocator, domHelper: DomHelper);
     attached(): void;
     bind(bindingContext: any, overrideContext: any): void;
     call(context: any, changes: any): void;

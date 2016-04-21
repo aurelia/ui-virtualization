@@ -4,13 +4,18 @@ import {DOM} from 'aurelia-pal';
 import {RepeatStrategyLocator} from 'aurelia-templating-resources/repeat-strategy-locator';
 import {inject} from 'aurelia-dependency-injection';
 import {ObserverLocator} from 'aurelia-binding';
-import {BoundViewFactory,ViewSlot,TargetInstruction,customAttribute,bindable,templateController} from 'aurelia-templating';
+import {BoundViewFactory,ViewSlot,ViewResources,TargetInstruction,customAttribute,bindable,templateController} from 'aurelia-templating';
 import {AbstractRepeater} from 'aurelia-templating-resources';
 import {viewsRequireLifecycle} from 'aurelia-templating-resources/analyze-view-factory';
 
 export class DomHelper {
-  getElementDistanceToTopViewPort(element: Element): number {
-    return element.getBoundingClientRect().top;
+  getElementDistanceToTopOfDocument(element: Element): number {
+    let box = element.getBoundingClientRect();
+    let documentElement = document.documentElement;
+    let scrollTop = window.pageYOffset;
+    let clientTop = documentElement.clientTop;
+    let top  = box.top +  scrollTop - clientTop;
+    return  Math.round(top);
   }
 
   hasOverflowScroll(element: Element): boolean {
@@ -295,7 +300,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
       let addIndex = splice.index;
       let end = splice.index + splice.addedCount;
       for (; addIndex < end; ++addIndex) {
-        let hasDistanceToBottomViewPort = getElementDistanceToBottomViewPort(repeat.bottomBuffer.previousElementSibling) > 0;
+        let hasDistanceToBottomViewPort = getElementDistanceToBottomViewPort(repeat.viewStrategy.getLastElement(repeat.bottomBuffer)) > 0;
         if (repeat.viewCount() === 0 || (!this._isIndexBeforeViewSlot(repeat, viewSlot, addIndex) && !this._isIndexAfterViewSlot(repeat, viewSlot, addIndex)) || hasDistanceToBottomViewPort)  {
           let overrideContext = createFullOverrideContext(repeat, array[addIndex], addIndex, arrayLength);
           repeat.insertView(addIndex, overrideContext.bindingContext, overrideContext);
@@ -330,6 +335,8 @@ interface ViewStrategy {
   createTopBufferElement(element: Element): Element;
   createBottomBufferElement(element: Element): Element;
   removeBufferElements(element: Element, topBuffer: Element, bottomBuffer: Element): void;
+  getFirstElement(topBuffer: Element): Element;
+  getLastView(bottomBuffer: Element): Element;
 }
 
 export class ViewStrategyLocator {
@@ -342,6 +349,19 @@ export class ViewStrategyLocator {
 }
 
 export class TableStrategy {
+  tableCssReset = '\
+    display: block;\
+    width: auto;\
+    height: auto;\
+    margin: 0;\
+    padding: 0;\
+    border: none;\
+    border-collapse: inherit;\
+    border-spacing: 0;\
+    background-color: transparent;\
+    -webkit-border-horizontal-spacing: 0;\
+    -webkit-border-vertical-spacing: 0;';
+
   getScrollContainer(element: Element): Element {
     return element.parentNode;
   }
@@ -356,8 +376,9 @@ export class TableStrategy {
 
   createTopBufferElement(element: Element): Element {
     let tr = DOM.createElement('tr');
+    tr.setAttribute('style', this.tableCssReset);
     let buffer = DOM.createElement('td');
-    buffer.setAttribute('style', 'height: 0px');
+    buffer.setAttribute('style', this.tableCssReset);
     tr.appendChild(buffer);
     element.parentNode.insertBefore(tr, element);
     return buffer;
@@ -365,8 +386,9 @@ export class TableStrategy {
 
   createBottomBufferElement(element: Element): Element {
     let tr = DOM.createElement('tr');
+    tr.setAttribute('style', this.tableCssReset);
     let buffer = DOM.createElement('td');
-    buffer.setAttribute('style', 'height: 0px');
+    buffer.setAttribute('style', this.tableCssReset);
     tr.appendChild(buffer);
     element.parentNode.insertBefore(tr, element.nextSibling);
     return buffer;
@@ -375,6 +397,15 @@ export class TableStrategy {
   removeBufferElements(element: Element, topBuffer: Element, bottomBuffer: Element): void {
     element.parentNode.removeChild(topBuffer.parentNode);
     element.parentNode.removeChild(bottomBuffer.parentNode);
+  }
+
+  getFirstElement(topBuffer: Element): Element {
+    let tr = topBuffer.parentNode;
+    return DOM.nextElementSibling(tr);
+  }
+
+  getLastElement(bottomBuffer: Element): Element {
+    return bottomBuffer.parentNode.previousElementSibling;
   }
 }
 
@@ -396,7 +427,6 @@ export class DefaultViewStrategy {
   createTopBufferElement(element: Element): Element {
     let elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
     let buffer = DOM.createElement(elementName);
-    buffer.setAttribute('style', 'height: 0px');
     element.parentNode.insertBefore(buffer, element);
     return buffer;
   }
@@ -404,7 +434,6 @@ export class DefaultViewStrategy {
   createBottomBufferElement(element: Element): Element {
     let elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
     let buffer = DOM.createElement(elementName);
-    buffer.setAttribute('style', 'height: 0px');
     element.parentNode.insertBefore(buffer, element.nextSibling);
     return buffer;
   }
@@ -412,6 +441,14 @@ export class DefaultViewStrategy {
   removeBufferElements(element: Element, topBuffer: Element, bottomBuffer: Element): void {
     element.parentNode.removeChild(topBuffer);
     element.parentNode.removeChild(bottomBuffer);
+  }
+
+  getFirstElement(topBuffer: Element): Element {
+    return DOM.nextElementSibling(topBuffer);
+  }
+
+  getLastElement(bottomBuffer: Element): Element {
+    return bottomBuffer.previousElementSibling;
   }
 }
 
@@ -427,7 +464,7 @@ export class VirtualRepeatStrategyLocator extends RepeatStrategyLocator {
 
 @customAttribute('virtual-repeat')
 @templateController
-@inject(DOM.Element, BoundViewFactory, TargetInstruction, ViewSlot, ObserverLocator, VirtualRepeatStrategyLocator, ViewStrategyLocator, DomHelper)
+@inject(DOM.Element, BoundViewFactory, TargetInstruction, ViewSlot, ViewResources, ObserverLocator, VirtualRepeatStrategyLocator, ViewStrategyLocator, DomHelper)
 export class VirtualRepeat extends AbstractRepeater {
   _first = 0;
   _previousFirst = 0;
@@ -452,6 +489,7 @@ export class VirtualRepeat extends AbstractRepeater {
     viewFactory: BoundViewFactory,
     instruction: TargetInstruction,
     viewSlot: ViewSlot,
+    viewResources: ViewResources,
     observerLocator: ObserverLocator,
     strategyLocator: VirtualRepeatStrategyLocator,
     viewStrategyLocator: ViewStrategyLocator,
@@ -465,6 +503,7 @@ export class VirtualRepeat extends AbstractRepeater {
     this.viewFactory = viewFactory;
     this.instruction = instruction;
     this.viewSlot = viewSlot;
+    this.lookupFunctions = viewResources.lookupFunctions;
     this.observerLocator = observerLocator;
     this.strategyLocator = strategyLocator;
     this.viewStrategyLocator = viewStrategyLocator;
@@ -483,7 +522,16 @@ export class VirtualRepeat extends AbstractRepeater {
     this.bottomBuffer = this.viewStrategy.createBottomBufferElement(element);
     this.itemsChanged();
     this.scrollListener = () => this._onScroll();
-    this.distanceToTop = this.domHelper.getElementDistanceToTopViewPort(DOM.nextElementSibling(this.topBuffer));
+
+    this.calcDistanceToTopInterval = setInterval(() => {
+      let distanceToTop = this.distanceToTop;
+      this.distanceToTop = this.domHelper.getElementDistanceToTopOfDocument(this.topBuffer);
+      if (distanceToTop !== this.distanceToTop) {
+        this._handleScroll();
+      }
+    }, 500);
+
+    this.distanceToTop = this.domHelper.getElementDistanceToTopOfDocument(this.viewStrategy.getFirstElement(this.topBuffer));
     if (this.domHelper.hasOverflowScroll(this.scrollContainer)) {
       this._fixedHeightContainer = true;
       this.scrollContainer.addEventListener('scroll', this.scrollListener);
@@ -524,6 +572,7 @@ export class VirtualRepeat extends AbstractRepeater {
       this.scrollHandler.dispose();
     }
     this._unsubscribeCollection();
+    clearInterval(this.calcDistanceToTopInterval);
   }
 
   itemsChanged(): void {
@@ -668,8 +717,8 @@ export class VirtualRepeat extends AbstractRepeater {
   }
 
   _adjustBufferHeights(): void {
-    this.topBuffer.setAttribute('style', `height:  ${this._topBufferHeight}px`);
-    this.bottomBuffer.setAttribute('style', `height: ${this._bottomBufferHeight}px`);
+    this.topBuffer.style.height = `${this._topBufferHeight}px`;
+    this.bottomBuffer.style.height = `${this._bottomBufferHeight}px`;
   }
 
   _unsubscribeCollection(): void {
@@ -730,9 +779,9 @@ export class VirtualRepeat extends AbstractRepeater {
     if (this._bottomBufferHeight < 0) {
       this._bottomBufferHeight = 0;
     }
-    this.bottomBuffer.setAttribute('style', `height: ${this._bottomBufferHeight}px`);
+    this.bottomBuffer.style.height = `${this._bottomBufferHeight}px`;
     this._topBufferHeight = 0;
-    this.topBuffer.setAttribute('style', `height: ${this._topBufferHeight}px`);
+    this.topBuffer.style.height = `${this._topBufferHeight}px`;
     // TODO This will cause scrolling back to top when swapping collection instances that have different lengths - instead should keep the scroll position
     this.scrollContainer.scrollTop = 0;
     this._first = 0;

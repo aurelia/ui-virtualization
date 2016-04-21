@@ -30,6 +30,19 @@ define(['exports', 'aurelia-pal', './utilities'], function (exports, _aureliaPal
   var TableStrategy = exports.TableStrategy = function () {
     function TableStrategy() {
       _classCallCheck(this, TableStrategy);
+
+      this.tableCssReset = '\
+    display: block;\
+    width: auto;\
+    height: auto;\
+    margin: 0;\
+    padding: 0;\
+    border: none;\
+    border-collapse: inherit;\
+    border-spacing: 0;\
+    background-color: transparent;\
+    -webkit-border-horizontal-spacing: 0;\
+    -webkit-border-vertical-spacing: 0;';
     }
 
     TableStrategy.prototype.getScrollContainer = function getScrollContainer(element) {
@@ -46,8 +59,9 @@ define(['exports', 'aurelia-pal', './utilities'], function (exports, _aureliaPal
 
     TableStrategy.prototype.createTopBufferElement = function createTopBufferElement(element) {
       var tr = _aureliaPal.DOM.createElement('tr');
+      tr.setAttribute('style', this.tableCssReset);
       var buffer = _aureliaPal.DOM.createElement('td');
-      buffer.setAttribute('style', 'height: 0px');
+      buffer.setAttribute('style', this.tableCssReset);
       tr.appendChild(buffer);
       element.parentNode.insertBefore(tr, element);
       return buffer;
@@ -55,8 +69,9 @@ define(['exports', 'aurelia-pal', './utilities'], function (exports, _aureliaPal
 
     TableStrategy.prototype.createBottomBufferElement = function createBottomBufferElement(element) {
       var tr = _aureliaPal.DOM.createElement('tr');
+      tr.setAttribute('style', this.tableCssReset);
       var buffer = _aureliaPal.DOM.createElement('td');
-      buffer.setAttribute('style', 'height: 0px');
+      buffer.setAttribute('style', this.tableCssReset);
       tr.appendChild(buffer);
       element.parentNode.insertBefore(tr, element.nextSibling);
       return buffer;
@@ -65,6 +80,15 @@ define(['exports', 'aurelia-pal', './utilities'], function (exports, _aureliaPal
     TableStrategy.prototype.removeBufferElements = function removeBufferElements(element, topBuffer, bottomBuffer) {
       element.parentNode.removeChild(topBuffer.parentNode);
       element.parentNode.removeChild(bottomBuffer.parentNode);
+    };
+
+    TableStrategy.prototype.getFirstElement = function getFirstElement(topBuffer) {
+      var tr = topBuffer.parentNode;
+      return _aureliaPal.DOM.nextElementSibling(tr);
+    };
+
+    TableStrategy.prototype.getLastElement = function getLastElement(bottomBuffer) {
+      return bottomBuffer.parentNode.previousElementSibling;
     };
 
     return TableStrategy;
@@ -92,7 +116,6 @@ define(['exports', 'aurelia-pal', './utilities'], function (exports, _aureliaPal
     DefaultViewStrategy.prototype.createTopBufferElement = function createTopBufferElement(element) {
       var elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
       var buffer = _aureliaPal.DOM.createElement(elementName);
-      buffer.setAttribute('style', 'height: 0px');
       element.parentNode.insertBefore(buffer, element);
       return buffer;
     };
@@ -100,7 +123,6 @@ define(['exports', 'aurelia-pal', './utilities'], function (exports, _aureliaPal
     DefaultViewStrategy.prototype.createBottomBufferElement = function createBottomBufferElement(element) {
       var elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
       var buffer = _aureliaPal.DOM.createElement(elementName);
-      buffer.setAttribute('style', 'height: 0px');
       element.parentNode.insertBefore(buffer, element.nextSibling);
       return buffer;
     };
@@ -108,6 +130,14 @@ define(['exports', 'aurelia-pal', './utilities'], function (exports, _aureliaPal
     DefaultViewStrategy.prototype.removeBufferElements = function removeBufferElements(element, topBuffer, bottomBuffer) {
       element.parentNode.removeChild(topBuffer);
       element.parentNode.removeChild(bottomBuffer);
+    };
+
+    DefaultViewStrategy.prototype.getFirstElement = function getFirstElement(topBuffer) {
+      return _aureliaPal.DOM.nextElementSibling(topBuffer);
+    };
+
+    DefaultViewStrategy.prototype.getLastElement = function getLastElement(bottomBuffer) {
+      return bottomBuffer.previousElementSibling;
     };
 
     return DefaultViewStrategy;

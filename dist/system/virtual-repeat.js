@@ -1,7 +1,7 @@
 'use strict';
 
 System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-templating', 'aurelia-templating-resources', 'aurelia-templating-resources/repeat-utilities', 'aurelia-templating-resources/analyze-view-factory', 'aurelia-pal', './utilities', './dom-helper', './virtual-repeat-strategy-locator', './view-strategy'], function (_export, _context) {
-  var inject, ObserverLocator, BoundViewFactory, ViewSlot, TargetInstruction, customAttribute, bindable, templateController, AbstractRepeater, getItemsSourceExpression, isOneTime, unwrapExpression, updateOneTimeBinding, viewsRequireLifecycle, DOM, getStyleValue, calcOuterHeight, rebindAndMoveView, DomHelper, VirtualRepeatStrategyLocator, ViewStrategyLocator, _dec, _dec2, _class, _desc, _value, _class2, _descriptor, _descriptor2, VirtualRepeat;
+  var inject, ObserverLocator, BoundViewFactory, ViewSlot, ViewResources, TargetInstruction, customAttribute, bindable, templateController, AbstractRepeater, getItemsSourceExpression, isOneTime, unwrapExpression, updateOneTimeBinding, viewsRequireLifecycle, DOM, getStyleValue, calcOuterHeight, rebindAndMoveView, DomHelper, VirtualRepeatStrategyLocator, ViewStrategyLocator, _dec, _dec2, _class, _desc, _value, _class2, _descriptor, _descriptor2, VirtualRepeat;
 
   function _initDefineProp(target, property, descriptor, context) {
     if (!descriptor) return;
@@ -84,6 +84,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-tem
     }, function (_aureliaTemplating) {
       BoundViewFactory = _aureliaTemplating.BoundViewFactory;
       ViewSlot = _aureliaTemplating.ViewSlot;
+      ViewResources = _aureliaTemplating.ViewResources;
       TargetInstruction = _aureliaTemplating.TargetInstruction;
       customAttribute = _aureliaTemplating.customAttribute;
       bindable = _aureliaTemplating.bindable;
@@ -111,10 +112,10 @@ System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-tem
       ViewStrategyLocator = _viewStrategy.ViewStrategyLocator;
     }],
     execute: function () {
-      _export('VirtualRepeat', VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = inject(DOM.Element, BoundViewFactory, TargetInstruction, ViewSlot, ObserverLocator, VirtualRepeatStrategyLocator, ViewStrategyLocator, DomHelper), _dec(_class = templateController(_class = _dec2(_class = (_class2 = function (_AbstractRepeater) {
+      _export('VirtualRepeat', VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = inject(DOM.Element, BoundViewFactory, TargetInstruction, ViewSlot, ViewResources, ObserverLocator, VirtualRepeatStrategyLocator, ViewStrategyLocator, DomHelper), _dec(_class = templateController(_class = _dec2(_class = (_class2 = function (_AbstractRepeater) {
         _inherits(VirtualRepeat, _AbstractRepeater);
 
-        function VirtualRepeat(element, viewFactory, instruction, viewSlot, observerLocator, strategyLocator, viewStrategyLocator, domHelper) {
+        function VirtualRepeat(element, viewFactory, instruction, viewSlot, viewResources, observerLocator, strategyLocator, viewStrategyLocator, domHelper) {
           _classCallCheck(this, VirtualRepeat);
 
           var _this = _possibleConstructorReturn(this, _AbstractRepeater.call(this, {
@@ -146,6 +147,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-tem
           _this.viewFactory = viewFactory;
           _this.instruction = instruction;
           _this.viewSlot = viewSlot;
+          _this.lookupFunctions = viewResources.lookupFunctions;
           _this.observerLocator = observerLocator;
           _this.strategyLocator = strategyLocator;
           _this.viewStrategyLocator = viewStrategyLocator;
@@ -169,7 +171,16 @@ System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-tem
           this.scrollListener = function () {
             return _this2._onScroll();
           };
-          this.distanceToTop = this.domHelper.getElementDistanceToTopViewPort(DOM.nextElementSibling(this.topBuffer));
+
+          this.calcDistanceToTopInterval = setInterval(function () {
+            var distanceToTop = _this2.distanceToTop;
+            _this2.distanceToTop = _this2.domHelper.getElementDistanceToTopOfDocument(_this2.topBuffer);
+            if (distanceToTop !== _this2.distanceToTop) {
+              _this2._handleScroll();
+            }
+          }, 500);
+
+          this.distanceToTop = this.domHelper.getElementDistanceToTopOfDocument(this.viewStrategy.getFirstElement(this.topBuffer));
           if (this.domHelper.hasOverflowScroll(this.scrollContainer)) {
             this._fixedHeightContainer = true;
             this.scrollContainer.addEventListener('scroll', this.scrollListener);
@@ -210,6 +221,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-tem
             this.scrollHandler.dispose();
           }
           this._unsubscribeCollection();
+          clearInterval(this.calcDistanceToTopInterval);
         };
 
         VirtualRepeat.prototype.itemsChanged = function itemsChanged() {
@@ -356,8 +368,8 @@ System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-tem
         };
 
         VirtualRepeat.prototype._adjustBufferHeights = function _adjustBufferHeights() {
-          this.topBuffer.setAttribute('style', 'height:  ' + this._topBufferHeight + 'px');
-          this.bottomBuffer.setAttribute('style', 'height: ' + this._bottomBufferHeight + 'px');
+          this.topBuffer.style.height = this._topBufferHeight + 'px';
+          this.bottomBuffer.style.height = this._bottomBufferHeight + 'px';
         };
 
         VirtualRepeat.prototype._unsubscribeCollection = function _unsubscribeCollection() {
@@ -426,9 +438,9 @@ System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-tem
           if (this._bottomBufferHeight < 0) {
             this._bottomBufferHeight = 0;
           }
-          this.bottomBuffer.setAttribute('style', 'height: ' + this._bottomBufferHeight + 'px');
+          this.bottomBuffer.style.height = this._bottomBufferHeight + 'px';
           this._topBufferHeight = 0;
-          this.topBuffer.setAttribute('style', 'height: ' + this._topBufferHeight + 'px');
+          this.topBuffer.style.height = this._topBufferHeight + 'px';
 
           this.scrollContainer.scrollTop = 0;
           this._first = 0;

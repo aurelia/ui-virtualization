@@ -245,7 +245,7 @@ define(['exports', 'aurelia-templating-resources/array-repeat-strategy', 'aureli
         var addIndex = splice.index;
         var end = splice.index + splice.addedCount;
         for (; addIndex < end; ++addIndex) {
-          var hasDistanceToBottomViewPort = (0, _utilities.getElementDistanceToBottomViewPort)(repeat.bottomBuffer.previousElementSibling) > 0;
+          var hasDistanceToBottomViewPort = (0, _utilities.getElementDistanceToBottomViewPort)(repeat.viewStrategy.getLastElement(repeat.bottomBuffer)) > 0;
           if (repeat.viewCount() === 0 || !this._isIndexBeforeViewSlot(repeat, viewSlot, addIndex) && !this._isIndexAfterViewSlot(repeat, viewSlot, addIndex) || hasDistanceToBottomViewPort) {
             var overrideContext = (0, _repeatUtilities.createFullOverrideContext)(repeat, array[addIndex], addIndex, arrayLength);
             repeat.insertView(addIndex, overrideContext.bindingContext, overrideContext);

@@ -1,3 +1,14 @@
+### 0.4.3 (2016-04-21)
+
+
+#### Bug Fixes
+
+* **virtual-repeat:**
+  * continuously calc distance to top of document ([4b8649e7](http://github.com/aurelia/ui-virtualization/commit/4b8649e7416517ad217addf20bef6e26e2366e69))
+  * handle mutations with value converters ([9aac0c77](http://github.com/aurelia/ui-virtualization/commit/9aac0c772fb128bd5cd4679cbfcbfccb7ebef380))
+  * table rendering not working ([13db6df7](http://github.com/aurelia/ui-virtualization/commit/13db6df782decce19fdf59b757cd036fc60a099b), closes [#44](http://github.com/aurelia/ui-virtualization/issues/44))
+
+
 ### 0.4.2 (2016-04-13)
 
 * refactoring, styling and cleanup
