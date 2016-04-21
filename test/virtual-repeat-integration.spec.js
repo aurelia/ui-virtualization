@@ -195,7 +195,7 @@ describe('VirtualRepeat Integration', () => {
   describe('value converters', () => {
     beforeEach(() => {
        items = [];
-      for(let i = 0; i < 1; ++i) {
+      for(let i = 0; i < 1000; ++i) {
         items.push('item' + i);
       }
       component = StageComponent
@@ -210,7 +210,7 @@ describe('VirtualRepeat Integration', () => {
     });
 
     afterEach(() => {
-      //component.cleanUp();
+      component.cleanUp();
     });
 
     it('handles push', done => {

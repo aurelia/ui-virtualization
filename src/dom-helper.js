@@ -1,6 +1,11 @@
 export class DomHelper {
-  getElementDistanceToTopViewPort(element: Element): number {
-    return element.getBoundingClientRect().top;
+  getElementDistanceToTopOfDocument(element: Element): number {
+    let box = element.getBoundingClientRect();
+    let documentElement = document.documentElement;
+    let scrollTop = window.pageYOffset;
+    let clientTop = documentElement.clientTop;
+    let top  = box.top +  scrollTop - clientTop;
+    return  Math.round(top);
   }
 
   hasOverflowScroll(element: Element): boolean {
