@@ -59,7 +59,7 @@ export class TableStrategy {
 
   createBottomBufferElement(element: Element): Element {
     let tr = DOM.createElement('tr');
-    tr.setAttribute('style',this.tableCssReset);
+    tr.setAttribute('style', this.tableCssReset);
     let buffer = DOM.createElement('td');
     buffer.setAttribute('style', this.tableCssReset);
     tr.appendChild(buffer);
@@ -73,8 +73,8 @@ export class TableStrategy {
   }
 
   getFirstElement(topBuffer: Element): Element {
-     let tr = topBuffer.parentNode;
-     return DOM.nextElementSibling(tr);
+    let tr = topBuffer.parentNode;
+    return DOM.nextElementSibling(tr);
   }
 
   getLastElement(bottomBuffer: Element): Element {
@@ -117,7 +117,7 @@ export class DefaultViewStrategy {
   }
 
   getFirstElement(topBuffer: Element): Element {
-     return DOM.nextElementSibling(topBuffer);
+    return DOM.nextElementSibling(topBuffer);
   }
 
   getLastElement(bottomBuffer: Element): Element {
