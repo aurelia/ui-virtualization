@@ -12,7 +12,13 @@ export function insertBeforeNode(view: View, bottomBuffer: number): void {
   let viewStart = view.firstChild;
   let element = viewStart.nextSibling;
   let viewEnd = view.lastChild;
-  let parentElement = bottomBuffer.parentElement;
+  let parentElement;
+
+  if (bottomBuffer.parentElement) {
+    parentElement = bottomBuffer.parentElement;
+  } else if (bottomBuffer.parentNode) {
+    parentElement = bottomBuffer.parentNode;
+  }
 
   parentElement.insertBefore(viewEnd, bottomBuffer);
   parentElement.insertBefore(element, viewEnd);
