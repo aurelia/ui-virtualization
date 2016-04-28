@@ -25,7 +25,13 @@ function insertBeforeNode(view, bottomBuffer) {
   var viewStart = view.firstChild;
   var element = viewStart.nextSibling;
   var viewEnd = view.lastChild;
-  var parentElement = bottomBuffer.parentElement;
+  var parentElement = void 0;
+
+  if (bottomBuffer.parentElement) {
+    parentElement = bottomBuffer.parentElement;
+  } else if (bottomBuffer.parentNode) {
+    parentElement = bottomBuffer.parentNode;
+  }
 
   parentElement.insertBefore(viewEnd, bottomBuffer);
   parentElement.insertBefore(element, viewEnd);

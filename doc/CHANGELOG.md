@@ -1,3 +1,11 @@
+### 0.4.4 (2016-04-28)
+
+
+#### Bug Fixes
+
+* **utilities:** undefined parentElement in IE11 ([c7bb7857](http://github.com/aurelia/ui-virtualization/commit/c7bb78576cf584c203cddb2e9374ff9df4284caf))
+
+
 ### 0.4.3 (2016-04-21)
 
 
