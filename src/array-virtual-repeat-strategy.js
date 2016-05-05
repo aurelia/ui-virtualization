@@ -105,26 +105,46 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
     let removeDelta = 0;
     let rmPromises = [];
 
-    for (let i = 0, ii = splices.length; i < ii; ++i) {
-      let splice = splices[i];
-      let removed = splice.removed;
-      for (let j = 0, jj = removed.length; j < jj; ++j) {
-        let viewOrPromise = this._removeViewAt(repeat, splice.index + removeDelta + rmPromises.length, true);
-        if (viewOrPromise instanceof Promise) {
-          rmPromises.push(viewOrPromise);
-        }
-      }
-      removeDelta -= splice.addedCount;
-    }
+    // do all splices replace existing entries?
+    let allSplicesAreInplace = splices.reduce( (prev,splice) => { 
+      return prev && splice.removed.length===splice.addedCount; 
+    }, true);
 
-    if (rmPromises.length > 0) {
-      return Promise.all(rmPromises).then(() => {
-        this._handleAddedSplices(repeat, array, splices);
-        updateVirtualOverrideContexts(repeat, 0);
+    // if so, optimise by just replacing affected visible views
+    if( allSplicesAreInplace ) {
+      splices.forEach( (splice) => {
+        for ( var collectionIndex = splice.index; collectionIndex<splice.index+splice.addedCount; collectionIndex++ ) {
+          if( !this._isIndexBeforeViewSlot(repeat, repeat.viewSlot, collectionIndex) && !this._isIndexAfterViewSlot(repeat, repeat.viewSlot, collectionIndex) ) {
+            var viewIndex = this._getViewIndex(repeat, repeat.viewSlot, collectionIndex);
+            var overrideContext = createFullOverrideContext(repeat, array[collectionIndex], collectionIndex, array.length);
+            repeat.removeView(viewIndex, true, true);            
+            repeat.insertView(viewIndex, overrideContext.bindingContext, overrideContext);
+          }
+        }
       });
     }
-    this._handleAddedSplices(repeat, array, splices);
-    updateVirtualOverrideContexts(repeat, 0);
+    else {
+      for (let i = 0, ii = splices.length; i < ii; ++i) {
+        let splice = splices[i];
+        let removed = splice.removed;
+        for (let j = 0, jj = removed.length; j < jj; ++j) {
+          let viewOrPromise = this._removeViewAt(repeat, splice.index + removeDelta + rmPromises.length, true);
+          if (viewOrPromise instanceof Promise) {
+            rmPromises.push(viewOrPromise);
+          }
+        }
+        removeDelta -= splice.addedCount;
+      }
+
+      if (rmPromises.length > 0) {
+        return Promise.all(rmPromises).then(() => {
+          this._handleAddedSplices(repeat, array, splices);
+          updateVirtualOverrideContexts(repeat, 0);
+        });
+      }
+      this._handleAddedSplices(repeat, array, splices);
+      updateVirtualOverrideContexts(repeat, 0);
+    }
   }
 
   _removeViewAt(repeat: VirtualRepeat, collectionIndex: number, returnToCache: boolean): any {
