@@ -1,5 +1,4 @@
-import {ArrayRepeatStrategy} from 'aurelia-templating-resources/array-repeat-strategy';
-import {createFullOverrideContext} from 'aurelia-templating-resources/repeat-utilities';
+import {ArrayRepeatStrategy, createFullOverrideContext} from 'aurelia-templating-resources';
 import {updateVirtualOverrideContexts, rebindAndMoveView, getElementDistanceToBottomViewPort} from './utilities';
 
 /**

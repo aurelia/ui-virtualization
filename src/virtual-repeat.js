@@ -9,14 +9,14 @@ import {
   bindable,
   templateController
 } from 'aurelia-templating';
-import {AbstractRepeater} from 'aurelia-templating-resources';
 import {
+  AbstractRepeater,
   getItemsSourceExpression,
   isOneTime,
   unwrapExpression,
-  updateOneTimeBinding
-} from 'aurelia-templating-resources/repeat-utilities';
-import {viewsRequireLifecycle} from 'aurelia-templating-resources/analyze-view-factory';
+  updateOneTimeBinding,
+  viewsRequireLifecycle
+} from 'aurelia-templating-resources';
 import {DOM} from 'aurelia-pal';
 import {
   getStyleValue,
