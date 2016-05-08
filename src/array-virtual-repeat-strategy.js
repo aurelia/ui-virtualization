@@ -134,7 +134,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
     let viewCount = repeat.viewCount();
     let viewAddIndex;
     let removeMoreThanInDom = removedLength > viewCount;
-    if(repeat._viewsLength <= j){
+    if (repeat._viewsLength <= j) {
       repeat._bottomBufferHeight = repeat._bottomBufferHeight - (repeat.itemHeight);
       repeat._adjustBufferHeights();
       return;
@@ -149,7 +149,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
         let collectionAddIndex;
         if (repeat._bottomBufferHeight > repeat.itemHeight) {
           viewAddIndex = viewCount;
-          if(!removeMoreThanInDom) {
+          if (!removeMoreThanInDom) {
             let lastViewItem = repeat._getLastViewItem();
             collectionAddIndex = repeat.items.indexOf(lastViewItem) + 1;
           } else {
@@ -167,8 +167,6 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
           view = repeat.viewFactory.create();
           view.bind(overrideContext.bindingContext, overrideContext);
         }
-      } else {
-        return viewOrPromise;
       }
     } else if (this._isIndexBeforeViewSlot(repeat, viewSlot, collectionIndex)) {
       if (repeat._bottomBufferHeight > 0) {
@@ -186,7 +184,6 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
         repeat.viewSlot.insert(viewAddIndex, view);
         repeat._adjustBufferHeights();
       });
-      return undefined;
     } else if (view) {
       repeat.viewSlot.insert(viewAddIndex, view);
     }

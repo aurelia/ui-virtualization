@@ -320,7 +320,7 @@ export class VirtualRepeat extends AbstractRepeater {
 
   _getIndexOfLastView(): number {
     const view = this.view(this.viewCount() - 1);
-    if(view) {
+    if (view) {
       return view.overrideContext.$index;
     }
 
