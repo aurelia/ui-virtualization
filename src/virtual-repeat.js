@@ -319,7 +319,21 @@ export class VirtualRepeat extends AbstractRepeater {
   }
 
   _getIndexOfLastView(): number {
-    return this.view(this.viewCount() - 1).overrideContext.$index;
+    const view = this.view(this.viewCount() - 1);
+    if(view) {
+      return view.overrideContext.$index;
+    }
+
+    return -1;
+  }
+
+  _getLastViewItem() {
+    let children = this.viewSlot.children;
+    if (!children.length) {
+      return undefined;
+    }
+    let lastViewItem = children[children.length - 1].bindingContext[this.local];
+    return lastViewItem;
   }
 
   _getIndexOfFirstView(): number {
