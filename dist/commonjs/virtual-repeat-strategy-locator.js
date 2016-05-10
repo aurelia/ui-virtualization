@@ -5,7 +5,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.VirtualRepeatStrategyLocator = undefined;
 
-var _repeatStrategyLocator = require('aurelia-templating-resources/repeat-strategy-locator');
+var _aureliaTemplatingResources = require('aurelia-templating-resources');
 
 var _arrayVirtualRepeatStrategy = require('./array-virtual-repeat-strategy');
 
@@ -33,4 +33,4 @@ var VirtualRepeatStrategyLocator = exports.VirtualRepeatStrategyLocator = functi
   }
 
   return VirtualRepeatStrategyLocator;
-}(_repeatStrategyLocator.RepeatStrategyLocator);
+}(_aureliaTemplatingResources.RepeatStrategyLocator);

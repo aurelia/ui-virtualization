@@ -1,4 +1,4 @@
-import { RepeatStrategyLocator } from 'aurelia-templating-resources/repeat-strategy-locator';
+import { RepeatStrategyLocator } from 'aurelia-templating-resources';
 import { ArrayVirtualRepeatStrategy } from './array-virtual-repeat-strategy';
 
 export let VirtualRepeatStrategyLocator = class VirtualRepeatStrategyLocator extends RepeatStrategyLocator {

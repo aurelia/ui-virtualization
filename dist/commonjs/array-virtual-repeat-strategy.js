@@ -5,9 +5,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.ArrayVirtualRepeatStrategy = undefined;
 
-var _arrayRepeatStrategy = require('aurelia-templating-resources/array-repeat-strategy');
-
-var _repeatUtilities = require('aurelia-templating-resources/repeat-utilities');
+var _aureliaTemplatingResources = require('aurelia-templating-resources');
 
 var _utilities = require('./utilities');
 
@@ -27,7 +25,7 @@ var ArrayVirtualRepeatStrategy = exports.ArrayVirtualRepeatStrategy = function (
   }
 
   ArrayVirtualRepeatStrategy.prototype.createFirstItem = function createFirstItem(repeat) {
-    var overrideContext = (0, _repeatUtilities.createFullOverrideContext)(repeat, repeat.items[0], 0, 1);
+    var overrideContext = (0, _aureliaTemplatingResources.createFullOverrideContext)(repeat, repeat.items[0], 0, 1);
     repeat.addView(overrideContext.bindingContext, overrideContext);
   };
 
@@ -37,7 +35,7 @@ var ArrayVirtualRepeatStrategy = exports.ArrayVirtualRepeatStrategy = function (
 
   ArrayVirtualRepeatStrategy.prototype._standardProcessInstanceChanged = function _standardProcessInstanceChanged(repeat, items) {
     for (var i = 1, ii = repeat._viewsLength; i < ii; ++i) {
-      var overrideContext = (0, _repeatUtilities.createFullOverrideContext)(repeat, items[i], i, ii);
+      var overrideContext = (0, _aureliaTemplatingResources.createFullOverrideContext)(repeat, items[i], i, ii);
       repeat.addView(overrideContext.bindingContext, overrideContext);
     }
   };
@@ -71,7 +69,7 @@ var ArrayVirtualRepeatStrategy = exports.ArrayVirtualRepeatStrategy = function (
 
     var minLength = Math.min(repeat._viewsLength, items.length);
     for (var _i = viewsLength; _i < minLength; _i++) {
-      var overrideContext = (0, _repeatUtilities.createFullOverrideContext)(repeat, items[_i], _i, itemsLength);
+      var overrideContext = (0, _aureliaTemplatingResources.createFullOverrideContext)(repeat, items[_i], _i, itemsLength);
       repeat.addView(overrideContext.bindingContext, overrideContext);
     }
   };
@@ -126,8 +124,9 @@ var ArrayVirtualRepeatStrategy = exports.ArrayVirtualRepeatStrategy = function (
     for (var i = 0, ii = splices.length; i < ii; ++i) {
       var splice = splices[i];
       var removed = splice.removed;
-      for (var j = 0, jj = removed.length; j < jj; ++j) {
-        var viewOrPromise = this._removeViewAt(repeat, splice.index + removeDelta + rmPromises.length, true);
+      var removedLength = removed.length;
+      for (var j = 0, jj = removedLength; j < jj; ++j) {
+        var viewOrPromise = this._removeViewAt(repeat, splice.index + removeDelta + rmPromises.length, true, j, removedLength);
         if (viewOrPromise instanceof Promise) {
           rmPromises.push(viewOrPromise);
         }
@@ -145,12 +144,18 @@ var ArrayVirtualRepeatStrategy = exports.ArrayVirtualRepeatStrategy = function (
     (0, _utilities.updateVirtualOverrideContexts)(repeat, 0);
   };
 
-  ArrayVirtualRepeatStrategy.prototype._removeViewAt = function _removeViewAt(repeat, collectionIndex, returnToCache) {
+  ArrayVirtualRepeatStrategy.prototype._removeViewAt = function _removeViewAt(repeat, collectionIndex, returnToCache, j, removedLength) {
     var viewOrPromise = void 0;
     var view = void 0;
     var viewSlot = repeat.viewSlot;
     var viewCount = repeat.viewCount();
     var viewAddIndex = void 0;
+    var removeMoreThanInDom = removedLength > viewCount;
+    if (repeat._viewsLength <= j) {
+      repeat._bottomBufferHeight = repeat._bottomBufferHeight - repeat.itemHeight;
+      repeat._adjustBufferHeights();
+      return;
+    }
 
     if (!this._isIndexBeforeViewSlot(repeat, viewSlot, collectionIndex) && !this._isIndexAfterViewSlot(repeat, viewSlot, collectionIndex)) {
       var viewIndex = this._getViewIndex(repeat, viewSlot, collectionIndex);
@@ -159,7 +164,12 @@ var ArrayVirtualRepeatStrategy = exports.ArrayVirtualRepeatStrategy = function (
         var collectionAddIndex = void 0;
         if (repeat._bottomBufferHeight > repeat.itemHeight) {
           viewAddIndex = viewCount;
-          collectionAddIndex = repeat._getIndexOfLastView() + 1;
+          if (!removeMoreThanInDom) {
+            var lastViewItem = repeat._getLastViewItem();
+            collectionAddIndex = repeat.items.indexOf(lastViewItem) + 1;
+          } else {
+            collectionAddIndex = j;
+          }
           repeat._bottomBufferHeight = repeat._bottomBufferHeight - repeat.itemHeight;
         } else if (repeat._topBufferHeight > 0) {
           viewAddIndex = 0;
@@ -168,12 +178,10 @@ var ArrayVirtualRepeatStrategy = exports.ArrayVirtualRepeatStrategy = function (
         }
         var data = repeat.items[collectionAddIndex];
         if (data) {
-          var overrideContext = (0, _repeatUtilities.createFullOverrideContext)(repeat, repeat.items[collectionAddIndex], collectionAddIndex, repeat.items.length);
+          var overrideContext = (0, _aureliaTemplatingResources.createFullOverrideContext)(repeat, data, collectionAddIndex, repeat.items.length);
           view = repeat.viewFactory.create();
           view.bind(overrideContext.bindingContext, overrideContext);
         }
-      } else {
-        return viewOrPromise;
       }
     } else if (this._isIndexBeforeViewSlot(repeat, viewSlot, collectionIndex)) {
       if (repeat._bottomBufferHeight > 0) {
@@ -191,11 +199,9 @@ var ArrayVirtualRepeatStrategy = exports.ArrayVirtualRepeatStrategy = function (
         repeat.viewSlot.insert(viewAddIndex, view);
         repeat._adjustBufferHeights();
       });
-      return undefined;
     } else if (view) {
       repeat.viewSlot.insert(viewAddIndex, view);
     }
-
     repeat._adjustBufferHeights();
   };
 
@@ -228,7 +234,7 @@ var ArrayVirtualRepeatStrategy = exports.ArrayVirtualRepeatStrategy = function (
       for (; addIndex < end; ++addIndex) {
         var hasDistanceToBottomViewPort = (0, _utilities.getElementDistanceToBottomViewPort)(repeat.viewStrategy.getLastElement(repeat.bottomBuffer)) > 0;
         if (repeat.viewCount() === 0 || !this._isIndexBeforeViewSlot(repeat, viewSlot, addIndex) && !this._isIndexAfterViewSlot(repeat, viewSlot, addIndex) || hasDistanceToBottomViewPort) {
-          var overrideContext = (0, _repeatUtilities.createFullOverrideContext)(repeat, array[addIndex], addIndex, arrayLength);
+          var overrideContext = (0, _aureliaTemplatingResources.createFullOverrideContext)(repeat, array[addIndex], addIndex, arrayLength);
           repeat.insertView(addIndex, overrideContext.bindingContext, overrideContext);
           if (!repeat._hasCalculatedSizes) {
             repeat._calcInitialHeights(1);
@@ -254,4 +260,4 @@ var ArrayVirtualRepeatStrategy = exports.ArrayVirtualRepeatStrategy = function (
   };
 
   return ArrayVirtualRepeatStrategy;
-}(_arrayRepeatStrategy.ArrayRepeatStrategy);
+}(_aureliaTemplatingResources.ArrayRepeatStrategy);
