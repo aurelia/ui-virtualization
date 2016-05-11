@@ -27,7 +27,8 @@ declare module 'aurelia-ui-virtualization' {
     TargetInstruction,
     customAttribute,
     bindable,
-    templateController
+    templateController,
+    View
   } from 'aurelia-templating';
   export interface ViewStrategy {
     getScrollContainer(element: Element): Element;
