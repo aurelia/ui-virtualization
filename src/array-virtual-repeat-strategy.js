@@ -1,5 +1,4 @@
-import {ArrayRepeatStrategy} from 'aurelia-templating-resources/array-repeat-strategy';
-import {createFullOverrideContext} from 'aurelia-templating-resources/repeat-utilities';
+import {ArrayRepeatStrategy, createFullOverrideContext} from 'aurelia-templating-resources';
 import {updateVirtualOverrideContexts, rebindAndMoveView, getElementDistanceToBottomViewPort} from './utilities';
 
 /**
@@ -108,8 +107,9 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
     for (let i = 0, ii = splices.length; i < ii; ++i) {
       let splice = splices[i];
       let removed = splice.removed;
-      for (let j = 0, jj = removed.length; j < jj; ++j) {
-        let viewOrPromise = this._removeViewAt(repeat, splice.index + removeDelta + rmPromises.length, true);
+      let removedLength = removed.length;
+      for (let j = 0, jj = removedLength; j < jj; ++j) {
+        let viewOrPromise = this._removeViewAt(repeat, splice.index + removeDelta + rmPromises.length, true, j, removedLength);
         if (viewOrPromise instanceof Promise) {
           rmPromises.push(viewOrPromise);
         }
@@ -127,12 +127,19 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
     updateVirtualOverrideContexts(repeat, 0);
   }
 
-  _removeViewAt(repeat: VirtualRepeat, collectionIndex: number, returnToCache: boolean): any {
+  _removeViewAt(repeat: VirtualRepeat, collectionIndex: number, returnToCache: boolean, j: number, removedLength: number): any {
     let viewOrPromise;
     let view;
     let viewSlot = repeat.viewSlot;
     let viewCount = repeat.viewCount();
     let viewAddIndex;
+    let removeMoreThanInDom = removedLength > viewCount;
+    if (repeat._viewsLength <= j) {
+      repeat._bottomBufferHeight = repeat._bottomBufferHeight - (repeat.itemHeight);
+      repeat._adjustBufferHeights();
+      return;
+    }
+
     // index in view slot?
     if (!this._isIndexBeforeViewSlot(repeat, viewSlot, collectionIndex) && !this._isIndexAfterViewSlot(repeat, viewSlot, collectionIndex)) {
       let viewIndex = this._getViewIndex(repeat, viewSlot, collectionIndex);
@@ -142,7 +149,12 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
         let collectionAddIndex;
         if (repeat._bottomBufferHeight > repeat.itemHeight) {
           viewAddIndex = viewCount;
-          collectionAddIndex = repeat._getIndexOfLastView() + 1;
+          if (!removeMoreThanInDom) {
+            let lastViewItem = repeat._getLastViewItem();
+            collectionAddIndex = repeat.items.indexOf(lastViewItem) + 1;
+          } else {
+            collectionAddIndex = j;
+          }
           repeat._bottomBufferHeight = repeat._bottomBufferHeight - (repeat.itemHeight);
         } else if (repeat._topBufferHeight > 0) {
           viewAddIndex = 0;
@@ -151,12 +163,10 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
         }
         let data = repeat.items[collectionAddIndex];
         if (data) {
-          let overrideContext = createFullOverrideContext(repeat, repeat.items[collectionAddIndex], collectionAddIndex, repeat.items.length);
+          let overrideContext = createFullOverrideContext(repeat, data, collectionAddIndex, repeat.items.length);
           view = repeat.viewFactory.create();
           view.bind(overrideContext.bindingContext, overrideContext);
         }
-      } else {
-        return viewOrPromise;
       }
     } else if (this._isIndexBeforeViewSlot(repeat, viewSlot, collectionIndex)) {
       if (repeat._bottomBufferHeight > 0) {
@@ -174,11 +184,9 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
         repeat.viewSlot.insert(viewAddIndex, view);
         repeat._adjustBufferHeights();
       });
-      return undefined;
     } else if (view) {
       repeat.viewSlot.insert(viewAddIndex, view);
     }
-
     repeat._adjustBufferHeights();
   }
 

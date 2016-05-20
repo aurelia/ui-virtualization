@@ -1,3 +1,20 @@
+### 0.4.5 (2016-05-10)
+
+
+#### Bug Fixes
+
+* **all:** import from root of dependencies ([6c41804f](http://github.com/aurelia/ui-virtualization/commit/6c41804f54e7951115f433b13fc2ab79ad20ae15), closes [#48](http://github.com/aurelia/ui-virtualization/issues/48))
+* **array-virtual-repeat-strategy:** error when deleting a lot of items ([b35135db](http://github.com/aurelia/ui-virtualization/commit/b35135dba7bd473a88383cbfc52e44e41000211b), closes [#49](http://github.com/aurelia/ui-virtualization/issues/49))
+
+
+### 0.4.4 (2016-04-28)
+
+
+#### Bug Fixes
+
+* **utilities:** undefined parentElement in IE11 ([c7bb7857](http://github.com/aurelia/ui-virtualization/commit/c7bb78576cf584c203cddb2e9374ff9df4284caf))
+
+
 ### 0.4.3 (2016-04-21)
 
 

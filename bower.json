@@ -1,6 +1,6 @@
 {
   "name": "aurelia-ui-virtualization",
-  "version": "0.4.3",
+  "version": "0.4.5",
   "description": "A plugin that provides a virtualized repeater and other virtualization services.",
   "keywords": [
     "aurelia",
@@ -8,6 +8,8 @@
     "plugin"
   ],
   "homepage": "http://aurelia.io",
+  "main": "dist/commonjs/index.js",
+  "moduleType": "node",
   "license": "MIT",
   "authors": [
     "Rob Eisenberg <rob@bluespire.com> (http://robeisenberg.com/)"

@@ -1,21 +1,19 @@
 declare module 'aurelia-ui-virtualization' {
   import {
     updateOverrideContext,
+    ArrayRepeatStrategy,
     createFullOverrideContext,
+    RepeatStrategyLocator,
+    AbstractRepeater,
     getItemsSourceExpression,
     isOneTime,
     unwrapExpression,
-    updateOneTimeBinding
-  } from 'aurelia-templating-resources/repeat-utilities';
-  import {
-    ArrayRepeatStrategy
-  } from 'aurelia-templating-resources/array-repeat-strategy';
+    updateOneTimeBinding,
+    viewsRequireLifecycle
+  } from 'aurelia-templating-resources';
   import {
     DOM
   } from 'aurelia-pal';
-  import {
-    RepeatStrategyLocator
-  } from 'aurelia-templating-resources/repeat-strategy-locator';
   import {
     inject
   } from 'aurelia-dependency-injection';
@@ -31,12 +29,6 @@ declare module 'aurelia-ui-virtualization' {
     bindable,
     templateController
   } from 'aurelia-templating';
-  import {
-    AbstractRepeater
-  } from 'aurelia-templating-resources';
-  import {
-    viewsRequireLifecycle
-  } from 'aurelia-templating-resources/analyze-view-factory';
   export interface ViewStrategy {
     getScrollContainer(element: Element): Element;
     moveViewFirst(view: View, topBuffer: Element): void;
