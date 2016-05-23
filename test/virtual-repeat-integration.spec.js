@@ -134,6 +134,76 @@ describe('VirtualRepeat Integration', () => {
       });
     });
 
+    describe('handles delete', () => {
+      it('can delete one at start', done => {
+        create.then(() => {
+          viewModel.items.splice(0, 1);
+          nq(() => validateState());
+          nq(() => done());
+        });
+      });
+
+      it('can delete one at end', done => {
+        create.then(() => {
+          viewModel.items.splice(viewModel.items.length - 1, 1);
+          nq(() => validateState());
+          nq(() => done());
+        });
+      });
+
+      it('can delete two at start', done => {
+        create.then(() => {
+          viewModel.items.splice(0, 1);
+          viewModel.items.splice(0, 1);
+          nq(() => validateState());
+          nq(() => done());
+        });
+      });
+
+      it('can delete two at end', done => {
+        create.then(() => {
+          viewModel.items.splice(viewModel.items.length - 1, 1);
+          viewModel.items.splice(viewModel.items.length - 1, 1);
+          nq(() => validateState());
+          nq(() => done());
+        });
+      });
+
+      it('can delete as many as in the DOM', done => {
+        create.then(() => {
+          let deleteCount = virtualRepeat.viewCount();
+          for(let i = 0; i < deleteCount; ++i) {
+            viewModel.items.splice(0, 1);
+          }
+          nq(() => validateState());
+          nq(() => done());
+        });
+      });
+
+      it('can delete more element than what is in the DOM', done => {
+        create.then(() => {
+          let deleteCount = virtualRepeat.viewCount() * 2;
+          for(let i = 0; i < deleteCount; ++i) {
+            viewModel.items.splice(0, 1);
+          }
+          nq(() => validateState());
+          nq(() => done());
+        });
+      });
+
+      it('can delete all', done => {
+        create.then(() => {
+          let deleteCount = viewModel.items.length;
+          for(let i = 0; i < deleteCount; ++i) {
+            viewModel.items.splice(0, 1);
+          }
+          nq(() => validateState());
+          nq(() => done());
+        });
+      });
+
+    });
+
     afterEach(() => {
       component.cleanUp();
     });
@@ -150,13 +220,11 @@ describe('VirtualRepeat Integration', () => {
       create.then(() => validateUnshift(done));
     });
 
-    // bug
-    xit('handles shift', done => {
+    it('handles shift', done => {
       create.then(() => validateShift(done));
     });
 
-    // bug
-    xit('handles reverse', done => {
+    it('handles reverse', done => {
       create.then(() => validateReverse(done));
     });
 

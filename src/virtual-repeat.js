@@ -9,14 +9,14 @@ import {
   bindable,
   templateController
 } from 'aurelia-templating';
-import {AbstractRepeater} from 'aurelia-templating-resources';
 import {
+  AbstractRepeater,
   getItemsSourceExpression,
   isOneTime,
   unwrapExpression,
-  updateOneTimeBinding
-} from 'aurelia-templating-resources/repeat-utilities';
-import {viewsRequireLifecycle} from 'aurelia-templating-resources/analyze-view-factory';
+  updateOneTimeBinding,
+  viewsRequireLifecycle
+} from 'aurelia-templating-resources';
 import {DOM} from 'aurelia-pal';
 import {
   getStyleValue,
@@ -319,7 +319,21 @@ export class VirtualRepeat extends AbstractRepeater {
   }
 
   _getIndexOfLastView(): number {
-    return this.view(this.viewCount() - 1).overrideContext.$index;
+    const view = this.view(this.viewCount() - 1);
+    if (view) {
+      return view.overrideContext.$index;
+    }
+
+    return -1;
+  }
+
+  _getLastViewItem() {
+    let children = this.viewSlot.children;
+    if (!children.length) {
+      return undefined;
+    }
+    let lastViewItem = children[children.length - 1].bindingContext[this.local];
+    return lastViewItem;
   }
 
   _getIndexOfFirstView(): number {

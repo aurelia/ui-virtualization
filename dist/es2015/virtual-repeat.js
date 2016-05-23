@@ -46,9 +46,7 @@ function _initializerWarningHelper(descriptor, context) {
 import { inject } from 'aurelia-dependency-injection';
 import { ObserverLocator } from 'aurelia-binding';
 import { BoundViewFactory, ViewSlot, ViewResources, TargetInstruction, customAttribute, bindable, templateController } from 'aurelia-templating';
-import { AbstractRepeater } from 'aurelia-templating-resources';
-import { getItemsSourceExpression, isOneTime, unwrapExpression, updateOneTimeBinding } from 'aurelia-templating-resources/repeat-utilities';
-import { viewsRequireLifecycle } from 'aurelia-templating-resources/analyze-view-factory';
+import { AbstractRepeater, getItemsSourceExpression, isOneTime, unwrapExpression, updateOneTimeBinding, viewsRequireLifecycle } from 'aurelia-templating-resources';
 import { DOM } from 'aurelia-pal';
 import { getStyleValue, calcOuterHeight, rebindAndMoveView } from './utilities';
 import { DomHelper } from './dom-helper';
@@ -331,7 +329,21 @@ export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
   }
 
   _getIndexOfLastView() {
-    return this.view(this.viewCount() - 1).overrideContext.$index;
+    const view = this.view(this.viewCount() - 1);
+    if (view) {
+      return view.overrideContext.$index;
+    }
+
+    return -1;
+  }
+
+  _getLastViewItem() {
+    let children = this.viewSlot.children;
+    if (!children.length) {
+      return undefined;
+    }
+    let lastViewItem = children[children.length - 1].bindingContext[this.local];
+    return lastViewItem;
   }
 
   _getIndexOfFirstView() {

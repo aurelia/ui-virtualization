@@ -1,4 +1,4 @@
-define(['exports', 'aurelia-templating-resources/repeat-strategy-locator', './array-virtual-repeat-strategy'], function (exports, _repeatStrategyLocator, _arrayVirtualRepeatStrategy) {
+define(['exports', 'aurelia-templating-resources', './array-virtual-repeat-strategy'], function (exports, _aureliaTemplatingResources, _arrayVirtualRepeatStrategy) {
   'use strict';
 
   Object.defineProperty(exports, "__esModule", {
@@ -54,5 +54,5 @@ define(['exports', 'aurelia-templating-resources/repeat-strategy-locator', './ar
     }
 
     return VirtualRepeatStrategyLocator;
-  }(_repeatStrategyLocator.RepeatStrategyLocator);
+  }(_aureliaTemplatingResources.RepeatStrategyLocator);
 });

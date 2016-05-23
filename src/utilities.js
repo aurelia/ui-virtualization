@@ -1,4 +1,4 @@
-import {updateOverrideContext} from 'aurelia-templating-resources/repeat-utilities';
+import {updateOverrideContext} from 'aurelia-templating-resources';
 
 export function calcOuterHeight(element: Element): number {
   let height;

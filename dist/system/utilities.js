@@ -1,10 +1,10 @@
 'use strict';
 
-System.register(['aurelia-templating-resources/repeat-utilities'], function (_export, _context) {
+System.register(['aurelia-templating-resources'], function (_export, _context) {
   var updateOverrideContext;
   return {
-    setters: [function (_aureliaTemplatingResourcesRepeatUtilities) {
-      updateOverrideContext = _aureliaTemplatingResourcesRepeatUtilities.updateOverrideContext;
+    setters: [function (_aureliaTemplatingResources) {
+      updateOverrideContext = _aureliaTemplatingResources.updateOverrideContext;
     }],
     execute: function () {
       function calcOuterHeight(element) {

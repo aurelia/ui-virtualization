@@ -15,10 +15,6 @@ var _aureliaTemplating = require('aurelia-templating');
 
 var _aureliaTemplatingResources = require('aurelia-templating-resources');
 
-var _repeatUtilities = require('aurelia-templating-resources/repeat-utilities');
-
-var _analyzeViewFactory = require('aurelia-templating-resources/analyze-view-factory');
-
 var _aureliaPal = require('aurelia-pal');
 
 var _utilities = require('./utilities');
@@ -86,7 +82,7 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec = (0, _aureliaTemplating.custo
 
     var _this = _possibleConstructorReturn(this, _AbstractRepeater.call(this, {
       local: 'item',
-      viewsRequireLifecycle: (0, _analyzeViewFactory.viewsRequireLifecycle)(viewFactory)
+      viewsRequireLifecycle: (0, _aureliaTemplatingResources.viewsRequireLifecycle)(viewFactory)
     }));
 
     _this._first = 0;
@@ -117,8 +113,8 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec = (0, _aureliaTemplating.custo
     _this.observerLocator = observerLocator;
     _this.strategyLocator = strategyLocator;
     _this.viewStrategyLocator = viewStrategyLocator;
-    _this.sourceExpression = (0, _repeatUtilities.getItemsSourceExpression)(_this.instruction, 'virtual-repeat.for');
-    _this.isOneTime = (0, _repeatUtilities.isOneTime)(_this.sourceExpression);
+    _this.sourceExpression = (0, _aureliaTemplatingResources.getItemsSourceExpression)(_this.instruction, 'virtual-repeat.for');
+    _this.isOneTime = (0, _aureliaTemplatingResources.isOneTime)(_this.sourceExpression);
     _this.domHelper = domHelper;
     return _this;
   }
@@ -379,7 +375,21 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec = (0, _aureliaTemplating.custo
   };
 
   VirtualRepeat.prototype._getIndexOfLastView = function _getIndexOfLastView() {
-    return this.view(this.viewCount() - 1).overrideContext.$index;
+    var view = this.view(this.viewCount() - 1);
+    if (view) {
+      return view.overrideContext.$index;
+    }
+
+    return -1;
+  };
+
+  VirtualRepeat.prototype._getLastViewItem = function _getLastViewItem() {
+    var children = this.viewSlot.children;
+    if (!children.length) {
+      return undefined;
+    }
+    var lastViewItem = children[children.length - 1].bindingContext[this.local];
+    return lastViewItem;
   };
 
   VirtualRepeat.prototype._getIndexOfFirstView = function _getIndexOfFirstView() {
@@ -436,7 +446,7 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec = (0, _aureliaTemplating.custo
   };
 
   VirtualRepeat.prototype._getInnerCollection = function _getInnerCollection() {
-    var expression = (0, _repeatUtilities.unwrapExpression)(this.sourceExpression);
+    var expression = (0, _aureliaTemplatingResources.unwrapExpression)(this.sourceExpression);
     if (!expression) {
       return null;
     }
@@ -487,14 +497,14 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec = (0, _aureliaTemplating.custo
   VirtualRepeat.prototype.updateBindings = function updateBindings(view) {
     var j = view.bindings.length;
     while (j--) {
-      (0, _repeatUtilities.updateOneTimeBinding)(view.bindings[j]);
+      (0, _aureliaTemplatingResources.updateOneTimeBinding)(view.bindings[j]);
     }
     j = view.controllers.length;
     while (j--) {
       var k = view.controllers[j].boundProperties.length;
       while (k--) {
         var binding = view.controllers[j].boundProperties[k].binding;
-        (0, _repeatUtilities.updateOneTimeBinding)(binding);
+        (0, _aureliaTemplatingResources.updateOneTimeBinding)(binding);
       }
     }
   };
