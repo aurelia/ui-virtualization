@@ -25,7 +25,7 @@ import {
 } from './utilities';
 import {DomHelper} from './dom-helper';
 import {VirtualRepeatStrategyLocator} from './virtual-repeat-strategy-locator';
-import {ViewStrategyLocator} from './view-strategy';
+import {ViewStrategyLocator, DocumentFragmentViewStrategy} from './view-strategy';
 
 @customAttribute('virtual-repeat')
 @templateController
@@ -82,6 +82,16 @@ export class VirtualRepeat extends AbstractRepeater {
     let element = this.element;
     this._itemsLength = this.items.length;
     this.viewStrategy = this.viewStrategyLocator.getStrategy(element);
+
+    if (this.viewStrategy instanceof DocumentFragmentViewStrategy) {
+      let root = element.parentNode;
+      let container = DOM.createElement('div');
+      container.classList.add('ui-virtualization-container');
+      root.appendChild(container);
+      root.removeChild(element);
+      container.appendChild(element);
+    }
+
     this.scrollContainer = this.viewStrategy.getScrollContainer(element);
     this.topBuffer = this.viewStrategy.createTopBufferElement(element);
     this.bottomBuffer = this.viewStrategy.createBottomBufferElement(element);

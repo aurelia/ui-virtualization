@@ -16,6 +16,9 @@ export class ViewStrategyLocator {
   getStrategy(element: Element): ViewStrategy {
     if (element.parentNode && element.parentNode.localName === 'tbody') {
       return new TableStrategy();
+    } else if (element.parentNode && element.parentNode.nodeType === 11) {
+      // or: element.parentNode.nodeName === "#document-fragment"
+      return new DocumentFragmentViewStrategy();
     }
     return new DefaultViewStrategy();
   }
@@ -79,6 +82,57 @@ export class TableStrategy {
 
   getLastElement(bottomBuffer: Element): Element {
     return bottomBuffer.parentNode.previousElementSibling;
+  }
+}
+
+export class DocumentFragmentViewStrategy {
+  getScrollContainer(element: Element): Element {
+    // surround element with a div
+    // let root = element.parentNode;
+    // let container = DOM.createElement('div');
+    // container.classList.add('ui-virtualization-container');
+    // root.appendChild(container);
+    // root.removeChild(element);
+    // container.appendChild(element);
+    // return container;
+    return element.parentNode;
+  }
+
+  moveViewFirst(view: View, topBuffer: Element): void {
+    insertBeforeNode(view, DOM.nextElementSibling(topBuffer).previousSibling);
+  }
+
+  moveViewLast(view: View, bottomBuffer: Element): void {
+    let previousSibling = bottomBuffer.previousSibling;
+    let referenceNode = previousSibling.nodeType === 8 && previousSibling.data === 'anchor' ? previousSibling : bottomBuffer;
+    insertBeforeNode(view, referenceNode);
+  }
+
+  createTopBufferElement(element: Element): Element {
+    let elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
+    let buffer = DOM.createElement(elementName);
+    element.parentNode.insertBefore(buffer, element);
+    return buffer;
+  }
+
+  createBottomBufferElement(element: Element): Element {
+    let elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
+    let buffer = DOM.createElement(elementName);
+    element.parentNode.insertBefore(buffer, element.nextSibling);
+    return buffer;
+  }
+
+  removeBufferElements(element: Element, topBuffer: Element, bottomBuffer: Element): void {
+    element.parentNode.removeChild(topBuffer);
+    element.parentNode.removeChild(bottomBuffer);
+  }
+
+  getFirstElement(topBuffer: Element): Element {
+    return DOM.nextElementSibling(topBuffer);
+  }
+
+  getLastElement(bottomBuffer: Element): Element {
+    return bottomBuffer.previousElementSibling;
   }
 }
 
