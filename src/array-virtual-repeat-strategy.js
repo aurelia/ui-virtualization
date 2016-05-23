@@ -110,10 +110,10 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
     // if so, optimise by just replacing affected visible views
     if( allSplicesAreInplace ) {
       splices.forEach( (splice) => {
-        for ( var collectionIndex = splice.index; collectionIndex<splice.index+splice.addedCount; collectionIndex++ ) {
+        for ( let collectionIndex = splice.index; collectionIndex<splice.index+splice.addedCount; collectionIndex++ ) {
           if( !this._isIndexBeforeViewSlot(repeat, repeat.viewSlot, collectionIndex) && !this._isIndexAfterViewSlot(repeat, repeat.viewSlot, collectionIndex) ) {
-            var viewIndex = this._getViewIndex(repeat, repeat.viewSlot, collectionIndex);
-            var overrideContext = createFullOverrideContext(repeat, array[collectionIndex], collectionIndex, array.length);
+            let viewIndex = this._getViewIndex(repeat, repeat.viewSlot, collectionIndex);
+            let overrideContext = createFullOverrideContext(repeat, array[collectionIndex], collectionIndex, array.length);
             repeat.removeView(viewIndex, true, true);            
             repeat.insertView(viewIndex, overrideContext.bindingContext, overrideContext);
           }

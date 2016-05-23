@@ -146,30 +146,47 @@ System.register(['aurelia-templating-resources', './utilities'], function (_expo
         ArrayVirtualRepeatStrategy.prototype._runSplices = function _runSplices(repeat, array, splices) {
           var _this3 = this;
 
-          var removeDelta = 0;
-          var rmPromises = [];
+          var allSplicesAreInplace = splices.reduce(function (prev, splice) {
+            return prev && splice.removed.length === splice.addedCount;
+          }, true);
 
-          for (var i = 0, ii = splices.length; i < ii; ++i) {
-            var splice = splices[i];
-            var removed = splice.removed;
-            var removedLength = removed.length;
-            for (var j = 0, jj = removedLength; j < jj; ++j) {
-              var viewOrPromise = this._removeViewAt(repeat, splice.index + removeDelta + rmPromises.length, true, j, removedLength);
-              if (viewOrPromise instanceof Promise) {
-                rmPromises.push(viewOrPromise);
+          if (allSplicesAreInplace) {
+            splices.forEach(function (splice) {
+              for (var collectionIndex = splice.index; collectionIndex < splice.index + splice.addedCount; collectionIndex++) {
+                if (!_this3._isIndexBeforeViewSlot(repeat, repeat.viewSlot, collectionIndex) && !_this3._isIndexAfterViewSlot(repeat, repeat.viewSlot, collectionIndex)) {
+                  var viewIndex = _this3._getViewIndex(repeat, repeat.viewSlot, collectionIndex);
+                  var overrideContext = createFullOverrideContext(repeat, array[collectionIndex], collectionIndex, array.length);
+                  repeat.removeView(viewIndex, true, true);
+                  repeat.insertView(viewIndex, overrideContext.bindingContext, overrideContext);
+                }
               }
-            }
-            removeDelta -= splice.addedCount;
-          }
-
-          if (rmPromises.length > 0) {
-            return Promise.all(rmPromises).then(function () {
-              _this3._handleAddedSplices(repeat, array, splices);
-              updateVirtualOverrideContexts(repeat, 0);
             });
+          } else {
+            var removeDelta = 0;
+            var rmPromises = [];
+
+            for (var i = 0, ii = splices.length; i < ii; ++i) {
+              var splice = splices[i];
+              var removed = splice.removed;
+              var removedLength = removed.length;
+              for (var j = 0, jj = removedLength; j < jj; ++j) {
+                var viewOrPromise = this._removeViewAt(repeat, splice.index + removeDelta + rmPromises.length, true, j, removedLength);
+                if (viewOrPromise instanceof Promise) {
+                  rmPromises.push(viewOrPromise);
+                }
+              }
+              removeDelta -= splice.addedCount;
+            }
+
+            if (rmPromises.length > 0) {
+              return Promise.all(rmPromises).then(function () {
+                _this3._handleAddedSplices(repeat, array, splices);
+                updateVirtualOverrideContexts(repeat, 0);
+              });
+            }
+            this._handleAddedSplices(repeat, array, splices);
+            updateVirtualOverrideContexts(repeat, 0);
           }
-          this._handleAddedSplices(repeat, array, splices);
-          updateVirtualOverrideContexts(repeat, 0);
         };
 
         ArrayVirtualRepeatStrategy.prototype._removeViewAt = function _removeViewAt(repeat, collectionIndex, returnToCache, j, removedLength) {
