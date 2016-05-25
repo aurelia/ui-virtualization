@@ -106,29 +106,28 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
 
     // do all splices replace existing entries?
     let allSplicesAreInplace = true;
-    for (let i=0; i<splices.length; i++) {
+    for (let i = 0; i < splices.length; i++) {
       let splice = splices[i];
-      if( splice.removed.length!==splice.addedCount ) {
-        allSplicesAreInplace = false;  
+      if (splice.removed.length !== splice.addedCount) {
+        allSplicesAreInplace = false;
         break;
       }
-    } 
+    }
 
     // if so, optimise by just replacing affected visible views
     if (allSplicesAreInplace) {
-      for (let i=0; i<splices.length; i++) {
+      for (let i = 0; i < splices.length; i++) {
         let splice = splices[i];
-        for ( let collectionIndex = splice.index; collectionIndex<splice.index+splice.addedCount; collectionIndex++ ) {
-          if( !this._isIndexBeforeViewSlot(repeat, repeat.viewSlot, collectionIndex) && !this._isIndexAfterViewSlot(repeat, repeat.viewSlot, collectionIndex) ) {
+        for (let collectionIndex = splice.index; collectionIndex < splice.index + splice.addedCount; collectionIndex++) {
+          if (!this._isIndexBeforeViewSlot(repeat, repeat.viewSlot, collectionIndex) && !this._isIndexAfterViewSlot(repeat, repeat.viewSlot, collectionIndex) ) {
             let viewIndex = this._getViewIndex(repeat, repeat.viewSlot, collectionIndex);
             let overrideContext = createFullOverrideContext(repeat, array[collectionIndex], collectionIndex, array.length);
-            repeat.removeView(viewIndex, true, true);            
+            repeat.removeView(viewIndex, true, true);
             repeat.insertView(viewIndex, overrideContext.bindingContext, overrideContext);
           }
         }
       }
-    }
-    else {
+    } else {
       for (let i = 0, ii = splices.length; i < ii; ++i) {
         let splice = splices[i];
         let removed = splice.removed;
