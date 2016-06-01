@@ -22,7 +22,7 @@ let topBuffer = DOM.createElement('div');
 let bottomBuffer = DOM.createElement('div');
 let scrollContainer = DOM.createElement('div');
 
-describe('VirtualRepeat', () => {
+xdescribe('VirtualRepeat', () => {
   let virtualRepeat, viewStrategyLocator, domHelper;
   let viewStrategyMock;
 

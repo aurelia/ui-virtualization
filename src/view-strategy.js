@@ -88,7 +88,7 @@ export class DefaultViewStrategy {
   }
 
   moveViewFirst(view: View, topBuffer: Element): void {
-    insertBeforeNode(view, DOM.nextElementSibling(topBuffer).previousSibling);
+    insertBeforeNode(view, DOM.nextElementSibling(topBuffer));
   }
 
   moveViewLast(view: View, bottomBuffer: Element): void {

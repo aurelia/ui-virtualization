@@ -346,7 +346,7 @@ export class VirtualRepeat extends AbstractRepeater {
     }
     this._hasCalculatedSizes = true;
     this._itemsLength = itemsLength;
-    let firstViewElement = DOM.nextElementSibling(this.view(0).firstChild);
+    let firstViewElement = this.view(0).lastChild;
     this.itemHeight = calcOuterHeight(firstViewElement);
     if (this.itemHeight <= 0) {
       throw new Error('Could not calculate item height');
