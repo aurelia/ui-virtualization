@@ -3,6 +3,7 @@
 [![npm Version](https://img.shields.io/npm/v/aurelia-ui-virtualization.svg)](https://www.npmjs.com/package/aurelia-ui-virtualization)
 [![ZenHub](https://raw.githubusercontent.com/ZenHubIO/support/master/zenhub-badge.png)](https://zenhub.io)
 [![Join the chat at https://gitter.im/aurelia/discuss](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/aurelia/discuss?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![CircleCI](https://circleci.com/gh/aurelia/ui-virtualization.svg?style=shield)](https://circleci.com/gh/aurelia/ui-virtualization)
 
 This library is part of the [Aurelia](http://www.aurelia.io/) platform and contains a plugin that provides a virtualized repeater and other virtualization services. This plugin enables "virtualization" of list through a new `virtual-repeat.for`. When used, the list "virtually" as tens or hundreds of thousands of rows, but the DOM only actually has rows for what is visible. It could be only tens of items. This allows rendering of massive lists of data with amazing performance. It works like repeat.for, it just creates a scrolling area and manages the list using UI virtualization techniques.
 
