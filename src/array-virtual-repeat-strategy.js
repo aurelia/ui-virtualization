@@ -19,7 +19,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
     this._inPlaceProcessItems(repeat, items);
   }
 
-  _standardProcessInstanceChanged(repeat: VirtualRepeat, items: Array): void {
+  _standardProcessInstanceChanged(repeat: VirtualRepeat, items: Array<any>): void {
     for (let i = 1, ii = repeat._viewsLength; i < ii; ++i) {
       let overrideContext = createFullOverrideContext(repeat, items[i], i, ii);
       repeat.addView(overrideContext.bindingContext, overrideContext);
@@ -100,7 +100,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
     }
   }
 
-  _runSplices(repeat: VirtualRepeat, array: Array, splices: any): any {
+  _runSplices(repeat: VirtualRepeat, array: Array<any>, splices: any): any {
     let removeDelta = 0;
     let rmPromises = [];
 
@@ -150,6 +150,8 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
       this._handleAddedSplices(repeat, array, splices);
       updateVirtualOverrideContexts(repeat, 0);
     }
+
+    return undefined;
   }
 
   _removeViewAt(repeat: VirtualRepeat, collectionIndex: number, returnToCache: boolean, j: number, removedLength: number): any {

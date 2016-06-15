@@ -1,4 +1,5 @@
 import {updateOverrideContext} from 'aurelia-templating-resources';
+import {View} from 'aurelia-templating';
 
 export function calcOuterHeight(element: Element): number {
   let height;

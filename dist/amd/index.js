@@ -1,14 +1,16 @@
-define(['exports', './virtual-repeat'], function (exports, _virtualRepeat) {
+define(['exports', './aurelia-ui-virtualization'], function (exports, _aureliaUiVirtualization) {
   'use strict';
 
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
-  exports.VirtualRepeat = undefined;
-  exports.configure = configure;
-  function configure(config) {
-    config.globalResources('./virtual-repeat');
-  }
-
-  exports.VirtualRepeat = _virtualRepeat.VirtualRepeat;
+  Object.keys(_aureliaUiVirtualization).forEach(function (key) {
+    if (key === "default") return;
+    Object.defineProperty(exports, key, {
+      enumerable: true,
+      get: function () {
+        return _aureliaUiVirtualization[key];
+      }
+    });
+  });
 });

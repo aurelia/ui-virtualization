@@ -1,4 +1,5 @@
 import { DOM } from 'aurelia-pal';
+import { View } from 'aurelia-templating';
 import { insertBeforeNode } from './utilities';
 
 export let ViewStrategyLocator = class ViewStrategyLocator {
@@ -79,7 +80,7 @@ export let DefaultViewStrategy = class DefaultViewStrategy {
   }
 
   moveViewFirst(view, topBuffer) {
-    insertBeforeNode(view, DOM.nextElementSibling(topBuffer).previousSibling);
+    insertBeforeNode(view, DOM.nextElementSibling(topBuffer));
   }
 
   moveViewLast(view, bottomBuffer) {

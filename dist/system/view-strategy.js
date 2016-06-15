@@ -1,24 +1,24 @@
 'use strict';
 
-System.register(['aurelia-pal', './utilities'], function (_export, _context) {
-  var DOM, insertBeforeNode, ViewStrategyLocator, TableStrategy, DefaultViewStrategy;
+System.register(['aurelia-pal', 'aurelia-templating', './utilities'], function (_export, _context) {
+  "use strict";
 
-  function _classCallCheck(instance, Constructor) {
-    if (!(instance instanceof Constructor)) {
-      throw new TypeError("Cannot call a class as a function");
-    }
-  }
+  var DOM, View, insertBeforeNode, ViewStrategyLocator, TableStrategy, DefaultViewStrategy;
+
+  
 
   return {
     setters: [function (_aureliaPal) {
       DOM = _aureliaPal.DOM;
+    }, function (_aureliaTemplating) {
+      View = _aureliaTemplating.View;
     }, function (_utilities) {
       insertBeforeNode = _utilities.insertBeforeNode;
     }],
     execute: function () {
       _export('ViewStrategyLocator', ViewStrategyLocator = function () {
         function ViewStrategyLocator() {
-          _classCallCheck(this, ViewStrategyLocator);
+          
         }
 
         ViewStrategyLocator.prototype.getStrategy = function getStrategy(element) {
@@ -35,7 +35,7 @@ System.register(['aurelia-pal', './utilities'], function (_export, _context) {
 
       _export('TableStrategy', TableStrategy = function () {
         function TableStrategy() {
-          _classCallCheck(this, TableStrategy);
+          
 
           this.tableCssReset = '\
     display: block;\
@@ -104,7 +104,7 @@ System.register(['aurelia-pal', './utilities'], function (_export, _context) {
 
       _export('DefaultViewStrategy', DefaultViewStrategy = function () {
         function DefaultViewStrategy() {
-          _classCallCheck(this, DefaultViewStrategy);
+          
         }
 
         DefaultViewStrategy.prototype.getScrollContainer = function getScrollContainer(element) {
@@ -112,7 +112,7 @@ System.register(['aurelia-pal', './utilities'], function (_export, _context) {
         };
 
         DefaultViewStrategy.prototype.moveViewFirst = function moveViewFirst(view, topBuffer) {
-          insertBeforeNode(view, DOM.nextElementSibling(topBuffer).previousSibling);
+          insertBeforeNode(view, DOM.nextElementSibling(topBuffer));
         };
 
         DefaultViewStrategy.prototype.moveViewLast = function moveViewLast(view, bottomBuffer) {

@@ -96,6 +96,7 @@
     "gulp-ignore": "^2.0.1",
     "gulp-insert": "^0.5.0",
     "gulp-rename": "^1.2.2",
+    "gulp-typedoc": "^2.0.0",
     "gulp-typescript": "^2.13.6",
     "gulp-util": "^3.0.7",
     "gulp-yuidoc": "^0.1.2",

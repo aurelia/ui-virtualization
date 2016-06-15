@@ -45,7 +45,7 @@ function _initializerWarningHelper(descriptor, context) {
 
 import { inject } from 'aurelia-dependency-injection';
 import { ObserverLocator } from 'aurelia-binding';
-import { BoundViewFactory, ViewSlot, ViewResources, TargetInstruction, customAttribute, bindable, templateController } from 'aurelia-templating';
+import { BoundViewFactory, ViewSlot, ViewResources, TargetInstruction, customAttribute, bindable, templateController, View } from 'aurelia-templating';
 import { AbstractRepeater, getItemsSourceExpression, isOneTime, unwrapExpression, updateOneTimeBinding, viewsRequireLifecycle } from 'aurelia-templating-resources';
 import { DOM } from 'aurelia-pal';
 import { getStyleValue, calcOuterHeight, rebindAndMoveView } from './utilities';
@@ -356,7 +356,7 @@ export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
     }
     this._hasCalculatedSizes = true;
     this._itemsLength = itemsLength;
-    let firstViewElement = DOM.nextElementSibling(this.view(0).firstChild);
+    let firstViewElement = this.view(0).lastChild;
     this.itemHeight = calcOuterHeight(firstViewElement);
     if (this.itemHeight <= 0) {
       throw new Error('Could not calculate item height');

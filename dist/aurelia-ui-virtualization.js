@@ -1,8 +1,8 @@
 import {updateOverrideContext,ArrayRepeatStrategy,createFullOverrideContext,RepeatStrategyLocator,AbstractRepeater,getItemsSourceExpression,isOneTime,unwrapExpression,updateOneTimeBinding,viewsRequireLifecycle} from 'aurelia-templating-resources';
+import {View,BoundViewFactory,ViewSlot,ViewResources,TargetInstruction,customAttribute,bindable,templateController} from 'aurelia-templating';
 import {DOM} from 'aurelia-pal';
 import {inject} from 'aurelia-dependency-injection';
 import {ObserverLocator} from 'aurelia-binding';
-import {BoundViewFactory,ViewSlot,ViewResources,TargetInstruction,customAttribute,bindable,templateController} from 'aurelia-templating';
 
 export class DomHelper {
   getElementDistanceToTopOfDocument(element: Element): number {
@@ -29,20 +29,8 @@ export function calcOuterHeight(element: Element): number {
 }
 
 export function insertBeforeNode(view: View, bottomBuffer: number): void {
-  let viewStart = view.firstChild;
-  let element = viewStart.nextSibling;
-  let viewEnd = view.lastChild;
-  let parentElement;
-
-  if (bottomBuffer.parentElement) {
-    parentElement = bottomBuffer.parentElement;
-  } else if (bottomBuffer.parentNode) {
-    parentElement = bottomBuffer.parentNode;
-  }
-
-  parentElement.insertBefore(viewEnd, bottomBuffer);
-  parentElement.insertBefore(element, viewEnd);
-  parentElement.insertBefore(viewStart, element);
+  let parentElement = bottomBuffer.parentElement || bottomBuffer.parentNode;
+  parentElement.insertBefore(view.lastChild, bottomBuffer);
 }
 
 /**
@@ -113,7 +101,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
     this._inPlaceProcessItems(repeat, items);
   }
 
-  _standardProcessInstanceChanged(repeat: VirtualRepeat, items: Array): void {
+  _standardProcessInstanceChanged(repeat: VirtualRepeat, items: Array<any>): void {
     for (let i = 1, ii = repeat._viewsLength; i < ii; ++i) {
       let overrideContext = createFullOverrideContext(repeat, items[i], i, ii);
       repeat.addView(overrideContext.bindingContext, overrideContext);
@@ -194,7 +182,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
     }
   }
 
-  _runSplices(repeat: VirtualRepeat, array: Array, splices: any): any {
+  _runSplices(repeat: VirtualRepeat, array: Array<any>, splices: any): any {
     let removeDelta = 0;
     let rmPromises = [];
 
@@ -244,6 +232,8 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
       this._handleAddedSplices(repeat, array, splices);
       updateVirtualOverrideContexts(repeat, 0);
     }
+
+    return undefined;
   }
 
   _removeViewAt(repeat: VirtualRepeat, collectionIndex: number, returnToCache: boolean, j: number, removedLength: number): any {
@@ -451,7 +441,7 @@ export class DefaultViewStrategy {
   }
 
   moveViewFirst(view: View, topBuffer: Element): void {
-    insertBeforeNode(view, DOM.nextElementSibling(topBuffer).previousSibling);
+    insertBeforeNode(view, DOM.nextElementSibling(topBuffer));
   }
 
   moveViewLast(view: View, bottomBuffer: Element): void {
@@ -817,7 +807,7 @@ export class VirtualRepeat extends AbstractRepeater {
     }
     this._hasCalculatedSizes = true;
     this._itemsLength = itemsLength;
-    let firstViewElement = DOM.nextElementSibling(this.view(0).firstChild);
+    let firstViewElement = this.view(0).lastChild;
     this.itemHeight = calcOuterHeight(firstViewElement);
     if (this.itemHeight <= 0) {
       throw new Error('Could not calculate item height');

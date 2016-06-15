@@ -7,7 +7,8 @@ import {
   TargetInstruction,
   customAttribute,
   bindable,
-  templateController
+  templateController,
+  View
 } from 'aurelia-templating';
 import {
   AbstractRepeater,

@@ -1,29 +1,4 @@
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.VirtualRepeat = undefined;
-
 var _dec, _dec2, _class, _desc, _value, _class2, _descriptor, _descriptor2;
-
-var _aureliaDependencyInjection = require('aurelia-dependency-injection');
-
-var _aureliaBinding = require('aurelia-binding');
-
-var _aureliaTemplating = require('aurelia-templating');
-
-var _aureliaTemplatingResources = require('aurelia-templating-resources');
-
-var _aureliaPal = require('aurelia-pal');
-
-var _utilities = require('./utilities');
-
-var _domHelper = require('./dom-helper');
-
-var _virtualRepeatStrategyLocator = require('./virtual-repeat-strategy-locator');
-
-var _viewStrategy = require('./view-strategy');
 
 function _initDefineProp(target, property, descriptor, context) {
   if (!descriptor) return;
@@ -74,7 +49,17 @@ function _initializerWarningHelper(descriptor, context) {
   throw new Error('Decorating class property failed. Please ensure that transform-class-properties is enabled.');
 }
 
-var VirtualRepeat = exports.VirtualRepeat = (_dec = (0, _aureliaTemplating.customAttribute)('virtual-repeat'), _dec2 = (0, _aureliaDependencyInjection.inject)(_aureliaPal.DOM.Element, _aureliaTemplating.BoundViewFactory, _aureliaTemplating.TargetInstruction, _aureliaTemplating.ViewSlot, _aureliaTemplating.ViewResources, _aureliaBinding.ObserverLocator, _virtualRepeatStrategyLocator.VirtualRepeatStrategyLocator, _viewStrategy.ViewStrategyLocator, _domHelper.DomHelper), _dec(_class = (0, _aureliaTemplating.templateController)(_class = _dec2(_class = (_class2 = function (_AbstractRepeater) {
+import { inject } from 'aurelia-dependency-injection';
+import { ObserverLocator } from 'aurelia-binding';
+import { BoundViewFactory, ViewSlot, ViewResources, TargetInstruction, customAttribute, bindable, templateController, View } from 'aurelia-templating';
+import { AbstractRepeater, getItemsSourceExpression, isOneTime, unwrapExpression, updateOneTimeBinding, viewsRequireLifecycle } from 'aurelia-templating-resources';
+import { DOM } from 'aurelia-pal';
+import { getStyleValue, calcOuterHeight, rebindAndMoveView } from './utilities';
+import { DomHelper } from './dom-helper';
+import { VirtualRepeatStrategyLocator } from './virtual-repeat-strategy-locator';
+import { ViewStrategyLocator } from './view-strategy';
+
+export var VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = inject(DOM.Element, BoundViewFactory, TargetInstruction, ViewSlot, ViewResources, ObserverLocator, VirtualRepeatStrategyLocator, ViewStrategyLocator, DomHelper), _dec(_class = templateController(_class = _dec2(_class = (_class2 = function (_AbstractRepeater) {
   _inherits(VirtualRepeat, _AbstractRepeater);
 
   function VirtualRepeat(element, viewFactory, instruction, viewSlot, viewResources, observerLocator, strategyLocator, viewStrategyLocator, domHelper) {
@@ -82,7 +67,7 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec = (0, _aureliaTemplating.custo
 
     var _this = _possibleConstructorReturn(this, _AbstractRepeater.call(this, {
       local: 'item',
-      viewsRequireLifecycle: (0, _aureliaTemplatingResources.viewsRequireLifecycle)(viewFactory)
+      viewsRequireLifecycle: viewsRequireLifecycle(viewFactory)
     }));
 
     _this._first = 0;
@@ -113,8 +98,8 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec = (0, _aureliaTemplating.custo
     _this.observerLocator = observerLocator;
     _this.strategyLocator = strategyLocator;
     _this.viewStrategyLocator = viewStrategyLocator;
-    _this.sourceExpression = (0, _aureliaTemplatingResources.getItemsSourceExpression)(_this.instruction, 'virtual-repeat.for');
-    _this.isOneTime = (0, _aureliaTemplatingResources.isOneTime)(_this.sourceExpression);
+    _this.sourceExpression = getItemsSourceExpression(_this.instruction, 'virtual-repeat.for');
+    _this.isOneTime = isOneTime(_this.sourceExpression);
     _this.domHelper = domHelper;
     return _this;
   }
@@ -366,7 +351,7 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec = (0, _aureliaTemplating.custo
       this._isAtTop = nextIndex <= 0;
       if (!(isAtFirstOrLastIndex() && childrenLength >= items.length)) {
         if (i > viewToMoveLimit) {
-          (0, _utilities.rebindAndMoveView)(this, view, nextIndex, this._scrollingDown);
+          rebindAndMoveView(this, view, nextIndex, this._scrollingDown);
         }
         i++;
       }
@@ -403,7 +388,7 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec = (0, _aureliaTemplating.custo
     this._hasCalculatedSizes = true;
     this._itemsLength = itemsLength;
     var firstViewElement = this.view(0).lastChild;
-    this.itemHeight = (0, _utilities.calcOuterHeight)(firstViewElement);
+    this.itemHeight = calcOuterHeight(firstViewElement);
     if (this.itemHeight <= 0) {
       throw new Error('Could not calculate item height');
     }
@@ -425,8 +410,8 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec = (0, _aureliaTemplating.custo
   VirtualRepeat.prototype._calcScrollHeight = function _calcScrollHeight(element) {
     var height = void 0;
     height = element.getBoundingClientRect().height;
-    height -= (0, _utilities.getStyleValue)(element, 'borderTopWidth');
-    height -= (0, _utilities.getStyleValue)(element, 'borderBottomWidth');
+    height -= getStyleValue(element, 'borderTopWidth');
+    height -= getStyleValue(element, 'borderBottomWidth');
     return height;
   };
 
@@ -446,7 +431,7 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec = (0, _aureliaTemplating.custo
   };
 
   VirtualRepeat.prototype._getInnerCollection = function _getInnerCollection() {
-    var expression = (0, _aureliaTemplatingResources.unwrapExpression)(this.sourceExpression);
+    var expression = unwrapExpression(this.sourceExpression);
     if (!expression) {
       return null;
     }
@@ -497,23 +482,23 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec = (0, _aureliaTemplating.custo
   VirtualRepeat.prototype.updateBindings = function updateBindings(view) {
     var j = view.bindings.length;
     while (j--) {
-      (0, _aureliaTemplatingResources.updateOneTimeBinding)(view.bindings[j]);
+      updateOneTimeBinding(view.bindings[j]);
     }
     j = view.controllers.length;
     while (j--) {
       var k = view.controllers[j].boundProperties.length;
       while (k--) {
         var binding = view.controllers[j].boundProperties[k].binding;
-        (0, _aureliaTemplatingResources.updateOneTimeBinding)(binding);
+        updateOneTimeBinding(binding);
       }
     }
   };
 
   return VirtualRepeat;
-}(_aureliaTemplatingResources.AbstractRepeater), (_descriptor = _applyDecoratedDescriptor(_class2.prototype, 'items', [_aureliaTemplating.bindable], {
+}(AbstractRepeater), (_descriptor = _applyDecoratedDescriptor(_class2.prototype, 'items', [bindable], {
   enumerable: true,
   initializer: null
-}), _descriptor2 = _applyDecoratedDescriptor(_class2.prototype, 'local', [_aureliaTemplating.bindable], {
+}), _descriptor2 = _applyDecoratedDescriptor(_class2.prototype, 'local', [bindable], {
   enumerable: true,
   initializer: null
 })), _class2)) || _class) || _class) || _class);

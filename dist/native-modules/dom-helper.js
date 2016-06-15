@@ -1,12 +1,6 @@
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
 
 
-
-var DomHelper = exports.DomHelper = function () {
+export var DomHelper = function () {
   function DomHelper() {
     
   }

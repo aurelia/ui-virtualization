@@ -6,11 +6,7 @@ define(['exports', 'aurelia-templating-resources', './utilities'], function (exp
   });
   exports.ArrayVirtualRepeatStrategy = undefined;
 
-  function _classCallCheck(instance, Constructor) {
-    if (!(instance instanceof Constructor)) {
-      throw new TypeError("Cannot call a class as a function");
-    }
-  }
+  
 
   function _possibleConstructorReturn(self, call) {
     if (!self) {
@@ -40,7 +36,7 @@ define(['exports', 'aurelia-templating-resources', './utilities'], function (exp
     _inherits(ArrayVirtualRepeatStrategy, _ArrayRepeatStrategy);
 
     function ArrayVirtualRepeatStrategy() {
-      _classCallCheck(this, ArrayVirtualRepeatStrategy);
+      
 
       return _possibleConstructorReturn(this, _ArrayRepeatStrategy.apply(this, arguments));
     }
@@ -186,6 +182,8 @@ define(['exports', 'aurelia-templating-resources', './utilities'], function (exp
         this._handleAddedSplices(repeat, array, splices);
         (0, _utilities.updateVirtualOverrideContexts)(repeat, 0);
       }
+
+      return undefined;
     };
 
     ArrayVirtualRepeatStrategy.prototype._removeViewAt = function _removeViewAt(repeat, collectionIndex, returnToCache, j, removedLength) {

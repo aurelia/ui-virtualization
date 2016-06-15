@@ -1,4 +1,4 @@
-define(['exports', 'aurelia-pal', './utilities'], function (exports, _aureliaPal, _utilities) {
+define(['exports', 'aurelia-pal', 'aurelia-templating', './utilities'], function (exports, _aureliaPal, _aureliaTemplating, _utilities) {
   'use strict';
 
   Object.defineProperty(exports, "__esModule", {
@@ -6,15 +6,11 @@ define(['exports', 'aurelia-pal', './utilities'], function (exports, _aureliaPal
   });
   exports.DefaultViewStrategy = exports.TableStrategy = exports.ViewStrategyLocator = undefined;
 
-  function _classCallCheck(instance, Constructor) {
-    if (!(instance instanceof Constructor)) {
-      throw new TypeError("Cannot call a class as a function");
-    }
-  }
+  
 
   var ViewStrategyLocator = exports.ViewStrategyLocator = function () {
     function ViewStrategyLocator() {
-      _classCallCheck(this, ViewStrategyLocator);
+      
     }
 
     ViewStrategyLocator.prototype.getStrategy = function getStrategy(element) {
@@ -29,7 +25,7 @@ define(['exports', 'aurelia-pal', './utilities'], function (exports, _aureliaPal
 
   var TableStrategy = exports.TableStrategy = function () {
     function TableStrategy() {
-      _classCallCheck(this, TableStrategy);
+      
 
       this.tableCssReset = '\
     display: block;\
@@ -96,7 +92,7 @@ define(['exports', 'aurelia-pal', './utilities'], function (exports, _aureliaPal
 
   var DefaultViewStrategy = exports.DefaultViewStrategy = function () {
     function DefaultViewStrategy() {
-      _classCallCheck(this, DefaultViewStrategy);
+      
     }
 
     DefaultViewStrategy.prototype.getScrollContainer = function getScrollContainer(element) {
@@ -104,7 +100,7 @@ define(['exports', 'aurelia-pal', './utilities'], function (exports, _aureliaPal
     };
 
     DefaultViewStrategy.prototype.moveViewFirst = function moveViewFirst(view, topBuffer) {
-      (0, _utilities.insertBeforeNode)(view, _aureliaPal.DOM.nextElementSibling(topBuffer).previousSibling);
+      (0, _utilities.insertBeforeNode)(view, _aureliaPal.DOM.nextElementSibling(topBuffer));
     };
 
     DefaultViewStrategy.prototype.moveViewLast = function moveViewLast(view, bottomBuffer) {

@@ -16,11 +16,7 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
     });
   }
 
-  function _classCallCheck(instance, Constructor) {
-    if (!(instance instanceof Constructor)) {
-      throw new TypeError("Cannot call a class as a function");
-    }
-  }
+  
 
   function _possibleConstructorReturn(self, call) {
     if (!self) {
@@ -85,7 +81,7 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
     _inherits(VirtualRepeat, _AbstractRepeater);
 
     function VirtualRepeat(element, viewFactory, instruction, viewSlot, viewResources, observerLocator, strategyLocator, viewStrategyLocator, domHelper) {
-      _classCallCheck(this, VirtualRepeat);
+      
 
       var _this = _possibleConstructorReturn(this, _AbstractRepeater.call(this, {
         local: 'item',
@@ -409,7 +405,7 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
       }
       this._hasCalculatedSizes = true;
       this._itemsLength = itemsLength;
-      var firstViewElement = _aureliaPal.DOM.nextElementSibling(this.view(0).firstChild);
+      var firstViewElement = this.view(0).lastChild;
       this.itemHeight = (0, _utilities.calcOuterHeight)(firstViewElement);
       if (this.itemHeight <= 0) {
         throw new Error('Could not calculate item height');

@@ -17,13 +17,13 @@ exports.getElementDistanceToTopViewPort = getElementDistanceToTopViewPort;
 
 var _aureliaTemplatingResources = require('aurelia-templating-resources');
 
+var _aureliaTemplating = require('aurelia-templating');
+
 var _aureliaPal = require('aurelia-pal');
 
 var _aureliaDependencyInjection = require('aurelia-dependency-injection');
 
 var _aureliaBinding = require('aurelia-binding');
-
-var _aureliaTemplating = require('aurelia-templating');
 
 function _initDefineProp(target, property, descriptor, context) {
   if (!descriptor) return;
@@ -105,20 +105,8 @@ function calcOuterHeight(element) {
 }
 
 function insertBeforeNode(view, bottomBuffer) {
-  var viewStart = view.firstChild;
-  var element = viewStart.nextSibling;
-  var viewEnd = view.lastChild;
-  var parentElement = void 0;
-
-  if (bottomBuffer.parentElement) {
-    parentElement = bottomBuffer.parentElement;
-  } else if (bottomBuffer.parentNode) {
-    parentElement = bottomBuffer.parentNode;
-  }
-
-  parentElement.insertBefore(viewEnd, bottomBuffer);
-  parentElement.insertBefore(element, viewEnd);
-  parentElement.insertBefore(viewStart, element);
+  var parentElement = bottomBuffer.parentElement || bottomBuffer.parentNode;
+  parentElement.insertBefore(view.lastChild, bottomBuffer);
 }
 
 function updateVirtualOverrideContexts(repeat, startIndex) {
@@ -317,6 +305,8 @@ var ArrayVirtualRepeatStrategy = exports.ArrayVirtualRepeatStrategy = function (
       this._handleAddedSplices(repeat, array, splices);
       updateVirtualOverrideContexts(repeat, 0);
     }
+
+    return undefined;
   };
 
   ArrayVirtualRepeatStrategy.prototype._removeViewAt = function _removeViewAt(repeat, collectionIndex, returnToCache, j, removedLength) {
@@ -529,7 +519,7 @@ var DefaultViewStrategy = exports.DefaultViewStrategy = function () {
   };
 
   DefaultViewStrategy.prototype.moveViewFirst = function moveViewFirst(view, topBuffer) {
-    insertBeforeNode(view, _aureliaPal.DOM.nextElementSibling(topBuffer).previousSibling);
+    insertBeforeNode(view, _aureliaPal.DOM.nextElementSibling(topBuffer));
   };
 
   DefaultViewStrategy.prototype.moveViewLast = function moveViewLast(view, bottomBuffer) {
@@ -916,7 +906,7 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec = (0, _aureliaTemplating.custo
     }
     this._hasCalculatedSizes = true;
     this._itemsLength = itemsLength;
-    var firstViewElement = _aureliaPal.DOM.nextElementSibling(this.view(0).firstChild);
+    var firstViewElement = this.view(0).lastChild;
     this.itemHeight = calcOuterHeight(firstViewElement);
     if (this.itemHeight <= 0) {
       throw new Error('Could not calculate item height');

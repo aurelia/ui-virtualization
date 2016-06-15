@@ -133,6 +133,8 @@ export let ArrayVirtualRepeatStrategy = class ArrayVirtualRepeatStrategy extends
       this._handleAddedSplices(repeat, array, splices);
       updateVirtualOverrideContexts(repeat, 0);
     }
+
+    return undefined;
   }
 
   _removeViewAt(repeat, collectionIndex, returnToCache, j, removedLength) {

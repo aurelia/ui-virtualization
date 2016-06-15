@@ -1,10 +1,14 @@
 'use strict';
 
-System.register(['aurelia-templating-resources'], function (_export, _context) {
-  var updateOverrideContext;
+System.register(['aurelia-templating-resources', 'aurelia-templating'], function (_export, _context) {
+  "use strict";
+
+  var updateOverrideContext, View;
   return {
     setters: [function (_aureliaTemplatingResources) {
       updateOverrideContext = _aureliaTemplatingResources.updateOverrideContext;
+    }, function (_aureliaTemplating) {
+      View = _aureliaTemplating.View;
     }],
     execute: function () {
       function calcOuterHeight(element) {
@@ -18,20 +22,8 @@ System.register(['aurelia-templating-resources'], function (_export, _context) {
       _export('calcOuterHeight', calcOuterHeight);
 
       function insertBeforeNode(view, bottomBuffer) {
-        var viewStart = view.firstChild;
-        var element = viewStart.nextSibling;
-        var viewEnd = view.lastChild;
-        var parentElement = void 0;
-
-        if (bottomBuffer.parentElement) {
-          parentElement = bottomBuffer.parentElement;
-        } else if (bottomBuffer.parentNode) {
-          parentElement = bottomBuffer.parentNode;
-        }
-
-        parentElement.insertBefore(viewEnd, bottomBuffer);
-        parentElement.insertBefore(element, viewEnd);
-        parentElement.insertBefore(viewStart, element);
+        var parentElement = bottomBuffer.parentElement || bottomBuffer.parentNode;
+        parentElement.insertBefore(view.lastChild, bottomBuffer);
       }
 
       _export('insertBeforeNode', insertBeforeNode);

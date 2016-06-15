@@ -1,7 +1,9 @@
 'use strict';
 
 System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-templating', 'aurelia-templating-resources', 'aurelia-pal', './utilities', './dom-helper', './virtual-repeat-strategy-locator', './view-strategy'], function (_export, _context) {
-  var inject, ObserverLocator, BoundViewFactory, ViewSlot, ViewResources, TargetInstruction, customAttribute, bindable, templateController, AbstractRepeater, getItemsSourceExpression, isOneTime, unwrapExpression, updateOneTimeBinding, viewsRequireLifecycle, DOM, getStyleValue, calcOuterHeight, rebindAndMoveView, DomHelper, VirtualRepeatStrategyLocator, ViewStrategyLocator, _dec, _dec2, _class, _desc, _value, _class2, _descriptor, _descriptor2, VirtualRepeat;
+  "use strict";
+
+  var inject, ObserverLocator, BoundViewFactory, ViewSlot, ViewResources, TargetInstruction, customAttribute, bindable, templateController, View, AbstractRepeater, getItemsSourceExpression, isOneTime, unwrapExpression, updateOneTimeBinding, viewsRequireLifecycle, DOM, getStyleValue, calcOuterHeight, rebindAndMoveView, DomHelper, VirtualRepeatStrategyLocator, ViewStrategyLocator, _dec, _dec2, _class, _desc, _value, _class2, _descriptor, _descriptor2, VirtualRepeat;
 
   function _initDefineProp(target, property, descriptor, context) {
     if (!descriptor) return;
@@ -13,11 +15,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-tem
     });
   }
 
-  function _classCallCheck(instance, Constructor) {
-    if (!(instance instanceof Constructor)) {
-      throw new TypeError("Cannot call a class as a function");
-    }
-  }
+  
 
   function _possibleConstructorReturn(self, call) {
     if (!self) {
@@ -89,6 +87,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-tem
       customAttribute = _aureliaTemplating.customAttribute;
       bindable = _aureliaTemplating.bindable;
       templateController = _aureliaTemplating.templateController;
+      View = _aureliaTemplating.View;
     }, function (_aureliaTemplatingResources) {
       AbstractRepeater = _aureliaTemplatingResources.AbstractRepeater;
       getItemsSourceExpression = _aureliaTemplatingResources.getItemsSourceExpression;
@@ -114,7 +113,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-tem
         _inherits(VirtualRepeat, _AbstractRepeater);
 
         function VirtualRepeat(element, viewFactory, instruction, viewSlot, viewResources, observerLocator, strategyLocator, viewStrategyLocator, domHelper) {
-          _classCallCheck(this, VirtualRepeat);
+          
 
           var _this = _possibleConstructorReturn(this, _AbstractRepeater.call(this, {
             local: 'item',
@@ -438,7 +437,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-tem
           }
           this._hasCalculatedSizes = true;
           this._itemsLength = itemsLength;
-          var firstViewElement = DOM.nextElementSibling(this.view(0).firstChild);
+          var firstViewElement = this.view(0).lastChild;
           this.itemHeight = calcOuterHeight(firstViewElement);
           if (this.itemHeight <= 0) {
             throw new Error('Could not calculate item height');

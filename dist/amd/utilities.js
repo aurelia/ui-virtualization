@@ -1,4 +1,4 @@
-define(['exports', 'aurelia-templating-resources'], function (exports, _aureliaTemplatingResources) {
+define(['exports', 'aurelia-templating-resources', 'aurelia-templating'], function (exports, _aureliaTemplatingResources, _aureliaTemplating) {
   'use strict';
 
   Object.defineProperty(exports, "__esModule", {
@@ -20,20 +20,8 @@ define(['exports', 'aurelia-templating-resources'], function (exports, _aureliaT
   }
 
   function insertBeforeNode(view, bottomBuffer) {
-    var viewStart = view.firstChild;
-    var element = viewStart.nextSibling;
-    var viewEnd = view.lastChild;
-    var parentElement = void 0;
-
-    if (bottomBuffer.parentElement) {
-      parentElement = bottomBuffer.parentElement;
-    } else if (bottomBuffer.parentNode) {
-      parentElement = bottomBuffer.parentNode;
-    }
-
-    parentElement.insertBefore(viewEnd, bottomBuffer);
-    parentElement.insertBefore(element, viewEnd);
-    parentElement.insertBefore(viewStart, element);
+    var parentElement = bottomBuffer.parentElement || bottomBuffer.parentNode;
+    parentElement.insertBefore(view.lastChild, bottomBuffer);
   }
 
   function updateVirtualOverrideContexts(repeat, startIndex) {

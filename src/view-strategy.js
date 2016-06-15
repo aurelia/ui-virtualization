@@ -1,4 +1,5 @@
 import {DOM} from 'aurelia-pal';
+import {View} from 'aurelia-templating';
 import {insertBeforeNode} from './utilities';
 
 interface ViewStrategy {

@@ -1,19 +1,18 @@
 'use strict';
 
-System.register(['./virtual-repeat'], function (_export, _context) {
-  var VirtualRepeat;
+System.register(['./aurelia-ui-virtualization'], function (_export, _context) {
+  "use strict";
+
   return {
-    setters: [function (_virtualRepeat) {
-      VirtualRepeat = _virtualRepeat.VirtualRepeat;
-    }],
-    execute: function () {
-      function configure(config) {
-        config.globalResources('./virtual-repeat');
+    setters: [function (_aureliaUiVirtualization) {
+      var _exportObj = {};
+
+      for (var _key in _aureliaUiVirtualization) {
+        if (_key !== "default") _exportObj[_key] = _aureliaUiVirtualization[_key];
       }
 
-      _export('configure', configure);
-
-      _export('VirtualRepeat', VirtualRepeat);
-    }
+      _export(_exportObj);
+    }],
+    execute: function () {}
   };
 });

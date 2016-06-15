@@ -1,13 +1,11 @@
 'use strict';
 
 System.register(['aurelia-templating-resources', './utilities'], function (_export, _context) {
+  "use strict";
+
   var ArrayRepeatStrategy, createFullOverrideContext, updateVirtualOverrideContexts, rebindAndMoveView, getElementDistanceToBottomViewPort, ArrayVirtualRepeatStrategy;
 
-  function _classCallCheck(instance, Constructor) {
-    if (!(instance instanceof Constructor)) {
-      throw new TypeError("Cannot call a class as a function");
-    }
-  }
+  
 
   function _possibleConstructorReturn(self, call) {
     if (!self) {
@@ -47,7 +45,7 @@ System.register(['aurelia-templating-resources', './utilities'], function (_expo
         _inherits(ArrayVirtualRepeatStrategy, _ArrayRepeatStrategy);
 
         function ArrayVirtualRepeatStrategy() {
-          _classCallCheck(this, ArrayVirtualRepeatStrategy);
+          
 
           return _possibleConstructorReturn(this, _ArrayRepeatStrategy.apply(this, arguments));
         }
@@ -193,6 +191,8 @@ System.register(['aurelia-templating-resources', './utilities'], function (_expo
             this._handleAddedSplices(repeat, array, splices);
             updateVirtualOverrideContexts(repeat, 0);
           }
+
+          return undefined;
         };
 
         ArrayVirtualRepeatStrategy.prototype._removeViewAt = function _removeViewAt(repeat, collectionIndex, returnToCache, j, removedLength) {
