@@ -9,14 +9,14 @@ import {
   bindable,
   templateController
 } from 'aurelia-templating';
-import {AbstractRepeater} from 'aurelia-templating-resources';
 import {
+  AbstractRepeater,
   getItemsSourceExpression,
   isOneTime,
   unwrapExpression,
-  updateOneTimeBinding
-} from 'aurelia-templating-resources/repeat-utilities';
-import {viewsRequireLifecycle} from 'aurelia-templating-resources/analyze-view-factory';
+  updateOneTimeBinding,
+  viewsRequireLifecycle
+} from 'aurelia-templating-resources';
 import {DOM} from 'aurelia-pal';
 import {
   getStyleValue,
@@ -25,7 +25,7 @@ import {
 } from './utilities';
 import {DomHelper} from './dom-helper';
 import {VirtualRepeatStrategyLocator} from './virtual-repeat-strategy-locator';
-import {ViewStrategyLocator} from './view-strategy';
+import {ViewStrategyLocator, DocumentFragmentViewStrategy} from './view-strategy';
 
 @customAttribute('virtual-repeat')
 @templateController
@@ -82,6 +82,16 @@ export class VirtualRepeat extends AbstractRepeater {
     let element = this.element;
     this._itemsLength = this.items.length;
     this.viewStrategy = this.viewStrategyLocator.getStrategy(element);
+
+    if (this.viewStrategy instanceof DocumentFragmentViewStrategy) {
+      let root = element.parentNode;
+      let container = DOM.createElement('div');
+      container.classList.add('ui-virtualization-container');
+      root.appendChild(container);
+      root.removeChild(element);
+      container.appendChild(element);
+    }
+
     this.scrollContainer = this.viewStrategy.getScrollContainer(element);
     this.topBuffer = this.viewStrategy.createTopBufferElement(element);
     this.bottomBuffer = this.viewStrategy.createBottomBufferElement(element);
@@ -319,7 +329,21 @@ export class VirtualRepeat extends AbstractRepeater {
   }
 
   _getIndexOfLastView(): number {
-    return this.view(this.viewCount() - 1).overrideContext.$index;
+    const view = this.view(this.viewCount() - 1);
+    if (view) {
+      return view.overrideContext.$index;
+    }
+
+    return -1;
+  }
+
+  _getLastViewItem() {
+    let children = this.viewSlot.children;
+    if (!children.length) {
+      return undefined;
+    }
+    let lastViewItem = children[children.length - 1].bindingContext[this.local];
+    return lastViewItem;
   }
 
   _getIndexOfFirstView(): number {

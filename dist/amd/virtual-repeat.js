@@ -1,4 +1,4 @@
-define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-templating', 'aurelia-templating-resources', 'aurelia-templating-resources/repeat-utilities', 'aurelia-templating-resources/analyze-view-factory', 'aurelia-pal', './utilities', './dom-helper', './virtual-repeat-strategy-locator', './view-strategy'], function (exports, _aureliaDependencyInjection, _aureliaBinding, _aureliaTemplating, _aureliaTemplatingResources, _repeatUtilities, _analyzeViewFactory, _aureliaPal, _utilities, _domHelper, _virtualRepeatStrategyLocator, _viewStrategy) {
+define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-templating', 'aurelia-templating-resources', 'aurelia-pal', './utilities', './dom-helper', './virtual-repeat-strategy-locator', './view-strategy'], function (exports, _aureliaDependencyInjection, _aureliaBinding, _aureliaTemplating, _aureliaTemplatingResources, _aureliaPal, _utilities, _domHelper, _virtualRepeatStrategyLocator, _viewStrategy) {
   'use strict';
 
   Object.defineProperty(exports, "__esModule", {
@@ -89,7 +89,7 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
 
       var _this = _possibleConstructorReturn(this, _AbstractRepeater.call(this, {
         local: 'item',
-        viewsRequireLifecycle: (0, _analyzeViewFactory.viewsRequireLifecycle)(viewFactory)
+        viewsRequireLifecycle: (0, _aureliaTemplatingResources.viewsRequireLifecycle)(viewFactory)
       }));
 
       _this._first = 0;
@@ -120,8 +120,8 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
       _this.observerLocator = observerLocator;
       _this.strategyLocator = strategyLocator;
       _this.viewStrategyLocator = viewStrategyLocator;
-      _this.sourceExpression = (0, _repeatUtilities.getItemsSourceExpression)(_this.instruction, 'virtual-repeat.for');
-      _this.isOneTime = (0, _repeatUtilities.isOneTime)(_this.sourceExpression);
+      _this.sourceExpression = (0, _aureliaTemplatingResources.getItemsSourceExpression)(_this.instruction, 'virtual-repeat.for');
+      _this.isOneTime = (0, _aureliaTemplatingResources.isOneTime)(_this.sourceExpression);
       _this.domHelper = domHelper;
       return _this;
     }
@@ -382,7 +382,21 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
     };
 
     VirtualRepeat.prototype._getIndexOfLastView = function _getIndexOfLastView() {
-      return this.view(this.viewCount() - 1).overrideContext.$index;
+      var view = this.view(this.viewCount() - 1);
+      if (view) {
+        return view.overrideContext.$index;
+      }
+
+      return -1;
+    };
+
+    VirtualRepeat.prototype._getLastViewItem = function _getLastViewItem() {
+      var children = this.viewSlot.children;
+      if (!children.length) {
+        return undefined;
+      }
+      var lastViewItem = children[children.length - 1].bindingContext[this.local];
+      return lastViewItem;
     };
 
     VirtualRepeat.prototype._getIndexOfFirstView = function _getIndexOfFirstView() {
@@ -439,7 +453,7 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
     };
 
     VirtualRepeat.prototype._getInnerCollection = function _getInnerCollection() {
-      var expression = (0, _repeatUtilities.unwrapExpression)(this.sourceExpression);
+      var expression = (0, _aureliaTemplatingResources.unwrapExpression)(this.sourceExpression);
       if (!expression) {
         return null;
       }
@@ -490,14 +504,14 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
     VirtualRepeat.prototype.updateBindings = function updateBindings(view) {
       var j = view.bindings.length;
       while (j--) {
-        (0, _repeatUtilities.updateOneTimeBinding)(view.bindings[j]);
+        (0, _aureliaTemplatingResources.updateOneTimeBinding)(view.bindings[j]);
       }
       j = view.controllers.length;
       while (j--) {
         var k = view.controllers[j].boundProperties.length;
         while (k--) {
           var binding = view.controllers[j].boundProperties[k].binding;
-          (0, _repeatUtilities.updateOneTimeBinding)(binding);
+          (0, _aureliaTemplatingResources.updateOneTimeBinding)(binding);
         }
       }
     };

@@ -1,6 +1,6 @@
 'use strict';
 
-System.register(['aurelia-templating-resources/repeat-strategy-locator', './array-virtual-repeat-strategy'], function (_export, _context) {
+System.register(['aurelia-templating-resources', './array-virtual-repeat-strategy'], function (_export, _context) {
   var RepeatStrategyLocator, ArrayVirtualRepeatStrategy, VirtualRepeatStrategyLocator;
 
   function _classCallCheck(instance, Constructor) {
@@ -34,8 +34,8 @@ System.register(['aurelia-templating-resources/repeat-strategy-locator', './arra
   }
 
   return {
-    setters: [function (_aureliaTemplatingResourcesRepeatStrategyLocator) {
-      RepeatStrategyLocator = _aureliaTemplatingResourcesRepeatStrategyLocator.RepeatStrategyLocator;
+    setters: [function (_aureliaTemplatingResources) {
+      RepeatStrategyLocator = _aureliaTemplatingResources.RepeatStrategyLocator;
     }, function (_arrayVirtualRepeatStrategy) {
       ArrayVirtualRepeatStrategy = _arrayVirtualRepeatStrategy.ArrayVirtualRepeatStrategy;
     }],

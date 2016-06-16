@@ -1,4 +1,4 @@
-import { updateOverrideContext } from 'aurelia-templating-resources/repeat-utilities';
+import { updateOverrideContext } from 'aurelia-templating-resources';
 
 export function calcOuterHeight(element) {
   let height;
@@ -12,7 +12,13 @@ export function insertBeforeNode(view, bottomBuffer) {
   let viewStart = view.firstChild;
   let element = viewStart.nextSibling;
   let viewEnd = view.lastChild;
-  let parentElement = bottomBuffer.parentElement;
+  let parentElement;
+
+  if (bottomBuffer.parentElement) {
+    parentElement = bottomBuffer.parentElement;
+  } else if (bottomBuffer.parentNode) {
+    parentElement = bottomBuffer.parentNode;
+  }
 
   parentElement.insertBefore(viewEnd, bottomBuffer);
   parentElement.insertBefore(element, viewEnd);

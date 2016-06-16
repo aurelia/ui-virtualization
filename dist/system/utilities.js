@@ -1,10 +1,10 @@
 'use strict';
 
-System.register(['aurelia-templating-resources/repeat-utilities'], function (_export, _context) {
+System.register(['aurelia-templating-resources'], function (_export, _context) {
   var updateOverrideContext;
   return {
-    setters: [function (_aureliaTemplatingResourcesRepeatUtilities) {
-      updateOverrideContext = _aureliaTemplatingResourcesRepeatUtilities.updateOverrideContext;
+    setters: [function (_aureliaTemplatingResources) {
+      updateOverrideContext = _aureliaTemplatingResources.updateOverrideContext;
     }],
     execute: function () {
       function calcOuterHeight(element) {
@@ -21,7 +21,13 @@ System.register(['aurelia-templating-resources/repeat-utilities'], function (_ex
         var viewStart = view.firstChild;
         var element = viewStart.nextSibling;
         var viewEnd = view.lastChild;
-        var parentElement = bottomBuffer.parentElement;
+        var parentElement = void 0;
+
+        if (bottomBuffer.parentElement) {
+          parentElement = bottomBuffer.parentElement;
+        } else if (bottomBuffer.parentNode) {
+          parentElement = bottomBuffer.parentNode;
+        }
 
         parentElement.insertBefore(viewEnd, bottomBuffer);
         parentElement.insertBefore(element, viewEnd);

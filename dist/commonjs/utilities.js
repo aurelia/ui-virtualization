@@ -11,7 +11,7 @@ exports.getStyleValue = getStyleValue;
 exports.getElementDistanceToBottomViewPort = getElementDistanceToBottomViewPort;
 exports.getElementDistanceToTopViewPort = getElementDistanceToTopViewPort;
 
-var _repeatUtilities = require('aurelia-templating-resources/repeat-utilities');
+var _aureliaTemplatingResources = require('aurelia-templating-resources');
 
 function calcOuterHeight(element) {
   var height = void 0;
@@ -25,7 +25,13 @@ function insertBeforeNode(view, bottomBuffer) {
   var viewStart = view.firstChild;
   var element = viewStart.nextSibling;
   var viewEnd = view.lastChild;
-  var parentElement = bottomBuffer.parentElement;
+  var parentElement = void 0;
+
+  if (bottomBuffer.parentElement) {
+    parentElement = bottomBuffer.parentElement;
+  } else if (bottomBuffer.parentNode) {
+    parentElement = bottomBuffer.parentNode;
+  }
 
   parentElement.insertBefore(viewEnd, bottomBuffer);
   parentElement.insertBefore(element, viewEnd);
@@ -44,14 +50,14 @@ function updateVirtualOverrideContexts(repeat, startIndex) {
   var delta = repeat._topBufferHeight / repeat.itemHeight;
 
   for (; startIndex < viewLength; ++startIndex) {
-    (0, _repeatUtilities.updateOverrideContext)(views[startIndex].overrideContext, startIndex + delta, collectionLength);
+    (0, _aureliaTemplatingResources.updateOverrideContext)(views[startIndex].overrideContext, startIndex + delta, collectionLength);
   }
 }
 
 function rebindAndMoveView(repeat, view, index, moveToBottom) {
   var items = repeat.items;
   var viewSlot = repeat.viewSlot;
-  (0, _repeatUtilities.updateOverrideContext)(view.overrideContext, index, items.length);
+  (0, _aureliaTemplatingResources.updateOverrideContext)(view.overrideContext, index, items.length);
   view.bindingContext[repeat.local] = items[index];
   if (moveToBottom) {
     viewSlot.children.push(viewSlot.children.shift());
