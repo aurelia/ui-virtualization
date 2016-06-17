@@ -23,7 +23,7 @@ var paths = {
   sort: true
 };
 
-paths.ignore = ['index.js'];
+paths.ignore = ['aurelia-ui-virtualization.js'];
 paths.files = [
   paths.source
 ];

@@ -13,7 +13,7 @@
   },
   "license": "MIT",
   "author": "Rob Eisenberg <rob@bluespire.com> (http://robeisenberg.com/)",
-  "main": "dist/commonjs/index.js",
+  "main": "dist/commonjs/aurelia-ui-virtualization.js",
   "typings": "dist/aurelia-ui-virtualization.d.ts",
   "repository": {
     "type": "git",
@@ -22,7 +22,7 @@
   "jspm": {
     "registry": "npm",
     "jspmPackage": true,
-    "main": "index",
+    "main": "aurelia-ui-virtualization",
     "format": "amd",
     "directories": {
       "dist": "dist/amd"
