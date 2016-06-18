@@ -2,7 +2,7 @@ import {DOM} from 'aurelia-pal';
 import {View} from 'aurelia-templating';
 import {insertBeforeNode} from './utilities';
 
-interface ViewStrategy {
+interface TemplateStrategy {
   getScrollContainer(element: Element): Element;
   moveViewFirst(view: View, topBuffer: Element): void;
   moveViewLast(view: View, bottomBuffer: Element): void;
@@ -13,12 +13,12 @@ interface ViewStrategy {
   getLastView(bottomBuffer: Element): Element;
 }
 
-export class ViewStrategyLocator {
-  getStrategy(element: Element): ViewStrategy {
+export class TemplateStrategyLocator {
+  getStrategy(element: Element): TemplateStrategy {
     if (element.parentNode && element.parentNode.localName === 'tbody') {
       return new TableStrategy();
     }
-    return new DefaultViewStrategy();
+    return new DefaultTemplateStrategy();
   }
 }
 
@@ -83,7 +83,7 @@ export class TableStrategy {
   }
 }
 
-export class DefaultViewStrategy {
+export class DefaultTemplateStrategy {
   getScrollContainer(element: Element): Element {
     return element.parentNode;
   }

@@ -244,7 +244,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
       let addIndex = splice.index;
       let end = splice.index + splice.addedCount;
       for (; addIndex < end; ++addIndex) {
-        let hasDistanceToBottomViewPort = getElementDistanceToBottomViewPort(repeat.viewStrategy.getLastElement(repeat.bottomBuffer)) > 0;
+        let hasDistanceToBottomViewPort = getElementDistanceToBottomViewPort(repeat.templateStrategy.getLastElement(repeat.bottomBuffer)) > 0;
         if (repeat.viewCount() === 0 || (!this._isIndexBeforeViewSlot(repeat, viewSlot, addIndex) && !this._isIndexAfterViewSlot(repeat, viewSlot, addIndex)) || hasDistanceToBottomViewPort)  {
           let overrideContext = createFullOverrideContext(repeat, array[addIndex], addIndex, arrayLength);
           repeat.insertView(addIndex, overrideContext.bindingContext, overrideContext);

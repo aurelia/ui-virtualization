@@ -26,11 +26,11 @@ import {
 } from './utilities';
 import {DomHelper} from './dom-helper';
 import {VirtualRepeatStrategyLocator} from './virtual-repeat-strategy-locator';
-import {ViewStrategyLocator} from './view-strategy';
+import {TemplateStrategyLocator} from './template-strategy';
 
 @customAttribute('virtual-repeat')
 @templateController
-@inject(DOM.Element, BoundViewFactory, TargetInstruction, ViewSlot, ViewResources, ObserverLocator, VirtualRepeatStrategyLocator, ViewStrategyLocator, DomHelper)
+@inject(DOM.Element, BoundViewFactory, TargetInstruction, ViewSlot, ViewResources, ObserverLocator, VirtualRepeatStrategyLocator, TemplateStrategyLocator, DomHelper)
 export class VirtualRepeat extends AbstractRepeater {
   _first = 0;
   _previousFirst = 0;
@@ -58,7 +58,7 @@ export class VirtualRepeat extends AbstractRepeater {
     viewResources: ViewResources,
     observerLocator: ObserverLocator,
     strategyLocator: VirtualRepeatStrategyLocator,
-    viewStrategyLocator: ViewStrategyLocator,
+    templateStrategyLocator: TemplateStrategyLocator,
     domHelper: DomHelper) {
     super({
       local: 'item',
@@ -72,7 +72,7 @@ export class VirtualRepeat extends AbstractRepeater {
     this.lookupFunctions = viewResources.lookupFunctions;
     this.observerLocator = observerLocator;
     this.strategyLocator = strategyLocator;
-    this.viewStrategyLocator = viewStrategyLocator;
+    this.templateStrategyLocator = templateStrategyLocator;
     this.sourceExpression = getItemsSourceExpression(this.instruction, 'virtual-repeat.for');
     this.isOneTime = isOneTime(this.sourceExpression);
     this.domHelper = domHelper;
@@ -82,10 +82,10 @@ export class VirtualRepeat extends AbstractRepeater {
     this._isAttached = true;
     let element = this.element;
     this._itemsLength = this.items.length;
-    this.viewStrategy = this.viewStrategyLocator.getStrategy(element);
-    this.scrollContainer = this.viewStrategy.getScrollContainer(element);
-    this.topBuffer = this.viewStrategy.createTopBufferElement(element);
-    this.bottomBuffer = this.viewStrategy.createBottomBufferElement(element);
+    this.templateStrategy = this.templateStrategyLocator.getStrategy(element);
+    this.scrollContainer = this.templateStrategy.getScrollContainer(element);
+    this.topBuffer = this.templateStrategy.createTopBufferElement(element);
+    this.bottomBuffer = this.templateStrategy.createBottomBufferElement(element);
     this.itemsChanged();
     this.scrollListener = () => this._onScroll();
 
@@ -97,7 +97,7 @@ export class VirtualRepeat extends AbstractRepeater {
       }
     }, 500);
 
-    this.distanceToTop = this.domHelper.getElementDistanceToTopOfDocument(this.viewStrategy.getFirstElement(this.topBuffer));
+    this.distanceToTop = this.domHelper.getElementDistanceToTopOfDocument(this.templateStrategy.getFirstElement(this.topBuffer));
     if (this.domHelper.hasOverflowScroll(this.scrollContainer)) {
       this._fixedHeightContainer = true;
       this.scrollContainer.addEventListener('scroll', this.scrollListener);
@@ -128,7 +128,7 @@ export class VirtualRepeat extends AbstractRepeater {
     this._isAttached = false;
     this._ticking = false;
     this._hasCalculatedSizes = false;
-    this.viewStrategy.removeBufferElements(this.element, this.topBuffer, this.bottomBuffer);
+    this.templateStrategy.removeBufferElements(this.element, this.topBuffer, this.bottomBuffer);
     this.isLastIndex = false;
     this.scrollContainer = null;
     this.scrollContainerHeight = null;

@@ -1,5 +1,5 @@
 import {StageComponent} from './component-tester';
-import {TableStrategy} from '../src/view-strategy';
+import {TableStrategy} from '../src/template-strategy';
 
 // async queue
 function createAssertionQueue() {
