@@ -1,3 +1,8 @@
+<a name="1.0.0-beta.1.0.0"></a>
+# [1.0.0-beta.1.0.0](https://github.com/aurelia/ui-virtualization/compare/0.5.2...v1.0.0-beta.1.0.0) (2016-06-22)
+
+
+
 ### 0.4.6 (2016-05-31)
 
 
