@@ -283,7 +283,7 @@ System.register(['aurelia-templating-resources', './utilities'], function (_expo
             var addIndex = splice.index;
             var end = splice.index + splice.addedCount;
             for (; addIndex < end; ++addIndex) {
-              var hasDistanceToBottomViewPort = getElementDistanceToBottomViewPort(repeat.viewStrategy.getLastElement(repeat.bottomBuffer)) > 0;
+              var hasDistanceToBottomViewPort = getElementDistanceToBottomViewPort(repeat.templateStrategy.getLastElement(repeat.bottomBuffer)) > 0;
               if (repeat.viewCount() === 0 || !this._isIndexBeforeViewSlot(repeat, viewSlot, addIndex) && !this._isIndexAfterViewSlot(repeat, viewSlot, addIndex) || hasDistanceToBottomViewPort) {
                 var overrideContext = createFullOverrideContext(repeat, array[addIndex], addIndex, arrayLength);
                 repeat.insertView(addIndex, overrideContext.bindingContext, overrideContext);

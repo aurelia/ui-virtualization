@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.DefaultViewStrategy = exports.TableStrategy = exports.ViewStrategyLocator = undefined;
+exports.DefaultTemplateStrategy = exports.TableStrategy = exports.TemplateStrategyLocator = undefined;
 
 var _aureliaPal = require('aurelia-pal');
 
@@ -13,19 +13,19 @@ var _utilities = require('./utilities');
 
 
 
-var ViewStrategyLocator = exports.ViewStrategyLocator = function () {
-  function ViewStrategyLocator() {
+var TemplateStrategyLocator = exports.TemplateStrategyLocator = function () {
+  function TemplateStrategyLocator() {
     
   }
 
-  ViewStrategyLocator.prototype.getStrategy = function getStrategy(element) {
+  TemplateStrategyLocator.prototype.getStrategy = function getStrategy(element) {
     if (element.parentNode && element.parentNode.localName === 'tbody') {
       return new TableStrategy();
     }
-    return new DefaultViewStrategy();
+    return new DefaultTemplateStrategy();
   };
 
-  return ViewStrategyLocator;
+  return TemplateStrategyLocator;
 }();
 
 var TableStrategy = exports.TableStrategy = function () {
@@ -95,51 +95,51 @@ var TableStrategy = exports.TableStrategy = function () {
   return TableStrategy;
 }();
 
-var DefaultViewStrategy = exports.DefaultViewStrategy = function () {
-  function DefaultViewStrategy() {
+var DefaultTemplateStrategy = exports.DefaultTemplateStrategy = function () {
+  function DefaultTemplateStrategy() {
     
   }
 
-  DefaultViewStrategy.prototype.getScrollContainer = function getScrollContainer(element) {
+  DefaultTemplateStrategy.prototype.getScrollContainer = function getScrollContainer(element) {
     return element.parentNode;
   };
 
-  DefaultViewStrategy.prototype.moveViewFirst = function moveViewFirst(view, topBuffer) {
+  DefaultTemplateStrategy.prototype.moveViewFirst = function moveViewFirst(view, topBuffer) {
     (0, _utilities.insertBeforeNode)(view, _aureliaPal.DOM.nextElementSibling(topBuffer));
   };
 
-  DefaultViewStrategy.prototype.moveViewLast = function moveViewLast(view, bottomBuffer) {
+  DefaultTemplateStrategy.prototype.moveViewLast = function moveViewLast(view, bottomBuffer) {
     var previousSibling = bottomBuffer.previousSibling;
     var referenceNode = previousSibling.nodeType === 8 && previousSibling.data === 'anchor' ? previousSibling : bottomBuffer;
     (0, _utilities.insertBeforeNode)(view, referenceNode);
   };
 
-  DefaultViewStrategy.prototype.createTopBufferElement = function createTopBufferElement(element) {
+  DefaultTemplateStrategy.prototype.createTopBufferElement = function createTopBufferElement(element) {
     var elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
     var buffer = _aureliaPal.DOM.createElement(elementName);
     element.parentNode.insertBefore(buffer, element);
     return buffer;
   };
 
-  DefaultViewStrategy.prototype.createBottomBufferElement = function createBottomBufferElement(element) {
+  DefaultTemplateStrategy.prototype.createBottomBufferElement = function createBottomBufferElement(element) {
     var elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
     var buffer = _aureliaPal.DOM.createElement(elementName);
     element.parentNode.insertBefore(buffer, element.nextSibling);
     return buffer;
   };
 
-  DefaultViewStrategy.prototype.removeBufferElements = function removeBufferElements(element, topBuffer, bottomBuffer) {
+  DefaultTemplateStrategy.prototype.removeBufferElements = function removeBufferElements(element, topBuffer, bottomBuffer) {
     element.parentNode.removeChild(topBuffer);
     element.parentNode.removeChild(bottomBuffer);
   };
 
-  DefaultViewStrategy.prototype.getFirstElement = function getFirstElement(topBuffer) {
+  DefaultTemplateStrategy.prototype.getFirstElement = function getFirstElement(topBuffer) {
     return _aureliaPal.DOM.nextElementSibling(topBuffer);
   };
 
-  DefaultViewStrategy.prototype.getLastElement = function getLastElement(bottomBuffer) {
+  DefaultTemplateStrategy.prototype.getLastElement = function getLastElement(bottomBuffer) {
     return bottomBuffer.previousElementSibling;
   };
 
-  return DefaultViewStrategy;
+  return DefaultTemplateStrategy;
 }();

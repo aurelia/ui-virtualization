@@ -2,12 +2,12 @@ import { DOM } from 'aurelia-pal';
 import { View } from 'aurelia-templating';
 import { insertBeforeNode } from './utilities';
 
-export let ViewStrategyLocator = class ViewStrategyLocator {
+export let TemplateStrategyLocator = class TemplateStrategyLocator {
   getStrategy(element) {
     if (element.parentNode && element.parentNode.localName === 'tbody') {
       return new TableStrategy();
     }
-    return new DefaultViewStrategy();
+    return new DefaultTemplateStrategy();
   }
 };
 
@@ -74,7 +74,7 @@ export let TableStrategy = class TableStrategy {
   }
 };
 
-export let DefaultViewStrategy = class DefaultViewStrategy {
+export let DefaultTemplateStrategy = class DefaultTemplateStrategy {
   getScrollContainer(element) {
     return element.parentNode;
   }

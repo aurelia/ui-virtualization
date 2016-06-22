@@ -57,12 +57,12 @@ import { DOM } from 'aurelia-pal';
 import { getStyleValue, calcOuterHeight, rebindAndMoveView } from './utilities';
 import { DomHelper } from './dom-helper';
 import { VirtualRepeatStrategyLocator } from './virtual-repeat-strategy-locator';
-import { ViewStrategyLocator } from './view-strategy';
+import { TemplateStrategyLocator } from './template-strategy';
 
-export var VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = inject(DOM.Element, BoundViewFactory, TargetInstruction, ViewSlot, ViewResources, ObserverLocator, VirtualRepeatStrategyLocator, ViewStrategyLocator, DomHelper), _dec(_class = templateController(_class = _dec2(_class = (_class2 = function (_AbstractRepeater) {
+export var VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = inject(DOM.Element, BoundViewFactory, TargetInstruction, ViewSlot, ViewResources, ObserverLocator, VirtualRepeatStrategyLocator, TemplateStrategyLocator, DomHelper), _dec(_class = templateController(_class = _dec2(_class = (_class2 = function (_AbstractRepeater) {
   _inherits(VirtualRepeat, _AbstractRepeater);
 
-  function VirtualRepeat(element, viewFactory, instruction, viewSlot, viewResources, observerLocator, strategyLocator, viewStrategyLocator, domHelper) {
+  function VirtualRepeat(element, viewFactory, instruction, viewSlot, viewResources, observerLocator, strategyLocator, templateStrategyLocator, domHelper) {
     
 
     var _this = _possibleConstructorReturn(this, _AbstractRepeater.call(this, {
@@ -97,7 +97,7 @@ export var VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
     _this.lookupFunctions = viewResources.lookupFunctions;
     _this.observerLocator = observerLocator;
     _this.strategyLocator = strategyLocator;
-    _this.viewStrategyLocator = viewStrategyLocator;
+    _this.templateStrategyLocator = templateStrategyLocator;
     _this.sourceExpression = getItemsSourceExpression(_this.instruction, 'virtual-repeat.for');
     _this.isOneTime = isOneTime(_this.sourceExpression);
     _this.domHelper = domHelper;
@@ -110,10 +110,10 @@ export var VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
     this._isAttached = true;
     var element = this.element;
     this._itemsLength = this.items.length;
-    this.viewStrategy = this.viewStrategyLocator.getStrategy(element);
-    this.scrollContainer = this.viewStrategy.getScrollContainer(element);
-    this.topBuffer = this.viewStrategy.createTopBufferElement(element);
-    this.bottomBuffer = this.viewStrategy.createBottomBufferElement(element);
+    this.templateStrategy = this.templateStrategyLocator.getStrategy(element);
+    this.scrollContainer = this.templateStrategy.getScrollContainer(element);
+    this.topBuffer = this.templateStrategy.createTopBufferElement(element);
+    this.bottomBuffer = this.templateStrategy.createBottomBufferElement(element);
     this.itemsChanged();
     this.scrollListener = function () {
       return _this2._onScroll();
@@ -127,7 +127,7 @@ export var VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
       }
     }, 500);
 
-    this.distanceToTop = this.domHelper.getElementDistanceToTopOfDocument(this.viewStrategy.getFirstElement(this.topBuffer));
+    this.distanceToTop = this.domHelper.getElementDistanceToTopOfDocument(this.templateStrategy.getFirstElement(this.topBuffer));
     if (this.domHelper.hasOverflowScroll(this.scrollContainer)) {
       this._fixedHeightContainer = true;
       this.scrollContainer.addEventListener('scroll', this.scrollListener);
@@ -158,7 +158,7 @@ export var VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
     this._isAttached = false;
     this._ticking = false;
     this._hasCalculatedSizes = false;
-    this.viewStrategy.removeBufferElements(this.element, this.topBuffer, this.bottomBuffer);
+    this.templateStrategy.removeBufferElements(this.element, this.topBuffer, this.bottomBuffer);
     this.isLastIndex = false;
     this.scrollContainer = null;
     this.scrollContainerHeight = null;
