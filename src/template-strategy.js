@@ -41,11 +41,13 @@ export class TableStrategy {
   }
 
   moveViewFirst(view: View, topBuffer: Element): void {
-    insertBeforeNode(view, DOM.nextElementSibling(topBuffer.parentNode).previousSibling);
+    insertBeforeNode(view, DOM.nextElementSibling(topBuffer.parentNode));
   }
 
   moveViewLast(view: View, bottomBuffer: Element): void {
-    insertBeforeNode(view, bottomBuffer.parentNode);
+    let previousSibling = bottomBuffer.parentNode.previousSibling;
+    let referenceNode = previousSibling.nodeType === 8 && previousSibling.data === 'anchor' ? previousSibling : bottomBuffer.parentNode;
+    insertBeforeNode(view, referenceNode);
   }
 
   createTopBufferElement(element: Element): Element {
