@@ -75,6 +75,7 @@ export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
     this._fixedHeightContainer = false;
     this._hasCalculatedSizes = false;
     this._isAtTop = true;
+    this._calledGetMore = false;
 
     _initDefineProp(this, 'items', _descriptor, this);
 
@@ -235,6 +236,7 @@ export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
       this._lastRebind = this._first;
       let movedViewsCount = this._moveViews(viewsToMove);
       let adjustHeight = movedViewsCount < viewsToMove ? this._bottomBufferHeight : itemHeight * movedViewsCount;
+      this._getMore();
       this._switchedDirection = false;
       this._topBufferHeight = this._topBufferHeight + adjustHeight;
       this._bottomBufferHeight = this._bottomBufferHeight - adjustHeight;
@@ -265,6 +267,37 @@ export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
     this._previousFirst = this._first;
 
     this._ticking = false;
+  }
+
+  _getMore() {
+    if (this.isLastIndex) {
+      if (!this._calledGetMore) {
+        let getMoreFunc = this.view(0).firstChild.getAttribute('virtual-repeat-next');
+        if (!getMoreFunc) {
+          return;
+        }
+        let getMore = this.scope.overrideContext.bindingContext[getMoreFunc];
+
+        this.observerLocator.taskQueue.queueMicroTask(() => {
+          this._calledGetMore = true;
+          if (getMore instanceof Promise) {
+            return getMore.then(() => {
+              this._calledGetMore = false;
+            });
+          } else if (typeof getMore === 'function') {
+              let result = getMore.bind(this.scope.overrideContext.bindingContext)();
+              if (result instanceof Promise) {
+                return result.then(() => {
+                  this._calledGetMore = false;
+                });
+              } else {
+                  this._calledGetMore = false;
+                  return;
+                }
+            }
+        });
+      }
+    }
   }
 
   _checkScrolling() {

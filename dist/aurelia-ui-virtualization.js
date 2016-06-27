@@ -1,5 +1,5 @@
+import {customAttribute,View,BoundViewFactory,ViewSlot,ViewResources,TargetInstruction,bindable,templateController} from 'aurelia-templating';
 import {updateOverrideContext,ArrayRepeatStrategy,createFullOverrideContext,RepeatStrategyLocator,AbstractRepeater,getItemsSourceExpression,isOneTime,unwrapExpression,updateOneTimeBinding,viewsRequireLifecycle} from 'aurelia-templating-resources';
-import {View,BoundViewFactory,ViewSlot,ViewResources,TargetInstruction,customAttribute,bindable,templateController} from 'aurelia-templating';
 import {DOM} from 'aurelia-pal';
 import {inject} from 'aurelia-dependency-injection';
 import {ObserverLocator} from 'aurelia-binding';
@@ -18,6 +18,23 @@ export class DomHelper {
     let style = element.style;
     return style.overflowY === 'scroll' || style.overflow === 'scroll' || style.overflowY === 'auto' || style.overflow === 'auto';
   }
+}
+
+//Placeholder attribute to prohibit use of this attribute name in other places
+
+@customAttribute('virtual-repeat-next')
+export class VirtualRepeatNext {
+
+    constructor(){
+    }
+
+    attached(){
+    }
+
+    bind(bindingContext, overrideContext): void {
+      this.scope = { bindingContext, overrideContext };
+    }
+
 }
 
 export function calcOuterHeight(element: Element): number {
@@ -393,11 +410,13 @@ export class TableStrategy {
   }
 
   moveViewFirst(view: View, topBuffer: Element): void {
-    insertBeforeNode(view, DOM.nextElementSibling(topBuffer.parentNode).previousSibling);
+    insertBeforeNode(view, DOM.nextElementSibling(topBuffer.parentNode));
   }
 
   moveViewLast(view: View, bottomBuffer: Element): void {
-    insertBeforeNode(view, bottomBuffer.parentNode);
+    let previousSibling = bottomBuffer.parentNode.previousSibling;
+    let referenceNode = previousSibling.nodeType === 8 && previousSibling.data === 'anchor' ? previousSibling : bottomBuffer.parentNode;
+    insertBeforeNode(view, referenceNode);
   }
 
   createTopBufferElement(element: Element): Element {
@@ -507,6 +526,7 @@ export class VirtualRepeat extends AbstractRepeater {
   _fixedHeightContainer = false;
   _hasCalculatedSizes = false;
   _isAtTop = true;
+  _calledGetMore = false;
 
   @bindable items
   @bindable local
@@ -686,6 +706,7 @@ export class VirtualRepeat extends AbstractRepeater {
       this._lastRebind = this._first;
       let movedViewsCount = this._moveViews(viewsToMove);
       let adjustHeight = movedViewsCount < viewsToMove ? this._bottomBufferHeight : itemHeight * movedViewsCount;
+      this._getMore();
       this._switchedDirection = false;
       this._topBufferHeight = this._topBufferHeight + adjustHeight;
       this._bottomBufferHeight = this._bottomBufferHeight - adjustHeight;
@@ -716,6 +737,38 @@ export class VirtualRepeat extends AbstractRepeater {
     this._previousFirst = this._first;
 
     this._ticking = false;
+  }
+
+  _getMore(): void{
+      if(this.isLastIndex){
+            if(!this._calledGetMore){
+                let getMoreFunc = this.view(0).firstChild.getAttribute('virtual-repeat-next');
+                if(!getMoreFunc){
+                    //break down the boogie
+                    return;
+                }
+                let getMore = this.scope.overrideContext.bindingContext[getMoreFunc];
+
+                this.observerLocator.taskQueue.queueMicroTask(() =>{
+                    this._calledGetMore = true;
+                    if(getMore instanceof Promise){
+                        return getMore.then(() => {
+                            this._calledGetMore = false; //Reset for the next time
+                        })
+                    } else if (typeof getMore === 'function'){
+                        let result = getMore.bind(this.scope.overrideContext.bindingContext)();
+                        if(result instanceof Promise){
+                            return result.then(() => {
+                                this._calledGetMore = false; //Reset for the next time
+                            })
+                        } else {
+                            this._calledGetMore = false; //Reset for the next time
+                            return;
+                        }
+                    }
+                });
+            }
+        }
   }
 
   _checkScrolling(): void {

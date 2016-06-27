@@ -1,4 +1,14 @@
 import {
+  customAttribute,
+  View,
+  BoundViewFactory,
+  ViewSlot,
+  ViewResources,
+  TargetInstruction,
+  bindable,
+  templateController
+} from 'aurelia-templating';
+import {
   updateOverrideContext,
   ArrayRepeatStrategy,
   createFullOverrideContext,
@@ -10,16 +20,6 @@ import {
   updateOneTimeBinding,
   viewsRequireLifecycle
 } from 'aurelia-templating-resources';
-import {
-  View,
-  BoundViewFactory,
-  ViewSlot,
-  ViewResources,
-  TargetInstruction,
-  customAttribute,
-  bindable,
-  templateController
-} from 'aurelia-templating';
 import {
   DOM
 } from 'aurelia-pal';
@@ -42,6 +42,13 @@ export declare interface TemplateStrategy {
 export declare class DomHelper {
   getElementDistanceToTopOfDocument(element: Element): number;
   hasOverflowScroll(element: Element): boolean;
+}
+
+//Placeholder attribute to prohibit use of this attribute name in other places
+export declare class VirtualRepeatNext {
+  constructor();
+  attached(): any;
+  bind(bindingContext?: any, overrideContext?: any): void;
 }
 export declare function calcOuterHeight(element: Element): number;
 export declare function insertBeforeNode(view: View, bottomBuffer: number): void;

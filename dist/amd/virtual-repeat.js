@@ -6,6 +6,12 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
   });
   exports.VirtualRepeat = undefined;
 
+  var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
+    return typeof obj;
+  } : function (obj) {
+    return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj;
+  };
+
   function _initDefineProp(target, property, descriptor, context) {
     if (!descriptor) return;
     Object.defineProperty(target, property, {
@@ -103,6 +109,7 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
       _this._fixedHeightContainer = false;
       _this._hasCalculatedSizes = false;
       _this._isAtTop = true;
+      _this._calledGetMore = false;
 
       _initDefineProp(_this, 'items', _descriptor, _this);
 
@@ -276,6 +283,7 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
         this._lastRebind = this._first;
         var movedViewsCount = this._moveViews(viewsToMove);
         var adjustHeight = movedViewsCount < viewsToMove ? this._bottomBufferHeight : itemHeight * movedViewsCount;
+        this._getMore();
         this._switchedDirection = false;
         this._topBufferHeight = this._topBufferHeight + adjustHeight;
         this._bottomBufferHeight = this._bottomBufferHeight - adjustHeight;
@@ -306,6 +314,45 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
       this._previousFirst = this._first;
 
       this._ticking = false;
+    };
+
+    VirtualRepeat.prototype._getMore = function _getMore() {
+      var _this5 = this;
+
+      if (this.isLastIndex) {
+        if (!this._calledGetMore) {
+          var _ret = function () {
+            var getMoreFunc = _this5.view(0).firstChild.getAttribute('virtual-repeat-next');
+            if (!getMoreFunc) {
+              return {
+                v: void 0
+              };
+            }
+            var getMore = _this5.scope.overrideContext.bindingContext[getMoreFunc];
+
+            _this5.observerLocator.taskQueue.queueMicroTask(function () {
+              _this5._calledGetMore = true;
+              if (getMore instanceof Promise) {
+                return getMore.then(function () {
+                  _this5._calledGetMore = false;
+                });
+              } else if (typeof getMore === 'function') {
+                  var result = getMore.bind(_this5.scope.overrideContext.bindingContext)();
+                  if (result instanceof Promise) {
+                    return result.then(function () {
+                      _this5._calledGetMore = false;
+                    });
+                  } else {
+                      _this5._calledGetMore = false;
+                      return;
+                    }
+                }
+            });
+          }();
+
+          if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
+        }
+      }
     };
 
     VirtualRepeat.prototype._checkScrolling = function _checkScrolling() {
@@ -346,7 +393,7 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
     };
 
     VirtualRepeat.prototype._moveViews = function _moveViews(length) {
-      var _this5 = this;
+      var _this6 = this;
 
       var getNextIndex = this._scrollingDown ? function (index, i) {
         return index + i;
@@ -354,7 +401,7 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
         return index - i;
       };
       var isAtFirstOrLastIndex = function isAtFirstOrLastIndex() {
-        return _this5._scrollingDown ? _this5.isLastIndex : _this5._isAtTop;
+        return _this6._scrollingDown ? _this6.isLastIndex : _this6._isAtTop;
       };
       var childrenLength = this.viewCount();
       var viewIndex = this._scrollingDown ? 0 : childrenLength - 1;

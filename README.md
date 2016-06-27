@@ -86,6 +86,28 @@ With a surrounding fixed height container with overflow scroll. Note that `overf
 
 If you are running the plugin in the `skeleton-naviagion` project, make sure to remove `overflow-x: hidden;` and `overflow-y: auto;` from `.page-host` in `styles.css`.
 
+#### infinite scroll
+```html
+<template>
+  <div virtual-repeat.for="item of items" virtual-repeat-next="getMore">
+    ${$index} ${item}
+  </div>
+</template>
+```  
+
+```javascript
+export class MyVirtualList {
+    items = ['Foo', 'Bar', 'Baz'];
+    getMore() {
+        for(let i = 0; i < 100; ++i) {
+            this.items.push('item' + i);
+        }
+    }
+}
+```  
+The `virtual-repeat-next` attribute can accept a function, a promise, or a function that returns a promise.  
+The bound function will be called when the scroll container has reached a point where there are no more items to move into the DOM (i.e. when it reaches the end of a list).
+
 ## [Demo](http://aurelia.io/ui-virtualization/)
 
 ## Platform Support

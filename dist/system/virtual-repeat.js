@@ -3,7 +3,7 @@
 System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-templating', 'aurelia-templating-resources', 'aurelia-pal', './utilities', './dom-helper', './virtual-repeat-strategy-locator', './template-strategy'], function (_export, _context) {
   "use strict";
 
-  var inject, ObserverLocator, BoundViewFactory, ViewSlot, ViewResources, TargetInstruction, customAttribute, bindable, templateController, View, AbstractRepeater, getItemsSourceExpression, isOneTime, unwrapExpression, updateOneTimeBinding, viewsRequireLifecycle, DOM, getStyleValue, calcOuterHeight, rebindAndMoveView, DomHelper, VirtualRepeatStrategyLocator, TemplateStrategyLocator, _dec, _dec2, _class, _desc, _value, _class2, _descriptor, _descriptor2, VirtualRepeat;
+  var inject, ObserverLocator, BoundViewFactory, ViewSlot, ViewResources, TargetInstruction, customAttribute, bindable, templateController, View, AbstractRepeater, getItemsSourceExpression, isOneTime, unwrapExpression, updateOneTimeBinding, viewsRequireLifecycle, DOM, getStyleValue, calcOuterHeight, rebindAndMoveView, DomHelper, VirtualRepeatStrategyLocator, TemplateStrategyLocator, _typeof, _dec, _dec2, _class, _desc, _value, _class2, _descriptor, _descriptor2, VirtualRepeat;
 
   function _initDefineProp(target, property, descriptor, context) {
     if (!descriptor) return;
@@ -109,6 +109,12 @@ System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-tem
       TemplateStrategyLocator = _templateStrategy.TemplateStrategyLocator;
     }],
     execute: function () {
+      _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
+        return typeof obj;
+      } : function (obj) {
+        return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj;
+      };
+
       _export('VirtualRepeat', VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = inject(DOM.Element, BoundViewFactory, TargetInstruction, ViewSlot, ViewResources, ObserverLocator, VirtualRepeatStrategyLocator, TemplateStrategyLocator, DomHelper), _dec(_class = templateController(_class = _dec2(_class = (_class2 = function (_AbstractRepeater) {
         _inherits(VirtualRepeat, _AbstractRepeater);
 
@@ -135,6 +141,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-tem
           _this._fixedHeightContainer = false;
           _this._hasCalculatedSizes = false;
           _this._isAtTop = true;
+          _this._calledGetMore = false;
 
           _initDefineProp(_this, 'items', _descriptor, _this);
 
@@ -308,6 +315,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-tem
             this._lastRebind = this._first;
             var movedViewsCount = this._moveViews(viewsToMove);
             var adjustHeight = movedViewsCount < viewsToMove ? this._bottomBufferHeight : itemHeight * movedViewsCount;
+            this._getMore();
             this._switchedDirection = false;
             this._topBufferHeight = this._topBufferHeight + adjustHeight;
             this._bottomBufferHeight = this._bottomBufferHeight - adjustHeight;
@@ -338,6 +346,45 @@ System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-tem
           this._previousFirst = this._first;
 
           this._ticking = false;
+        };
+
+        VirtualRepeat.prototype._getMore = function _getMore() {
+          var _this5 = this;
+
+          if (this.isLastIndex) {
+            if (!this._calledGetMore) {
+              var _ret = function () {
+                var getMoreFunc = _this5.view(0).firstChild.getAttribute('virtual-repeat-next');
+                if (!getMoreFunc) {
+                  return {
+                    v: void 0
+                  };
+                }
+                var getMore = _this5.scope.overrideContext.bindingContext[getMoreFunc];
+
+                _this5.observerLocator.taskQueue.queueMicroTask(function () {
+                  _this5._calledGetMore = true;
+                  if (getMore instanceof Promise) {
+                    return getMore.then(function () {
+                      _this5._calledGetMore = false;
+                    });
+                  } else if (typeof getMore === 'function') {
+                      var result = getMore.bind(_this5.scope.overrideContext.bindingContext)();
+                      if (result instanceof Promise) {
+                        return result.then(function () {
+                          _this5._calledGetMore = false;
+                        });
+                      } else {
+                          _this5._calledGetMore = false;
+                          return;
+                        }
+                    }
+                });
+              }();
+
+              if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
+            }
+          }
         };
 
         VirtualRepeat.prototype._checkScrolling = function _checkScrolling() {
@@ -378,7 +425,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-tem
         };
 
         VirtualRepeat.prototype._moveViews = function _moveViews(length) {
-          var _this5 = this;
+          var _this6 = this;
 
           var getNextIndex = this._scrollingDown ? function (index, i) {
             return index + i;
@@ -386,7 +433,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-tem
             return index - i;
           };
           var isAtFirstOrLastIndex = function isAtFirstOrLastIndex() {
-            return _this5._scrollingDown ? _this5.isLastIndex : _this5._isAtTop;
+            return _this6._scrollingDown ? _this6.isLastIndex : _this6._isAtTop;
           };
           var childrenLength = this.viewCount();
           var viewIndex = this._scrollingDown ? 0 : childrenLength - 1;

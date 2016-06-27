@@ -63,6 +63,50 @@ describe('VirtualRepeat Integration', () => {
     }
   }
 
+  function validateScrolledState() {
+    let views = virtualRepeat.viewSlot.children;
+    let expectedHeight = viewModel.items.length * itemHeight;
+    let topBufferHeight = virtualRepeat.topBuffer.getBoundingClientRect().height;
+    let bottomBufferHeight = virtualRepeat.bottomBuffer.getBoundingClientRect().height;
+    let renderedItemsHeight = views.length * itemHeight;
+    expect(topBufferHeight + renderedItemsHeight + bottomBufferHeight).toBe(expectedHeight);
+
+    if(viewModel.items.length > views.length) {
+      expect(topBufferHeight + bottomBufferHeight).toBeGreaterThan(0);
+    }
+
+    // validate contextual data
+    let startingLoc = viewModel.items.indexOf(views[0].bindingContext.item);
+    for (let i = startingLoc; i < views.length; i++) {
+      expect(views[i].bindingContext.item).toBe(viewModel.items[i]);
+      let overrideContext = views[i].overrideContext;
+      expect(overrideContext.parentOverrideContext.bindingContext).toBe(viewModel);
+      expect(overrideContext.bindingContext).toBe(views[i].bindingContext);
+      let first = i === 0;
+      let last = i === viewModel.items.length - 1;
+      let even = i % 2 === 0;
+      expect(overrideContext.$index).toBe(i);
+      expect(overrideContext.$first).toBe(first);
+      expect(overrideContext.$last).toBe(last);
+      expect(overrideContext.$middle).toBe(!first && !last);
+      expect(overrideContext.$odd).toBe(!even);
+      expect(overrideContext.$even).toBe(even);
+    }
+  }
+
+  function validateScroll(done) {
+      let elem = document.getElementById('scrollContainer');
+      let event = new Event('scroll');
+      elem.scrollTop = elem.scrollHeight;
+      elem.dispatchEvent(event);
+      window.setTimeout(()=>{
+          window.requestAnimationFrame(() => {
+              validateScrolledState();
+              done();
+          });
+      });
+  }
+
   function validatePush(done) {
     viewModel.items.push('Foo');
     nq(() => validateState());
@@ -309,4 +353,60 @@ describe('VirtualRepeat Integration', () => {
       create.then(() => validateSplice(done));
     });
   });
+
+  describe('infinite scroll', () =>{
+      let vm;
+      beforeEach(() => {
+        items = [];
+        vm = {
+            items: items,
+            getNextPage: function(){
+              let itemLength = this.items.length;
+              for(let i = 0; i < 100; ++i) {
+                  let itemNum = itemLength + i;
+                  this.items.push('item' + itemNum);
+              }
+            }
+        };
+        for(let i = 0; i < 1000; ++i) {
+          items.push('item' + i);
+        }
+
+        spyOn(vm, 'getNextPage').and.callThrough();
+
+        component = StageComponent
+          .withResources(['src/virtual-repeat', 'src/virtual-repeat-next'])
+          .inView(`<div id="scrollContainer" style="height: 500px; overflow-y: scroll">
+                        <div style="height: ${itemHeight}px;" virtual-repeat.for="item of items" virtual-repeat-next="getNextPage">\${item}</div>
+                    </div>`)
+          .boundTo(vm);
+
+        create = component.create().then(() => {
+          virtualRepeat = component.sut;
+          viewModel = component.viewModel;
+          spyOn(virtualRepeat, '_onScroll').and.callThrough();
+        });
+      });
+
+      afterEach(() => {
+        component.cleanUp();
+      });
+
+      it('handles scrolling', done => {
+          create.then(() => {
+              validateScroll(() => {
+                  expect(virtualRepeat._onScroll).toHaveBeenCalled();
+                  done();
+              })
+          });
+      })
+      it('handles getting next data set', done => {
+          create.then(() => {
+              validateScroll(() => {
+                  expect(vm.getNextPage).toHaveBeenCalled();
+                  done();
+              })
+          });
+      })
+  })
 });
