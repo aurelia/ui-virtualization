@@ -122,6 +122,11 @@
   },
   "aurelia": {
     "usedBy": [],
+    "build": {
+      "resources": [
+        "virtual-repeat"
+      ]
+    },
     "documentation": {
       "links": [
         {
