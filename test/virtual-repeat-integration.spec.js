@@ -461,8 +461,11 @@ describe('VirtualRepeat Integration', () => {
       it('handles getting next data set scrolling up', done => {
         create.then(() => {
             validateScrollUp(() => {
-                expect(vm.getNextPage).toHaveBeenCalledWith(0, false, true);
-                done();
+              var args = vm.getNextPage.calls.argsFor(0);
+              expect(args[0]).toEqual(0);
+              expect(args[1]).toBe(false);
+              expect(args[2]).toBe(true);
+              done();
             });
         });
       });
@@ -478,8 +481,13 @@ describe('VirtualRepeat Integration', () => {
       it('passes the current index and location state', done => {
         create.then(() => {
             validateScroll(() => {
-                expect(vm.getNextPage).toHaveBeenCalledWith(989, true, false);
-                done();
+              //Taking into account 1 index difference due to default styles on browsers causing small margins of error
+              var args = vm.getNextPage.calls.argsFor(0);
+              expect(args[0]).toBeGreaterThan(988);
+              expect(args[0]).toBeLessThan(991);
+              expect(args[1]).toBe(true);
+              expect(args[2]).toBe(false);
+              done();
             })
         });
       })
