@@ -356,6 +356,11 @@ describe('VirtualRepeat Integration', () => {
 
   describe('infinite scroll', () =>{
       let vm;
+      let promisedVm;
+      let promisedComponent;
+      let promisedCreate;
+      let promisedVirtualRepeat;
+      let promisedViewModel;
       beforeEach(() => {
         items = [];
         vm = {
@@ -366,6 +371,20 @@ describe('VirtualRepeat Integration', () => {
                   let itemNum = itemLength + i;
                   this.items.push('item' + itemNum);
               }
+            }
+        };
+        promisedVm = {
+            items: items,
+            getNextPage: function(){
+              console.log('here');
+              return new Promise((resolve, reject) => {
+                let itemLength = this.items.length;
+                for(let i = 0; i < 100; ++i) {
+                    let itemNum = itemLength + i;
+                    this.items.push('item' + itemNum);
+                }
+                resolve(true);
+              });
             }
         };
         for(let i = 0; i < 1000; ++i) {
@@ -380,16 +399,27 @@ describe('VirtualRepeat Integration', () => {
                         <div style="height: ${itemHeight}px;" virtual-repeat.for="item of items" virtual-repeat-next="getNextPage">\${item}</div>
                     </div>`)
           .boundTo(vm);
+        promisedComponent = StageComponent
+          .withResources(['src/virtual-repeat', 'src/virtual-repeat-next'])
+          .inView(`<div id="scrollContainer" style="height: 500px; overflow-y: scroll">
+                        <div style="height: ${itemHeight}px;" virtual-repeat.for="item of items" virtual-repeat-next="getNextPage">\${item}</div>
+                    </div>`)
+          .boundTo(promisedVm);
 
         create = component.create().then(() => {
           virtualRepeat = component.sut;
           viewModel = component.viewModel;
           spyOn(virtualRepeat, '_onScroll').and.callThrough();
         });
+        promisedCreate = promisedComponent.create().then(() => {
+          promisedVirtualRepeat = promisedComponent.sut;
+          promisedViewModel = promisedComponent.viewModel;
+        });
       });
 
       afterEach(() => {
         component.cleanUp();
+        promisedComponent.cleanUp();
       });
 
       it('handles scrolling', done => {
@@ -399,7 +429,7 @@ describe('VirtualRepeat Integration', () => {
                   done();
               })
           });
-      })
+      });
       it('handles getting next data set', done => {
           create.then(() => {
               validateScroll(() => {
@@ -407,6 +437,16 @@ describe('VirtualRepeat Integration', () => {
                   done();
               })
           });
-      })
+      });
+      it('handles getting next data set with promises', done => {
+          promisedCreate.then(() => {
+              validateScroll(() => {
+                //Jasmine spies seem to not be working with returned promises and getting the instance of them, causing regular checks on getNextPage to fail
+                expect(promisedVm.items.length).toBe(1100);
+                done();
+              })
+          });
+      });
+
   })
 });
