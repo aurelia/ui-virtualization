@@ -227,7 +227,9 @@ export class VirtualRepeat extends AbstractRepeater {
       this._lastRebind = this._first;
       let movedViewsCount = this._moveViews(viewsToMove);
       let adjustHeight = movedViewsCount < viewsToMove ? this._bottomBufferHeight : itemHeight * movedViewsCount;
-      this._getMore();
+      if (viewsToMove > 0) {
+        this._getMore();
+      }
       this._switchedDirection = false;
       this._topBufferHeight = this._topBufferHeight + adjustHeight;
       this._bottomBufferHeight = this._bottomBufferHeight - adjustHeight;
@@ -248,6 +250,9 @@ export class VirtualRepeat extends AbstractRepeater {
       let movedViewsCount = this._moveViews(viewsToMove);
       this.movedViewsCount = movedViewsCount;
       let adjustHeight = movedViewsCount < viewsToMove ? this._topBufferHeight : itemHeight * movedViewsCount;
+      if (viewsToMove > 0) {
+        this._getMore();
+      }
       this._switchedDirection = false;
       this._topBufferHeight = this._topBufferHeight - adjustHeight;
       this._bottomBufferHeight = this._bottomBufferHeight + adjustHeight;
@@ -261,7 +266,7 @@ export class VirtualRepeat extends AbstractRepeater {
   }
 
   _getMore(): void {
-    if (this.isLastIndex) {
+    if (this.isLastIndex || this._first === 0) {
       if (!this._calledGetMore) {
         let getMoreFunc = this.view(0).firstChild.getAttribute('virtual-repeat-next');
         if (!getMoreFunc) {
@@ -275,7 +280,7 @@ export class VirtualRepeat extends AbstractRepeater {
               this._calledGetMore = false; //Reset for the next time
             });
           } else if (typeof getMore === 'function') {
-            let result = getMore.bind(this.scope.overrideContext.bindingContext)();
+            let result = getMore.bind(this.scope.overrideContext.bindingContext)(this._first, this._bottomBufferHeight === 0, this._isAtTop);
             if (!(result instanceof Promise)) {
               this._calledGetMore = false; //Reset for the next time
             } else {

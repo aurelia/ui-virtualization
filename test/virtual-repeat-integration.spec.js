@@ -107,6 +107,26 @@ describe('VirtualRepeat Integration', () => {
       });
   }
 
+  function validateScrollUp(done) {
+      let elem = document.getElementById('scrollContainer');
+      let event = new Event('scroll');
+      elem.scrollTop = elem.scrollHeight/2; //Scroll down but not far enough to reach bottom and call 'getNext'
+      elem.dispatchEvent(event);
+      window.setTimeout(()=>{
+          window.requestAnimationFrame(() => {
+            let eventUp = new Event('scroll');
+            elem.scrollTop = 0;
+            elem.dispatchEvent(eventUp);
+            window.setTimeout(()=>{
+                window.requestAnimationFrame(() => {
+                  validateScrolledState();
+                  done();
+                });
+            });
+          });
+      });
+  }
+
   function validatePush(done) {
     viewModel.items.push('Foo');
     nq(() => validateState());
@@ -438,6 +458,14 @@ describe('VirtualRepeat Integration', () => {
               })
           });
       });
+      it('handles getting next data set scrolling up', done => {
+        create.then(() => {
+            validateScrollUp(() => {
+                expect(vm.getNextPage).toHaveBeenCalledWith(0, false, true);
+                done();
+            });
+        });
+      });
       it('handles getting next data set with promises', done => {
           promisedCreate.then(() => {
               validateScroll(() => {
@@ -447,6 +475,13 @@ describe('VirtualRepeat Integration', () => {
               })
           });
       });
-
+      it('passes the current index and location state', done => {
+        create.then(() => {
+            validateScroll(() => {
+                expect(vm.getNextPage).toHaveBeenCalledWith(989, true, false);
+                done();
+            })
+        });
+      })
   })
 });
