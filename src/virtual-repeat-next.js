@@ -5,14 +5,12 @@ import {customAttribute} from 'aurelia-templating';
 @customAttribute('virtual-repeat-next')
 export class VirtualRepeatNext {
 
-    constructor(){
-    }
+  constructor() {}
 
-    attached(){
-    }
+  attached() {}
 
-    bind(bindingContext, overrideContext): void {
-      this.scope = { bindingContext, overrideContext };
-    }
+  bind(bindingContext, overrideContext): void {
+    this.scope = { bindingContext, overrideContext };
+  }
 
 }

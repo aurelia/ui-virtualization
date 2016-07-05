@@ -260,36 +260,36 @@ export class VirtualRepeat extends AbstractRepeater {
     this._ticking = false;
   }
 
-  _getMore(): void{
-      if(this.isLastIndex){
-            if(!this._calledGetMore){
-                let getMoreFunc = this.view(0).firstChild.getAttribute('virtual-repeat-next');
-                if(!getMoreFunc){
-                    //break down the boogie
-                    return;
-                }
-                let getMore = this.scope.overrideContext.bindingContext[getMoreFunc];
-
-                this.observerLocator.taskQueue.queueMicroTask(() =>{
-                    this._calledGetMore = true;
-                    if(getMore instanceof Promise){
-                        return getMore.then(() => {
-                            this._calledGetMore = false; //Reset for the next time
-                        })
-                    } else if (typeof getMore === 'function'){
-                        let result = getMore.bind(this.scope.overrideContext.bindingContext)();
-                        if(result instanceof Promise){
-                            return result.then(() => {
-                                this._calledGetMore = false; //Reset for the next time
-                            })
-                        } else {
-                            this._calledGetMore = false; //Reset for the next time
-                            return;
-                        }
-                    }
-                });
-            }
+  _getMore(): void {
+    if (this.isLastIndex) {
+      if (!this._calledGetMore) {
+        let getMoreFunc = this.view(0).firstChild.getAttribute('virtual-repeat-next');
+        if (!getMoreFunc) {
+          return;
         }
+        let getMore = this.scope.overrideContext.bindingContext[getMoreFunc];
+        let executeGetMore = () => {
+          this._calledGetMore = true;
+          if (getMore instanceof Promise) {
+            return getMore.then(() => {
+              this._calledGetMore = false; //Reset for the next time
+            });
+          } else if (typeof getMore === 'function') {
+            let result = getMore.bind(this.scope.overrideContext.bindingContext)();
+            if (!(result instanceof Promise)) {
+              this._calledGetMore = false; //Reset for the next time
+            } else {
+              return result.then(() => {
+                this._calledGetMore = false; //Reset for the next time
+              });
+            }
+          }
+          return null;
+        };
+
+        this.observerLocator.taskQueue.queueMicroTask(executeGetMore);
+      }
+    }
   }
 
   _checkScrolling(): void {
