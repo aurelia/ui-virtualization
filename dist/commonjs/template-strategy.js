@@ -51,11 +51,13 @@ var TableStrategy = exports.TableStrategy = function () {
   };
 
   TableStrategy.prototype.moveViewFirst = function moveViewFirst(view, topBuffer) {
-    (0, _utilities.insertBeforeNode)(view, _aureliaPal.DOM.nextElementSibling(topBuffer.parentNode).previousSibling);
+    (0, _utilities.insertBeforeNode)(view, _aureliaPal.DOM.nextElementSibling(topBuffer.parentNode));
   };
 
   TableStrategy.prototype.moveViewLast = function moveViewLast(view, bottomBuffer) {
-    (0, _utilities.insertBeforeNode)(view, bottomBuffer.parentNode);
+    var previousSibling = bottomBuffer.parentNode.previousSibling;
+    var referenceNode = previousSibling.nodeType === 8 && previousSibling.data === 'anchor' ? previousSibling : bottomBuffer.parentNode;
+    (0, _utilities.insertBeforeNode)(view, referenceNode);
   };
 
   TableStrategy.prototype.createTopBufferElement = function createTopBufferElement(element) {

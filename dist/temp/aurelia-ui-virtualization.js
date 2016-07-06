@@ -465,11 +465,13 @@ var TableStrategy = exports.TableStrategy = function () {
   };
 
   TableStrategy.prototype.moveViewFirst = function moveViewFirst(view, topBuffer) {
-    insertBeforeNode(view, _aureliaPal.DOM.nextElementSibling(topBuffer.parentNode).previousSibling);
+    insertBeforeNode(view, _aureliaPal.DOM.nextElementSibling(topBuffer.parentNode));
   };
 
   TableStrategy.prototype.moveViewLast = function moveViewLast(view, bottomBuffer) {
-    insertBeforeNode(view, bottomBuffer.parentNode);
+    var previousSibling = bottomBuffer.parentNode.previousSibling;
+    var referenceNode = previousSibling.nodeType === 8 && previousSibling.data === 'anchor' ? previousSibling : bottomBuffer.parentNode;
+    insertBeforeNode(view, referenceNode);
   };
 
   TableStrategy.prototype.createTopBufferElement = function createTopBufferElement(element) {

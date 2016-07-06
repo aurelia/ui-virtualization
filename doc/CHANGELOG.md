@@ -1,3 +1,13 @@
+<a name="1.0.0-beta.1.0.1"></a>
+# [1.0.0-beta.1.0.1](https://github.com/aurelia/ui-virtualization/compare/1.0.0-beta.1.0.0...v1.0.0-beta.1.0.1) (2016-07-06)
+
+
+### Bug Fixes
+
+* **template-strategy:** move views correctly ([5b5e6e6](https://github.com/aurelia/ui-virtualization/commit/5b5e6e6)), closes [#68](https://github.com/aurelia/ui-virtualization/issues/68)
+
+
+
 <a name="1.0.0-beta.1.0.0"></a>
 # [1.0.0-beta.1.0.0](https://github.com/aurelia/ui-virtualization/compare/0.5.2...v1.0.0-beta.1.0.0) (2016-06-22)
 
