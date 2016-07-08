@@ -93,12 +93,15 @@ export class VirtualRepeat extends AbstractRepeater {
     this.calcDistanceToTopInterval = setInterval(() => {
       let distanceToTop = this.distanceToTop;
       this.distanceToTop = this.domHelper.getElementDistanceToTopOfDocument(this.topBuffer);
+      this.distanceToTop += this.topBufferDistance;
       if (distanceToTop !== this.distanceToTop) {
         this._handleScroll();
       }
     }, 500);
 
     this.distanceToTop = this.domHelper.getElementDistanceToTopOfDocument(this.templateStrategy.getFirstElement(this.topBuffer));
+    this.topBufferDistance = this.templateStrategy.getTopBufferDistance(this.topBuffer);
+
     if (this.domHelper.hasOverflowScroll(this.scrollContainer)) {
       this._fixedHeightContainer = true;
       this.scrollContainer.addEventListener('scroll', this.scrollListener);
