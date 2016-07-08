@@ -63,6 +63,70 @@ describe('VirtualRepeat Integration', () => {
     }
   }
 
+  function validateScrolledState() {
+    let views = virtualRepeat.viewSlot.children;
+    let expectedHeight = viewModel.items.length * itemHeight;
+    let topBufferHeight = virtualRepeat.topBuffer.getBoundingClientRect().height;
+    let bottomBufferHeight = virtualRepeat.bottomBuffer.getBoundingClientRect().height;
+    let renderedItemsHeight = views.length * itemHeight;
+    expect(topBufferHeight + renderedItemsHeight + bottomBufferHeight).toBe(expectedHeight);
+
+    if(viewModel.items.length > views.length) {
+      expect(topBufferHeight + bottomBufferHeight).toBeGreaterThan(0);
+    }
+
+    // validate contextual data
+    let startingLoc = viewModel.items.indexOf(views[0].bindingContext.item);
+    for (let i = startingLoc; i < views.length; i++) {
+      expect(views[i].bindingContext.item).toBe(viewModel.items[i]);
+      let overrideContext = views[i].overrideContext;
+      expect(overrideContext.parentOverrideContext.bindingContext).toBe(viewModel);
+      expect(overrideContext.bindingContext).toBe(views[i].bindingContext);
+      let first = i === 0;
+      let last = i === viewModel.items.length - 1;
+      let even = i % 2 === 0;
+      expect(overrideContext.$index).toBe(i);
+      expect(overrideContext.$first).toBe(first);
+      expect(overrideContext.$last).toBe(last);
+      expect(overrideContext.$middle).toBe(!first && !last);
+      expect(overrideContext.$odd).toBe(!even);
+      expect(overrideContext.$even).toBe(even);
+    }
+  }
+
+  function validateScroll(done) {
+      let elem = document.getElementById('scrollContainer');
+      let event = new Event('scroll');
+      elem.scrollTop = elem.scrollHeight;
+      elem.dispatchEvent(event);
+      window.setTimeout(()=>{
+          window.requestAnimationFrame(() => {
+              validateScrolledState();
+              done();
+          });
+      });
+  }
+
+  function validateScrollUp(done) {
+      let elem = document.getElementById('scrollContainer');
+      let event = new Event('scroll');
+      elem.scrollTop = elem.scrollHeight/2; //Scroll down but not far enough to reach bottom and call 'getNext'
+      elem.dispatchEvent(event);
+      window.setTimeout(()=>{
+          window.requestAnimationFrame(() => {
+            let eventUp = new Event('scroll');
+            elem.scrollTop = 0;
+            elem.dispatchEvent(eventUp);
+            window.setTimeout(()=>{
+                window.requestAnimationFrame(() => {
+                  validateScrolledState();
+                  done();
+                });
+            });
+          });
+      });
+  }
+
   function validatePush(done) {
     viewModel.items.push('Foo');
     nq(() => validateState());
@@ -309,4 +373,123 @@ describe('VirtualRepeat Integration', () => {
       create.then(() => validateSplice(done));
     });
   });
+
+  describe('infinite scroll', () =>{
+      let vm;
+      let promisedVm;
+      let promisedComponent;
+      let promisedCreate;
+      let promisedVirtualRepeat;
+      let promisedViewModel;
+      beforeEach(() => {
+        items = [];
+        vm = {
+            items: items,
+            getNextPage: function(){
+              let itemLength = this.items.length;
+              for(let i = 0; i < 100; ++i) {
+                  let itemNum = itemLength + i;
+                  this.items.push('item' + itemNum);
+              }
+            }
+        };
+        promisedVm = {
+            items: items,
+            getNextPage: function(){
+              console.log('here');
+              return new Promise((resolve, reject) => {
+                let itemLength = this.items.length;
+                for(let i = 0; i < 100; ++i) {
+                    let itemNum = itemLength + i;
+                    this.items.push('item' + itemNum);
+                }
+                resolve(true);
+              });
+            }
+        };
+        for(let i = 0; i < 1000; ++i) {
+          items.push('item' + i);
+        }
+
+        spyOn(vm, 'getNextPage').and.callThrough();
+
+        component = StageComponent
+          .withResources(['src/virtual-repeat', 'src/virtual-repeat-next'])
+          .inView(`<div id="scrollContainer" style="height: 500px; overflow-y: scroll">
+                        <div style="height: ${itemHeight}px;" virtual-repeat.for="item of items" virtual-repeat-next="getNextPage">\${item}</div>
+                    </div>`)
+          .boundTo(vm);
+        promisedComponent = StageComponent
+          .withResources(['src/virtual-repeat', 'src/virtual-repeat-next'])
+          .inView(`<div id="scrollContainer" style="height: 500px; overflow-y: scroll">
+                        <div style="height: ${itemHeight}px;" virtual-repeat.for="item of items" virtual-repeat-next="getNextPage">\${item}</div>
+                    </div>`)
+          .boundTo(promisedVm);
+
+        create = component.create().then(() => {
+          virtualRepeat = component.sut;
+          viewModel = component.viewModel;
+          spyOn(virtualRepeat, '_onScroll').and.callThrough();
+        });
+        promisedCreate = promisedComponent.create().then(() => {
+          promisedVirtualRepeat = promisedComponent.sut;
+          promisedViewModel = promisedComponent.viewModel;
+        });
+      });
+
+      afterEach(() => {
+        component.cleanUp();
+        promisedComponent.cleanUp();
+      });
+
+      it('handles scrolling', done => {
+          create.then(() => {
+              validateScroll(() => {
+                  expect(virtualRepeat._onScroll).toHaveBeenCalled();
+                  done();
+              })
+          });
+      });
+      it('handles getting next data set', done => {
+          create.then(() => {
+              validateScroll(() => {
+                  expect(vm.getNextPage).toHaveBeenCalled();
+                  done();
+              })
+          });
+      });
+      it('handles getting next data set scrolling up', done => {
+        create.then(() => {
+            validateScrollUp(() => {
+              var args = vm.getNextPage.calls.argsFor(0);
+              expect(args[0]).toEqual(0);
+              expect(args[1]).toBe(false);
+              expect(args[2]).toBe(true);
+              done();
+            });
+        });
+      });
+      it('handles getting next data set with promises', done => {
+          promisedCreate.then(() => {
+              validateScroll(() => {
+                //Jasmine spies seem to not be working with returned promises and getting the instance of them, causing regular checks on getNextPage to fail
+                expect(promisedVm.items.length).toBe(1100);
+                done();
+              })
+          });
+      });
+      it('passes the current index and location state', done => {
+        create.then(() => {
+            validateScroll(() => {
+              //Taking into account 1 index difference due to default styles on browsers causing small margins of error
+              var args = vm.getNextPage.calls.argsFor(0);
+              expect(args[0]).toBeGreaterThan(988);
+              expect(args[0]).toBeLessThan(991);
+              expect(args[1]).toBe(true);
+              expect(args[2]).toBe(false);
+              done();
+            })
+        });
+      })
+  })
 });
