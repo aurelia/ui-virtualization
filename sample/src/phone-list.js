@@ -1,4 +1,5 @@
 export class PhoneList {
+  selectedMarkup = 'div';
 
   constructor() {
     this.objectArray = [];
@@ -6,7 +7,6 @@ export class PhoneList {
     this.numberOfItems = 100;
     this.isSelected = false;
     this.isVisible = true;
-    this.viewStrategy = 'div';
   }
 
   setViewStrategy(strategy){
@@ -67,8 +67,10 @@ export class PhoneList {
     this.objectArray.splice(1, 0, item);
   }
 
-  addItemFirst(){
-    this.objectArray.unshift(this.createItem());
+  addItemFirst(count = 10){
+    for(let i = 0; i < count; ++i) {
+      this.objectArray.unshift(this.createItem());
+    }
   }
 
   removeItems(count){
