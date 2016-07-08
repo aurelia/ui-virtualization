@@ -47,6 +47,7 @@ export class VirtualRepeat extends AbstractRepeater {
   _fixedHeightContainer = false;
   _hasCalculatedSizes = false;
   _isAtTop = true;
+  _calledGetMore = false;
 
   @bindable items
   @bindable local
@@ -226,6 +227,9 @@ export class VirtualRepeat extends AbstractRepeater {
       this._lastRebind = this._first;
       let movedViewsCount = this._moveViews(viewsToMove);
       let adjustHeight = movedViewsCount < viewsToMove ? this._bottomBufferHeight : itemHeight * movedViewsCount;
+      if (viewsToMove > 0) {
+        this._getMore();
+      }
       this._switchedDirection = false;
       this._topBufferHeight = this._topBufferHeight + adjustHeight;
       this._bottomBufferHeight = this._bottomBufferHeight - adjustHeight;
@@ -246,6 +250,9 @@ export class VirtualRepeat extends AbstractRepeater {
       let movedViewsCount = this._moveViews(viewsToMove);
       this.movedViewsCount = movedViewsCount;
       let adjustHeight = movedViewsCount < viewsToMove ? this._topBufferHeight : itemHeight * movedViewsCount;
+      if (viewsToMove > 0) {
+        this._getMore();
+      }
       this._switchedDirection = false;
       this._topBufferHeight = this._topBufferHeight - adjustHeight;
       this._bottomBufferHeight = this._bottomBufferHeight + adjustHeight;
@@ -256,6 +263,38 @@ export class VirtualRepeat extends AbstractRepeater {
     this._previousFirst = this._first;
 
     this._ticking = false;
+  }
+
+  _getMore(): void {
+    if (this.isLastIndex || this._first === 0) {
+      if (!this._calledGetMore) {
+        let getMoreFunc = this.view(0).firstChild.getAttribute('virtual-repeat-next');
+        if (!getMoreFunc) {
+          return;
+        }
+        let getMore = this.scope.overrideContext.bindingContext[getMoreFunc];
+        let executeGetMore = () => {
+          this._calledGetMore = true;
+          if (getMore instanceof Promise) {
+            return getMore.then(() => {
+              this._calledGetMore = false; //Reset for the next time
+            });
+          } else if (typeof getMore === 'function') {
+            let result = getMore.bind(this.scope.overrideContext.bindingContext)(this._first, this._bottomBufferHeight === 0, this._isAtTop);
+            if (!(result instanceof Promise)) {
+              this._calledGetMore = false; //Reset for the next time
+            } else {
+              return result.then(() => {
+                this._calledGetMore = false; //Reset for the next time
+              });
+            }
+          }
+          return null;
+        };
+
+        this.observerLocator.taskQueue.queueMicroTask(executeGetMore);
+      }
+    }
   }
 
   _checkScrolling(): void {
