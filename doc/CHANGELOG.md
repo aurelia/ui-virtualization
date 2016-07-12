@@ -1,3 +1,20 @@
+<a name="1.0.0-beta.1.0.2"></a>
+# [1.0.0-beta.1.0.2](https://github.com/aurelia/ui-virtualization/compare/1.0.0-beta.1.0.1...v1.0.0-beta.1.0.2) (2016-07-12)
+
+
+### Bug Fixes
+
+* **dist:** restore release dist folder ([45f74be](https://github.com/aurelia/ui-virtualization/commit/45f74be))
+* **table-strategy:** move buffer elements outside of table ([1fe64a6](https://github.com/aurelia/ui-virtualization/commit/1fe64a6)), closes [#46](https://github.com/aurelia/ui-virtualization/issues/46)
+
+
+### Features
+
+* **all:** support infinite scroll ([9a3b965](https://github.com/aurelia/ui-virtualization/commit/9a3b965))
+* **virtual-repeat:** pass location state to scroll callback ([29418bf](https://github.com/aurelia/ui-virtualization/commit/29418bf))
+
+
+
 <a name="1.0.0-beta.1.0.1"></a>
 # [1.0.0-beta.1.0.1](https://github.com/aurelia/ui-virtualization/compare/1.0.0-beta.1.0.0...v1.0.0-beta.1.0.1) (2016-07-06)
 

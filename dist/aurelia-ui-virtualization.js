@@ -1,7 +1,7 @@
+import {customAttribute,View,BoundViewFactory,ViewSlot,ViewResources,TargetInstruction,bindable,templateController} from 'aurelia-templating';
 import {updateOverrideContext,ArrayRepeatStrategy,createFullOverrideContext,RepeatStrategyLocator,AbstractRepeater,getItemsSourceExpression,isOneTime,unwrapExpression,updateOneTimeBinding,viewsRequireLifecycle} from 'aurelia-templating-resources';
-import {View,BoundViewFactory,ViewSlot,ViewResources,TargetInstruction,customAttribute,bindable,templateController} from 'aurelia-templating';
+import {inject,Container} from 'aurelia-dependency-injection';
 import {DOM} from 'aurelia-pal';
-import {inject} from 'aurelia-dependency-injection';
 import {ObserverLocator} from 'aurelia-binding';
 
 export class DomHelper {
@@ -18,6 +18,21 @@ export class DomHelper {
     let style = element.style;
     return style.overflowY === 'scroll' || style.overflow === 'scroll' || style.overflowY === 'auto' || style.overflow === 'auto';
   }
+}
+
+//Placeholder attribute to prohibit use of this attribute name in other places
+
+@customAttribute('virtual-repeat-next')
+export class VirtualRepeatNext {
+
+  constructor() {}
+
+  attached() {}
+
+  bind(bindingContext, overrideContext): void {
+    this.scope = { bindingContext, overrideContext };
+  }
+
 }
 
 export function calcOuterHeight(element: Element): number {
@@ -363,17 +378,25 @@ interface TemplateStrategy {
   removeBufferElements(element: Element, topBuffer: Element, bottomBuffer: Element): void;
   getFirstElement(topBuffer: Element): Element;
   getLastView(bottomBuffer: Element): Element;
+  getTopBufferDistance(topBuffer: Element): number;
 }
 
+@inject(Container)
 export class TemplateStrategyLocator {
+
+  constructor(container: Container) {
+    this.container = container;
+  }
+
   getStrategy(element: Element): TemplateStrategy {
     if (element.parentNode && element.parentNode.localName === 'tbody') {
-      return new TableStrategy();
+      return this.container.get(TableStrategy);
     }
-    return new DefaultTemplateStrategy();
+    return this.container.get(DefaultTemplateStrategy);
   }
 }
 
+@inject(DomHelper)
 export class TableStrategy {
   tableCssReset = '\
     display: block;\
@@ -388,52 +411,76 @@ export class TableStrategy {
     -webkit-border-horizontal-spacing: 0;\
     -webkit-border-vertical-spacing: 0;';
 
+  constructor(domHelper) {
+    this.domHelper = domHelper;
+  }
+
   getScrollContainer(element: Element): Element {
     return element.parentNode;
   }
 
   moveViewFirst(view: View, topBuffer: Element): void {
-    insertBeforeNode(view, DOM.nextElementSibling(topBuffer.parentNode));
+    const tbody = this._getTbodyElement(topBuffer.nextSibling);
+    const tr = tbody.firstChild;
+    const firstElement = DOM.nextElementSibling(tr);
+    insertBeforeNode(view, firstElement);
   }
 
   moveViewLast(view: View, bottomBuffer: Element): void {
-    let previousSibling = bottomBuffer.parentNode.previousSibling;
-    let referenceNode = previousSibling.nodeType === 8 && previousSibling.data === 'anchor' ? previousSibling : bottomBuffer.parentNode;
+    const lastElement = this.getLastElement(bottomBuffer).nextSibling;
+    const referenceNode = lastElement.nodeType === 8 && lastElement.data === 'anchor' ? lastElement : lastElement;
     insertBeforeNode(view, referenceNode);
   }
 
   createTopBufferElement(element: Element): Element {
-    let tr = DOM.createElement('tr');
-    tr.setAttribute('style', this.tableCssReset);
-    let buffer = DOM.createElement('td');
-    buffer.setAttribute('style', this.tableCssReset);
-    tr.appendChild(buffer);
-    element.parentNode.insertBefore(tr, element);
+    const elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
+    const buffer = DOM.createElement(elementName);
+    const tableElement = element.parentNode.parentNode;
+    tableElement.parentNode.insertBefore(buffer, tableElement);
+    buffer.innerHTML = '&nbsp;';
     return buffer;
   }
 
   createBottomBufferElement(element: Element): Element {
-    let tr = DOM.createElement('tr');
-    tr.setAttribute('style', this.tableCssReset);
-    let buffer = DOM.createElement('td');
-    buffer.setAttribute('style', this.tableCssReset);
-    tr.appendChild(buffer);
-    element.parentNode.insertBefore(tr, element.nextSibling);
+    const elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
+    const buffer = DOM.createElement(elementName);
+    const tableElement = element.parentNode.parentNode;
+    tableElement.parentNode.insertBefore(buffer, tableElement.nextSibling);
     return buffer;
   }
 
   removeBufferElements(element: Element, topBuffer: Element, bottomBuffer: Element): void {
-    element.parentNode.removeChild(topBuffer.parentNode);
-    element.parentNode.removeChild(bottomBuffer.parentNode);
+    topBuffer.parentNode.removeChild(topBuffer);
+    bottomBuffer.parentNode.removeChild(bottomBuffer);
   }
 
   getFirstElement(topBuffer: Element): Element {
-    let tr = topBuffer.parentNode;
+    const tbody = this._getTbodyElement(DOM.nextElementSibling(topBuffer));
+    const tr = tbody.firstChild;
     return DOM.nextElementSibling(tr);
   }
 
   getLastElement(bottomBuffer: Element): Element {
-    return bottomBuffer.parentNode.previousElementSibling;
+    const tbody = this._getTbodyElement(bottomBuffer.previousSibling);
+    const trs = tbody.children;
+    return trs[trs.length - 1];
+  }
+
+  getTopBufferDistance(topBuffer: Element): number {
+    const tbody = this._getTbodyElement(topBuffer.nextSibling);
+    return this.domHelper.getElementDistanceToTopOfDocument(tbody) - this.domHelper.getElementDistanceToTopOfDocument(topBuffer);
+  }
+
+  _getTbodyElement(tableElement: Element): Element {
+    let tbodyElement;
+    const children = tableElement.children;
+    for (let i = 0, ii = children.length; i < ii; ++i) {
+      if (children[i].localName === 'tbody') {
+        tbodyElement = children[i];
+        break;
+      }
+    }
+    return tbodyElement;
   }
 }
 
@@ -447,21 +494,21 @@ export class DefaultTemplateStrategy {
   }
 
   moveViewLast(view: View, bottomBuffer: Element): void {
-    let previousSibling = bottomBuffer.previousSibling;
-    let referenceNode = previousSibling.nodeType === 8 && previousSibling.data === 'anchor' ? previousSibling : bottomBuffer;
+    const previousSibling = bottomBuffer.previousSibling;
+    const referenceNode = previousSibling.nodeType === 8 && previousSibling.data === 'anchor' ? previousSibling : bottomBuffer;
     insertBeforeNode(view, referenceNode);
   }
 
   createTopBufferElement(element: Element): Element {
-    let elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
-    let buffer = DOM.createElement(elementName);
+    const elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
+    const buffer = DOM.createElement(elementName);
     element.parentNode.insertBefore(buffer, element);
     return buffer;
   }
 
   createBottomBufferElement(element: Element): Element {
-    let elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
-    let buffer = DOM.createElement(elementName);
+    const elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
+    const buffer = DOM.createElement(elementName);
     element.parentNode.insertBefore(buffer, element.nextSibling);
     return buffer;
   }
@@ -477,6 +524,10 @@ export class DefaultTemplateStrategy {
 
   getLastElement(bottomBuffer: Element): Element {
     return bottomBuffer.previousElementSibling;
+  }
+
+  getTopBufferDistance(topBuffer: Element): number {
+    return 0;
   }
 }
 
@@ -509,6 +560,7 @@ export class VirtualRepeat extends AbstractRepeater {
   _fixedHeightContainer = false;
   _hasCalculatedSizes = false;
   _isAtTop = true;
+  _calledGetMore = false;
 
   @bindable items
   @bindable local
@@ -554,12 +606,15 @@ export class VirtualRepeat extends AbstractRepeater {
     this.calcDistanceToTopInterval = setInterval(() => {
       let distanceToTop = this.distanceToTop;
       this.distanceToTop = this.domHelper.getElementDistanceToTopOfDocument(this.topBuffer);
+      this.distanceToTop += this.topBufferDistance;
       if (distanceToTop !== this.distanceToTop) {
         this._handleScroll();
       }
     }, 500);
 
     this.distanceToTop = this.domHelper.getElementDistanceToTopOfDocument(this.templateStrategy.getFirstElement(this.topBuffer));
+    this.topBufferDistance = this.templateStrategy.getTopBufferDistance(this.topBuffer);
+
     if (this.domHelper.hasOverflowScroll(this.scrollContainer)) {
       this._fixedHeightContainer = true;
       this.scrollContainer.addEventListener('scroll', this.scrollListener);
@@ -688,6 +743,9 @@ export class VirtualRepeat extends AbstractRepeater {
       this._lastRebind = this._first;
       let movedViewsCount = this._moveViews(viewsToMove);
       let adjustHeight = movedViewsCount < viewsToMove ? this._bottomBufferHeight : itemHeight * movedViewsCount;
+      if (viewsToMove > 0) {
+        this._getMore();
+      }
       this._switchedDirection = false;
       this._topBufferHeight = this._topBufferHeight + adjustHeight;
       this._bottomBufferHeight = this._bottomBufferHeight - adjustHeight;
@@ -708,6 +766,9 @@ export class VirtualRepeat extends AbstractRepeater {
       let movedViewsCount = this._moveViews(viewsToMove);
       this.movedViewsCount = movedViewsCount;
       let adjustHeight = movedViewsCount < viewsToMove ? this._topBufferHeight : itemHeight * movedViewsCount;
+      if (viewsToMove > 0) {
+        this._getMore();
+      }
       this._switchedDirection = false;
       this._topBufferHeight = this._topBufferHeight - adjustHeight;
       this._bottomBufferHeight = this._bottomBufferHeight + adjustHeight;
@@ -718,6 +779,38 @@ export class VirtualRepeat extends AbstractRepeater {
     this._previousFirst = this._first;
 
     this._ticking = false;
+  }
+
+  _getMore(): void {
+    if (this.isLastIndex || this._first === 0) {
+      if (!this._calledGetMore) {
+        let getMoreFunc = this.view(0).firstChild.getAttribute('virtual-repeat-next');
+        if (!getMoreFunc) {
+          return;
+        }
+        let getMore = this.scope.overrideContext.bindingContext[getMoreFunc];
+        let executeGetMore = () => {
+          this._calledGetMore = true;
+          if (getMore instanceof Promise) {
+            return getMore.then(() => {
+              this._calledGetMore = false; //Reset for the next time
+            });
+          } else if (typeof getMore === 'function') {
+            let result = getMore.bind(this.scope.overrideContext.bindingContext)(this._first, this._bottomBufferHeight === 0, this._isAtTop);
+            if (!(result instanceof Promise)) {
+              this._calledGetMore = false; //Reset for the next time
+            } else {
+              return result.then(() => {
+                this._calledGetMore = false; //Reset for the next time
+              });
+            }
+          }
+          return null;
+        };
+
+        this.observerLocator.taskQueue.queueMicroTask(executeGetMore);
+      }
+    }
   }
 
   _checkScrolling(): void {

@@ -1,4 +1,14 @@
 import {
+  customAttribute,
+  View,
+  BoundViewFactory,
+  ViewSlot,
+  ViewResources,
+  TargetInstruction,
+  bindable,
+  templateController
+} from 'aurelia-templating';
+import {
   updateOverrideContext,
   ArrayRepeatStrategy,
   createFullOverrideContext,
@@ -11,21 +21,12 @@ import {
   viewsRequireLifecycle
 } from 'aurelia-templating-resources';
 import {
-  View,
-  BoundViewFactory,
-  ViewSlot,
-  ViewResources,
-  TargetInstruction,
-  customAttribute,
-  bindable,
-  templateController
-} from 'aurelia-templating';
+  inject,
+  Container
+} from 'aurelia-dependency-injection';
 import {
   DOM
 } from 'aurelia-pal';
-import {
-  inject
-} from 'aurelia-dependency-injection';
 import {
   ObserverLocator
 } from 'aurelia-binding';
@@ -38,10 +39,18 @@ export declare interface TemplateStrategy {
   removeBufferElements(element: Element, topBuffer: Element, bottomBuffer: Element): void;
   getFirstElement(topBuffer: Element): Element;
   getLastView(bottomBuffer: Element): Element;
+  getTopBufferDistance(topBuffer: Element): number;
 }
 export declare class DomHelper {
   getElementDistanceToTopOfDocument(element: Element): number;
   hasOverflowScroll(element: Element): boolean;
+}
+
+//Placeholder attribute to prohibit use of this attribute name in other places
+export declare class VirtualRepeatNext {
+  constructor();
+  attached(): any;
+  bind(bindingContext?: any, overrideContext?: any): void;
 }
 export declare function calcOuterHeight(element: Element): number;
 export declare function insertBeforeNode(view: View, bottomBuffer: number): void;
@@ -80,10 +89,12 @@ export declare class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
   instanceMutated(repeat: VirtualRepeat, array: Array<any>, splices: any): void;
 }
 export declare class TemplateStrategyLocator {
+  constructor(container: Container);
   getStrategy(element: Element): TemplateStrategy;
 }
 export declare class TableStrategy {
   tableCssReset: any;
+  constructor(domHelper?: any);
   getScrollContainer(element: Element): Element;
   moveViewFirst(view: View, topBuffer: Element): void;
   moveViewLast(view: View, bottomBuffer: Element): void;
@@ -92,6 +103,7 @@ export declare class TableStrategy {
   removeBufferElements(element: Element, topBuffer: Element, bottomBuffer: Element): void;
   getFirstElement(topBuffer: Element): Element;
   getLastElement(bottomBuffer: Element): Element;
+  getTopBufferDistance(topBuffer: Element): number;
 }
 export declare class DefaultTemplateStrategy {
   getScrollContainer(element: Element): Element;
@@ -102,6 +114,7 @@ export declare class DefaultTemplateStrategy {
   removeBufferElements(element: Element, topBuffer: Element, bottomBuffer: Element): void;
   getFirstElement(topBuffer: Element): Element;
   getLastElement(bottomBuffer: Element): Element;
+  getTopBufferDistance(topBuffer: Element): number;
 }
 export declare class VirtualRepeatStrategyLocator extends RepeatStrategyLocator {
   constructor();

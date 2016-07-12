@@ -1,18 +1,28 @@
+var _dec, _class, _dec2, _class2;
+
+import { inject, Container } from 'aurelia-dependency-injection';
 import { DOM } from 'aurelia-pal';
 import { View } from 'aurelia-templating';
 import { insertBeforeNode } from './utilities';
+import { DomHelper } from './dom-helper';
 
-export let TemplateStrategyLocator = class TemplateStrategyLocator {
+export let TemplateStrategyLocator = (_dec = inject(Container), _dec(_class = class TemplateStrategyLocator {
+
+  constructor(container) {
+    this.container = container;
+  }
+
   getStrategy(element) {
     if (element.parentNode && element.parentNode.localName === 'tbody') {
-      return new TableStrategy();
+      return this.container.get(TableStrategy);
     }
-    return new DefaultTemplateStrategy();
+    return this.container.get(DefaultTemplateStrategy);
   }
-};
+}) || _class);
 
-export let TableStrategy = class TableStrategy {
-  constructor() {
+export let TableStrategy = (_dec2 = inject(DomHelper), _dec2(_class2 = class TableStrategy {
+
+  constructor(domHelper) {
     this.tableCssReset = '\
     display: block;\
     width: auto;\
@@ -25,6 +35,8 @@ export let TableStrategy = class TableStrategy {
     background-color: transparent;\
     -webkit-border-horizontal-spacing: 0;\
     -webkit-border-vertical-spacing: 0;';
+
+    this.domHelper = domHelper;
   }
 
   getScrollContainer(element) {
@@ -32,49 +44,69 @@ export let TableStrategy = class TableStrategy {
   }
 
   moveViewFirst(view, topBuffer) {
-    insertBeforeNode(view, DOM.nextElementSibling(topBuffer.parentNode));
+    const tbody = this._getTbodyElement(topBuffer.nextSibling);
+    const tr = tbody.firstChild;
+    const firstElement = DOM.nextElementSibling(tr);
+    insertBeforeNode(view, firstElement);
   }
 
   moveViewLast(view, bottomBuffer) {
-    let previousSibling = bottomBuffer.parentNode.previousSibling;
-    let referenceNode = previousSibling.nodeType === 8 && previousSibling.data === 'anchor' ? previousSibling : bottomBuffer.parentNode;
+    const lastElement = this.getLastElement(bottomBuffer).nextSibling;
+    const referenceNode = lastElement.nodeType === 8 && lastElement.data === 'anchor' ? lastElement : lastElement;
     insertBeforeNode(view, referenceNode);
   }
 
   createTopBufferElement(element) {
-    let tr = DOM.createElement('tr');
-    tr.setAttribute('style', this.tableCssReset);
-    let buffer = DOM.createElement('td');
-    buffer.setAttribute('style', this.tableCssReset);
-    tr.appendChild(buffer);
-    element.parentNode.insertBefore(tr, element);
+    const elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
+    const buffer = DOM.createElement(elementName);
+    const tableElement = element.parentNode.parentNode;
+    tableElement.parentNode.insertBefore(buffer, tableElement);
+    buffer.innerHTML = '&nbsp;';
     return buffer;
   }
 
   createBottomBufferElement(element) {
-    let tr = DOM.createElement('tr');
-    tr.setAttribute('style', this.tableCssReset);
-    let buffer = DOM.createElement('td');
-    buffer.setAttribute('style', this.tableCssReset);
-    tr.appendChild(buffer);
-    element.parentNode.insertBefore(tr, element.nextSibling);
+    const elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
+    const buffer = DOM.createElement(elementName);
+    const tableElement = element.parentNode.parentNode;
+    tableElement.parentNode.insertBefore(buffer, tableElement.nextSibling);
     return buffer;
   }
 
   removeBufferElements(element, topBuffer, bottomBuffer) {
-    element.parentNode.removeChild(topBuffer.parentNode);
-    element.parentNode.removeChild(bottomBuffer.parentNode);
+    topBuffer.parentNode.removeChild(topBuffer);
+    bottomBuffer.parentNode.removeChild(bottomBuffer);
   }
 
   getFirstElement(topBuffer) {
-    let tr = topBuffer.parentNode;
+    const tbody = this._getTbodyElement(DOM.nextElementSibling(topBuffer));
+    const tr = tbody.firstChild;
     return DOM.nextElementSibling(tr);
   }
 
   getLastElement(bottomBuffer) {
-    return bottomBuffer.parentNode.previousElementSibling;
+    const tbody = this._getTbodyElement(bottomBuffer.previousSibling);
+    const trs = tbody.children;
+    return trs[trs.length - 1];
   }
-};
+
+  getTopBufferDistance(topBuffer) {
+    const tbody = this._getTbodyElement(topBuffer.nextSibling);
+    return this.domHelper.getElementDistanceToTopOfDocument(tbody) - this.domHelper.getElementDistanceToTopOfDocument(topBuffer);
+  }
+
+  _getTbodyElement(tableElement) {
+    let tbodyElement;
+    const children = tableElement.children;
+    for (let i = 0, ii = children.length; i < ii; ++i) {
+      if (children[i].localName === 'tbody') {
+        tbodyElement = children[i];
+        break;
+      }
+    }
+    return tbodyElement;
+  }
+}) || _class2);
 
 export let DefaultTemplateStrategy = class DefaultTemplateStrategy {
   getScrollContainer(element) {
@@ -86,21 +118,21 @@ export let DefaultTemplateStrategy = class DefaultTemplateStrategy {
   }
 
   moveViewLast(view, bottomBuffer) {
-    let previousSibling = bottomBuffer.previousSibling;
-    let referenceNode = previousSibling.nodeType === 8 && previousSibling.data === 'anchor' ? previousSibling : bottomBuffer;
+    const previousSibling = bottomBuffer.previousSibling;
+    const referenceNode = previousSibling.nodeType === 8 && previousSibling.data === 'anchor' ? previousSibling : bottomBuffer;
     insertBeforeNode(view, referenceNode);
   }
 
   createTopBufferElement(element) {
-    let elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
-    let buffer = DOM.createElement(elementName);
+    const elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
+    const buffer = DOM.createElement(elementName);
     element.parentNode.insertBefore(buffer, element);
     return buffer;
   }
 
   createBottomBufferElement(element) {
-    let elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
-    let buffer = DOM.createElement(elementName);
+    const elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
+    const buffer = DOM.createElement(elementName);
     element.parentNode.insertBefore(buffer, element.nextSibling);
     return buffer;
   }
@@ -116,5 +148,9 @@ export let DefaultTemplateStrategy = class DefaultTemplateStrategy {
 
   getLastElement(bottomBuffer) {
     return bottomBuffer.previousElementSibling;
+  }
+
+  getTopBufferDistance(topBuffer) {
+    return 0;
   }
 };
