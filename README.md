@@ -94,7 +94,6 @@ If you are running the plugin in the `skeleton-naviagion` project, make sure to 
   </div>
 </template>
 ```  
-
 ```javascript
 export class MyVirtualList {
     items = ['Foo', 'Bar', 'Baz'];
@@ -105,6 +104,26 @@ export class MyVirtualList {
     }
 }
 ```  
+
+Or to use an expression, use `.call` as shown below.
+```html
+<template>
+  <div virtual-repeat.for="item of items" virtual-repeat-next.call="getMore($scrollContext)">
+    ${$index} ${item}
+  </div>
+</template>
+```  
+```javascript
+export class MyVirtualList {
+    items = ['Foo', 'Bar', 'Baz'];
+    getMore(scrollContext) {
+        for(let i = 0; i < 100; ++i) {
+            this.items.push('item' + i);
+        }
+    }
+}
+```  
+
 The `virtual-repeat-next` attribute can accept a function, a promise, or a function that returns a promise.  
 The bound function will be called when the scroll container has reached a point where there are no more items to move into the DOM (i.e. when it reaches the end of a list, either from the top or the bottom).  
 There are three parameters that are passed to the function (`getMore(topIndex, isAtBottom, isAtTop)`) which helps determine the behavior or amount of items to get during scrolling.    
