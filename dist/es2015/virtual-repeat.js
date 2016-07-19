@@ -102,8 +102,17 @@ export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
     this.scrollContainer = this.templateStrategy.getScrollContainer(element);
     this.topBuffer = this.templateStrategy.createTopBufferElement(element);
     this.bottomBuffer = this.templateStrategy.createBottomBufferElement(element);
-    this.itemsChanged();
+
     this.scrollListener = () => this._onScroll();
+
+    if (this.domHelper.hasOverflowScroll(this.scrollContainer)) {
+      this._fixedHeightContainer = true;
+      this.scrollContainer.addEventListener('scroll', this.scrollListener);
+    } else {
+      document.addEventListener('scroll', this.scrollListener);
+    }
+
+    this.itemsChanged();
 
     this.calcDistanceToTopInterval = setInterval(() => {
       let distanceToTop = this.distanceToTop;
@@ -116,13 +125,6 @@ export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
 
     this.distanceToTop = this.domHelper.getElementDistanceToTopOfDocument(this.templateStrategy.getFirstElement(this.topBuffer));
     this.topBufferDistance = this.templateStrategy.getTopBufferDistance(this.topBuffer);
-
-    if (this.domHelper.hasOverflowScroll(this.scrollContainer)) {
-      this._fixedHeightContainer = true;
-      this.scrollContainer.addEventListener('scroll', this.scrollListener);
-    } else {
-      document.addEventListener('scroll', this.scrollListener);
-    }
   }
 
   bind(bindingContext, overrideContext) {
@@ -292,15 +294,15 @@ export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
               this._calledGetMore = false;
             });
           } else if (typeof getMore === 'function') {
-              let result = getMore.bind(this.scope.overrideContext.bindingContext)(this._first, this._bottomBufferHeight === 0, this._isAtTop);
-              if (!(result instanceof Promise)) {
+            let result = getMore.bind(this.scope.overrideContext.bindingContext)(this._first, this._bottomBufferHeight === 0, this._isAtTop);
+            if (!(result instanceof Promise)) {
+              this._calledGetMore = false;
+            } else {
+              return result.then(() => {
                 this._calledGetMore = false;
-              } else {
-                  return result.then(() => {
-                    this._calledGetMore = false;
-                  });
-                }
+              });
             }
+          }
           return null;
         };
 

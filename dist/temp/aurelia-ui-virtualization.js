@@ -678,10 +678,19 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec4 = (0, _aureliaTemplating.cust
     this.scrollContainer = this.templateStrategy.getScrollContainer(element);
     this.topBuffer = this.templateStrategy.createTopBufferElement(element);
     this.bottomBuffer = this.templateStrategy.createBottomBufferElement(element);
-    this.itemsChanged();
+
     this.scrollListener = function () {
       return _this6._onScroll();
     };
+
+    if (this.domHelper.hasOverflowScroll(this.scrollContainer)) {
+      this._fixedHeightContainer = true;
+      this.scrollContainer.addEventListener('scroll', this.scrollListener);
+    } else {
+      document.addEventListener('scroll', this.scrollListener);
+    }
+
+    this.itemsChanged();
 
     this.calcDistanceToTopInterval = setInterval(function () {
       var distanceToTop = _this6.distanceToTop;
@@ -694,13 +703,6 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec4 = (0, _aureliaTemplating.cust
 
     this.distanceToTop = this.domHelper.getElementDistanceToTopOfDocument(this.templateStrategy.getFirstElement(this.topBuffer));
     this.topBufferDistance = this.templateStrategy.getTopBufferDistance(this.topBuffer);
-
-    if (this.domHelper.hasOverflowScroll(this.scrollContainer)) {
-      this._fixedHeightContainer = true;
-      this.scrollContainer.addEventListener('scroll', this.scrollListener);
-    } else {
-      document.addEventListener('scroll', this.scrollListener);
-    }
   };
 
   VirtualRepeat.prototype.bind = function bind(bindingContext, overrideContext) {
@@ -883,15 +885,15 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec4 = (0, _aureliaTemplating.cust
                 _this9._calledGetMore = false;
               });
             } else if (typeof getMore === 'function') {
-                var result = getMore.bind(_this9.scope.overrideContext.bindingContext)(_this9._first, _this9._bottomBufferHeight === 0, _this9._isAtTop);
-                if (!(result instanceof Promise)) {
+              var result = getMore.bind(_this9.scope.overrideContext.bindingContext)(_this9._first, _this9._bottomBufferHeight === 0, _this9._isAtTop);
+              if (!(result instanceof Promise)) {
+                _this9._calledGetMore = false;
+              } else {
+                return result.then(function () {
                   _this9._calledGetMore = false;
-                } else {
-                    return result.then(function () {
-                      _this9._calledGetMore = false;
-                    });
-                  }
+                });
               }
+            }
             return null;
           };
 

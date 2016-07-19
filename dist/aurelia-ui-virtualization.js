@@ -600,8 +600,17 @@ export class VirtualRepeat extends AbstractRepeater {
     this.scrollContainer = this.templateStrategy.getScrollContainer(element);
     this.topBuffer = this.templateStrategy.createTopBufferElement(element);
     this.bottomBuffer = this.templateStrategy.createBottomBufferElement(element);
-    this.itemsChanged();
+
     this.scrollListener = () => this._onScroll();
+
+    if (this.domHelper.hasOverflowScroll(this.scrollContainer)) {
+      this._fixedHeightContainer = true;
+      this.scrollContainer.addEventListener('scroll', this.scrollListener);
+    } else {
+      document.addEventListener('scroll', this.scrollListener);
+    }
+
+    this.itemsChanged();
 
     this.calcDistanceToTopInterval = setInterval(() => {
       let distanceToTop = this.distanceToTop;
@@ -615,12 +624,6 @@ export class VirtualRepeat extends AbstractRepeater {
     this.distanceToTop = this.domHelper.getElementDistanceToTopOfDocument(this.templateStrategy.getFirstElement(this.topBuffer));
     this.topBufferDistance = this.templateStrategy.getTopBufferDistance(this.topBuffer);
 
-    if (this.domHelper.hasOverflowScroll(this.scrollContainer)) {
-      this._fixedHeightContainer = true;
-      this.scrollContainer.addEventListener('scroll', this.scrollListener);
-    } else {
-      document.addEventListener('scroll', this.scrollListener);
-    }
   }
 
   bind(bindingContext, overrideContext): void {
