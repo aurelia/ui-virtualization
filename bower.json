@@ -19,14 +19,14 @@
     "url": "http://github.com/aurelia/ui-virtualization"
   },
   "dependencies": {
-    "aurelia-binding": "^1.0.0-rc.1.0.0",
-    "aurelia-dependency-injection": "^1.0.0-rc.1.0.0",
-    "aurelia-framework": "^1.0.0-rc.1.0.0",
-    "aurelia-logging": "^1.0.0-rc.1.0.0",
-    "aurelia-logging-console": "^1.0.0-rc.1.0.0",
-    "aurelia-path": "^1.0.0-rc.1.0.0",
-    "aurelia-task-queue": "^1.0.0-rc.1.0.0",
-    "aurelia-templating": "^1.0.0-rc.1.0.0",
-    "aurelia-templating-resources": "^1.0.0-rc.1.0.0"
+    "aurelia-binding": "^1.0.0",
+    "aurelia-dependency-injection": "^1.0.0",
+    "aurelia-framework": "^1.0.0",
+    "aurelia-logging": "^1.0.0",
+    "aurelia-logging-console": "^1.0.0",
+    "aurelia-path": "^1.0.0",
+    "aurelia-task-queue": "^1.0.0",
+    "aurelia-templating": "^1.0.0",
+    "aurelia-templating-resources": "^1.0.0"
   }
 }
