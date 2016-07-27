@@ -21,6 +21,7 @@
   },
   "jspm": {
     "registry": "npm",
+    "jspmPackage": true,
     "main": "aurelia-ui-virtualization",
     "format": "amd",
     "directories": {
