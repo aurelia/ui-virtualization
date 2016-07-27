@@ -4,6 +4,12 @@ System.register(['./virtual-repeat', './virtual-repeat-next'], function (_export
   "use strict";
 
   var VirtualRepeat, VirtualRepeatNext;
+  function configure(config) {
+    config.globalResources('./virtual-repeat', './virtual-repeat-next');
+  }
+
+  _export('configure', configure);
+
   return {
     setters: [function (_virtualRepeat) {
       VirtualRepeat = _virtualRepeat.VirtualRepeat;
@@ -11,12 +17,6 @@ System.register(['./virtual-repeat', './virtual-repeat-next'], function (_export
       VirtualRepeatNext = _virtualRepeatNext.VirtualRepeatNext;
     }],
     execute: function () {
-      function configure(config) {
-        config.globalResources('./virtual-repeat', './virtual-repeat-next');
-      }
-
-      _export('configure', configure);
-
       _export('VirtualRepeat', VirtualRepeat);
 
       _export('VirtualRepeatNext', VirtualRepeatNext);

@@ -5,7 +5,7 @@ define(['exports', './aurelia-ui-virtualization'], function (exports, _aureliaUi
     value: true
   });
   Object.keys(_aureliaUiVirtualization).forEach(function (key) {
-    if (key === "default") return;
+    if (key === "default" || key === "__esModule") return;
     Object.defineProperty(exports, key, {
       enumerable: true,
       get: function () {
