@@ -124,7 +124,7 @@
     "build": {
       "resources": [
         "virtual-repeat",
-        "virtual-repeat-next"
+        "infinite-scroll-next"
       ]
     },
     "documentation": {

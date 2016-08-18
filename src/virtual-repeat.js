@@ -273,7 +273,7 @@ export class VirtualRepeat extends AbstractRepeater {
       if (!this._calledGetMore) {
         let executeGetMore = () => {
           this._calledGetMore = true;
-          let func = (this.view(0) && this.view(0).firstChild.au) ? this.view(0).firstChild.au['virtual-repeat-next'].instruction.attributes['virtual-repeat-next'] : undefined;
+          let func = (this.view(0) && this.view(0).firstChild.au) ? this.view(0).firstChild.au['infinite-scroll-next'].instruction.attributes['infinite-scroll-next'] : undefined;
           let topIndex = this._first;
           let isAtBottom = this._bottomBufferHeight === 0;
           let isAtTop = this._isAtTop;
@@ -288,7 +288,7 @@ export class VirtualRepeat extends AbstractRepeater {
           if (func === undefined) {
             return null;
           } else if (typeof func === 'string') {
-            let getMoreFuncName = this.view(0).firstChild.getAttribute('virtual-repeat-next');
+            let getMoreFuncName = this.view(0).firstChild.getAttribute('infinite-scroll-next');
             let funcCall = this.scope.overrideContext.bindingContext[getMoreFuncName];
 
             if (typeof funcCall === 'function') {
@@ -301,13 +301,13 @@ export class VirtualRepeat extends AbstractRepeater {
                 });
               }
             } else {
-              throw new Error("'virtual-repeat-next' must be a function or evaluate to one");
+              throw new Error("'infinite-scroll-next' must be a function or evaluate to one");
             }
           } else if (func.sourceExpression) {
             this._calledGetMore = false; //Reset for the next time
             return func.sourceExpression.evaluate(this.scope);
           } else {
-            throw new Error("'virtual-repeat-next' must be a function or evaluate to one");
+            throw new Error("'infinite-scroll-next' must be a function or evaluate to one");
           }
           return null;
         };

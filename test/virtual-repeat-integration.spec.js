@@ -450,21 +450,21 @@ describe('VirtualRepeat Integration', () => {
       spyOn(nestedVm, 'getNextPage').and.callThrough();
 
       component = StageComponent
-        .withResources(['src/virtual-repeat', 'src/virtual-repeat-next'])
+        .withResources(['src/virtual-repeat', 'src/infinite-scroll-next'])
         .inView(`<div id="scrollContainer" style="height: 500px; overflow-y: scroll">
-                      <div style="height: ${itemHeight}px;" virtual-repeat.for="item of items" virtual-repeat-next="getNextPage">\${item}</div>
+                      <div style="height: ${itemHeight}px;" virtual-repeat.for="item of items" infinite-scroll-next="getNextPage">\${item}</div>
                   </div>`)
         .boundTo(vm);
       nestedComponent = StageComponent
-        .withResources(['src/virtual-repeat', 'src/virtual-repeat-next'])
+        .withResources(['src/virtual-repeat', 'src/infinite-scroll-next'])
         .inView(`<div id="scrollContainerNested" style="height: 500px; overflow-y: scroll" repeat.for="foo of bar">
-                      <div style="height: ${itemHeight}px;" virtual-repeat.for="item of items" virtual-repeat-next.call="$parent.getNextPage($scrollContext)">\${item}</div>
+                      <div style="height: ${itemHeight}px;" virtual-repeat.for="item of items" infinite-scroll-next.call="$parent.getNextPage($scrollContext)">\${item}</div>
                   </div>`)
         .boundTo(nestedVm);
       promisedComponent = StageComponent
-        .withResources(['src/virtual-repeat', 'src/virtual-repeat-next'])
+        .withResources(['src/virtual-repeat', 'src/infinite-scroll-next'])
         .inView(`<div id="scrollContainerPromise" style="height: 500px; overflow-y: scroll">
-                      <div style="height: ${itemHeight}px;" virtual-repeat.for="item of items" virtual-repeat-next="getNextPage">\${item}</div>
+                      <div style="height: ${itemHeight}px;" virtual-repeat.for="item of items" infinite-scroll-next="getNextPage">\${item}</div>
                   </div>`)
         .boundTo(promisedVm);
 

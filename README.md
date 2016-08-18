@@ -89,7 +89,7 @@ If you are running the plugin in the `skeleton-naviagion` project, make sure to 
 #### infinite scroll
 ```html
 <template>
-  <div virtual-repeat.for="item of items" virtual-repeat-next="getMore">
+  <div virtual-repeat.for="item of items" infinite-scroll-next="getMore">
     ${$index} ${item}
   </div>
 </template>
@@ -108,7 +108,7 @@ export class MyVirtualList {
 Or to use an expression, use `.call` as shown below.
 ```html
 <template>
-  <div virtual-repeat.for="item of items" virtual-repeat-next.call="getMore($scrollContext)">
+  <div virtual-repeat.for="item of items" infinite-scroll-next.call="getMore($scrollContext)">
     ${$index} ${item}
   </div>
 </template>
@@ -124,7 +124,7 @@ export class MyVirtualList {
 }
 ```  
 
-The `virtual-repeat-next` attribute can accept a function, a promise, or a function that returns a promise.  
+The `infinite-scroll-next` attribute can accept a function, a promise, or a function that returns a promise.  
 The bound function will be called when the scroll container has reached a point where there are no more items to move into the DOM (i.e. when it reaches the end of a list, either from the top or the bottom).  
 There are three parameters that are passed to the function (`getMore(topIndex, isAtBottom, isAtTop)`) which helps determine the behavior or amount of items to get during scrolling.    
 1. `topIndex` - A integer value that represents the current item that exists at the top of the rendered items in the DOM.  
