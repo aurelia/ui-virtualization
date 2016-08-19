@@ -124,7 +124,8 @@
     "usedBy": [],
     "build": {
       "resources": [
-        "virtual-repeat"
+        "virtual-repeat",
+        "infinite-scroll-next"
       ]
     },
     "documentation": {

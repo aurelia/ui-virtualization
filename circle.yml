@@ -20,4 +20,5 @@ dependencies:
 test:
   override:
     - gulp build
+    - gulp lint
     - gulp test
