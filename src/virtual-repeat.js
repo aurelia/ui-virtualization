@@ -241,6 +241,7 @@ export class VirtualRepeat extends AbstractRepeater {
       }
     } else if (this._scrollingUp) {
       let viewsToMove = this._lastRebind - this._first;
+      let initialScrollState = this.isLastIndex === undefined; //Use for catching initial scroll state where a small page size might cause _getMore not to fire.
       if (this._switchedDirection) {
         if (this.isLastIndex) {
           viewsToMove = this.items.length - this._first - this.elementsInView;
@@ -254,7 +255,8 @@ export class VirtualRepeat extends AbstractRepeater {
       this.movedViewsCount = movedViewsCount;
       let adjustHeight = movedViewsCount < viewsToMove ? this._topBufferHeight : itemHeight * movedViewsCount;
       if (viewsToMove > 0) {
-        this._getMore();
+        let force = this.movedViewsCount === 0 && initialScrollState && this._first <= 0 ? true : false;
+        this._getMore(force);
       }
       this._switchedDirection = false;
       this._topBufferHeight = this._topBufferHeight - adjustHeight;
@@ -268,8 +270,8 @@ export class VirtualRepeat extends AbstractRepeater {
     this._ticking = false;
   }
 
-  _getMore(): void {
-    if (this.isLastIndex || this._first === 0) {
+  _getMore(force): void {
+    if (this.isLastIndex || this._first === 0 || force) {
       if (!this._calledGetMore) {
         let executeGetMore = () => {
           this._calledGetMore = true;
