@@ -271,26 +271,43 @@ export class VirtualRepeat extends AbstractRepeater {
   _getMore(): void {
     if (this.isLastIndex || this._first === 0) {
       if (!this._calledGetMore) {
-        let getMoreFunc = this.view(0).firstChild.getAttribute('virtual-repeat-next');
-        if (!getMoreFunc) {
-          return;
-        }
-        let getMore = this.scope.overrideContext.bindingContext[getMoreFunc];
         let executeGetMore = () => {
           this._calledGetMore = true;
-          if (getMore instanceof Promise) {
-            return getMore.then(() => {
-              this._calledGetMore = false; //Reset for the next time
-            });
-          } else if (typeof getMore === 'function') {
-            let result = getMore.bind(this.scope.overrideContext.bindingContext)(this._first, this._bottomBufferHeight === 0, this._isAtTop);
-            if (!(result instanceof Promise)) {
-              this._calledGetMore = false; //Reset for the next time
-            } else {
-              return result.then(() => {
+          let func = (this.view(0) && this.view(0).firstChild.au) ? this.view(0).firstChild.au['infinite-scroll-next'].instruction.attributes['infinite-scroll-next'] : undefined;
+          let topIndex = this._first;
+          let isAtBottom = this._bottomBufferHeight === 0;
+          let isAtTop = this._isAtTop;
+          let scrollContext = {
+            topIndex: topIndex,
+            isAtBottom: isAtBottom,
+            isAtTop: isAtTop
+          };
+
+          this.scope.overrideContext.$scrollContext = scrollContext;
+
+          if (func === undefined) {
+            return null;
+          } else if (typeof func === 'string') {
+            let getMoreFuncName = this.view(0).firstChild.getAttribute('infinite-scroll-next');
+            let funcCall = this.scope.overrideContext.bindingContext[getMoreFuncName];
+
+            if (typeof funcCall === 'function') {
+              let result = funcCall.call(this.scope.overrideContext.bindingContext, topIndex, isAtBottom, isAtTop);
+              if (!(result instanceof Promise)) {
                 this._calledGetMore = false; //Reset for the next time
-              });
+              } else {
+                return result.then(() => {
+                  this._calledGetMore = false; //Reset for the next time
+                });
+              }
+            } else {
+              throw new Error("'infinite-scroll-next' must be a function or evaluate to one");
             }
+          } else if (func.sourceExpression) {
+            this._calledGetMore = false; //Reset for the next time
+            return func.sourceExpression.evaluate(this.scope);
+          } else {
+            throw new Error("'infinite-scroll-next' must be a function or evaluate to one");
           }
           return null;
         };
