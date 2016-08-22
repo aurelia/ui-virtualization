@@ -533,6 +533,18 @@ describe('VirtualRepeat Integration', () => {
             }, 'scrollContainerPromise')
         });
     });
+    it('handles getting next data set with small page size', done => {
+      vm.items = [];
+      for(let i = 0; i < 5; ++i) {
+        vm.items.push('item' + i);
+      }
+      create.then(() => {
+        validateScroll(virtualRepeat, viewModel, () => {
+          expect(vm.getNextPage).toHaveBeenCalled();
+          done();
+        })
+      });
+    });
     it('passes the current index and location state', done => {
       create.then(() => {
           validateScroll(virtualRepeat, viewModel, () => {
