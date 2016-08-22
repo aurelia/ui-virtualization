@@ -183,6 +183,11 @@ describe('VirtualRepeat Integration', () => {
     let create;
     let items;
 
+    let hiddenComponent;
+    let hiddenCreate;
+    let hiddenVirtualRepeat;
+    let hiddenViewModel;
+
     beforeEach(() => {
       items = [];
       for(let i = 0; i < 1000; ++i) {
@@ -197,10 +202,23 @@ describe('VirtualRepeat Integration', () => {
         virtualRepeat = component.sut;
         viewModel = component.viewModel;
       });
+
+      hiddenComponent = StageComponent
+        .withResources('src/virtual-repeat')
+        .inView(`<div id="scrollContainer" style="height: 500px; overflow-y: scroll; display: none">
+                        <div style="height: ${itemHeight}px;" virtual-repeat.for="item of items">\${item}</div>
+                    </div>`)
+        .boundTo({ items: items });
+
+      hiddenCreate = hiddenComponent.create().then(() => {
+        hiddenVirtualRepeat = hiddenComponent.sut;
+        hiddenViewModel = hiddenComponent.viewModel;
+      });
     });
 
     afterEach(() => {
       component.cleanUp();
+      hiddenComponent.cleanUp();
     });
 
     describe('handles delete', () => {
@@ -295,6 +313,18 @@ describe('VirtualRepeat Integration', () => {
 
     it('handles splice', done => {
       create.then(() => validateSplice(virtualRepeat, viewModel, done));
+    });
+
+    it('handles displaying when initially hidden', done => {
+      hiddenCreate.then(() => {
+        hiddenVirtualRepeat.scrollContainer.style.display = "block";
+        window.requestAnimationFrame(()=>{
+          window.setTimeout(()=>{
+            validateState(hiddenVirtualRepeat, hiddenViewModel);
+            done();
+          }, 750)
+        });
+      });
     });
   });
 
