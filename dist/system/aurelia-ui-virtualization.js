@@ -1,11 +1,11 @@
 'use strict';
 
-System.register(['./virtual-repeat', './virtual-repeat-next'], function (_export, _context) {
+System.register(['./virtual-repeat', './infinite-scroll-next'], function (_export, _context) {
   "use strict";
 
-  var VirtualRepeat, VirtualRepeatNext;
+  var VirtualRepeat, InfiniteScrollNext;
   function configure(config) {
-    config.globalResources('./virtual-repeat', './virtual-repeat-next');
+    config.globalResources('./virtual-repeat', './infinite-scroll-next');
   }
 
   _export('configure', configure);
@@ -13,13 +13,13 @@ System.register(['./virtual-repeat', './virtual-repeat-next'], function (_export
   return {
     setters: [function (_virtualRepeat) {
       VirtualRepeat = _virtualRepeat.VirtualRepeat;
-    }, function (_virtualRepeatNext) {
-      VirtualRepeatNext = _virtualRepeatNext.VirtualRepeatNext;
+    }, function (_infiniteScrollNext) {
+      InfiniteScrollNext = _infiniteScrollNext.InfiniteScrollNext;
     }],
     execute: function () {
       _export('VirtualRepeat', VirtualRepeat);
 
-      _export('VirtualRepeatNext', VirtualRepeatNext);
+      _export('InfiniteScrollNext', InfiniteScrollNext);
     }
   };
 });

@@ -1,8 +1,8 @@
 import { VirtualRepeat } from './virtual-repeat';
-import { VirtualRepeatNext } from './virtual-repeat-next';
+import { InfiniteScrollNext } from './infinite-scroll-next';
 
 export function configure(config) {
-  config.globalResources('./virtual-repeat', './virtual-repeat-next');
+  config.globalResources('./virtual-repeat', './infinite-scroll-next');
 }
 
-export { VirtualRepeat, VirtualRepeatNext };
+export { VirtualRepeat, InfiniteScrollNext };

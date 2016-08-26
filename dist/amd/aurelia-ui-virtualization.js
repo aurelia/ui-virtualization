@@ -1,15 +1,15 @@
-define(['exports', './virtual-repeat', './virtual-repeat-next'], function (exports, _virtualRepeat, _virtualRepeatNext) {
+define(['exports', './virtual-repeat', './infinite-scroll-next'], function (exports, _virtualRepeat, _infiniteScrollNext) {
   'use strict';
 
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
-  exports.VirtualRepeatNext = exports.VirtualRepeat = undefined;
+  exports.InfiniteScrollNext = exports.VirtualRepeat = undefined;
   exports.configure = configure;
   function configure(config) {
-    config.globalResources('./virtual-repeat', './virtual-repeat-next');
+    config.globalResources('./virtual-repeat', './infinite-scroll-next');
   }
 
   exports.VirtualRepeat = _virtualRepeat.VirtualRepeat;
-  exports.VirtualRepeatNext = _virtualRepeatNext.VirtualRepeatNext;
+  exports.InfiniteScrollNext = _infiniteScrollNext.InfiniteScrollNext;
 });

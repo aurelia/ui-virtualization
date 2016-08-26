@@ -2,7 +2,7 @@ var _dec, _class;
 
 import { customAttribute } from 'aurelia-templating';
 
-export let VirtualRepeatNext = (_dec = customAttribute('virtual-repeat-next'), _dec(_class = class VirtualRepeatNext {
+export let InfiniteScrollNext = (_dec = customAttribute('infinite-scroll-next'), _dec(_class = class InfiniteScrollNext {
 
   constructor() {}
 
