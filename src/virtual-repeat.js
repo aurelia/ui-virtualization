@@ -143,6 +143,9 @@ export class VirtualRepeat extends AbstractRepeater {
     }
     this._unsubscribeCollection();
     clearInterval(this.calcDistanceToTopInterval);
+    if (this._sizeInterval) {
+      clearInterval(this._sizeInterval);
+    }
   }
 
   itemsChanged(): void {
@@ -402,7 +405,7 @@ export class VirtualRepeat extends AbstractRepeater {
     return this.view(0) ? this.view(0).overrideContext.$index : -1;
   }
 
-  _calcInitialHeights(itemsLength: number) {
+  _calcInitialHeights(itemsLength: number): void {
     if (this._viewsLength > 0 && this._itemsLength === itemsLength || itemsLength <= 0) {
       return;
     }
@@ -411,7 +414,14 @@ export class VirtualRepeat extends AbstractRepeater {
     let firstViewElement = this.view(0).lastChild;
     this.itemHeight = calcOuterHeight(firstViewElement);
     if (this.itemHeight <= 0) {
-      throw new Error('Could not calculate item height');
+      this._sizeInterval = setInterval(()=>{
+        let newCalcSize = calcOuterHeight(firstViewElement);
+        if (newCalcSize > 0) {
+          clearInterval(this._sizeInterval);
+          this.itemsChanged();
+        }
+      }, 500);
+      return;
     }
     this.scrollContainerHeight = this._fixedHeightContainer ? this._calcScrollHeight(this.scrollContainer) : document.documentElement.clientHeight;
     this.elementsInView = Math.ceil(this.scrollContainerHeight / this.itemHeight) + 1;
@@ -426,6 +436,7 @@ export class VirtualRepeat extends AbstractRepeater {
     // TODO This will cause scrolling back to top when swapping collection instances that have different lengths - instead should keep the scroll position
     this.scrollContainer.scrollTop = 0;
     this._first = 0;
+    return;
   }
 
   _calcScrollHeight(element: Element): number {
