@@ -278,7 +278,7 @@ export class VirtualRepeat extends AbstractRepeater {
       if (!this._calledGetMore) {
         let executeGetMore = () => {
           this._calledGetMore = true;
-          let func = (this.view(0) && this.view(0).firstChild.au) ? this.view(0).firstChild.au['infinite-scroll-next'].instruction.attributes['infinite-scroll-next'] : undefined;
+          let func = (this.view(0) && this.view(0).firstChild && this.view(0).firstChild.au && this.view(0).firstChild.au['infinite-scroll-next']) ? this.view(0).firstChild.au['infinite-scroll-next'].instruction.attributes['infinite-scroll-next'] : undefined;
           let topIndex = this._first;
           let isAtBottom = this._bottomBufferHeight === 0;
           let isAtTop = this._isAtTop;

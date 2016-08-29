@@ -188,6 +188,11 @@ describe('VirtualRepeat Integration', () => {
     let hiddenVirtualRepeat;
     let hiddenViewModel;
 
+    let containerComponent;
+    let containerCreate;
+    let containerVirtualRepeat;
+    let containerViewModel;
+
     beforeEach(() => {
       items = [];
       for(let i = 0; i < 1000; ++i) {
@@ -214,11 +219,25 @@ describe('VirtualRepeat Integration', () => {
         hiddenVirtualRepeat = hiddenComponent.sut;
         hiddenViewModel = hiddenComponent.viewModel;
       });
+
+      containerComponent = StageComponent
+        .withResources('src/virtual-repeat')
+        .inView(`<div id="scrollContainer2" style="height: 500px; overflow-y: scroll;">
+                        <div style="height: ${itemHeight}px;" virtual-repeat.for="item of items">\${item}</div>
+                    </div>`)
+        .boundTo({ items: items });
+
+      containerCreate = containerComponent.create().then(() => {
+        containerVirtualRepeat = containerComponent.sut;
+        containerViewModel = containerComponent.viewModel;
+        spyOn(containerVirtualRepeat, '_onScroll').and.callThrough();
+      });
     });
 
     afterEach(() => {
       component.cleanUp();
       hiddenComponent.cleanUp();
+      containerComponent.cleanUp();
     });
 
     describe('handles delete', () => {
@@ -325,6 +344,15 @@ describe('VirtualRepeat Integration', () => {
           }, 750)
         });
       });
+    });
+
+    it('handles scrolling to bottom', done => {
+        containerCreate.then(() => {
+            validateScroll(containerVirtualRepeat, containerViewModel, () => {
+                expect(containerVirtualRepeat._onScroll).toHaveBeenCalled();
+                done();
+            }, 'scrollContainer2')
+        });
     });
   });
 
