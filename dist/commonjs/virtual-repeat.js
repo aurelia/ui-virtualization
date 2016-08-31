@@ -327,7 +327,7 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec = (0, _aureliaTemplating.custo
       if (!this._calledGetMore) {
         var executeGetMore = function executeGetMore() {
           _this5._calledGetMore = true;
-          var func = _this5.view(0) && _this5.view(0).firstChild.au ? _this5.view(0).firstChild.au['infinite-scroll-next'].instruction.attributes['infinite-scroll-next'] : undefined;
+          var func = _this5.view(0) && _this5.view(0).firstChild && _this5.view(0).firstChild.au && _this5.view(0).firstChild.au['infinite-scroll-next'] ? _this5.view(0).firstChild.au['infinite-scroll-next'].instruction.attributes['infinite-scroll-next'] : undefined;
           var topIndex = _this5._first;
           var isAtBottom = _this5._bottomBufferHeight === 0;
           var isAtTop = _this5._isAtTop;

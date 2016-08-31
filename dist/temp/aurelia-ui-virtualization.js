@@ -873,7 +873,7 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec4 = (0, _aureliaTemplating.cust
       if (!this._calledGetMore) {
         var executeGetMore = function executeGetMore() {
           _this9._calledGetMore = true;
-          var func = _this9.view(0) && _this9.view(0).firstChild.au ? _this9.view(0).firstChild.au['infinite-scroll-next'].instruction.attributes['infinite-scroll-next'] : undefined;
+          var func = _this9.view(0) && _this9.view(0).firstChild && _this9.view(0).firstChild.au && _this9.view(0).firstChild.au['infinite-scroll-next'] ? _this9.view(0).firstChild.au['infinite-scroll-next'].instruction.attributes['infinite-scroll-next'] : undefined;
           var topIndex = _this9._first;
           var isAtBottom = _this9._bottomBufferHeight === 0;
           var isAtTop = _this9._isAtTop;
