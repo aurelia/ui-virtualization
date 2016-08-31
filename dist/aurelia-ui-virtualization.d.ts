@@ -47,7 +47,7 @@ export declare class DomHelper {
 }
 
 //Placeholder attribute to prohibit use of this attribute name in other places
-export declare class VirtualRepeatNext {
+export declare class InfiniteScrollNext {
   constructor();
   attached(): any;
   bind(bindingContext?: any, overrideContext?: any): void;

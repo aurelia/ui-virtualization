@@ -1,3 +1,31 @@
+<a name="1.0.0-beta.3.0.0"></a>
+# [1.0.0-beta.3.0.0](https://github.com/aurelia/ui-virtualization/compare/1.0.0-beta.2.0.0...v1.0.0-beta.3.0.0) (2016-08-26)
+
+
+### Bug Fixes
+
+* **package.json:** change package.json to properly define resources ([4da877f](https://github.com/aurelia/ui-virtualization/commit/4da877f))
+* **virtual-repeat:** make infinite scroll work with initial small page size ([cb135a2](https://github.com/aurelia/ui-virtualization/commit/cb135a2))
+* **virtual-repeat:** make initially hidden elements display correctly ([319cc59](https://github.com/aurelia/ui-virtualization/commit/319cc59))
+
+
+### Code Refactoring
+
+* **all:** rename `virtual-repeat-next` to `infinite-scroll-next` ([b7ff555](https://github.com/aurelia/ui-virtualization/commit/b7ff555))
+
+
+### Features
+
+* **virtual-repeat:** allow use of `.call` on `virtual-repeat-next` ([2d1789b](https://github.com/aurelia/ui-virtualization/commit/2d1789b))
+
+
+### BREAKING CHANGES
+
+* all: Renamed `virtual-repeat-next` to
+`infinite-scroll-next` to provide more meaning to the attribute.
+
+
+
 <a name="1.0.0-beta.2.0.0"></a>
 # [1.0.0-beta.2.0.0](https://github.com/aurelia/ui-virtualization/compare/1.0.0-beta.1.0.2...v1.0.0-beta.2.0.0) (2016-07-27)
 

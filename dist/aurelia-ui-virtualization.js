@@ -22,8 +22,8 @@ export class DomHelper {
 
 //Placeholder attribute to prohibit use of this attribute name in other places
 
-@customAttribute('virtual-repeat-next')
-export class VirtualRepeatNext {
+@customAttribute('infinite-scroll-next')
+export class InfiniteScrollNext {
 
   constructor() {}
 
@@ -656,6 +656,9 @@ export class VirtualRepeat extends AbstractRepeater {
     }
     this._unsubscribeCollection();
     clearInterval(this.calcDistanceToTopInterval);
+    if (this._sizeInterval) {
+      clearInterval(this._sizeInterval);
+    }
   }
 
   itemsChanged(): void {
@@ -754,6 +757,7 @@ export class VirtualRepeat extends AbstractRepeater {
       }
     } else if (this._scrollingUp) {
       let viewsToMove = this._lastRebind - this._first;
+      let initialScrollState = this.isLastIndex === undefined; //Use for catching initial scroll state where a small page size might cause _getMore not to fire.
       if (this._switchedDirection) {
         if (this.isLastIndex) {
           viewsToMove = this.items.length - this._first - this.elementsInView;
@@ -767,7 +771,8 @@ export class VirtualRepeat extends AbstractRepeater {
       this.movedViewsCount = movedViewsCount;
       let adjustHeight = movedViewsCount < viewsToMove ? this._topBufferHeight : itemHeight * movedViewsCount;
       if (viewsToMove > 0) {
-        this._getMore();
+        let force = this.movedViewsCount === 0 && initialScrollState && this._first <= 0 ? true : false;
+        this._getMore(force);
       }
       this._switchedDirection = false;
       this._topBufferHeight = this._topBufferHeight - adjustHeight;
@@ -781,29 +786,46 @@ export class VirtualRepeat extends AbstractRepeater {
     this._ticking = false;
   }
 
-  _getMore(): void {
-    if (this.isLastIndex || this._first === 0) {
+  _getMore(force): void {
+    if (this.isLastIndex || this._first === 0 || force) {
       if (!this._calledGetMore) {
-        let getMoreFunc = this.view(0).firstChild.getAttribute('virtual-repeat-next');
-        if (!getMoreFunc) {
-          return;
-        }
-        let getMore = this.scope.overrideContext.bindingContext[getMoreFunc];
         let executeGetMore = () => {
           this._calledGetMore = true;
-          if (getMore instanceof Promise) {
-            return getMore.then(() => {
-              this._calledGetMore = false; //Reset for the next time
-            });
-          } else if (typeof getMore === 'function') {
-            let result = getMore.bind(this.scope.overrideContext.bindingContext)(this._first, this._bottomBufferHeight === 0, this._isAtTop);
-            if (!(result instanceof Promise)) {
-              this._calledGetMore = false; //Reset for the next time
-            } else {
-              return result.then(() => {
+          let func = (this.view(0) && this.view(0).firstChild.au) ? this.view(0).firstChild.au['infinite-scroll-next'].instruction.attributes['infinite-scroll-next'] : undefined;
+          let topIndex = this._first;
+          let isAtBottom = this._bottomBufferHeight === 0;
+          let isAtTop = this._isAtTop;
+          let scrollContext = {
+            topIndex: topIndex,
+            isAtBottom: isAtBottom,
+            isAtTop: isAtTop
+          };
+
+          this.scope.overrideContext.$scrollContext = scrollContext;
+
+          if (func === undefined) {
+            return null;
+          } else if (typeof func === 'string') {
+            let getMoreFuncName = this.view(0).firstChild.getAttribute('infinite-scroll-next');
+            let funcCall = this.scope.overrideContext.bindingContext[getMoreFuncName];
+
+            if (typeof funcCall === 'function') {
+              let result = funcCall.call(this.scope.overrideContext.bindingContext, topIndex, isAtBottom, isAtTop);
+              if (!(result instanceof Promise)) {
                 this._calledGetMore = false; //Reset for the next time
-              });
+              } else {
+                return result.then(() => {
+                  this._calledGetMore = false; //Reset for the next time
+                });
+              }
+            } else {
+              throw new Error("'infinite-scroll-next' must be a function or evaluate to one");
             }
+          } else if (func.sourceExpression) {
+            this._calledGetMore = false; //Reset for the next time
+            return func.sourceExpression.evaluate(this.scope);
+          } else {
+            throw new Error("'infinite-scroll-next' must be a function or evaluate to one");
           }
           return null;
         };
@@ -896,7 +918,7 @@ export class VirtualRepeat extends AbstractRepeater {
     return this.view(0) ? this.view(0).overrideContext.$index : -1;
   }
 
-  _calcInitialHeights(itemsLength: number) {
+  _calcInitialHeights(itemsLength: number): void {
     if (this._viewsLength > 0 && this._itemsLength === itemsLength || itemsLength <= 0) {
       return;
     }
@@ -905,7 +927,14 @@ export class VirtualRepeat extends AbstractRepeater {
     let firstViewElement = this.view(0).lastChild;
     this.itemHeight = calcOuterHeight(firstViewElement);
     if (this.itemHeight <= 0) {
-      throw new Error('Could not calculate item height');
+      this._sizeInterval = setInterval(()=>{
+        let newCalcSize = calcOuterHeight(firstViewElement);
+        if (newCalcSize > 0) {
+          clearInterval(this._sizeInterval);
+          this.itemsChanged();
+        }
+      }, 500);
+      return;
     }
     this.scrollContainerHeight = this._fixedHeightContainer ? this._calcScrollHeight(this.scrollContainer) : document.documentElement.clientHeight;
     this.elementsInView = Math.ceil(this.scrollContainerHeight / this.itemHeight) + 1;
@@ -920,6 +949,7 @@ export class VirtualRepeat extends AbstractRepeater {
     // TODO This will cause scrolling back to top when swapping collection instances that have different lengths - instead should keep the scroll position
     this.scrollContainer.scrollTop = 0;
     this._first = 0;
+    return;
   }
 
   _calcScrollHeight(element: Element): number {

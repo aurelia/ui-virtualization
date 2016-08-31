@@ -3,9 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.VirtualRepeat = exports.VirtualRepeatStrategyLocator = exports.DefaultTemplateStrategy = exports.TableStrategy = exports.TemplateStrategyLocator = exports.ArrayVirtualRepeatStrategy = exports.VirtualRepeatNext = exports.DomHelper = undefined;
-
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+exports.VirtualRepeat = exports.VirtualRepeatStrategyLocator = exports.DefaultTemplateStrategy = exports.TableStrategy = exports.TemplateStrategyLocator = exports.ArrayVirtualRepeatStrategy = exports.InfiniteScrollNext = exports.DomHelper = undefined;
 
 var _dec, _class, _dec2, _class2, _dec3, _class3, _dec4, _dec5, _class5, _desc, _value, _class6, _descriptor, _descriptor2;
 
@@ -98,18 +96,18 @@ var DomHelper = exports.DomHelper = function () {
   return DomHelper;
 }();
 
-var VirtualRepeatNext = exports.VirtualRepeatNext = (_dec = (0, _aureliaTemplating.customAttribute)('virtual-repeat-next'), _dec(_class = function () {
-  function VirtualRepeatNext() {
-    _classCallCheck(this, VirtualRepeatNext);
+var InfiniteScrollNext = exports.InfiniteScrollNext = (_dec = (0, _aureliaTemplating.customAttribute)('infinite-scroll-next'), _dec(_class = function () {
+  function InfiniteScrollNext() {
+    _classCallCheck(this, InfiniteScrollNext);
   }
 
-  VirtualRepeatNext.prototype.attached = function attached() {};
+  InfiniteScrollNext.prototype.attached = function attached() {};
 
-  VirtualRepeatNext.prototype.bind = function bind(bindingContext, overrideContext) {
+  InfiniteScrollNext.prototype.bind = function bind(bindingContext, overrideContext) {
     this.scope = { bindingContext: bindingContext, overrideContext: overrideContext };
   };
 
-  return VirtualRepeatNext;
+  return InfiniteScrollNext;
 }()) || _class);
 function calcOuterHeight(element) {
   var height = void 0;
@@ -736,6 +734,9 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec4 = (0, _aureliaTemplating.cust
     }
     this._unsubscribeCollection();
     clearInterval(this.calcDistanceToTopInterval);
+    if (this._sizeInterval) {
+      clearInterval(this._sizeInterval);
+    }
   };
 
   VirtualRepeat.prototype.itemsChanged = function itemsChanged() {
@@ -836,6 +837,7 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec4 = (0, _aureliaTemplating.cust
       }
     } else if (this._scrollingUp) {
       var _viewsToMove = this._lastRebind - this._first;
+      var initialScrollState = this.isLastIndex === undefined;
       if (this._switchedDirection) {
         if (this.isLastIndex) {
           _viewsToMove = this.items.length - this._first - this.elementsInView;
@@ -849,7 +851,8 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec4 = (0, _aureliaTemplating.cust
       this.movedViewsCount = _movedViewsCount;
       var _adjustHeight = _movedViewsCount < _viewsToMove ? this._topBufferHeight : itemHeight * _movedViewsCount;
       if (_viewsToMove > 0) {
-        this._getMore();
+        var force = this.movedViewsCount === 0 && initialScrollState && this._first <= 0 ? true : false;
+        this._getMore(force);
       }
       this._switchedDirection = false;
       this._topBufferHeight = this._topBufferHeight - _adjustHeight;
@@ -863,42 +866,53 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec4 = (0, _aureliaTemplating.cust
     this._ticking = false;
   };
 
-  VirtualRepeat.prototype._getMore = function _getMore() {
+  VirtualRepeat.prototype._getMore = function _getMore(force) {
     var _this9 = this;
 
-    if (this.isLastIndex || this._first === 0) {
+    if (this.isLastIndex || this._first === 0 || force) {
       if (!this._calledGetMore) {
-        var _ret2 = function () {
-          var getMoreFunc = _this9.view(0).firstChild.getAttribute('virtual-repeat-next');
-          if (!getMoreFunc) {
-            return {
-              v: void 0
-            };
-          }
-          var getMore = _this9.scope.overrideContext.bindingContext[getMoreFunc];
-          var executeGetMore = function executeGetMore() {
-            _this9._calledGetMore = true;
-            if (getMore instanceof Promise) {
-              return getMore.then(function () {
-                _this9._calledGetMore = false;
-              });
-            } else if (typeof getMore === 'function') {
-                var result = getMore.bind(_this9.scope.overrideContext.bindingContext)(_this9._first, _this9._bottomBufferHeight === 0, _this9._isAtTop);
-                if (!(result instanceof Promise)) {
-                  _this9._calledGetMore = false;
-                } else {
-                    return result.then(function () {
-                      _this9._calledGetMore = false;
-                    });
-                  }
-              }
-            return null;
+        var executeGetMore = function executeGetMore() {
+          _this9._calledGetMore = true;
+          var func = _this9.view(0) && _this9.view(0).firstChild.au ? _this9.view(0).firstChild.au['infinite-scroll-next'].instruction.attributes['infinite-scroll-next'] : undefined;
+          var topIndex = _this9._first;
+          var isAtBottom = _this9._bottomBufferHeight === 0;
+          var isAtTop = _this9._isAtTop;
+          var scrollContext = {
+            topIndex: topIndex,
+            isAtBottom: isAtBottom,
+            isAtTop: isAtTop
           };
 
-          _this9.observerLocator.taskQueue.queueMicroTask(executeGetMore);
-        }();
+          _this9.scope.overrideContext.$scrollContext = scrollContext;
 
-        if ((typeof _ret2 === 'undefined' ? 'undefined' : _typeof(_ret2)) === "object") return _ret2.v;
+          if (func === undefined) {
+            return null;
+          } else if (typeof func === 'string') {
+            var getMoreFuncName = _this9.view(0).firstChild.getAttribute('infinite-scroll-next');
+            var funcCall = _this9.scope.overrideContext.bindingContext[getMoreFuncName];
+
+            if (typeof funcCall === 'function') {
+              var result = funcCall.call(_this9.scope.overrideContext.bindingContext, topIndex, isAtBottom, isAtTop);
+              if (!(result instanceof Promise)) {
+                _this9._calledGetMore = false;
+              } else {
+                  return result.then(function () {
+                    _this9._calledGetMore = false;
+                  });
+                }
+            } else {
+                throw new Error("'infinite-scroll-next' must be a function or evaluate to one");
+              }
+          } else if (func.sourceExpression) {
+            _this9._calledGetMore = false;
+            return func.sourceExpression.evaluate(_this9.scope);
+          } else {
+            throw new Error("'infinite-scroll-next' must be a function or evaluate to one");
+          }
+          return null;
+        };
+
+        this.observerLocator.taskQueue.queueMicroTask(executeGetMore);
       }
     }
   };
@@ -995,6 +1009,8 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec4 = (0, _aureliaTemplating.cust
   };
 
   VirtualRepeat.prototype._calcInitialHeights = function _calcInitialHeights(itemsLength) {
+    var _this11 = this;
+
     if (this._viewsLength > 0 && this._itemsLength === itemsLength || itemsLength <= 0) {
       return;
     }
@@ -1003,7 +1019,14 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec4 = (0, _aureliaTemplating.cust
     var firstViewElement = this.view(0).lastChild;
     this.itemHeight = calcOuterHeight(firstViewElement);
     if (this.itemHeight <= 0) {
-      throw new Error('Could not calculate item height');
+      this._sizeInterval = setInterval(function () {
+        var newCalcSize = calcOuterHeight(firstViewElement);
+        if (newCalcSize > 0) {
+          clearInterval(_this11._sizeInterval);
+          _this11.itemsChanged();
+        }
+      }, 500);
+      return;
     }
     this.scrollContainerHeight = this._fixedHeightContainer ? this._calcScrollHeight(this.scrollContainer) : document.documentElement.clientHeight;
     this.elementsInView = Math.ceil(this.scrollContainerHeight / this.itemHeight) + 1;
@@ -1018,6 +1041,7 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec4 = (0, _aureliaTemplating.cust
 
     this.scrollContainer.scrollTop = 0;
     this._first = 0;
+    return;
   };
 
   VirtualRepeat.prototype._calcScrollHeight = function _calcScrollHeight(element) {
