@@ -48,7 +48,7 @@ export class ArrayObserverMock {
   unsubscribe(){};
 }
 
-export class ViewStrategyMock {
+export class TemplateStrategyMock {
   getScrollContainer(element: Element)  { }
   moveViewFirst(view: View, topBuffer: Element) { }
   moveViewLast(view: View, bottomBuffer: Element) { }

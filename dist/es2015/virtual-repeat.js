@@ -45,16 +45,16 @@ function _initializerWarningHelper(descriptor, context) {
 
 import { inject } from 'aurelia-dependency-injection';
 import { ObserverLocator } from 'aurelia-binding';
-import { BoundViewFactory, ViewSlot, ViewResources, TargetInstruction, customAttribute, bindable, templateController } from 'aurelia-templating';
+import { BoundViewFactory, ViewSlot, ViewResources, TargetInstruction, customAttribute, bindable, templateController, View } from 'aurelia-templating';
 import { AbstractRepeater, getItemsSourceExpression, isOneTime, unwrapExpression, updateOneTimeBinding, viewsRequireLifecycle } from 'aurelia-templating-resources';
 import { DOM } from 'aurelia-pal';
 import { getStyleValue, calcOuterHeight, rebindAndMoveView } from './utilities';
 import { DomHelper } from './dom-helper';
 import { VirtualRepeatStrategyLocator } from './virtual-repeat-strategy-locator';
-import { ViewStrategyLocator } from './view-strategy';
+import { TemplateStrategyLocator } from './template-strategy';
 
-export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = inject(DOM.Element, BoundViewFactory, TargetInstruction, ViewSlot, ViewResources, ObserverLocator, VirtualRepeatStrategyLocator, ViewStrategyLocator, DomHelper), _dec(_class = templateController(_class = _dec2(_class = (_class2 = class VirtualRepeat extends AbstractRepeater {
-  constructor(element, viewFactory, instruction, viewSlot, viewResources, observerLocator, strategyLocator, viewStrategyLocator, domHelper) {
+export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = inject(DOM.Element, BoundViewFactory, TargetInstruction, ViewSlot, ViewResources, ObserverLocator, VirtualRepeatStrategyLocator, TemplateStrategyLocator, DomHelper), _dec(_class = templateController(_class = _dec2(_class = (_class2 = class VirtualRepeat extends AbstractRepeater {
+  constructor(element, viewFactory, instruction, viewSlot, viewResources, observerLocator, strategyLocator, templateStrategyLocator, domHelper) {
     super({
       local: 'item',
       viewsRequireLifecycle: viewsRequireLifecycle(viewFactory)
@@ -75,6 +75,7 @@ export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
     this._fixedHeightContainer = false;
     this._hasCalculatedSizes = false;
     this._isAtTop = true;
+    this._calledGetMore = false;
 
     _initDefineProp(this, 'items', _descriptor, this);
 
@@ -87,7 +88,7 @@ export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
     this.lookupFunctions = viewResources.lookupFunctions;
     this.observerLocator = observerLocator;
     this.strategyLocator = strategyLocator;
-    this.viewStrategyLocator = viewStrategyLocator;
+    this.templateStrategyLocator = templateStrategyLocator;
     this.sourceExpression = getItemsSourceExpression(this.instruction, 'virtual-repeat.for');
     this.isOneTime = isOneTime(this.sourceExpression);
     this.domHelper = domHelper;
@@ -97,22 +98,25 @@ export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
     this._isAttached = true;
     let element = this.element;
     this._itemsLength = this.items.length;
-    this.viewStrategy = this.viewStrategyLocator.getStrategy(element);
-    this.scrollContainer = this.viewStrategy.getScrollContainer(element);
-    this.topBuffer = this.viewStrategy.createTopBufferElement(element);
-    this.bottomBuffer = this.viewStrategy.createBottomBufferElement(element);
+    this.templateStrategy = this.templateStrategyLocator.getStrategy(element);
+    this.scrollContainer = this.templateStrategy.getScrollContainer(element);
+    this.topBuffer = this.templateStrategy.createTopBufferElement(element);
+    this.bottomBuffer = this.templateStrategy.createBottomBufferElement(element);
     this.itemsChanged();
     this.scrollListener = () => this._onScroll();
 
     this.calcDistanceToTopInterval = setInterval(() => {
       let distanceToTop = this.distanceToTop;
       this.distanceToTop = this.domHelper.getElementDistanceToTopOfDocument(this.topBuffer);
+      this.distanceToTop += this.topBufferDistance;
       if (distanceToTop !== this.distanceToTop) {
         this._handleScroll();
       }
     }, 500);
 
-    this.distanceToTop = this.domHelper.getElementDistanceToTopOfDocument(this.viewStrategy.getFirstElement(this.topBuffer));
+    this.distanceToTop = this.domHelper.getElementDistanceToTopOfDocument(this.templateStrategy.getFirstElement(this.topBuffer));
+    this.topBufferDistance = this.templateStrategy.getTopBufferDistance(this.topBuffer);
+
     if (this.domHelper.hasOverflowScroll(this.scrollContainer)) {
       this._fixedHeightContainer = true;
       this.scrollContainer.addEventListener('scroll', this.scrollListener);
@@ -143,7 +147,7 @@ export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
     this._isAttached = false;
     this._ticking = false;
     this._hasCalculatedSizes = false;
-    this.viewStrategy.removeBufferElements(this.element, this.topBuffer, this.bottomBuffer);
+    this.templateStrategy.removeBufferElements(this.element, this.topBuffer, this.bottomBuffer);
     this.isLastIndex = false;
     this.scrollContainer = null;
     this.scrollContainerHeight = null;
@@ -154,6 +158,9 @@ export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
     }
     this._unsubscribeCollection();
     clearInterval(this.calcDistanceToTopInterval);
+    if (this._sizeInterval) {
+      clearInterval(this._sizeInterval);
+    }
   }
 
   itemsChanged() {
@@ -235,6 +242,9 @@ export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
       this._lastRebind = this._first;
       let movedViewsCount = this._moveViews(viewsToMove);
       let adjustHeight = movedViewsCount < viewsToMove ? this._bottomBufferHeight : itemHeight * movedViewsCount;
+      if (viewsToMove > 0) {
+        this._getMore();
+      }
       this._switchedDirection = false;
       this._topBufferHeight = this._topBufferHeight + adjustHeight;
       this._bottomBufferHeight = this._bottomBufferHeight - adjustHeight;
@@ -243,6 +253,7 @@ export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
       }
     } else if (this._scrollingUp) {
       let viewsToMove = this._lastRebind - this._first;
+      let initialScrollState = this.isLastIndex === undefined;
       if (this._switchedDirection) {
         if (this.isLastIndex) {
           viewsToMove = this.items.length - this._first - this.elementsInView;
@@ -255,6 +266,10 @@ export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
       let movedViewsCount = this._moveViews(viewsToMove);
       this.movedViewsCount = movedViewsCount;
       let adjustHeight = movedViewsCount < viewsToMove ? this._topBufferHeight : itemHeight * movedViewsCount;
+      if (viewsToMove > 0) {
+        let force = this.movedViewsCount === 0 && initialScrollState && this._first <= 0 ? true : false;
+        this._getMore(force);
+      }
       this._switchedDirection = false;
       this._topBufferHeight = this._topBufferHeight - adjustHeight;
       this._bottomBufferHeight = this._bottomBufferHeight + adjustHeight;
@@ -265,6 +280,55 @@ export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
     this._previousFirst = this._first;
 
     this._ticking = false;
+  }
+
+  _getMore(force) {
+    if (this.isLastIndex || this._first === 0 || force) {
+      if (!this._calledGetMore) {
+        let executeGetMore = () => {
+          this._calledGetMore = true;
+          let func = this.view(0) && this.view(0).firstChild && this.view(0).firstChild.au && this.view(0).firstChild.au['infinite-scroll-next'] ? this.view(0).firstChild.au['infinite-scroll-next'].instruction.attributes['infinite-scroll-next'] : undefined;
+          let topIndex = this._first;
+          let isAtBottom = this._bottomBufferHeight === 0;
+          let isAtTop = this._isAtTop;
+          let scrollContext = {
+            topIndex: topIndex,
+            isAtBottom: isAtBottom,
+            isAtTop: isAtTop
+          };
+
+          this.scope.overrideContext.$scrollContext = scrollContext;
+
+          if (func === undefined) {
+            return null;
+          } else if (typeof func === 'string') {
+            let getMoreFuncName = this.view(0).firstChild.getAttribute('infinite-scroll-next');
+            let funcCall = this.scope.overrideContext.bindingContext[getMoreFuncName];
+
+            if (typeof funcCall === 'function') {
+              let result = funcCall.call(this.scope.overrideContext.bindingContext, topIndex, isAtBottom, isAtTop);
+              if (!(result instanceof Promise)) {
+                this._calledGetMore = false;
+              } else {
+                  return result.then(() => {
+                    this._calledGetMore = false;
+                  });
+                }
+            } else {
+                throw new Error("'infinite-scroll-next' must be a function or evaluate to one");
+              }
+          } else if (func.sourceExpression) {
+            this._calledGetMore = false;
+            return func.sourceExpression.evaluate(this.scope);
+          } else {
+            throw new Error("'infinite-scroll-next' must be a function or evaluate to one");
+          }
+          return null;
+        };
+
+        this.observerLocator.taskQueue.queueMicroTask(executeGetMore);
+      }
+    }
   }
 
   _checkScrolling() {
@@ -356,10 +420,17 @@ export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
     }
     this._hasCalculatedSizes = true;
     this._itemsLength = itemsLength;
-    let firstViewElement = DOM.nextElementSibling(this.view(0).firstChild);
+    let firstViewElement = this.view(0).lastChild;
     this.itemHeight = calcOuterHeight(firstViewElement);
     if (this.itemHeight <= 0) {
-      throw new Error('Could not calculate item height');
+      this._sizeInterval = setInterval(() => {
+        let newCalcSize = calcOuterHeight(firstViewElement);
+        if (newCalcSize > 0) {
+          clearInterval(this._sizeInterval);
+          this.itemsChanged();
+        }
+      }, 500);
+      return;
     }
     this.scrollContainerHeight = this._fixedHeightContainer ? this._calcScrollHeight(this.scrollContainer) : document.documentElement.clientHeight;
     this.elementsInView = Math.ceil(this.scrollContainerHeight / this.itemHeight) + 1;
@@ -374,6 +445,7 @@ export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
 
     this.scrollContainer.scrollTop = 0;
     this._first = 0;
+    return;
   }
 
   _calcScrollHeight(element) {

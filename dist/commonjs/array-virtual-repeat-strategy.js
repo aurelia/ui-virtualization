@@ -9,7 +9,7 @@ var _aureliaTemplatingResources = require('aurelia-templating-resources');
 
 var _utilities = require('./utilities');
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
@@ -19,7 +19,7 @@ var ArrayVirtualRepeatStrategy = exports.ArrayVirtualRepeatStrategy = function (
   _inherits(ArrayVirtualRepeatStrategy, _ArrayRepeatStrategy);
 
   function ArrayVirtualRepeatStrategy() {
-    _classCallCheck(this, ArrayVirtualRepeatStrategy);
+    
 
     return _possibleConstructorReturn(this, _ArrayRepeatStrategy.apply(this, arguments));
   }
@@ -121,27 +121,52 @@ var ArrayVirtualRepeatStrategy = exports.ArrayVirtualRepeatStrategy = function (
     var removeDelta = 0;
     var rmPromises = [];
 
-    for (var i = 0, ii = splices.length; i < ii; ++i) {
+    var allSplicesAreInplace = true;
+    for (var i = 0; i < splices.length; i++) {
       var splice = splices[i];
-      var removed = splice.removed;
-      var removedLength = removed.length;
-      for (var j = 0, jj = removedLength; j < jj; ++j) {
-        var viewOrPromise = this._removeViewAt(repeat, splice.index + removeDelta + rmPromises.length, true, j, removedLength);
-        if (viewOrPromise instanceof Promise) {
-          rmPromises.push(viewOrPromise);
-        }
+      if (splice.removed.length !== splice.addedCount) {
+        allSplicesAreInplace = false;
+        break;
       }
-      removeDelta -= splice.addedCount;
     }
 
-    if (rmPromises.length > 0) {
-      return Promise.all(rmPromises).then(function () {
-        _this3._handleAddedSplices(repeat, array, splices);
-        (0, _utilities.updateVirtualOverrideContexts)(repeat, 0);
-      });
+    if (allSplicesAreInplace) {
+      for (var _i2 = 0; _i2 < splices.length; _i2++) {
+        var _splice = splices[_i2];
+        for (var collectionIndex = _splice.index; collectionIndex < _splice.index + _splice.addedCount; collectionIndex++) {
+          if (!this._isIndexBeforeViewSlot(repeat, repeat.viewSlot, collectionIndex) && !this._isIndexAfterViewSlot(repeat, repeat.viewSlot, collectionIndex)) {
+            var viewIndex = this._getViewIndex(repeat, repeat.viewSlot, collectionIndex);
+            var overrideContext = (0, _aureliaTemplatingResources.createFullOverrideContext)(repeat, array[collectionIndex], collectionIndex, array.length);
+            repeat.removeView(viewIndex, true, true);
+            repeat.insertView(viewIndex, overrideContext.bindingContext, overrideContext);
+          }
+        }
+      }
+    } else {
+      for (var _i3 = 0, ii = splices.length; _i3 < ii; ++_i3) {
+        var _splice2 = splices[_i3];
+        var removed = _splice2.removed;
+        var removedLength = removed.length;
+        for (var j = 0, jj = removedLength; j < jj; ++j) {
+          var viewOrPromise = this._removeViewAt(repeat, _splice2.index + removeDelta + rmPromises.length, true, j, removedLength);
+          if (viewOrPromise instanceof Promise) {
+            rmPromises.push(viewOrPromise);
+          }
+        }
+        removeDelta -= _splice2.addedCount;
+      }
+
+      if (rmPromises.length > 0) {
+        return Promise.all(rmPromises).then(function () {
+          _this3._handleAddedSplices(repeat, array, splices);
+          (0, _utilities.updateVirtualOverrideContexts)(repeat, 0);
+        });
+      }
+      this._handleAddedSplices(repeat, array, splices);
+      (0, _utilities.updateVirtualOverrideContexts)(repeat, 0);
     }
-    this._handleAddedSplices(repeat, array, splices);
-    (0, _utilities.updateVirtualOverrideContexts)(repeat, 0);
+
+    return undefined;
   };
 
   ArrayVirtualRepeatStrategy.prototype._removeViewAt = function _removeViewAt(repeat, collectionIndex, returnToCache, j, removedLength) {
@@ -232,7 +257,7 @@ var ArrayVirtualRepeatStrategy = exports.ArrayVirtualRepeatStrategy = function (
       var addIndex = splice.index;
       var end = splice.index + splice.addedCount;
       for (; addIndex < end; ++addIndex) {
-        var hasDistanceToBottomViewPort = (0, _utilities.getElementDistanceToBottomViewPort)(repeat.viewStrategy.getLastElement(repeat.bottomBuffer)) > 0;
+        var hasDistanceToBottomViewPort = (0, _utilities.getElementDistanceToBottomViewPort)(repeat.templateStrategy.getLastElement(repeat.bottomBuffer)) > 0;
         if (repeat.viewCount() === 0 || !this._isIndexBeforeViewSlot(repeat, viewSlot, addIndex) && !this._isIndexAfterViewSlot(repeat, viewSlot, addIndex) || hasDistanceToBottomViewPort) {
           var overrideContext = (0, _aureliaTemplatingResources.createFullOverrideContext)(repeat, array[addIndex], addIndex, arrayLength);
           repeat.insertView(addIndex, overrideContext.bindingContext, overrideContext);

@@ -19,7 +19,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
     this._inPlaceProcessItems(repeat, items);
   }
 
-  _standardProcessInstanceChanged(repeat: VirtualRepeat, items: Array): void {
+  _standardProcessInstanceChanged(repeat: VirtualRepeat, items: Array<any>): void {
     for (let i = 1, ii = repeat._viewsLength; i < ii; ++i) {
       let overrideContext = createFullOverrideContext(repeat, items[i], i, ii);
       repeat.addView(overrideContext.bindingContext, overrideContext);
@@ -100,31 +100,58 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
     }
   }
 
-  _runSplices(repeat: VirtualRepeat, array: Array, splices: any): any {
+  _runSplices(repeat: VirtualRepeat, array: Array<any>, splices: any): any {
     let removeDelta = 0;
     let rmPromises = [];
 
-    for (let i = 0, ii = splices.length; i < ii; ++i) {
+    // do all splices replace existing entries?
+    let allSplicesAreInplace = true;
+    for (let i = 0; i < splices.length; i++) {
       let splice = splices[i];
-      let removed = splice.removed;
-      let removedLength = removed.length;
-      for (let j = 0, jj = removedLength; j < jj; ++j) {
-        let viewOrPromise = this._removeViewAt(repeat, splice.index + removeDelta + rmPromises.length, true, j, removedLength);
-        if (viewOrPromise instanceof Promise) {
-          rmPromises.push(viewOrPromise);
-        }
+      if (splice.removed.length !== splice.addedCount) {
+        allSplicesAreInplace = false;
+        break;
       }
-      removeDelta -= splice.addedCount;
     }
 
-    if (rmPromises.length > 0) {
-      return Promise.all(rmPromises).then(() => {
-        this._handleAddedSplices(repeat, array, splices);
-        updateVirtualOverrideContexts(repeat, 0);
-      });
+    // if so, optimise by just replacing affected visible views
+    if (allSplicesAreInplace) {
+      for (let i = 0; i < splices.length; i++) {
+        let splice = splices[i];
+        for (let collectionIndex = splice.index; collectionIndex < splice.index + splice.addedCount; collectionIndex++) {
+          if (!this._isIndexBeforeViewSlot(repeat, repeat.viewSlot, collectionIndex) && !this._isIndexAfterViewSlot(repeat, repeat.viewSlot, collectionIndex) ) {
+            let viewIndex = this._getViewIndex(repeat, repeat.viewSlot, collectionIndex);
+            let overrideContext = createFullOverrideContext(repeat, array[collectionIndex], collectionIndex, array.length);
+            repeat.removeView(viewIndex, true, true);
+            repeat.insertView(viewIndex, overrideContext.bindingContext, overrideContext);
+          }
+        }
+      }
+    } else {
+      for (let i = 0, ii = splices.length; i < ii; ++i) {
+        let splice = splices[i];
+        let removed = splice.removed;
+        let removedLength = removed.length;
+        for (let j = 0, jj = removedLength; j < jj; ++j) {
+          let viewOrPromise = this._removeViewAt(repeat, splice.index + removeDelta + rmPromises.length, true, j, removedLength);
+          if (viewOrPromise instanceof Promise) {
+            rmPromises.push(viewOrPromise);
+          }
+        }
+        removeDelta -= splice.addedCount;
+      }
+
+      if (rmPromises.length > 0) {
+        return Promise.all(rmPromises).then(() => {
+          this._handleAddedSplices(repeat, array, splices);
+          updateVirtualOverrideContexts(repeat, 0);
+        });
+      }
+      this._handleAddedSplices(repeat, array, splices);
+      updateVirtualOverrideContexts(repeat, 0);
     }
-    this._handleAddedSplices(repeat, array, splices);
-    updateVirtualOverrideContexts(repeat, 0);
+
+    return undefined;
   }
 
   _removeViewAt(repeat: VirtualRepeat, collectionIndex: number, returnToCache: boolean, j: number, removedLength: number): any {
@@ -217,7 +244,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
       let addIndex = splice.index;
       let end = splice.index + splice.addedCount;
       for (; addIndex < end; ++addIndex) {
-        let hasDistanceToBottomViewPort = getElementDistanceToBottomViewPort(repeat.viewStrategy.getLastElement(repeat.bottomBuffer)) > 0;
+        let hasDistanceToBottomViewPort = getElementDistanceToBottomViewPort(repeat.templateStrategy.getLastElement(repeat.bottomBuffer)) > 0;
         if (repeat.viewCount() === 0 || (!this._isIndexBeforeViewSlot(repeat, viewSlot, addIndex) && !this._isIndexAfterViewSlot(repeat, viewSlot, addIndex)) || hasDistanceToBottomViewPort)  {
           let overrideContext = createFullOverrideContext(repeat, array[addIndex], addIndex, arrayLength);
           repeat.insertView(addIndex, overrideContext.bindingContext, overrideContext);

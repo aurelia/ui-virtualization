@@ -12,6 +12,16 @@ gulp.task('test', function (done) {
 });
 
 /**
+ * Run test and watch for changes
+ */
+gulp.task('test:watch', function (done) {
+  new Karma({
+    configFile: __dirname + '/../../karma.conf.js',
+    singleRun: false
+  }, done).start();
+});
+
+/**
  * Watch for file changes and re-run tests on each change
  */
 gulp.task('tdd', function (done) {

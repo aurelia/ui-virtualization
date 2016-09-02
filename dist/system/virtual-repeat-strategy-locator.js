@@ -1,13 +1,11 @@
 'use strict';
 
 System.register(['aurelia-templating-resources', './array-virtual-repeat-strategy'], function (_export, _context) {
+  "use strict";
+
   var RepeatStrategyLocator, ArrayVirtualRepeatStrategy, VirtualRepeatStrategyLocator;
 
-  function _classCallCheck(instance, Constructor) {
-    if (!(instance instanceof Constructor)) {
-      throw new TypeError("Cannot call a class as a function");
-    }
-  }
+  
 
   function _possibleConstructorReturn(self, call) {
     if (!self) {
@@ -44,7 +42,7 @@ System.register(['aurelia-templating-resources', './array-virtual-repeat-strateg
         _inherits(VirtualRepeatStrategyLocator, _RepeatStrategyLocato);
 
         function VirtualRepeatStrategyLocator() {
-          _classCallCheck(this, VirtualRepeatStrategyLocator);
+          
 
           var _this = _possibleConstructorReturn(this, _RepeatStrategyLocato.call(this));
 

@@ -1,4 +1,5 @@
 import { updateOverrideContext } from 'aurelia-templating-resources';
+import { View } from 'aurelia-templating';
 
 export function calcOuterHeight(element) {
   let height;
@@ -9,20 +10,8 @@ export function calcOuterHeight(element) {
 }
 
 export function insertBeforeNode(view, bottomBuffer) {
-  let viewStart = view.firstChild;
-  let element = viewStart.nextSibling;
-  let viewEnd = view.lastChild;
-  let parentElement;
-
-  if (bottomBuffer.parentElement) {
-    parentElement = bottomBuffer.parentElement;
-  } else if (bottomBuffer.parentNode) {
-    parentElement = bottomBuffer.parentNode;
-  }
-
-  parentElement.insertBefore(viewEnd, bottomBuffer);
-  parentElement.insertBefore(element, viewEnd);
-  parentElement.insertBefore(viewStart, element);
+  let parentElement = bottomBuffer.parentElement || bottomBuffer.parentNode;
+  parentElement.insertBefore(view.lastChild, bottomBuffer);
 }
 
 export function updateVirtualOverrideContexts(repeat, startIndex) {
@@ -48,10 +37,10 @@ export function rebindAndMoveView(repeat, view, index, moveToBottom) {
   view.bindingContext[repeat.local] = items[index];
   if (moveToBottom) {
     viewSlot.children.push(viewSlot.children.shift());
-    repeat.viewStrategy.moveViewLast(view, repeat.bottomBuffer);
+    repeat.templateStrategy.moveViewLast(view, repeat.bottomBuffer);
   } else {
     viewSlot.children.unshift(viewSlot.children.splice(-1, 1)[0]);
-    repeat.viewStrategy.moveViewFirst(view, repeat.topBuffer);
+    repeat.templateStrategy.moveViewFirst(view, repeat.topBuffer);
   }
 }
 
