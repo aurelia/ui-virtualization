@@ -3,13 +3,15 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.VirtualRepeat = undefined;
-exports.configure = configure;
 
-var _virtualRepeat = require('./virtual-repeat');
+var _aureliaUiVirtualization = require('./aurelia-ui-virtualization');
 
-function configure(config) {
-  config.globalResources('./virtual-repeat');
-}
-
-exports.VirtualRepeat = _virtualRepeat.VirtualRepeat;
+Object.keys(_aureliaUiVirtualization).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function get() {
+      return _aureliaUiVirtualization[key];
+    }
+  });
+});

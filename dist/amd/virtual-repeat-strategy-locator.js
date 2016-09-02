@@ -6,11 +6,7 @@ define(['exports', 'aurelia-templating-resources', './array-virtual-repeat-strat
   });
   exports.VirtualRepeatStrategyLocator = undefined;
 
-  function _classCallCheck(instance, Constructor) {
-    if (!(instance instanceof Constructor)) {
-      throw new TypeError("Cannot call a class as a function");
-    }
-  }
+  
 
   function _possibleConstructorReturn(self, call) {
     if (!self) {
@@ -40,7 +36,7 @@ define(['exports', 'aurelia-templating-resources', './array-virtual-repeat-strat
     _inherits(VirtualRepeatStrategyLocator, _RepeatStrategyLocato);
 
     function VirtualRepeatStrategyLocator() {
-      _classCallCheck(this, VirtualRepeatStrategyLocator);
+      
 
       var _this = _possibleConstructorReturn(this, _RepeatStrategyLocato.call(this));
 

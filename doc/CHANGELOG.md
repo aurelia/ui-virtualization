@@ -1,3 +1,81 @@
+<a name="1.0.0-beta.3.0.1"></a>
+# [1.0.0-beta.3.0.1](https://github.com/aurelia/ui-virtualization/compare/1.0.0-beta.3.0.0...v1.0.0-beta.3.0.1) (2016-08-31)
+
+
+### Bug Fixes
+
+* **virtual-repeat:** check for infinite-scroll attribute ([c779738](https://github.com/aurelia/ui-virtualization/commit/c779738))
+
+
+
+<a name="1.0.0-beta.3.0.0"></a>
+# [1.0.0-beta.3.0.0](https://github.com/aurelia/ui-virtualization/compare/1.0.0-beta.2.0.0...v1.0.0-beta.3.0.0) (2016-08-26)
+
+
+### Bug Fixes
+
+* **package.json:** change package.json to properly define resources ([4da877f](https://github.com/aurelia/ui-virtualization/commit/4da877f))
+* **virtual-repeat:** make infinite scroll work with initial small page size ([cb135a2](https://github.com/aurelia/ui-virtualization/commit/cb135a2))
+* **virtual-repeat:** make initially hidden elements display correctly ([319cc59](https://github.com/aurelia/ui-virtualization/commit/319cc59))
+
+
+### Code Refactoring
+
+* **all:** rename `virtual-repeat-next` to `infinite-scroll-next` ([b7ff555](https://github.com/aurelia/ui-virtualization/commit/b7ff555))
+
+
+### Features
+
+* **virtual-repeat:** allow use of `.call` on `virtual-repeat-next` ([2d1789b](https://github.com/aurelia/ui-virtualization/commit/2d1789b))
+
+
+### BREAKING CHANGES
+
+* all: Renamed `virtual-repeat-next` to
+`infinite-scroll-next` to provide more meaning to the attribute.
+
+
+
+<a name="1.0.0-beta.2.0.0"></a>
+# [1.0.0-beta.2.0.0](https://github.com/aurelia/ui-virtualization/compare/1.0.0-beta.1.0.2...v1.0.0-beta.2.0.0) (2016-07-27)
+
+
+
+<a name="1.0.0-beta.1.0.2"></a>
+# [1.0.0-beta.1.0.2](https://github.com/aurelia/ui-virtualization/compare/1.0.0-beta.1.0.1...v1.0.0-beta.1.0.2) (2016-07-12)
+
+
+### Bug Fixes
+
+* **dist:** restore release dist folder ([45f74be](https://github.com/aurelia/ui-virtualization/commit/45f74be))
+* **table-strategy:** move buffer elements outside of table ([1fe64a6](https://github.com/aurelia/ui-virtualization/commit/1fe64a6)), closes [#46](https://github.com/aurelia/ui-virtualization/issues/46)
+
+
+### Features
+
+* **all:** support infinite scroll ([9a3b965](https://github.com/aurelia/ui-virtualization/commit/9a3b965))
+* **virtual-repeat:** pass location state to scroll callback ([29418bf](https://github.com/aurelia/ui-virtualization/commit/29418bf))
+
+
+
+<a name="1.0.0-beta.1.0.1"></a>
+# [1.0.0-beta.1.0.1](https://github.com/aurelia/ui-virtualization/compare/1.0.0-beta.1.0.0...v1.0.0-beta.1.0.1) (2016-07-06)
+
+
+### Bug Fixes
+
+* **template-strategy:** move views correctly ([5b5e6e6](https://github.com/aurelia/ui-virtualization/commit/5b5e6e6)), closes [#68](https://github.com/aurelia/ui-virtualization/issues/68)
+
+
+
+<a name="1.0.0-beta.1.0.0"></a>
+# [1.0.0-beta.1.0.0](https://github.com/aurelia/ui-virtualization/compare/0.5.2...v1.0.0-beta.1.0.0) (2016-06-22)
+
+
+
+### 0.4.6 (2016-05-31)
+
+
 ### 0.4.5 (2016-05-10)
 
 

@@ -14,8 +14,8 @@ function reportChange(event) {
 gulp.task('watch', ['serve'], function() {
   var bs = browserSync.get('Sample server');
 
-  gulp.watch(paths.source, ['build-system', bs.reload]).on('change', reportChange);
-  gulp.watch(paths.html, ['build-system', bs.reload]).on('change', reportChange);
+  gulp.watch(paths.source, ['build-babel-system', bs.reload]).on('change', reportChange);
+  gulp.watch(paths.html, ['build-babel-system', bs.reload]).on('change', reportChange);
   gulp.watch(paths.style, bs.reload).on('change', reportChange);
   gulp.watch(paths.sample + '/*', bs.reload).on('change', reportChange);
   gulp.watch(paths.sample + '/src/**/*', bs.reload).on('change', reportChange);
