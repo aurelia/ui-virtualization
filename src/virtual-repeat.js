@@ -423,6 +423,7 @@ export class VirtualRepeat extends AbstractRepeater {
       }, 500);
       return;
     }
+    this._itemsLength = itemsLength;
     this.scrollContainerHeight = this._fixedHeightContainer ? this._calcScrollHeight(this.scrollContainer) : document.documentElement.clientHeight;
     this.elementsInView = Math.ceil(this.scrollContainerHeight / this.itemHeight) + 1;
     this._viewsLength = (this.elementsInView * 2) + this._bufferSize;
