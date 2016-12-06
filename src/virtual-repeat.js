@@ -410,7 +410,6 @@ export class VirtualRepeat extends AbstractRepeater {
       return;
     }
     this._hasCalculatedSizes = true;
-    this._itemsLength = itemsLength;
     let firstViewElement = this.view(0).lastChild;
     this.itemHeight = calcOuterHeight(firstViewElement);
     if (this.itemHeight <= 0) {
