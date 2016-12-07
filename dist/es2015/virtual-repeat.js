@@ -310,13 +310,13 @@ export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
               if (!(result instanceof Promise)) {
                 this._calledGetMore = false;
               } else {
-                  return result.then(() => {
-                    this._calledGetMore = false;
-                  });
-                }
-            } else {
-                throw new Error("'infinite-scroll-next' must be a function or evaluate to one");
+                return result.then(() => {
+                  this._calledGetMore = false;
+                });
               }
+            } else {
+              throw new Error("'infinite-scroll-next' must be a function or evaluate to one");
+            }
           } else if (func.sourceExpression) {
             this._calledGetMore = false;
             return func.sourceExpression.evaluate(this.scope);
@@ -419,7 +419,6 @@ export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
       return;
     }
     this._hasCalculatedSizes = true;
-    this._itemsLength = itemsLength;
     let firstViewElement = this.view(0).lastChild;
     this.itemHeight = calcOuterHeight(firstViewElement);
     if (this.itemHeight <= 0) {
@@ -432,6 +431,7 @@ export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
       }, 500);
       return;
     }
+    this._itemsLength = itemsLength;
     this.scrollContainerHeight = this._fixedHeightContainer ? this._calcScrollHeight(this.scrollContainer) : document.documentElement.clientHeight;
     this.elementsInView = Math.ceil(this.scrollContainerHeight / this.itemHeight) + 1;
     this._viewsLength = this.elementsInView * 2 + this._bufferSize;
