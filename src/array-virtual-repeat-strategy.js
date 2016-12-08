@@ -239,13 +239,14 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
   _handleAddedSplices(repeat: VirtualRepeat, array: Array<any>, splices: any): void {
     let arrayLength = array.length;
     let viewSlot = repeat.viewSlot;
+    let hasInsertedBeforeViewSlot = false;
     for (let i = 0, ii = splices.length; i < ii; ++i) {
       let splice = splices[i];
       let addIndex = splice.index;
       let end = splice.index + splice.addedCount;
       for (; addIndex < end; ++addIndex) {
         let hasDistanceToBottomViewPort = getElementDistanceToBottomViewPort(repeat.templateStrategy.getLastElement(repeat.bottomBuffer)) > 0;
-        if (repeat.viewCount() === 0 || (!this._isIndexBeforeViewSlot(repeat, viewSlot, addIndex) && !this._isIndexAfterViewSlot(repeat, viewSlot, addIndex)) || hasDistanceToBottomViewPort)  {
+        if (repeat.viewCount() === 0 || (!this._isIndexBeforeViewSlot(repeat, viewSlot, addIndex) && !this._isIndexAfterViewSlot(repeat, viewSlot, addIndex))) {
           let overrideContext = createFullOverrideContext(repeat, array[addIndex], addIndex, arrayLength);
           repeat.insertView(addIndex, overrideContext.bindingContext, overrideContext);
           if (!repeat._hasCalculatedSizes) {
@@ -262,6 +263,11 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
           }
         } else if (this._isIndexBeforeViewSlot(repeat, viewSlot, addIndex)) {
           repeat._topBufferHeight = repeat._topBufferHeight + repeat.itemHeight;
+          // As we're adding an item before the view slots, this can cause the buffer to run out of rendered items. 
+          // By triggering the scrolling mechanism (after setting the previousFirst & lastRebind) the appropriate items are rendered. 
+          hasInsertedBeforeViewSlot = true;
+          repeat._previousFirst = repeat._previousFirst + 1;
+          repeat._lastRebind = repeat._lastRebind + 1;
         } else if (this._isIndexAfterViewSlot(repeat, viewSlot, addIndex)) {
           repeat._bottomBufferHeight = repeat._bottomBufferHeight + repeat.itemHeight;
           repeat.isLastIndex = false;
@@ -269,5 +275,9 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
       }
     }
     repeat._adjustBufferHeights();
+    
+    if (hasInsertedBeforeViewSlot) {
+      repeat._handleScroll();
+    }
   }
 }
