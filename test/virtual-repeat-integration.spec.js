@@ -41,15 +41,17 @@ describe('VirtualRepeat Integration', () => {
     }
 
     // validate contextual data
+    let viewModelItemOffset = topBufferHeight / itemHeight;
     for (let i = 0; i < views.length; i++) {
-      expect(views[i].bindingContext.item).toBe(viewModel.items[i]);
+      let viewModelItemIndex = viewModelItemOffset + i;
+      expect(views[i].bindingContext.item).toBe(viewModel.items[viewModelItemIndex]);
       let overrideContext = views[i].overrideContext;
       expect(overrideContext.parentOverrideContext.bindingContext).toBe(viewModel);
       expect(overrideContext.bindingContext).toBe(views[i].bindingContext);
-      let first = i === 0;
-      let last = i === viewModel.items.length - 1;
-      let even = i % 2 === 0;
-      expect(overrideContext.$index).toBe(i);
+      let first = viewModelItemIndex === 0;
+      let last = viewModelItemIndex === viewModel.items.length - 1;
+      let even = viewModelItemIndex % 2 === 0;
+      expect(overrideContext.$index).toBe(viewModelItemIndex);
       expect(overrideContext.$first).toBe(first);
       expect(overrideContext.$last).toBe(last);
       expect(overrideContext.$middle).toBe(!first && !last);
@@ -198,6 +200,20 @@ describe('VirtualRepeat Integration', () => {
       for(let i = 0; i < 1000; ++i) {
         items.push('item' + i);
       }
+
+      containerComponent = StageComponent
+        .withResources('src/virtual-repeat')
+        .inView(`<div id="scrollContainer2" style="height: 500px; overflow-y: scroll;">
+                        <div style="height: ${itemHeight}px;" virtual-repeat.for="item of items">\${item}</div>
+                    </div>`)
+        .boundTo({ items: items });
+
+      containerCreate = containerComponent.create().then(() => {
+        containerVirtualRepeat = containerComponent.sut;
+        containerViewModel = containerComponent.viewModel;
+        spyOn(containerVirtualRepeat, '_onScroll').and.callThrough();
+      });
+      
       component = StageComponent
         .withResources('src/virtual-repeat')
         .inView(`<div style="height: ${itemHeight}px;" virtual-repeat.for="item of items">\${item}</div>`)
@@ -218,19 +234,6 @@ describe('VirtualRepeat Integration', () => {
       hiddenCreate = hiddenComponent.create().then(() => {
         hiddenVirtualRepeat = hiddenComponent.sut;
         hiddenViewModel = hiddenComponent.viewModel;
-      });
-
-      containerComponent = StageComponent
-        .withResources('src/virtual-repeat')
-        .inView(`<div id="scrollContainer2" style="height: 500px; overflow-y: scroll;">
-                        <div style="height: ${itemHeight}px;" virtual-repeat.for="item of items">\${item}</div>
-                    </div>`)
-        .boundTo({ items: items });
-
-      containerCreate = containerComponent.create().then(() => {
-        containerVirtualRepeat = containerComponent.sut;
-        containerViewModel = containerComponent.viewModel;
-        spyOn(containerVirtualRepeat, '_onScroll').and.callThrough();
       });
     });
 
@@ -351,6 +354,16 @@ describe('VirtualRepeat Integration', () => {
             validateScroll(containerVirtualRepeat, containerViewModel, () => {
                 expect(containerVirtualRepeat._onScroll).toHaveBeenCalled();
                 done();
+            }, 'scrollContainer2')
+        });
+    });
+
+    it('handles unshift after scrolling to bottom', done => {
+        containerCreate.then(() => {
+            validateScroll(containerVirtualRepeat, containerViewModel, () => {
+                nq(() => containerViewModel.items.unshift('x', 'y'));
+                nq(() => validateState(containerVirtualRepeat, containerViewModel));
+                nq(() => done());
             }, 'scrollContainer2')
         });
     });
