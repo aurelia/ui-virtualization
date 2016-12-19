@@ -1,3 +1,14 @@
+<a name="1.0.0-beta.3.0.2"></a>
+# [1.0.0-beta.3.0.2](https://github.com/aurelia/ui-virtualization/compare/1.0.0-beta.3.0.1...v1.0.0-beta.3.0.2) (2016-12-07)
+
+
+### Bug Fixes
+
+* recalute height when source array is re-initialized ([c81afad](https://github.com/aurelia/ui-virtualization/commit/c81afad))
+* **virtual-repeat:** removed extra declaration ([b3e783c](https://github.com/aurelia/ui-virtualization/commit/b3e783c))
+
+
+
 <a name="1.0.0-beta.3.0.1"></a>
 # [1.0.0-beta.3.0.1](https://github.com/aurelia/ui-virtualization/compare/1.0.0-beta.3.0.0...v1.0.0-beta.3.0.1) (2016-08-31)
 

@@ -236,10 +236,10 @@ var ArrayVirtualRepeatStrategy = exports.ArrayVirtualRepeatStrategy = function (
 
     if (repeat.__queuedSplices) {
       for (var i = 0, ii = splices.length; i < ii; ++i) {
-        var _splices$i = splices[i];
-        var index = _splices$i.index;
-        var removed = _splices$i.removed;
-        var addedCount = _splices$i.addedCount;
+        var _splices$i = splices[i],
+            index = _splices$i.index,
+            removed = _splices$i.removed,
+            addedCount = _splices$i.addedCount;
 
         mergeSplice(repeat.__queuedSplices, index, removed, addedCount);
       }
@@ -896,13 +896,13 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec4 = (0, _aureliaTemplating.cust
               if (!(result instanceof Promise)) {
                 _this9._calledGetMore = false;
               } else {
-                  return result.then(function () {
-                    _this9._calledGetMore = false;
-                  });
-                }
-            } else {
-                throw new Error("'infinite-scroll-next' must be a function or evaluate to one");
+                return result.then(function () {
+                  _this9._calledGetMore = false;
+                });
               }
+            } else {
+              throw new Error("'infinite-scroll-next' must be a function or evaluate to one");
+            }
           } else if (func.sourceExpression) {
             _this9._calledGetMore = false;
             return func.sourceExpression.evaluate(_this9.scope);
@@ -1015,7 +1015,6 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec4 = (0, _aureliaTemplating.cust
       return;
     }
     this._hasCalculatedSizes = true;
-    this._itemsLength = itemsLength;
     var firstViewElement = this.view(0).lastChild;
     this.itemHeight = calcOuterHeight(firstViewElement);
     if (this.itemHeight <= 0) {
@@ -1028,6 +1027,7 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec4 = (0, _aureliaTemplating.cust
       }, 500);
       return;
     }
+    this._itemsLength = itemsLength;
     this.scrollContainerHeight = this._fixedHeightContainer ? this._calcScrollHeight(this.scrollContainer) : document.documentElement.clientHeight;
     this.elementsInView = Math.ceil(this.scrollContainerHeight / this.itemHeight) + 1;
     this._viewsLength = this.elementsInView * 2 + this._bufferSize;

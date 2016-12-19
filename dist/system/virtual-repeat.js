@@ -385,13 +385,13 @@ System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-tem
                     if (!(result instanceof Promise)) {
                       _this5._calledGetMore = false;
                     } else {
-                        return result.then(function () {
-                          _this5._calledGetMore = false;
-                        });
-                      }
-                  } else {
-                      throw new Error("'infinite-scroll-next' must be a function or evaluate to one");
+                      return result.then(function () {
+                        _this5._calledGetMore = false;
+                      });
                     }
+                  } else {
+                    throw new Error("'infinite-scroll-next' must be a function or evaluate to one");
+                  }
                 } else if (func.sourceExpression) {
                   _this5._calledGetMore = false;
                   return func.sourceExpression.evaluate(_this5.scope);
@@ -504,7 +504,6 @@ System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-tem
             return;
           }
           this._hasCalculatedSizes = true;
-          this._itemsLength = itemsLength;
           var firstViewElement = this.view(0).lastChild;
           this.itemHeight = calcOuterHeight(firstViewElement);
           if (this.itemHeight <= 0) {
@@ -517,6 +516,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-binding', 'aurelia-tem
             }, 500);
             return;
           }
+          this._itemsLength = itemsLength;
           this.scrollContainerHeight = this._fixedHeightContainer ? this._calcScrollHeight(this.scrollContainer) : document.documentElement.clientHeight;
           this.elementsInView = Math.ceil(this.scrollContainerHeight / this.itemHeight) + 1;
           this._viewsLength = this.elementsInView * 2 + this._bufferSize;

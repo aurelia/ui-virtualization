@@ -410,7 +410,6 @@ export class VirtualRepeat extends AbstractRepeater {
       return;
     }
     this._hasCalculatedSizes = true;
-    this._itemsLength = itemsLength;
     let firstViewElement = this.view(0).lastChild;
     this.itemHeight = calcOuterHeight(firstViewElement);
     if (this.itemHeight <= 0) {
@@ -423,6 +422,7 @@ export class VirtualRepeat extends AbstractRepeater {
       }, 500);
       return;
     }
+    this._itemsLength = itemsLength;
     this.scrollContainerHeight = this._fixedHeightContainer ? this._calcScrollHeight(this.scrollContainer) : document.documentElement.clientHeight;
     this.elementsInView = Math.ceil(this.scrollContainerHeight / this.itemHeight) + 1;
     this._viewsLength = (this.elementsInView * 2) + this._bufferSize;
