@@ -402,7 +402,7 @@ export class VirtualRepeat extends AbstractRepeater {
   }
 
   _getIndexOfFirstView(): number {
-    return this.view(0) ? this.view(0).overrideContext.$index : -1;
+    return this.view(0) ? this.viewSlot.children.indexOf(this.view(0)) : -1;
   }
 
   _calcInitialHeights(itemsLength: number): void {
