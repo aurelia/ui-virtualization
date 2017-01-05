@@ -133,7 +133,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
         let removed = splice.removed;
         let removedLength = removed.length;
         for (let j = 0, jj = removedLength; j < jj; ++j) {
-          let viewOrPromise = this._removeViewAt(repeat, splice.index + removeDelta + rmPromises.length, true, j, removedLength);
+          let viewOrPromise = this._removeViewAt(repeat, splice.index + removeDelta + rmPromises.length, true, j, removedLength, splice.addedCount);
           if (viewOrPromise instanceof Promise) {
             rmPromises.push(viewOrPromise);
           }
@@ -154,7 +154,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
     return undefined;
   }
 
-  _removeViewAt(repeat: VirtualRepeat, collectionIndex: number, returnToCache: boolean, j: number, removedLength: number): any {
+  _removeViewAt(repeat: VirtualRepeat, collectionIndex: number, returnToCache: boolean, j: number, removedLength: number, addedLength: number): any {
     let viewOrPromise;
     let view;
     let viewSlot = repeat.viewSlot;
@@ -180,7 +180,10 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
             let lastViewItem = repeat._getLastViewItem();
             collectionAddIndex = repeat.items.indexOf(lastViewItem) + 1;
           } else {
-            collectionAddIndex = j;
+            collectionAddIndex = j + addedLength;
+            if (collectionAddIndex >= repeat.items.length) {
+              collectionAddIndex = repeat.items.length - repeat._viewsLength - 1 + collectionAddIndex;
+            }
           }
           repeat._bottomBufferHeight = repeat._bottomBufferHeight - (repeat.itemHeight);
         } else if (repeat._topBufferHeight > 0) {

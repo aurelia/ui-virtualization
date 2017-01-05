@@ -535,5 +535,29 @@ describe('VirtualRepeat Integration', () => {
         });
       });
     });
+
+    it('handles splice removing many', done => {
+      create.then(() => {
+        viewModel.items.splice(5, 990);
+        nq(() => validateScrolledState());
+        nq(() => done());
+      });
+    });
+
+    it('handles splice removing many + add', done => {
+      create.then(() => {
+        viewModel.items.splice(5, 990, 'a', 'b', 'c');
+        nq(() => validateScrolledState());
+        nq(() => done());
+      });
+    });
+
+    it('handles splice remove remaining + add', done => {
+      create.then(() => {
+        viewModel.items.splice(5, 995, 'a', 'b', 'c');
+        nq(() => validateScrolledState());
+        nq(() => done());
+      });
+    });
   });
 });
