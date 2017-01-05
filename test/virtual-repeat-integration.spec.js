@@ -77,15 +77,18 @@ describe('VirtualRepeat Integration', () => {
 
     // validate contextual data
     let startingLoc = viewModel.items.indexOf(views[0].bindingContext.item);
-    for (let i = startingLoc; i < views.length; i++) {
-      expect(views[i].bindingContext.item).toBe(viewModel.items[i]);
+    let i = 0;
+    let ii = Math.min(viewModel.items.length - startingLoc, views.length);
+    for (; i < ii; i++) {
+      let itemIndex = startingLoc + i;
+      expect(views[i].bindingContext.item).toBe(viewModel.items[itemIndex]);
       let overrideContext = views[i].overrideContext;
       expect(overrideContext.parentOverrideContext.bindingContext).toBe(viewModel);
       expect(overrideContext.bindingContext).toBe(views[i].bindingContext);
-      let first = i === 0;
-      let last = i === viewModel.items.length - 1;
-      let even = i % 2 === 0;
-      expect(overrideContext.$index).toBe(i);
+      let first = itemIndex === 0;
+      let last = itemIndex === viewModel.items.length - 1;
+      let even = itemIndex % 2 === 0;
+      expect(overrideContext.$index).toBe(itemIndex);
       expect(overrideContext.$first).toBe(first);
       expect(overrideContext.$last).toBe(last);
       expect(overrideContext.$middle).toBe(!first && !last);
