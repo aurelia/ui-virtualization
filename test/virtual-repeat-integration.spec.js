@@ -495,4 +495,45 @@ describe('VirtualRepeat Integration', () => {
         });
       })
   })
+
+  describe('scrolling div', () => {
+    beforeEach(() => {
+      items = [];
+      for (let i = 0; i < 1000; ++i) {
+        items.push('item' + i);
+      }
+
+      component = StageComponent
+        .withResources(['src/virtual-repeat'])
+        .inView(`<div id="scrollContainer" style="height: 500px; overflow-y: scroll;">
+                   <div style="height: ${itemHeight}px;" virtual-repeat.for="item of items">\${item}</div>
+                 </div>`)
+        .boundTo({ items: items });
+
+      create = component.create().then(() => {
+        virtualRepeat = component.sut;
+        viewModel = component.viewModel;
+      });
+    });
+
+    afterEach(() => {
+      component.cleanUp();
+    });
+
+    it('handles splice when scrolled to end', done => {
+      create.then(() => {
+        validateScroll(() => {
+          viewModel.items.splice(995, 1, 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j');
+          nq(() => validateScrolledState());
+          nq(() => validateScroll(() => {
+            let views = virtualRepeat.viewSlot.children;
+            setTimeout(() => {
+              expect(views[views.length - 1].bindingContext.item).toBe(viewModel.items[viewModel.items.length - 1]);
+              done();
+            }, 500);
+          }));
+        });
+      });
+    });
+  });
 });

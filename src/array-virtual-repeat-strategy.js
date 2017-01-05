@@ -247,7 +247,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
         let hasDistanceToBottomViewPort = getElementDistanceToBottomViewPort(repeat.templateStrategy.getLastElement(repeat.bottomBuffer)) > 0;
         if (repeat.viewCount() === 0 || (!this._isIndexBeforeViewSlot(repeat, viewSlot, addIndex) && !this._isIndexAfterViewSlot(repeat, viewSlot, addIndex)) || hasDistanceToBottomViewPort)  {
           let overrideContext = createFullOverrideContext(repeat, array[addIndex], addIndex, arrayLength);
-          repeat.insertView(addIndex, overrideContext.bindingContext, overrideContext);
+          repeat.insertView(this._getViewIndex(repeat, viewSlot, addIndex), overrideContext.bindingContext, overrideContext);
           if (!repeat._hasCalculatedSizes) {
             repeat._calcInitialHeights(1);
           } else if (repeat.viewCount() > repeat._viewsLength) {
@@ -259,6 +259,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
               repeat.removeView(repeat.viewCount() - 1, true, true);
               repeat._bottomBufferHeight = repeat._bottomBufferHeight + repeat.itemHeight;
             }
+            repeat.isLastIndex = false;
           }
         } else if (this._isIndexBeforeViewSlot(repeat, viewSlot, addIndex)) {
           repeat._topBufferHeight = repeat._topBufferHeight + repeat.itemHeight;
