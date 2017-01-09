@@ -538,7 +538,28 @@ describe('VirtualRepeat Integration', () => {
 
     it('handles splice removing many', done => {
       create.then(() => {
-        viewModel.items.splice(5, 990);
+        // more items remaining than viewslot capacity
+        viewModel.items.splice(5, 1000 - virtualRepeat._viewsLength - 10);
+        nq(() => validateScrolledState());
+        nq(() => done());
+      });
+    });
+
+    it('handles splice removing more', done => {
+      // number of items remaining exactly as viewslot capacity
+      create.then(() => {
+        viewModel.items.splice(5, 1000 - virtualRepeat._viewsLength);
+        nq(() => expect(virtualRepeat.viewSlot.children.length).toBe(viewModel.items.length));
+        nq(() => validateScrolledState());
+        nq(() => done());
+      });
+    });
+
+    it('handles splice removing even more', done => {
+      // less items remaining than viewslot capacity
+      create.then(() => {
+        viewModel.items.splice(5, 1000 - virtualRepeat._viewsLength + 10);
+        nq(() => expect(virtualRepeat.viewSlot.children.length).toBe(viewModel.items.length));
         nq(() => validateScrolledState());
         nq(() => done());
       });

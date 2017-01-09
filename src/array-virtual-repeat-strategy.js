@@ -171,7 +171,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
     if (!this._isIndexBeforeViewSlot(repeat, viewSlot, collectionIndex) && !this._isIndexAfterViewSlot(repeat, viewSlot, collectionIndex)) {
       let viewIndex = this._getViewIndex(repeat, viewSlot, collectionIndex);
       viewOrPromise = repeat.removeView(viewIndex, returnToCache);
-      if (repeat.items.length > viewCount) {
+      if (repeat.items.length >= viewCount) {
         // TODO: do not trigger view lifecycle here
         let collectionAddIndex;
         if (repeat._bottomBufferHeight > repeat.itemHeight) {
@@ -180,10 +180,8 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
             let lastViewItem = repeat._getLastViewItem();
             collectionAddIndex = repeat.items.indexOf(lastViewItem) + 1;
           } else {
-            collectionAddIndex = j + addedLength;
-            if (collectionAddIndex >= repeat.items.length) {
-              collectionAddIndex = repeat.items.length - repeat._viewsLength - 1 + collectionAddIndex;
-            }
+            let offset = Math.max(0, repeat._viewsLength - repeat.items.length);
+            collectionAddIndex = j - offset + addedLength;
           }
           repeat._bottomBufferHeight = repeat._bottomBufferHeight - (repeat.itemHeight);
         } else if (repeat._topBufferHeight > 0) {
