@@ -536,6 +536,42 @@ describe('VirtualRepeat Integration', () => {
       });
     });
 
+    it('handles splice removing non-consecutive when scrolled to end', done => {
+      create.then(() => {
+        validateScroll(() => {
+          for (let i = 0, ii = 100; i < ii; i++) {
+            viewModel.items.splice(i + 1, 9);
+          }
+          nq(() => validateScrolledState());
+          nq(() => validateScroll(() => {
+            let views = virtualRepeat.viewSlot.children;
+            setTimeout(() => {
+              expect(views[views.length - 1].bindingContext.item).toBe(viewModel.items[viewModel.items.length - 1]);
+              done();
+            }, 500);
+          }));
+        });
+      });
+    });
+
+    it('handles splice non-consecutive when scrolled to end', done => {
+      create.then(() => {
+        validateScroll(() => {
+          for (let i = 0, ii = 80; i < ii; i++) {
+            viewModel.items.splice(10 * i, 3, i);
+          }
+          nq(() => validateScrolledState());
+          nq(() => validateScroll(() => {
+            let views = virtualRepeat.viewSlot.children;
+            setTimeout(() => {
+              expect(views[views.length - 1].bindingContext.item).toBe(viewModel.items[viewModel.items.length - 1]);
+              done();
+            }, 500);
+          }));
+        });
+      });
+    });
+
     it('handles splice removing many', done => {
       create.then(() => {
         // more items remaining than viewslot capacity
@@ -560,6 +596,26 @@ describe('VirtualRepeat Integration', () => {
       create.then(() => {
         viewModel.items.splice(5, 1000 - virtualRepeat._viewsLength + 10);
         nq(() => expect(virtualRepeat.viewSlot.children.length).toBe(viewModel.items.length));
+        nq(() => validateScrolledState());
+        nq(() => done());
+      });
+    });
+
+    it('handles splice removing non-consecutive', done => {
+      create.then(() => {
+        for (let i = 0, ii = 100; i < ii; i++) {
+          viewModel.items.splice(i + 1, 9);
+        }
+        nq(() => validateScrolledState());
+        nq(() => done());
+      });
+    });
+
+    it('handles splice non-consecutive', done => {
+      create.then(() => {
+        for (let i = 0, ii = 100; i < ii; i++) {
+          viewModel.items.splice(3 * (i + 1), 3, i);
+        }
         nq(() => validateScrolledState());
         nq(() => done());
       });
