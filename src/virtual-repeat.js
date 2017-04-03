@@ -100,6 +100,7 @@ export class VirtualRepeat extends AbstractRepeater {
     }, 500);
 
     this.distanceToTop = this.domHelper.getElementDistanceToTopOfDocument(this.templateStrategy.getFirstElement(this.topBuffer));
+    // When dealing with tables, there can be gaps between elements, causing distances to be messed up. Might need to handle this case here.
     this.topBufferDistance = this.templateStrategy.getTopBufferDistance(this.topBuffer);
 
     if (this.domHelper.hasOverflowScroll(this.scrollContainer)) {
@@ -181,7 +182,13 @@ export class VirtualRepeat extends AbstractRepeater {
     if (reducingItems && previousLastViewIndex > this.items.length - 1) {
       //Do we need to set scrolltop so that we appear at the bottom of the list to match scrolling as far as we could?
       //We only want to execute this line if we're reducing such that it brings us to the bottom of the new list
-      this.scrollContainer.scrollTop = this.scrollContainer.scrollTop + (this.viewCount() * this.itemHeight);
+      //Make sure we handle the special case of tables
+      if (this.scrollContainer.tagName === 'TBODY') {
+        let realScrollContainer = this.scrollContainer.parentNode.parentNode; //tbody > table > container
+        realScrollContainer.scrollTop = realScrollContainer.scrollTop + (this.viewCount() * this.itemHeight);
+      } else {
+        this.scrollContainer.scrollTop = this.scrollContainer.scrollTop + (this.viewCount() * this.itemHeight);
+      }
     }
     if (!reducingItems) {
       // If we're expanding our items, then we need to reset our previous first for the next go around of scroll handling
