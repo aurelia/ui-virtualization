@@ -178,8 +178,16 @@ describe('VirtualRepeat Integration', () => {
 
   function validateArrayChange(virtualRepeat, viewModel, done) {
     viewModel.items = ['Foo B: 1', 'Foo B: 2', 'Foo B: 3', 'Foo B: 4', 'Foo B: 5'];
-      nq(() => validateState(virtualRepeat, viewModel));
-      nq(() => done());
+    nq(() => validateState(virtualRepeat, viewModel));
+    nq(() => {
+      let newArr = [];
+      for (let i = 0; i < 100; i++) {
+        newArr.push('Foo C: ' + i);
+      }
+      viewModel.items = newArr;
+    });
+    nq(() => validateState(virtualRepeat, viewModel));
+    nq(() => done());
   }
 
   describe('iterating div', () => {
@@ -395,6 +403,9 @@ describe('VirtualRepeat Integration', () => {
 
     it('handles push', done => {
       create.then(() => validatePush(virtualRepeat, viewModel, done));
+    });
+    it('handles array changes', done => {
+      create.then(() => validateArrayChange(virtualRepeat, viewModel, done));
     });
   });
 
