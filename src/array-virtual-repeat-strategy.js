@@ -15,8 +15,8 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
   * @param repeat The repeater instance.
   * @param items The new array instance.
   */
-  instanceChanged(repeat: VirtualRepeat, items: Array<any>): void {
-    this._inPlaceProcessItems(repeat, items);
+  instanceChanged(repeat: VirtualRepeat, items: Array<any>, first: number): void {
+    this._inPlaceProcessItems(repeat, items, first);
   }
 
   _standardProcessInstanceChanged(repeat: VirtualRepeat, items: Array<any>): void {
@@ -26,10 +26,16 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
     }
   }
 
-  _inPlaceProcessItems(repeat: VirtualRepeat, items: Array<any>): void {
+  _inPlaceProcessItems(repeat: VirtualRepeat, items: Array<any>, first: number): void {
     let itemsLength = items.length;
     let viewsLength = repeat.viewCount();
-    let first = repeat._getIndexOfFirstView();
+    /*
+      Get index of first view is looking at the view which is from the ViewSlot
+      The view slot has not yet been updated with the new list
+      New first has to be the calculated "first" in our view slot, so the first one that's going to be rendered
+        To figure out that one, we're going to have to know where we are in our scrolling so we can know how far down we've gone to show the first view
+        That "first" is calculated and passed into here
+    */
     // remove unneeded views.
     while (viewsLength > itemsLength) {
       viewsLength--;
@@ -51,6 +57,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
       view.bindingContext[local] = items[i + first];
       view.overrideContext.$middle = middle;
       view.overrideContext.$last = last;
+      view.overrideContext.$index = i + first;
       repeat.updateBindings(view);
     }
     // add new views

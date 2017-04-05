@@ -92,7 +92,7 @@ export class TableStrategy {
   getFirstElement(topBuffer: Element): Element {
     const tbody = this._getTbodyElement(DOM.nextElementSibling(topBuffer));
     const tr = tbody.firstChild;
-    return DOM.nextElementSibling(tr);
+    return tr; //since the buffer is outside table, first element _is_ first element.
   }
 
   getLastElement(bottomBuffer: Element): Element {

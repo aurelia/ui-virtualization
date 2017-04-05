@@ -176,6 +176,20 @@ describe('VirtualRepeat Integration', () => {
       nq(() => done());
   }
 
+  function validateArrayChange(virtualRepeat, viewModel, done) {
+    viewModel.items = ['Foo B: 1', 'Foo B: 2', 'Foo B: 3', 'Foo B: 4', 'Foo B: 5'];
+    nq(() => validateState(virtualRepeat, viewModel));
+    nq(() => {
+      let newArr = [];
+      for (let i = 0; i < 100; i++) {
+        newArr.push('Foo C: ' + i);
+      }
+      viewModel.items = newArr;
+    });
+    nq(() => validateState(virtualRepeat, viewModel));
+    nq(() => done());
+  }
+
   describe('iterating div', () => {
     let component;
     let virtualRepeat;
@@ -307,7 +321,6 @@ describe('VirtualRepeat Integration', () => {
           nq(() => done());
         });
       });
-
     });
 
     it('handles push', done => {
@@ -354,6 +367,10 @@ describe('VirtualRepeat Integration', () => {
             }, 'scrollContainer2')
         });
     });
+
+    it('handles array changes', done => {
+      create.then(() => validateArrayChange(virtualRepeat, viewModel, done));
+    });
   });
 
   describe('iterating table', () => {
@@ -386,6 +403,9 @@ describe('VirtualRepeat Integration', () => {
 
     it('handles push', done => {
       create.then(() => validatePush(virtualRepeat, viewModel, done));
+    });
+    it('handles array changes', done => {
+      create.then(() => validateArrayChange(virtualRepeat, viewModel, done));
     });
   });
 
@@ -609,7 +629,7 @@ describe('VirtualRepeat Integration', () => {
             //Taking into account 1 index difference due to default styles on browsers causing small margins of error
             var args = vm.getNextPage.calls.argsFor(0);
             expect(args[0]).toBeGreaterThan(988);
-            expect(args[0]).toBeLessThan(991);
+            expect(args[0]).toBeLessThan(995);
             expect(args[1]).toBe(true);
             expect(args[2]).toBe(false);
             done();
@@ -623,7 +643,7 @@ describe('VirtualRepeat Integration', () => {
               expect(nestedVm.getNextPage).toHaveBeenCalled();
               var scrollContext = nestedVm.getNextPage.calls.argsFor(0)[0];
               expect(scrollContext.topIndex).toBeGreaterThan(988);
-              expect(scrollContext.topIndex).toBeLessThan(991);
+              expect(scrollContext.topIndex).toBeLessThan(995);
               expect(scrollContext.isAtBottom).toBe(true);
               expect(scrollContext.isAtTop).toBe(false);
               done();
