@@ -15,8 +15,8 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
   * @param repeat The repeater instance.
   * @param items The new array instance.
   */
-  instanceChanged(repeat: VirtualRepeat, items: Array<any>, first: number): void {
-    this._inPlaceProcessItems(repeat, items, first);
+  instanceChanged(repeat: VirtualRepeat, items: Array<any>, ...rest): void {
+    this._inPlaceProcessItems(repeat, items, rest[0]);
   }
 
   _standardProcessInstanceChanged(repeat: VirtualRepeat, items: Array<any>): void {

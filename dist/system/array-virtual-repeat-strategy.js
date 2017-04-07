@@ -56,7 +56,7 @@ System.register(['aurelia-templating-resources', './utilities'], function (_expo
         };
 
         ArrayVirtualRepeatStrategy.prototype.instanceChanged = function instanceChanged(repeat, items) {
-          this._inPlaceProcessItems(repeat, items);
+          this._inPlaceProcessItems(repeat, items, arguments.length <= 2 ? undefined : arguments[2]);
         };
 
         ArrayVirtualRepeatStrategy.prototype._standardProcessInstanceChanged = function _standardProcessInstanceChanged(repeat, items) {
@@ -66,10 +66,9 @@ System.register(['aurelia-templating-resources', './utilities'], function (_expo
           }
         };
 
-        ArrayVirtualRepeatStrategy.prototype._inPlaceProcessItems = function _inPlaceProcessItems(repeat, items) {
+        ArrayVirtualRepeatStrategy.prototype._inPlaceProcessItems = function _inPlaceProcessItems(repeat, items, first) {
           var itemsLength = items.length;
           var viewsLength = repeat.viewCount();
-          var first = repeat._getIndexOfFirstView();
 
           while (viewsLength > itemsLength) {
             viewsLength--;
@@ -90,6 +89,7 @@ System.register(['aurelia-templating-resources', './utilities'], function (_expo
             view.bindingContext[local] = items[i + first];
             view.overrideContext.$middle = middle;
             view.overrideContext.$last = last;
+            view.overrideContext.$index = i + first;
             repeat.updateBindings(view);
           }
 

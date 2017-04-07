@@ -81,7 +81,7 @@ export let TableStrategy = (_dec2 = inject(DomHelper), _dec2(_class2 = class Tab
   getFirstElement(topBuffer) {
     const tbody = this._getTbodyElement(DOM.nextElementSibling(topBuffer));
     const tr = tbody.firstChild;
-    return DOM.nextElementSibling(tr);
+    return tr;
   }
 
   getLastElement(bottomBuffer) {

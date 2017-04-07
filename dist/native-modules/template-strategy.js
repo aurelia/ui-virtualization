@@ -87,7 +87,7 @@ export var TableStrategy = (_dec2 = inject(DomHelper), _dec2(_class2 = function 
   TableStrategy.prototype.getFirstElement = function getFirstElement(topBuffer) {
     var tbody = this._getTbodyElement(DOM.nextElementSibling(topBuffer));
     var tr = tbody.firstChild;
-    return DOM.nextElementSibling(tr);
+    return tr;
   };
 
   TableStrategy.prototype.getLastElement = function getLastElement(bottomBuffer) {

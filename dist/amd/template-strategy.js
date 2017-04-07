@@ -88,7 +88,7 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-pal', 'aurelia-templ
     TableStrategy.prototype.getFirstElement = function getFirstElement(topBuffer) {
       var tbody = this._getTbodyElement(_aureliaPal.DOM.nextElementSibling(topBuffer));
       var tr = tbody.firstChild;
-      return _aureliaPal.DOM.nextElementSibling(tr);
+      return tr;
     };
 
     TableStrategy.prototype.getLastElement = function getLastElement(bottomBuffer) {

@@ -112,8 +112,8 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
   * @param repeat The repeater instance.
   * @param items The new array instance.
   */
-  instanceChanged(repeat: VirtualRepeat, items: Array<any>): void {
-    this._inPlaceProcessItems(repeat, items);
+  instanceChanged(repeat: VirtualRepeat, items: Array<any>, ...rest): void {
+    this._inPlaceProcessItems(repeat, items, rest[0]);
   }
 
   _standardProcessInstanceChanged(repeat: VirtualRepeat, items: Array<any>): void {
@@ -123,10 +123,16 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
     }
   }
 
-  _inPlaceProcessItems(repeat: VirtualRepeat, items: Array<any>): void {
+  _inPlaceProcessItems(repeat: VirtualRepeat, items: Array<any>, first: number): void {
     let itemsLength = items.length;
     let viewsLength = repeat.viewCount();
-    let first = repeat._getIndexOfFirstView();
+    /*
+      Get index of first view is looking at the view which is from the ViewSlot
+      The view slot has not yet been updated with the new list
+      New first has to be the calculated "first" in our view slot, so the first one that's going to be rendered
+        To figure out that one, we're going to have to know where we are in our scrolling so we can know how far down we've gone to show the first view
+        That "first" is calculated and passed into here
+    */
     // remove unneeded views.
     while (viewsLength > itemsLength) {
       viewsLength--;
@@ -148,6 +154,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
       view.bindingContext[local] = items[i + first];
       view.overrideContext.$middle = middle;
       view.overrideContext.$last = last;
+      view.overrideContext.$index = i + first;
       repeat.updateBindings(view);
     }
     // add new views
@@ -457,7 +464,7 @@ export class TableStrategy {
   getFirstElement(topBuffer: Element): Element {
     const tbody = this._getTbodyElement(DOM.nextElementSibling(topBuffer));
     const tr = tbody.firstChild;
-    return DOM.nextElementSibling(tr);
+    return tr; //since the buffer is outside table, first element _is_ first element.
   }
 
   getLastElement(bottomBuffer: Element): Element {
@@ -613,6 +620,7 @@ export class VirtualRepeat extends AbstractRepeater {
     }, 500);
 
     this.distanceToTop = this.domHelper.getElementDistanceToTopOfDocument(this.templateStrategy.getFirstElement(this.topBuffer));
+    // When dealing with tables, there can be gaps between elements, causing distances to be messed up. Might need to handle this case here.
     this.topBufferDistance = this.templateStrategy.getTopBufferDistance(this.topBuffer);
 
     if (this.domHelper.hasOverflowScroll(this.scrollContainer)) {
@@ -667,17 +675,53 @@ export class VirtualRepeat extends AbstractRepeater {
     if (!this.scope) {
       return;
     }
+    let reducingItems = false;
+    let previousLastViewIndex = this._getIndexOfLastView();
+
     let items = this.items;
     this.strategy = this.strategyLocator.getStrategy(items);
     if (items.length > 0 && this.viewCount() === 0) {
       this.strategy.createFirstItem(this);
     }
+    // Skip scroll handling if we are decreasing item list
+    // Otherwise if expanding list, call the handle scroll below
+    if (this._itemsLength >= items.length) {
+      //Scroll handle is redundant in this case since the instanceChanged will re-evaluate orderings
+      //  Also, when items are reduced, we're not having to move any bindings, just a straight rebind of the items in the list
+      this._skipNextScrollHandle = true;
+      reducingItems = true;
+    }
+    this._checkFixedHeightContainer();
     this._calcInitialHeights(items.length);
     if (!this.isOneTime && !this._observeInnerCollection()) {
       this._observeCollection();
     }
+    this.strategy.instanceChanged(this, items, this._first);
+    this._lastRebind = this._first; //Reset rebinding
 
-    this.strategy.instanceChanged(this, items, this._viewsLength);
+    if (reducingItems && previousLastViewIndex > this.items.length - 1) {
+      //Do we need to set scrolltop so that we appear at the bottom of the list to match scrolling as far as we could?
+      //We only want to execute this line if we're reducing such that it brings us to the bottom of the new list
+      //Make sure we handle the special case of tables
+      if (this.scrollContainer.tagName === 'TBODY') {
+        let realScrollContainer = this.scrollContainer.parentNode.parentNode; //tbody > table > container
+        realScrollContainer.scrollTop = realScrollContainer.scrollTop + (this.viewCount() * this.itemHeight);
+      } else {
+        this.scrollContainer.scrollTop = this.scrollContainer.scrollTop + (this.viewCount() * this.itemHeight);
+      }
+    }
+    if (!reducingItems) {
+      // If we're expanding our items, then we need to reset our previous first for the next go around of scroll handling
+      this._previousFirst = this._first;
+      this._scrollingDown = true; //Simulating the down scroll event to load up data appropriately
+      this._scrollingUp = false;
+
+      //Make sure we fix any state (we could have been at the last index before, but this doesn't get set until too late for scrolling)
+      this.isLastIndex = this._getIndexOfLastView() >= this.items.length - 1;
+    }
+
+    //Need to readjust the scroll position to "move" us back to the appropriate position, since moving the views will shift our view port's percieved location
+    this._handleScroll();
   }
 
   unbind(): void {
@@ -726,6 +770,10 @@ export class VirtualRepeat extends AbstractRepeater {
 
   _handleScroll(): void {
     if (!this._isAttached) {
+      return;
+    }
+    if (this._skipNextScrollHandle) {
+      this._skipNextScrollHandle = false;
       return;
     }
     let itemHeight = this.itemHeight;
@@ -859,6 +907,12 @@ export class VirtualRepeat extends AbstractRepeater {
     }
   }
 
+  _checkFixedHeightContainer(): void {
+    if (this.domHelper.hasOverflowScroll(this.scrollContainer)) {
+      this._fixedHeightContainer = true;
+    }
+  }
+
   _adjustBufferHeights(): void {
     this.topBuffer.style.height = `${this._topBufferHeight}px`;
     this.bottomBuffer.style.height = `${this._bottomBufferHeight}px`;
@@ -935,20 +989,38 @@ export class VirtualRepeat extends AbstractRepeater {
       }, 500);
       return;
     }
+
     this._itemsLength = itemsLength;
     this.scrollContainerHeight = this._fixedHeightContainer ? this._calcScrollHeight(this.scrollContainer) : document.documentElement.clientHeight;
     this.elementsInView = Math.ceil(this.scrollContainerHeight / this.itemHeight) + 1;
     this._viewsLength = (this.elementsInView * 2) + this._bufferSize;
-    this._bottomBufferHeight = this.itemHeight * itemsLength - this.itemHeight * this._viewsLength;
-    if (this._bottomBufferHeight < 0) {
-      this._bottomBufferHeight = 0;
+
+    //Look at top buffer height (how far we've scrolled down)
+    //If top buffer height is greater than the new bottom buffer height (how far we *can* scroll down)
+    //    Then set top buffer height to max it can be (bottom buffer height - views in length?) and bottom buffer height to 0
+    let newBottomBufferHeight = this.itemHeight * itemsLength - this.itemHeight * this._viewsLength; //How much buffer room to the bottom if you were at the top
+    if (newBottomBufferHeight < 0) { // In case of small lists, ensure that we never set the buffer heights to impossible values
+      newBottomBufferHeight = 0;
     }
-    this.bottomBuffer.style.height = `${this._bottomBufferHeight}px`;
-    this._topBufferHeight = 0;
-    this.topBuffer.style.height = `${this._topBufferHeight}px`;
-    // TODO This will cause scrolling back to top when swapping collection instances that have different lengths - instead should keep the scroll position
-    this.scrollContainer.scrollTop = 0;
-    this._first = 0;
+    if (this._topBufferHeight >= newBottomBufferHeight) { //Use case when items are removed (we've scrolled past where we can)
+      this._topBufferHeight = newBottomBufferHeight;
+      this._bottomBufferHeight = 0;
+      this._first = this._itemsLength - this._viewsLength;
+      if (this._first < 0) { // In case of small lists, ensure that we never set first to less than possible
+        this._first = 0;
+      }
+    } else { //Use case when items are added (we are adding scrollable space to the bottom)
+      // We need to re-evaluate which is the true "first". If we've added items, then the previous "first" is actually too far down the list
+      this._first = this._getIndexOfFirstView();
+      let adjustedTopBufferHeight = this._first * this.itemHeight; //appropriate buffer height for top, might be 1 too long...
+      this._topBufferHeight = adjustedTopBufferHeight;
+      //But what about when we've only scrolled slightly down the list? We need to readjust the top buffer height then
+      this._bottomBufferHeight = newBottomBufferHeight - adjustedTopBufferHeight;
+      if (this._bottomBufferHeight < 0) {
+        this._bottomBufferHeight = 0;
+      }
+    }
+    this._adjustBufferHeights();
     return;
   }
 
@@ -993,6 +1065,7 @@ export class VirtualRepeat extends AbstractRepeater {
   }
 
   // @override AbstractRepeater
+  // How will these behaviors need to change since we are in a virtual list instead?
   viewCount() { return this.viewSlot.children.length; }
   views() { return this.viewSlot.children; }
   view(index) { return this.viewSlot.children[index]; }

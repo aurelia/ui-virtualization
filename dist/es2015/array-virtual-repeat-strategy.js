@@ -7,8 +7,8 @@ export let ArrayVirtualRepeatStrategy = class ArrayVirtualRepeatStrategy extends
     repeat.addView(overrideContext.bindingContext, overrideContext);
   }
 
-  instanceChanged(repeat, items) {
-    this._inPlaceProcessItems(repeat, items);
+  instanceChanged(repeat, items, ...rest) {
+    this._inPlaceProcessItems(repeat, items, rest[0]);
   }
 
   _standardProcessInstanceChanged(repeat, items) {
@@ -18,10 +18,9 @@ export let ArrayVirtualRepeatStrategy = class ArrayVirtualRepeatStrategy extends
     }
   }
 
-  _inPlaceProcessItems(repeat, items) {
+  _inPlaceProcessItems(repeat, items, first) {
     let itemsLength = items.length;
     let viewsLength = repeat.viewCount();
-    let first = repeat._getIndexOfFirstView();
 
     while (viewsLength > itemsLength) {
       viewsLength--;
@@ -42,6 +41,7 @@ export let ArrayVirtualRepeatStrategy = class ArrayVirtualRepeatStrategy extends
       view.bindingContext[local] = items[i + first];
       view.overrideContext.$middle = middle;
       view.overrideContext.$last = last;
+      view.overrideContext.$index = i + first;
       repeat.updateBindings(view);
     }
 

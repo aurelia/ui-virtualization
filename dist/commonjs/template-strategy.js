@@ -97,7 +97,7 @@ var TableStrategy = exports.TableStrategy = (_dec2 = (0, _aureliaDependencyInjec
   TableStrategy.prototype.getFirstElement = function getFirstElement(topBuffer) {
     var tbody = this._getTbodyElement(_aureliaPal.DOM.nextElementSibling(topBuffer));
     var tr = tbody.firstChild;
-    return _aureliaPal.DOM.nextElementSibling(tr);
+    return tr;
   };
 
   TableStrategy.prototype.getLastElement = function getLastElement(bottomBuffer) {

@@ -1,3 +1,13 @@
+<a name="1.0.0-beta.3.1.0"></a>
+# [1.0.0-beta.3.1.0](https://github.com/aurelia/ui-virtualization/compare/1.0.0-beta.3.0.2...v1.0.0-beta.3.1.0) (2017-04-07)
+
+
+### Bug Fixes
+
+* **virtual-repeat:** handle array changes correctly ([b861aa6](https://github.com/aurelia/ui-virtualization/commit/b861aa6))
+
+
+
 <a name="1.0.0-beta.3.0.2"></a>
 # [1.0.0-beta.3.0.2](https://github.com/aurelia/ui-virtualization/compare/1.0.0-beta.3.0.1...v1.0.0-beta.3.0.2) (2016-12-07)
 

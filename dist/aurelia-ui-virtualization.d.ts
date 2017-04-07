@@ -78,7 +78,7 @@ export declare class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
     * @param repeat The repeater instance.
     * @param items The new array instance.
     */
-  instanceChanged(repeat: VirtualRepeat, items: Array<any>): void;
+  instanceChanged(repeat: VirtualRepeat, items: Array<any>, ...rest: any[]): void;
   
   /**
     * Handle the repeat's collection instance mutating.
@@ -133,6 +133,7 @@ export declare class VirtualRepeat extends AbstractRepeater {
   handleInnerCollectionMutated(collection?: any, changes?: any): void;
   
   // @override AbstractRepeater
+  // How will these behaviors need to change since we are in a virtual list instead?
   viewCount(): any;
   views(): any;
   view(index?: any): any;

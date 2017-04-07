@@ -102,7 +102,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-pal', 'aurelia-templat
         TableStrategy.prototype.getFirstElement = function getFirstElement(topBuffer) {
           var tbody = this._getTbodyElement(DOM.nextElementSibling(topBuffer));
           var tr = tbody.firstChild;
-          return DOM.nextElementSibling(tr);
+          return tr;
         };
 
         TableStrategy.prototype.getLastElement = function getLastElement(bottomBuffer) {
