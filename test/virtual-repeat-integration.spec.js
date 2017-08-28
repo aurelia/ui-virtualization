@@ -613,14 +613,26 @@ describe('VirtualRepeat Integration', () => {
     });
     it('handles getting next data set with small page size', done => {
       vm.items = [];
-      for(let i = 0; i < 5; ++i) {
+      for(let i = 0; i < 7; ++i) {
         vm.items.push('item' + i);
       }
       create.then(() => {
         validateScroll(virtualRepeat, viewModel, () => {
           expect(vm.getNextPage).toHaveBeenCalled();
           done();
-        })
+        });
+      });
+    });
+    it('handles not scrolling if number of items less than elements in view', done => {
+      vm.items = [];
+      for(let i = 0; i < 5; ++i) {
+        vm.items.push('item' + i);
+      }
+      create.then(() => {
+        validateScroll(virtualRepeat, viewModel, () => {
+          expect(vm.getNextPage).not.toHaveBeenCalled();
+          done();
+        });
       });
     });
     it('passes the current index and location state', done => {
