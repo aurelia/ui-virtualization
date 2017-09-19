@@ -8,8 +8,8 @@ function createAssertionQueue() {
   let next;
   next = () => {
     if (queue.length) {
-      let func = queue.pop();
       setTimeout(() => {
+        let func = queue.shift();
         func();
         next();
       })
