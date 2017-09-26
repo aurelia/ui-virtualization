@@ -177,15 +177,15 @@ describe('VirtualRepeat Integration', () => {
   }
 
   function validateArrayChange(virtualRepeat, viewModel, done) {
-    viewModel.items = ['Foo B: 1', 'Foo B: 2', 'Foo B: 3', 'Foo B: 4', 'Foo B: 5'];
+    const createItems = (name, amount) => new Array(amount).map((v, index) => name + index);
+
+    viewModel.items = createItems('A', 4);
     nq(() => validateState(virtualRepeat, viewModel));
-    nq(() => {
-      let newArr = [];
-      for (let i = 0; i < 100; i++) {
-        newArr.push('Foo C: ' + i);
-      }
-      viewModel.items = newArr;
-    });
+    nq(() => viewModel.items = createItems('B', 0));
+    nq(() => validateState(virtualRepeat, viewModel));
+    nq(() => viewModel.items = createItems('C', 101));
+    nq(() => validateState(virtualRepeat, viewModel));
+    nq(() => viewModel.items = createItems('D', 0));
     nq(() => validateState(virtualRepeat, viewModel));
     nq(() => done());
   }
