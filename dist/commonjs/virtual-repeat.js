@@ -300,6 +300,7 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec = (0, _aureliaTemplating.custo
     this._first = this._first < 0 ? 0 : this._first;
     if (this._first > this.items.length - this.elementsInView) {
       this._first = this.items.length - this.elementsInView;
+      this._first = this._first < 0 ? 0 : this._first;
     }
     this._checkScrolling();
 

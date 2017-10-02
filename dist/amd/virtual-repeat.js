@@ -303,6 +303,7 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
       this._first = this._first < 0 ? 0 : this._first;
       if (this._first > this.items.length - this.elementsInView) {
         this._first = this.items.length - this.elementsInView;
+        this._first = this._first < 0 ? 0 : this._first;
       }
       this._checkScrolling();
 

@@ -1,3 +1,13 @@
+<a name="1.0.0-beta.3.1.1"></a>
+# [1.0.0-beta.3.1.1](https://github.com/aurelia/ui-virtualization/compare/1.0.0-beta.3.1.0...v1.0.0-beta.3.1.1) (2017-10-02)
+
+
+### Bug Fixes
+
+* **virtual-repeat:** Correctly handle items array smaller than elements in view ([d14a391](https://github.com/aurelia/ui-virtualization/commit/d14a391)), closes [#111](https://github.com/aurelia/ui-virtualization/issues/111)
+
+
+
 <a name="1.0.0-beta.3.1.0"></a>
 # [1.0.0-beta.3.1.0](https://github.com/aurelia/ui-virtualization/compare/1.0.0-beta.3.0.2...v1.0.0-beta.3.1.0) (2017-04-07)
 

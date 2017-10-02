@@ -782,6 +782,7 @@ export class VirtualRepeat extends AbstractRepeater {
     this._first = this._first < 0 ? 0 : this._first;
     if (this._first > this.items.length - this.elementsInView) {
       this._first = this.items.length - this.elementsInView;
+      this._first = this._first < 0 ? 0 : this._first;
     }
     this._checkScrolling();
     // TODO if and else paths do almost same thing, refactor?
