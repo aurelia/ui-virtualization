@@ -161,6 +161,9 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
 
     VirtualRepeat.prototype.bind = function bind(bindingContext, overrideContext) {
       this.scope = { bindingContext: bindingContext, overrideContext: overrideContext };
+      if (this._isAttached) {
+        this.itemsChanged();
+      }
     };
 
     VirtualRepeat.prototype.call = function call(context, changes) {
@@ -507,7 +510,7 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
     VirtualRepeat.prototype._calcInitialHeights = function _calcInitialHeights(itemsLength) {
       var _this7 = this;
 
-      if (this._viewsLength > 0 && this._itemsLength === itemsLength || itemsLength <= 0) {
+      if (this._viewsLength > 0 && this._itemsLength === itemsLength || this._viewsLength > 0 && itemsLength < 0) {
         return;
       }
       this._hasCalculatedSizes = true;

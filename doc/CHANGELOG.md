@@ -1,3 +1,13 @@
+<a name="1.0.0-beta.3.1.2"></a>
+# [1.0.0-beta.3.1.2](https://github.com/aurelia/ui-virtualization/compare/1.0.0-beta.3.1.1...v1.0.0-beta.3.1.2) (2017-10-23)
+
+
+### Bug Fixes
+
+* **virtual-repeat:** Changing the items to emty array from scrollable list ([0e0b702](https://github.com/aurelia/ui-virtualization/commit/0e0b702))
+
+
+
 <a name="1.0.0-beta.3.1.1"></a>
 # [1.0.0-beta.3.1.1](https://github.com/aurelia/ui-virtualization/compare/1.0.0-beta.3.1.0...v1.0.0-beta.3.1.1) (2017-10-02)
 

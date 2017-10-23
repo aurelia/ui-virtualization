@@ -633,6 +633,9 @@ export class VirtualRepeat extends AbstractRepeater {
 
   bind(bindingContext, overrideContext): void {
     this.scope = { bindingContext, overrideContext };
+    if (this._isAttached) {
+      this.itemsChanged();
+    }
   }
 
   call(context, changes): void {
@@ -974,7 +977,7 @@ export class VirtualRepeat extends AbstractRepeater {
   }
 
   _calcInitialHeights(itemsLength: number): void {
-    if (this._viewsLength > 0 && this._itemsLength === itemsLength || itemsLength <= 0) {
+    if (this._viewsLength > 0 && this._itemsLength === itemsLength || this._viewsLength > 0 && itemsLength < 0) {
       return;
     }
     this._hasCalculatedSizes = true;

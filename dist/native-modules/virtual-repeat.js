@@ -143,6 +143,9 @@ export var VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
 
   VirtualRepeat.prototype.bind = function bind(bindingContext, overrideContext) {
     this.scope = { bindingContext: bindingContext, overrideContext: overrideContext };
+    if (this._isAttached) {
+      this.itemsChanged();
+    }
   };
 
   VirtualRepeat.prototype.call = function call(context, changes) {
@@ -489,7 +492,7 @@ export var VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
   VirtualRepeat.prototype._calcInitialHeights = function _calcInitialHeights(itemsLength) {
     var _this7 = this;
 
-    if (this._viewsLength > 0 && this._itemsLength === itemsLength || itemsLength <= 0) {
+    if (this._viewsLength > 0 && this._itemsLength === itemsLength || this._viewsLength > 0 && itemsLength < 0) {
       return;
     }
     this._hasCalculatedSizes = true;

@@ -128,6 +128,9 @@ export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
 
   bind(bindingContext, overrideContext) {
     this.scope = { bindingContext, overrideContext };
+    if (this._isAttached) {
+      this.itemsChanged();
+    }
   }
 
   call(context, changes) {
@@ -454,7 +457,7 @@ export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
   }
 
   _calcInitialHeights(itemsLength) {
-    if (this._viewsLength > 0 && this._itemsLength === itemsLength || itemsLength <= 0) {
+    if (this._viewsLength > 0 && this._itemsLength === itemsLength || this._viewsLength > 0 && itemsLength < 0) {
       return;
     }
     this._hasCalculatedSizes = true;
