@@ -457,7 +457,7 @@ export class VirtualRepeat extends AbstractRepeater {
   }
 
   _calcInitialHeights(itemsLength: number): void {
-    if (this._viewsLength > 0 && this._itemsLength === itemsLength || this._viewsLength > 0 && itemsLength < 0) {
+    if (this._viewsLength > 0 && this._itemsLength === itemsLength || !this.viewCount()) {
       return;
     }
     this._hasCalculatedSizes = true;

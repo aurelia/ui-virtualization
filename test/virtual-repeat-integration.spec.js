@@ -663,4 +663,35 @@ describe('VirtualRepeat Integration', () => {
         });
     });
   })
+
+  describe('initial setup', () => {
+    let component;
+    let virtualRepeat;
+    let viewModel;
+    let create;
+    let items;
+
+    beforeEach(() => {
+      items = [];
+      component = StageComponent
+        .withResources(['src/virtual-repeat'])
+        .inView(`<div style="height: ${itemHeight}px;" virtual-repeat.for="item of items">\${item}</div>`)
+        .boundTo({items: items});
+
+      create = component.create().then(() => {
+        virtualRepeat = component.sut;
+        viewModel = component.viewModel;
+      });
+    });
+
+    afterEach(() => {
+      component.cleanUp();
+    });
+
+    it('constructs with empty array', done => {
+      create
+        .then(() => validateState(virtualRepeat, viewModel))
+        .then(done);
+    });
+  });
 });
