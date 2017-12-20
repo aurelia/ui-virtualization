@@ -675,7 +675,7 @@ export class VirtualRepeat extends AbstractRepeater {
   itemsChanged(): void {
     this._unsubscribeCollection();
     // still bound?
-    if (!this.scope) {
+    if (!this.scope || !this._isAttached) {
       return;
     }
     let reducingItems = false;

@@ -185,7 +185,7 @@ export var VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
   VirtualRepeat.prototype.itemsChanged = function itemsChanged() {
     this._unsubscribeCollection();
 
-    if (!this.scope) {
+    if (!this.scope || !this._isAttached) {
       return;
     }
     var reducingItems = false;

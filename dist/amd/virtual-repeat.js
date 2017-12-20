@@ -203,7 +203,7 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-binding', 'aurelia-t
     VirtualRepeat.prototype.itemsChanged = function itemsChanged() {
       this._unsubscribeCollection();
 
-      if (!this.scope) {
+      if (!this.scope || !this._isAttached) {
         return;
       }
       var reducingItems = false;

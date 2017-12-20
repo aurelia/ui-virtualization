@@ -170,7 +170,7 @@ export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
   itemsChanged() {
     this._unsubscribeCollection();
 
-    if (!this.scope) {
+    if (!this.scope || !this._isAttached) {
       return;
     }
     let reducingItems = false;

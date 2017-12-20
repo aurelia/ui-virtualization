@@ -1,4 +1,4 @@
-define(['exports', './virtual-repeat', './infinite-scroll-next'], function (exports, _virtualRepeat, _infiniteScrollNext) {
+define(['exports', 'aurelia-pal', './virtual-repeat', './infinite-scroll-next'], function (exports, _aureliaPal, _virtualRepeat, _infiniteScrollNext) {
   'use strict';
 
   Object.defineProperty(exports, "__esModule", {
@@ -7,7 +7,7 @@ define(['exports', './virtual-repeat', './infinite-scroll-next'], function (expo
   exports.InfiniteScrollNext = exports.VirtualRepeat = undefined;
   exports.configure = configure;
   function configure(config) {
-    config.globalResources('./virtual-repeat', './infinite-scroll-next');
+    config.globalResources(_aureliaPal.PLATFORM.moduleName('./virtual-repeat'), _aureliaPal.PLATFORM.moduleName('./infinite-scroll-next'));
   }
 
   exports.VirtualRepeat = _virtualRepeat.VirtualRepeat;

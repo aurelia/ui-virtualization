@@ -6,12 +6,14 @@ Object.defineProperty(exports, "__esModule", {
 exports.InfiniteScrollNext = exports.VirtualRepeat = undefined;
 exports.configure = configure;
 
+var _aureliaPal = require('aurelia-pal');
+
 var _virtualRepeat = require('./virtual-repeat');
 
 var _infiniteScrollNext = require('./infinite-scroll-next');
 
 function configure(config) {
-  config.globalResources('./virtual-repeat', './infinite-scroll-next');
+  config.globalResources(_aureliaPal.PLATFORM.moduleName('./virtual-repeat'), _aureliaPal.PLATFORM.moduleName('./infinite-scroll-next'));
 }
 
 exports.VirtualRepeat = _virtualRepeat.VirtualRepeat;

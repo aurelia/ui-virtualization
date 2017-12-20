@@ -1,3 +1,13 @@
+<a name="1.0.0-beta.3.2.0"></a>
+# [1.0.0-beta.3.2.0](https://github.com/aurelia/ui-virtualization/compare/1.0.0-beta.3.1.2...v1.0.0-beta.3.2.0) (2017-12-20)
+
+
+### Bug Fixes
+
+* **VirtuaRepeat:** don't calcuate size when not attached ([0f03dff](https://github.com/aurelia/ui-virtualization/commit/0f03dff))
+
+
+
 <a name="1.0.0-beta.3.1.2"></a>
 # [1.0.0-beta.3.1.2](https://github.com/aurelia/ui-virtualization/compare/1.0.0-beta.3.1.1...v1.0.0-beta.3.1.2) (2017-10-23)
 

@@ -1,17 +1,19 @@
 'use strict';
 
-System.register(['./virtual-repeat', './infinite-scroll-next'], function (_export, _context) {
+System.register(['aurelia-pal', './virtual-repeat', './infinite-scroll-next'], function (_export, _context) {
   "use strict";
 
-  var VirtualRepeat, InfiniteScrollNext;
+  var PLATFORM, VirtualRepeat, InfiniteScrollNext;
   function configure(config) {
-    config.globalResources('./virtual-repeat', './infinite-scroll-next');
+    config.globalResources(PLATFORM.moduleName('./virtual-repeat'), PLATFORM.moduleName('./infinite-scroll-next'));
   }
 
   _export('configure', configure);
 
   return {
-    setters: [function (_virtualRepeat) {
+    setters: [function (_aureliaPal) {
+      PLATFORM = _aureliaPal.PLATFORM;
+    }, function (_virtualRepeat) {
       VirtualRepeat = _virtualRepeat.VirtualRepeat;
     }, function (_infiniteScrollNext) {
       InfiniteScrollNext = _infiniteScrollNext.InfiniteScrollNext;

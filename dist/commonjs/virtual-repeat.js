@@ -200,7 +200,7 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec = (0, _aureliaTemplating.custo
   VirtualRepeat.prototype.itemsChanged = function itemsChanged() {
     this._unsubscribeCollection();
 
-    if (!this.scope) {
+    if (!this.scope || !this._isAttached) {
       return;
     }
     var reducingItems = false;
