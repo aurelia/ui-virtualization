@@ -1,4 +1,4 @@
-import {PLATFORM} from 'aurelia-pal'
+import {PLATFORM} from 'aurelia-pal';
 import {VirtualRepeat} from './virtual-repeat';
 import {InfiniteScrollNext} from './infinite-scroll-next';
 
