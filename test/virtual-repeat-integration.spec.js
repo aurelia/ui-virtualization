@@ -1,3 +1,5 @@
+import {Container} from 'aurelia-dependency-injection';
+import {TaskQueue} from 'aurelia-task-queue'
 import {StageComponent} from './component-tester';
 import {TableStrategy} from '../src/template-strategy';
 
@@ -371,6 +373,21 @@ describe('VirtualRepeat Integration', () => {
     it('handles array changes', done => {
       create.then(() => validateArrayChange(virtualRepeat, viewModel, done));
     });
+
+    it('handles array changes with null / undefined', done => {
+      create.then(() => {
+        viewModel.items = null;
+        
+        setTimeout(() => {
+          let topBufferHeight = virtualRepeat.topBuffer.getBoundingClientRect().height;
+          let bottomBufferHeight = virtualRepeat.bottomBuffer.getBoundingClientRect().height;
+
+          expect(topBufferHeight + bottomBufferHeight).toBe(0);
+
+          validateArrayChange(virtualRepeat, viewModel, done);
+        }, 1000)
+      });
+    });
   });
 
   describe('iterating table', () => {
@@ -487,9 +504,9 @@ describe('VirtualRepeat Integration', () => {
       items = [];
       vm = {
           items: items,
-          getNextPage: function(){
+          getNextPage: function() {
             let itemLength = this.items.length;
-            for(let i = 0; i < 100; ++i) {
+            for (let i = 0; i < 100; ++i) {
                 let itemNum = itemLength + i;
                 this.items.push('item' + itemNum);
             }
@@ -498,9 +515,9 @@ describe('VirtualRepeat Integration', () => {
       nestedVm = {
         items: items,
         bar: [1],
-        getNextPage: function(topIndex, isAtBottom, isAtTop){
+        getNextPage: function(topIndex, isAtBottom, isAtTop) {
           let itemLength = this.items.length;
-          for(let i = 0; i < 100; ++i) {
+          for (let i = 0; i < 100; ++i) {
               let itemNum = itemLength + i;
               this.items.push('item' + itemNum);
           }
@@ -509,10 +526,10 @@ describe('VirtualRepeat Integration', () => {
       promisedVm = {
           items: items,
           test: '2',
-          getNextPage: function(){
+          getNextPage: function() {
             return new Promise((resolve, reject) => {
               let itemLength = this.items.length;
-              for(let i = 0; i < 100; ++i) {
+              for (let i = 0; i < 100; ++i) {
                   let itemNum = itemLength + i;
                   this.items.push('item' + itemNum);
               }
@@ -520,7 +537,7 @@ describe('VirtualRepeat Integration', () => {
             });
           }
       };
-      for(let i = 0; i < 1000; ++i) {
+      for (let i = 0; i < 1000; ++i) {
         items.push('item' + i);
       }
 

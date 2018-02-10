@@ -61,7 +61,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
       repeat.updateBindings(view);
     }
     // add new views
-    let minLength = Math.min(repeat._viewsLength, items.length);
+    let minLength = Math.min(repeat._viewsLength, itemsLength);
     for (let i = viewsLength; i < minLength; i++) {
       let overrideContext = createFullOverrideContext(repeat, items[i], i, itemsLength);
       repeat.addView(overrideContext.bindingContext, overrideContext);
