@@ -64,7 +64,7 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-pal', 'aurelia-templ
     };
 
     TableStrategy.prototype.createTopBufferElement = function createTopBufferElement(element) {
-      var elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
+      var elementName = /^[uo]l$/.test(element.parentNode.localName) ? 'li' : 'div';
       var buffer = _aureliaPal.DOM.createElement(elementName);
       var tableElement = element.parentNode.parentNode;
       tableElement.parentNode.insertBefore(buffer, tableElement);
@@ -73,7 +73,7 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-pal', 'aurelia-templ
     };
 
     TableStrategy.prototype.createBottomBufferElement = function createBottomBufferElement(element) {
-      var elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
+      var elementName = /^[uo]l$/.test(element.parentNode.localName) ? 'li' : 'div';
       var buffer = _aureliaPal.DOM.createElement(elementName);
       var tableElement = element.parentNode.parentNode;
       tableElement.parentNode.insertBefore(buffer, tableElement.nextSibling);
@@ -137,14 +137,14 @@ define(['exports', 'aurelia-dependency-injection', 'aurelia-pal', 'aurelia-templ
     };
 
     DefaultTemplateStrategy.prototype.createTopBufferElement = function createTopBufferElement(element) {
-      var elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
+      var elementName = /^[uo]l$/.test(element.parentNode.localName) ? 'li' : 'div';
       var buffer = _aureliaPal.DOM.createElement(elementName);
       element.parentNode.insertBefore(buffer, element);
       return buffer;
     };
 
     DefaultTemplateStrategy.prototype.createBottomBufferElement = function createBottomBufferElement(element) {
-      var elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
+      var elementName = /^[uo]l$/.test(element.parentNode.localName) ? 'li' : 'div';
       var buffer = _aureliaPal.DOM.createElement(elementName);
       element.parentNode.insertBefore(buffer, element.nextSibling);
       return buffer;

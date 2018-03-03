@@ -1,4 +1,4 @@
-define(['exports', 'aurelia-templating-resources', './array-virtual-repeat-strategy'], function (exports, _aureliaTemplatingResources, _arrayVirtualRepeatStrategy) {
+define(['exports', 'aurelia-templating-resources', './array-virtual-repeat-strategy', './null-virtual-repeat-strategy'], function (exports, _aureliaTemplatingResources, _arrayVirtualRepeatStrategy, _nullVirtualRepeatStrategy) {
   'use strict';
 
   Object.defineProperty(exports, "__esModule", {
@@ -43,6 +43,9 @@ define(['exports', 'aurelia-templating-resources', './array-virtual-repeat-strat
       _this.matchers = [];
       _this.strategies = [];
 
+      _this.addStrategy(function (items) {
+        return items === null || items === undefined;
+      }, new _nullVirtualRepeatStrategy.NullVirtualRepeatStrategy());
       _this.addStrategy(function (items) {
         return items instanceof Array;
       }, new _arrayVirtualRepeatStrategy.ArrayVirtualRepeatStrategy());

@@ -63,7 +63,7 @@ export var TableStrategy = (_dec2 = inject(DomHelper), _dec2(_class2 = function 
   };
 
   TableStrategy.prototype.createTopBufferElement = function createTopBufferElement(element) {
-    var elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
+    var elementName = /^[uo]l$/.test(element.parentNode.localName) ? 'li' : 'div';
     var buffer = DOM.createElement(elementName);
     var tableElement = element.parentNode.parentNode;
     tableElement.parentNode.insertBefore(buffer, tableElement);
@@ -72,7 +72,7 @@ export var TableStrategy = (_dec2 = inject(DomHelper), _dec2(_class2 = function 
   };
 
   TableStrategy.prototype.createBottomBufferElement = function createBottomBufferElement(element) {
-    var elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
+    var elementName = /^[uo]l$/.test(element.parentNode.localName) ? 'li' : 'div';
     var buffer = DOM.createElement(elementName);
     var tableElement = element.parentNode.parentNode;
     tableElement.parentNode.insertBefore(buffer, tableElement.nextSibling);
@@ -136,14 +136,14 @@ export var DefaultTemplateStrategy = function () {
   };
 
   DefaultTemplateStrategy.prototype.createTopBufferElement = function createTopBufferElement(element) {
-    var elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
+    var elementName = /^[uo]l$/.test(element.parentNode.localName) ? 'li' : 'div';
     var buffer = DOM.createElement(elementName);
     element.parentNode.insertBefore(buffer, element);
     return buffer;
   };
 
   DefaultTemplateStrategy.prototype.createBottomBufferElement = function createBottomBufferElement(element) {
-    var elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
+    var elementName = /^[uo]l$/.test(element.parentNode.localName) ? 'li' : 'div';
     var buffer = DOM.createElement(elementName);
     element.parentNode.insertBefore(buffer, element.nextSibling);
     return buffer;

@@ -78,7 +78,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-pal', 'aurelia-templat
         };
 
         TableStrategy.prototype.createTopBufferElement = function createTopBufferElement(element) {
-          var elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
+          var elementName = /^[uo]l$/.test(element.parentNode.localName) ? 'li' : 'div';
           var buffer = DOM.createElement(elementName);
           var tableElement = element.parentNode.parentNode;
           tableElement.parentNode.insertBefore(buffer, tableElement);
@@ -87,7 +87,7 @@ System.register(['aurelia-dependency-injection', 'aurelia-pal', 'aurelia-templat
         };
 
         TableStrategy.prototype.createBottomBufferElement = function createBottomBufferElement(element) {
-          var elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
+          var elementName = /^[uo]l$/.test(element.parentNode.localName) ? 'li' : 'div';
           var buffer = DOM.createElement(elementName);
           var tableElement = element.parentNode.parentNode;
           tableElement.parentNode.insertBefore(buffer, tableElement.nextSibling);
@@ -153,14 +153,14 @@ System.register(['aurelia-dependency-injection', 'aurelia-pal', 'aurelia-templat
         };
 
         DefaultTemplateStrategy.prototype.createTopBufferElement = function createTopBufferElement(element) {
-          var elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
+          var elementName = /^[uo]l$/.test(element.parentNode.localName) ? 'li' : 'div';
           var buffer = DOM.createElement(elementName);
           element.parentNode.insertBefore(buffer, element);
           return buffer;
         };
 
         DefaultTemplateStrategy.prototype.createBottomBufferElement = function createBottomBufferElement(element) {
-          var elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
+          var elementName = /^[uo]l$/.test(element.parentNode.localName) ? 'li' : 'div';
           var buffer = DOM.createElement(elementName);
           element.parentNode.insertBefore(buffer, element.nextSibling);
           return buffer;

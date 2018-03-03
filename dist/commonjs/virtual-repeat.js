@@ -169,20 +169,9 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec = (0, _aureliaTemplating.custo
 
   VirtualRepeat.prototype.detached = function detached() {
     this.scrollContainer.removeEventListener('scroll', this.scrollListener);
-    this._first = 0;
-    this._previousFirst = 0;
-    this._viewsLength = 0;
-    this._lastRebind = 0;
-    this._topBufferHeight = 0;
-    this._bottomBufferHeight = 0;
-    this._scrollingDown = false;
-    this._scrollingUp = false;
-    this._switchedDirection = false;
+    this._resetCalculation();
     this._isAttached = false;
-    this._ticking = false;
-    this._hasCalculatedSizes = false;
     this.templateStrategy.removeBufferElements(this.element, this.topBuffer, this.bottomBuffer);
-    this.isLastIndex = false;
     this.scrollContainer = null;
     this.scrollContainerHeight = null;
     this.distanceToTop = null;
@@ -207,40 +196,47 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec = (0, _aureliaTemplating.custo
     var previousLastViewIndex = this._getIndexOfLastView();
 
     var items = this.items;
+    var shouldCalculateSize = !!items;
     this.strategy = this.strategyLocator.getStrategy(items);
-    if (items.length > 0 && this.viewCount() === 0) {
-      this.strategy.createFirstItem(this);
-    }
 
-    if (this._itemsLength >= items.length) {
-      this._skipNextScrollHandle = true;
-      reducingItems = true;
+    if (shouldCalculateSize) {
+      if (items.length > 0 && this.viewCount() === 0) {
+        this.strategy.createFirstItem(this);
+      }
+
+      if (this._itemsLength >= items.length) {
+        this._skipNextScrollHandle = true;
+        reducingItems = true;
+      }
+      this._checkFixedHeightContainer();
+      this._calcInitialHeights(items.length);
     }
-    this._checkFixedHeightContainer();
-    this._calcInitialHeights(items.length);
     if (!this.isOneTime && !this._observeInnerCollection()) {
       this._observeCollection();
     }
     this.strategy.instanceChanged(this, items, this._first);
-    this._lastRebind = this._first;
 
-    if (reducingItems && previousLastViewIndex > this.items.length - 1) {
-      if (this.scrollContainer.tagName === 'TBODY') {
-        var realScrollContainer = this.scrollContainer.parentNode.parentNode;
-        realScrollContainer.scrollTop = realScrollContainer.scrollTop + this.viewCount() * this.itemHeight;
-      } else {
-        this.scrollContainer.scrollTop = this.scrollContainer.scrollTop + this.viewCount() * this.itemHeight;
+    if (shouldCalculateSize) {
+      this._lastRebind = this._first;
+
+      if (reducingItems && previousLastViewIndex > this.items.length - 1) {
+        if (this.scrollContainer.tagName === 'TBODY') {
+          var realScrollContainer = this.scrollContainer.parentNode.parentNode;
+          realScrollContainer.scrollTop = realScrollContainer.scrollTop + this.viewCount() * this.itemHeight;
+        } else {
+          this.scrollContainer.scrollTop = this.scrollContainer.scrollTop + this.viewCount() * this.itemHeight;
+        }
       }
-    }
-    if (!reducingItems) {
-      this._previousFirst = this._first;
-      this._scrollingDown = true;
-      this._scrollingUp = false;
+      if (!reducingItems) {
+        this._previousFirst = this._first;
+        this._scrollingDown = true;
+        this._scrollingUp = false;
 
-      this.isLastIndex = this._getIndexOfLastView() >= this.items.length - 1;
-    }
+        this.isLastIndex = this._getIndexOfLastView() >= this.items.length - 1;
+      }
 
-    this._handleScroll();
+      this._handleScroll();
+    }
   };
 
   VirtualRepeat.prototype.unbind = function unbind() {
@@ -274,6 +270,24 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec = (0, _aureliaTemplating.custo
     }
   };
 
+  VirtualRepeat.prototype._resetCalculation = function _resetCalculation() {
+    this._first = 0;
+    this._previousFirst = 0;
+    this._viewsLength = 0;
+    this._lastRebind = 0;
+    this._topBufferHeight = 0;
+    this._bottomBufferHeight = 0;
+    this._scrollingDown = false;
+    this._scrollingUp = false;
+    this._switchedDirection = false;
+    this._ticking = false;
+    this._hasCalculatedSizes = false;
+    this._isAtTop = true;
+    this.isLastIndex = false;
+    this.elementsInView = 0;
+    this._adjustBufferHeights();
+  };
+
   VirtualRepeat.prototype._onScroll = function _onScroll() {
     var _this4 = this;
 
@@ -295,6 +309,9 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec = (0, _aureliaTemplating.custo
     }
     if (this._skipNextScrollHandle) {
       this._skipNextScrollHandle = false;
+      return;
+    }
+    if (!this.items) {
       return;
     }
     var itemHeight = this.itemHeight;
@@ -507,7 +524,12 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec = (0, _aureliaTemplating.custo
   VirtualRepeat.prototype._calcInitialHeights = function _calcInitialHeights(itemsLength) {
     var _this7 = this;
 
-    if (this._viewsLength > 0 && this._itemsLength === itemsLength || this._viewsLength > 0 && itemsLength < 0) {
+    var isSameLength = this._viewsLength > 0 && this._itemsLength === itemsLength;
+    if (isSameLength) {
+      return;
+    }
+    if (itemsLength < 1) {
+      this._resetCalculation();
       return;
     }
     this._hasCalculatedSizes = true;

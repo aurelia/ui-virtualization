@@ -6,6 +6,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 import { RepeatStrategyLocator } from 'aurelia-templating-resources';
 import { ArrayVirtualRepeatStrategy } from './array-virtual-repeat-strategy';
+import { NullVirtualRepeatStrategy } from './null-virtual-repeat-strategy';
 
 export var VirtualRepeatStrategyLocator = function (_RepeatStrategyLocato) {
   _inherits(VirtualRepeatStrategyLocator, _RepeatStrategyLocato);
@@ -18,6 +19,9 @@ export var VirtualRepeatStrategyLocator = function (_RepeatStrategyLocato) {
     _this.matchers = [];
     _this.strategies = [];
 
+    _this.addStrategy(function (items) {
+      return items === null || items === undefined;
+    }, new NullVirtualRepeatStrategy());
     _this.addStrategy(function (items) {
       return items instanceof Array;
     }, new ArrayVirtualRepeatStrategy());

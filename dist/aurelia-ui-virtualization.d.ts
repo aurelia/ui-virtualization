@@ -1,14 +1,5 @@
 import {
-  customAttribute,
-  View,
-  BoundViewFactory,
-  ViewSlot,
-  ViewResources,
-  TargetInstruction,
-  bindable,
-  templateController
-} from 'aurelia-templating';
-import {
+  NullRepeatStrategy,
   updateOverrideContext,
   ArrayRepeatStrategy,
   createFullOverrideContext,
@@ -20,6 +11,16 @@ import {
   updateOneTimeBinding,
   viewsRequireLifecycle
 } from 'aurelia-templating-resources';
+import {
+  customAttribute,
+  View,
+  BoundViewFactory,
+  ViewSlot,
+  ViewResources,
+  TargetInstruction,
+  bindable,
+  templateController
+} from 'aurelia-templating';
 import {
   inject,
   Container
@@ -40,6 +41,9 @@ export declare interface TemplateStrategy {
   getFirstElement(topBuffer: Element): Element;
   getLastView(bottomBuffer: Element): Element;
   getTopBufferDistance(topBuffer: Element): number;
+}
+export declare class NullVirtualRepeatStrategy extends NullRepeatStrategy {
+  instanceChanged(repeat?: any): any;
 }
 export declare class DomHelper {
   getElementDistanceToTopOfDocument(element: Element): number;

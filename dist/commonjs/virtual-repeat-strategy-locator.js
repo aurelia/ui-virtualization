@@ -9,6 +9,8 @@ var _aureliaTemplatingResources = require('aurelia-templating-resources');
 
 var _arrayVirtualRepeatStrategy = require('./array-virtual-repeat-strategy');
 
+var _nullVirtualRepeatStrategy = require('./null-virtual-repeat-strategy');
+
 
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -26,6 +28,9 @@ var VirtualRepeatStrategyLocator = exports.VirtualRepeatStrategyLocator = functi
     _this.matchers = [];
     _this.strategies = [];
 
+    _this.addStrategy(function (items) {
+      return items === null || items === undefined;
+    }, new _nullVirtualRepeatStrategy.NullVirtualRepeatStrategy());
     _this.addStrategy(function (items) {
       return items instanceof Array;
     }, new _arrayVirtualRepeatStrategy.ArrayVirtualRepeatStrategy());

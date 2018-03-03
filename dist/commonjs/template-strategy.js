@@ -73,7 +73,7 @@ var TableStrategy = exports.TableStrategy = (_dec2 = (0, _aureliaDependencyInjec
   };
 
   TableStrategy.prototype.createTopBufferElement = function createTopBufferElement(element) {
-    var elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
+    var elementName = /^[uo]l$/.test(element.parentNode.localName) ? 'li' : 'div';
     var buffer = _aureliaPal.DOM.createElement(elementName);
     var tableElement = element.parentNode.parentNode;
     tableElement.parentNode.insertBefore(buffer, tableElement);
@@ -82,7 +82,7 @@ var TableStrategy = exports.TableStrategy = (_dec2 = (0, _aureliaDependencyInjec
   };
 
   TableStrategy.prototype.createBottomBufferElement = function createBottomBufferElement(element) {
-    var elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
+    var elementName = /^[uo]l$/.test(element.parentNode.localName) ? 'li' : 'div';
     var buffer = _aureliaPal.DOM.createElement(elementName);
     var tableElement = element.parentNode.parentNode;
     tableElement.parentNode.insertBefore(buffer, tableElement.nextSibling);
@@ -146,14 +146,14 @@ var DefaultTemplateStrategy = exports.DefaultTemplateStrategy = function () {
   };
 
   DefaultTemplateStrategy.prototype.createTopBufferElement = function createTopBufferElement(element) {
-    var elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
+    var elementName = /^[uo]l$/.test(element.parentNode.localName) ? 'li' : 'div';
     var buffer = _aureliaPal.DOM.createElement(elementName);
     element.parentNode.insertBefore(buffer, element);
     return buffer;
   };
 
   DefaultTemplateStrategy.prototype.createBottomBufferElement = function createBottomBufferElement(element) {
-    var elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
+    var elementName = /^[uo]l$/.test(element.parentNode.localName) ? 'li' : 'div';
     var buffer = _aureliaPal.DOM.createElement(elementName);
     element.parentNode.insertBefore(buffer, element.nextSibling);
     return buffer;

@@ -57,7 +57,7 @@ export let TableStrategy = (_dec2 = inject(DomHelper), _dec2(_class2 = class Tab
   }
 
   createTopBufferElement(element) {
-    const elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
+    const elementName = /^[uo]l$/.test(element.parentNode.localName) ? 'li' : 'div';
     const buffer = DOM.createElement(elementName);
     const tableElement = element.parentNode.parentNode;
     tableElement.parentNode.insertBefore(buffer, tableElement);
@@ -66,7 +66,7 @@ export let TableStrategy = (_dec2 = inject(DomHelper), _dec2(_class2 = class Tab
   }
 
   createBottomBufferElement(element) {
-    const elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
+    const elementName = /^[uo]l$/.test(element.parentNode.localName) ? 'li' : 'div';
     const buffer = DOM.createElement(elementName);
     const tableElement = element.parentNode.parentNode;
     tableElement.parentNode.insertBefore(buffer, tableElement.nextSibling);
@@ -124,14 +124,14 @@ export let DefaultTemplateStrategy = class DefaultTemplateStrategy {
   }
 
   createTopBufferElement(element) {
-    const elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
+    const elementName = /^[uo]l$/.test(element.parentNode.localName) ? 'li' : 'div';
     const buffer = DOM.createElement(elementName);
     element.parentNode.insertBefore(buffer, element);
     return buffer;
   }
 
   createBottomBufferElement(element) {
-    const elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
+    const elementName = /^[uo]l$/.test(element.parentNode.localName) ? 'li' : 'div';
     const buffer = DOM.createElement(elementName);
     element.parentNode.insertBefore(buffer, element.nextSibling);
     return buffer;

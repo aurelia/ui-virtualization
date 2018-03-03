@@ -1,3 +1,13 @@
+<a name="1.0.0-beta.3.3.0"></a>
+# [1.0.0-beta.3.3.0](https://github.com/aurelia/ui-virtualization/compare/1.0.0-beta.3.2.0...v1.0.0-beta.3.3.0) (2018-03-03)
+
+
+### Features
+
+* **VirtualRepeat:** handle null / undefined, empty collection ([6f92c31](https://github.com/aurelia/ui-virtualization/commit/6f92c31))
+
+
+
 <a name="1.0.0-beta.3.2.0"></a>
 # [1.0.0-beta.3.2.0](https://github.com/aurelia/ui-virtualization/compare/1.0.0-beta.3.1.2...v1.0.0-beta.3.2.0) (2017-12-20)
 

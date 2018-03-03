@@ -1,9 +1,9 @@
 'use strict';
 
-System.register(['aurelia-templating-resources', './array-virtual-repeat-strategy'], function (_export, _context) {
+System.register(['aurelia-templating-resources', './array-virtual-repeat-strategy', './null-virtual-repeat-strategy'], function (_export, _context) {
   "use strict";
 
-  var RepeatStrategyLocator, ArrayVirtualRepeatStrategy, VirtualRepeatStrategyLocator;
+  var RepeatStrategyLocator, ArrayVirtualRepeatStrategy, NullVirtualRepeatStrategy, VirtualRepeatStrategyLocator;
 
   
 
@@ -36,6 +36,8 @@ System.register(['aurelia-templating-resources', './array-virtual-repeat-strateg
       RepeatStrategyLocator = _aureliaTemplatingResources.RepeatStrategyLocator;
     }, function (_arrayVirtualRepeatStrategy) {
       ArrayVirtualRepeatStrategy = _arrayVirtualRepeatStrategy.ArrayVirtualRepeatStrategy;
+    }, function (_nullVirtualRepeatStrategy) {
+      NullVirtualRepeatStrategy = _nullVirtualRepeatStrategy.NullVirtualRepeatStrategy;
     }],
     execute: function () {
       _export('VirtualRepeatStrategyLocator', VirtualRepeatStrategyLocator = function (_RepeatStrategyLocato) {
@@ -49,6 +51,9 @@ System.register(['aurelia-templating-resources', './array-virtual-repeat-strateg
           _this.matchers = [];
           _this.strategies = [];
 
+          _this.addStrategy(function (items) {
+            return items === null || items === undefined;
+          }, new NullVirtualRepeatStrategy());
           _this.addStrategy(function (items) {
             return items instanceof Array;
           }, new ArrayVirtualRepeatStrategy());

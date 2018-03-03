@@ -84,7 +84,7 @@ define(['exports', 'aurelia-templating-resources', './utilities'], function (exp
         repeat.updateBindings(view);
       }
 
-      var minLength = Math.min(repeat._viewsLength, items.length);
+      var minLength = Math.min(repeat._viewsLength, itemsLength);
       for (var _i = viewsLength; _i < minLength; _i++) {
         var overrideContext = (0, _aureliaTemplatingResources.createFullOverrideContext)(repeat, items[_i], _i, itemsLength);
         repeat.addView(overrideContext.bindingContext, overrideContext);

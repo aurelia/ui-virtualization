@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.VirtualRepeat = exports.VirtualRepeatStrategyLocator = exports.DefaultTemplateStrategy = exports.TableStrategy = exports.TemplateStrategyLocator = exports.ArrayVirtualRepeatStrategy = exports.InfiniteScrollNext = exports.DomHelper = undefined;
+exports.VirtualRepeat = exports.VirtualRepeatStrategyLocator = exports.DefaultTemplateStrategy = exports.TableStrategy = exports.TemplateStrategyLocator = exports.ArrayVirtualRepeatStrategy = exports.InfiniteScrollNext = exports.DomHelper = exports.NullVirtualRepeatStrategy = undefined;
 
 var _dec, _class, _dec2, _class2, _dec3, _class3, _dec4, _dec5, _class5, _desc, _value, _class6, _descriptor, _descriptor2;
 
@@ -15,9 +15,9 @@ exports.getStyleValue = getStyleValue;
 exports.getElementDistanceToBottomViewPort = getElementDistanceToBottomViewPort;
 exports.getElementDistanceToTopViewPort = getElementDistanceToTopViewPort;
 
-var _aureliaTemplating = require('aurelia-templating');
-
 var _aureliaTemplatingResources = require('aurelia-templating-resources');
+
+var _aureliaTemplating = require('aurelia-templating');
 
 var _aureliaDependencyInjection = require('aurelia-dependency-injection');
 
@@ -68,11 +68,28 @@ function _initializerWarningHelper(descriptor, context) {
   throw new Error('Decorating class property failed. Please ensure that transform-class-properties is enabled.');
 }
 
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+var NullVirtualRepeatStrategy = exports.NullVirtualRepeatStrategy = function (_NullRepeatStrategy) {
+  _inherits(NullVirtualRepeatStrategy, _NullRepeatStrategy);
+
+  function NullVirtualRepeatStrategy() {
+    _classCallCheck(this, NullVirtualRepeatStrategy);
+
+    return _possibleConstructorReturn(this, _NullRepeatStrategy.apply(this, arguments));
+  }
+
+  NullVirtualRepeatStrategy.prototype.instanceChanged = function instanceChanged(repeat) {
+    _NullRepeatStrategy.prototype.instanceChanged.call(this, repeat);
+    repeat._resetCalculation();
+  };
+
+  return NullVirtualRepeatStrategy;
+}(_aureliaTemplatingResources.NullRepeatStrategy);
 
 var DomHelper = exports.DomHelper = function () {
   function DomHelper() {
@@ -220,7 +237,7 @@ var ArrayVirtualRepeatStrategy = exports.ArrayVirtualRepeatStrategy = function (
       repeat.updateBindings(_view);
     }
 
-    var minLength = Math.min(repeat._viewsLength, items.length);
+    var minLength = Math.min(repeat._viewsLength, itemsLength);
     for (var _i = viewsLength; _i < minLength; _i++) {
       var overrideContext = (0, _aureliaTemplatingResources.createFullOverrideContext)(repeat, items[_i], _i, itemsLength);
       repeat.addView(overrideContext.bindingContext, overrideContext);
@@ -232,7 +249,7 @@ var ArrayVirtualRepeatStrategy = exports.ArrayVirtualRepeatStrategy = function (
   };
 
   ArrayVirtualRepeatStrategy.prototype._standardProcessInstanceMutated = function _standardProcessInstanceMutated(repeat, array, splices) {
-    var _this2 = this;
+    var _this3 = this;
 
     if (repeat.__queuedSplices) {
       for (var i = 0, ii = splices.length; i < ii; ++i) {
@@ -259,7 +276,7 @@ var ArrayVirtualRepeatStrategy = exports.ArrayVirtualRepeatStrategy = function (
             return;
           }
 
-          var nextPromise = _this2._runSplices(repeat, repeat.__array, queuedSplices) || Promise.resolve();
+          var nextPromise = _this3._runSplices(repeat, repeat.__array, queuedSplices) || Promise.resolve();
           nextPromise.then(runQueuedSplices);
         };
 
@@ -269,7 +286,7 @@ var ArrayVirtualRepeatStrategy = exports.ArrayVirtualRepeatStrategy = function (
   };
 
   ArrayVirtualRepeatStrategy.prototype._runSplices = function _runSplices(repeat, array, splices) {
-    var _this3 = this;
+    var _this4 = this;
 
     var removeDelta = 0;
     var rmPromises = [];
@@ -311,7 +328,7 @@ var ArrayVirtualRepeatStrategy = exports.ArrayVirtualRepeatStrategy = function (
 
       if (rmPromises.length > 0) {
         return Promise.all(rmPromises).then(function () {
-          _this3._handleAddedSplices(repeat, array, splices);
+          _this4._handleAddedSplices(repeat, array, splices);
           updateVirtualOverrideContexts(repeat, 0);
         });
       }
@@ -494,7 +511,7 @@ var TableStrategy = exports.TableStrategy = (_dec3 = (0, _aureliaDependencyInjec
   };
 
   TableStrategy.prototype.createTopBufferElement = function createTopBufferElement(element) {
-    var elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
+    var elementName = /^[uo]l$/.test(element.parentNode.localName) ? 'li' : 'div';
     var buffer = _aureliaPal.DOM.createElement(elementName);
     var tableElement = element.parentNode.parentNode;
     tableElement.parentNode.insertBefore(buffer, tableElement);
@@ -503,7 +520,7 @@ var TableStrategy = exports.TableStrategy = (_dec3 = (0, _aureliaDependencyInjec
   };
 
   TableStrategy.prototype.createBottomBufferElement = function createBottomBufferElement(element) {
-    var elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
+    var elementName = /^[uo]l$/.test(element.parentNode.localName) ? 'li' : 'div';
     var buffer = _aureliaPal.DOM.createElement(elementName);
     var tableElement = element.parentNode.parentNode;
     tableElement.parentNode.insertBefore(buffer, tableElement.nextSibling);
@@ -567,14 +584,14 @@ var DefaultTemplateStrategy = exports.DefaultTemplateStrategy = function () {
   };
 
   DefaultTemplateStrategy.prototype.createTopBufferElement = function createTopBufferElement(element) {
-    var elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
+    var elementName = /^[uo]l$/.test(element.parentNode.localName) ? 'li' : 'div';
     var buffer = _aureliaPal.DOM.createElement(elementName);
     element.parentNode.insertBefore(buffer, element);
     return buffer;
   };
 
   DefaultTemplateStrategy.prototype.createBottomBufferElement = function createBottomBufferElement(element) {
-    var elementName = element.parentNode.localName === 'ul' ? 'li' : 'div';
+    var elementName = /^[uo]l$/.test(element.parentNode.localName) ? 'li' : 'div';
     var buffer = _aureliaPal.DOM.createElement(elementName);
     element.parentNode.insertBefore(buffer, element.nextSibling);
     return buffer;
@@ -606,15 +623,18 @@ var VirtualRepeatStrategyLocator = exports.VirtualRepeatStrategyLocator = functi
   function VirtualRepeatStrategyLocator() {
     _classCallCheck(this, VirtualRepeatStrategyLocator);
 
-    var _this4 = _possibleConstructorReturn(this, _RepeatStrategyLocato.call(this));
+    var _this5 = _possibleConstructorReturn(this, _RepeatStrategyLocato.call(this));
 
-    _this4.matchers = [];
-    _this4.strategies = [];
+    _this5.matchers = [];
+    _this5.strategies = [];
 
-    _this4.addStrategy(function (items) {
+    _this5.addStrategy(function (items) {
+      return items === null || items === undefined;
+    }, new NullVirtualRepeatStrategy());
+    _this5.addStrategy(function (items) {
       return items instanceof Array;
     }, new ArrayVirtualRepeatStrategy());
-    return _this4;
+    return _this5;
   }
 
   return VirtualRepeatStrategyLocator;
@@ -626,48 +646,48 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec4 = (0, _aureliaTemplating.cust
   function VirtualRepeat(element, viewFactory, instruction, viewSlot, viewResources, observerLocator, strategyLocator, templateStrategyLocator, domHelper) {
     _classCallCheck(this, VirtualRepeat);
 
-    var _this5 = _possibleConstructorReturn(this, _AbstractRepeater.call(this, {
+    var _this6 = _possibleConstructorReturn(this, _AbstractRepeater.call(this, {
       local: 'item',
       viewsRequireLifecycle: (0, _aureliaTemplatingResources.viewsRequireLifecycle)(viewFactory)
     }));
 
-    _this5._first = 0;
-    _this5._previousFirst = 0;
-    _this5._viewsLength = 0;
-    _this5._lastRebind = 0;
-    _this5._topBufferHeight = 0;
-    _this5._bottomBufferHeight = 0;
-    _this5._bufferSize = 5;
-    _this5._scrollingDown = false;
-    _this5._scrollingUp = false;
-    _this5._switchedDirection = false;
-    _this5._isAttached = false;
-    _this5._ticking = false;
-    _this5._fixedHeightContainer = false;
-    _this5._hasCalculatedSizes = false;
-    _this5._isAtTop = true;
-    _this5._calledGetMore = false;
+    _this6._first = 0;
+    _this6._previousFirst = 0;
+    _this6._viewsLength = 0;
+    _this6._lastRebind = 0;
+    _this6._topBufferHeight = 0;
+    _this6._bottomBufferHeight = 0;
+    _this6._bufferSize = 5;
+    _this6._scrollingDown = false;
+    _this6._scrollingUp = false;
+    _this6._switchedDirection = false;
+    _this6._isAttached = false;
+    _this6._ticking = false;
+    _this6._fixedHeightContainer = false;
+    _this6._hasCalculatedSizes = false;
+    _this6._isAtTop = true;
+    _this6._calledGetMore = false;
 
-    _initDefineProp(_this5, 'items', _descriptor, _this5);
+    _initDefineProp(_this6, 'items', _descriptor, _this6);
 
-    _initDefineProp(_this5, 'local', _descriptor2, _this5);
+    _initDefineProp(_this6, 'local', _descriptor2, _this6);
 
-    _this5.element = element;
-    _this5.viewFactory = viewFactory;
-    _this5.instruction = instruction;
-    _this5.viewSlot = viewSlot;
-    _this5.lookupFunctions = viewResources.lookupFunctions;
-    _this5.observerLocator = observerLocator;
-    _this5.strategyLocator = strategyLocator;
-    _this5.templateStrategyLocator = templateStrategyLocator;
-    _this5.sourceExpression = (0, _aureliaTemplatingResources.getItemsSourceExpression)(_this5.instruction, 'virtual-repeat.for');
-    _this5.isOneTime = (0, _aureliaTemplatingResources.isOneTime)(_this5.sourceExpression);
-    _this5.domHelper = domHelper;
-    return _this5;
+    _this6.element = element;
+    _this6.viewFactory = viewFactory;
+    _this6.instruction = instruction;
+    _this6.viewSlot = viewSlot;
+    _this6.lookupFunctions = viewResources.lookupFunctions;
+    _this6.observerLocator = observerLocator;
+    _this6.strategyLocator = strategyLocator;
+    _this6.templateStrategyLocator = templateStrategyLocator;
+    _this6.sourceExpression = (0, _aureliaTemplatingResources.getItemsSourceExpression)(_this6.instruction, 'virtual-repeat.for');
+    _this6.isOneTime = (0, _aureliaTemplatingResources.isOneTime)(_this6.sourceExpression);
+    _this6.domHelper = domHelper;
+    return _this6;
   }
 
   VirtualRepeat.prototype.attached = function attached() {
-    var _this6 = this;
+    var _this7 = this;
 
     this._isAttached = true;
     var element = this.element;
@@ -678,15 +698,15 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec4 = (0, _aureliaTemplating.cust
     this.bottomBuffer = this.templateStrategy.createBottomBufferElement(element);
     this.itemsChanged();
     this.scrollListener = function () {
-      return _this6._onScroll();
+      return _this7._onScroll();
     };
 
     this.calcDistanceToTopInterval = setInterval(function () {
-      var distanceToTop = _this6.distanceToTop;
-      _this6.distanceToTop = _this6.domHelper.getElementDistanceToTopOfDocument(_this6.topBuffer);
-      _this6.distanceToTop += _this6.topBufferDistance;
-      if (distanceToTop !== _this6.distanceToTop) {
-        _this6._handleScroll();
+      var distanceToTop = _this7.distanceToTop;
+      _this7.distanceToTop = _this7.domHelper.getElementDistanceToTopOfDocument(_this7.topBuffer);
+      _this7.distanceToTop += _this7.topBufferDistance;
+      if (distanceToTop !== _this7.distanceToTop) {
+        _this7._handleScroll();
       }
     }, 500);
 
@@ -715,20 +735,9 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec4 = (0, _aureliaTemplating.cust
 
   VirtualRepeat.prototype.detached = function detached() {
     this.scrollContainer.removeEventListener('scroll', this.scrollListener);
-    this._first = 0;
-    this._previousFirst = 0;
-    this._viewsLength = 0;
-    this._lastRebind = 0;
-    this._topBufferHeight = 0;
-    this._bottomBufferHeight = 0;
-    this._scrollingDown = false;
-    this._scrollingUp = false;
-    this._switchedDirection = false;
+    this._resetCalculation();
     this._isAttached = false;
-    this._ticking = false;
-    this._hasCalculatedSizes = false;
     this.templateStrategy.removeBufferElements(this.element, this.topBuffer, this.bottomBuffer);
-    this.isLastIndex = false;
     this.scrollContainer = null;
     this.scrollContainerHeight = null;
     this.distanceToTop = null;
@@ -753,40 +762,47 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec4 = (0, _aureliaTemplating.cust
     var previousLastViewIndex = this._getIndexOfLastView();
 
     var items = this.items;
+    var shouldCalculateSize = !!items;
     this.strategy = this.strategyLocator.getStrategy(items);
-    if (items.length > 0 && this.viewCount() === 0) {
-      this.strategy.createFirstItem(this);
-    }
 
-    if (this._itemsLength >= items.length) {
-      this._skipNextScrollHandle = true;
-      reducingItems = true;
+    if (shouldCalculateSize) {
+      if (items.length > 0 && this.viewCount() === 0) {
+        this.strategy.createFirstItem(this);
+      }
+
+      if (this._itemsLength >= items.length) {
+        this._skipNextScrollHandle = true;
+        reducingItems = true;
+      }
+      this._checkFixedHeightContainer();
+      this._calcInitialHeights(items.length);
     }
-    this._checkFixedHeightContainer();
-    this._calcInitialHeights(items.length);
     if (!this.isOneTime && !this._observeInnerCollection()) {
       this._observeCollection();
     }
     this.strategy.instanceChanged(this, items, this._first);
-    this._lastRebind = this._first;
 
-    if (reducingItems && previousLastViewIndex > this.items.length - 1) {
-      if (this.scrollContainer.tagName === 'TBODY') {
-        var realScrollContainer = this.scrollContainer.parentNode.parentNode;
-        realScrollContainer.scrollTop = realScrollContainer.scrollTop + this.viewCount() * this.itemHeight;
-      } else {
-        this.scrollContainer.scrollTop = this.scrollContainer.scrollTop + this.viewCount() * this.itemHeight;
+    if (shouldCalculateSize) {
+      this._lastRebind = this._first;
+
+      if (reducingItems && previousLastViewIndex > this.items.length - 1) {
+        if (this.scrollContainer.tagName === 'TBODY') {
+          var realScrollContainer = this.scrollContainer.parentNode.parentNode;
+          realScrollContainer.scrollTop = realScrollContainer.scrollTop + this.viewCount() * this.itemHeight;
+        } else {
+          this.scrollContainer.scrollTop = this.scrollContainer.scrollTop + this.viewCount() * this.itemHeight;
+        }
       }
-    }
-    if (!reducingItems) {
-      this._previousFirst = this._first;
-      this._scrollingDown = true;
-      this._scrollingUp = false;
+      if (!reducingItems) {
+        this._previousFirst = this._first;
+        this._scrollingDown = true;
+        this._scrollingUp = false;
 
-      this.isLastIndex = this._getIndexOfLastView() >= this.items.length - 1;
-    }
+        this.isLastIndex = this._getIndexOfLastView() >= this.items.length - 1;
+      }
 
-    this._handleScroll();
+      this._handleScroll();
+    }
   };
 
   VirtualRepeat.prototype.unbind = function unbind() {
@@ -802,7 +818,7 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec4 = (0, _aureliaTemplating.cust
   };
 
   VirtualRepeat.prototype.handleInnerCollectionMutated = function handleInnerCollectionMutated(collection, changes) {
-    var _this7 = this;
+    var _this8 = this;
 
     if (this.ignoreMutation) {
       return;
@@ -810,7 +826,7 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec4 = (0, _aureliaTemplating.cust
     this.ignoreMutation = true;
     var newItems = this.sourceExpression.evaluate(this.scope, this.lookupFunctions);
     this.observerLocator.taskQueue.queueMicroTask(function () {
-      return _this7.ignoreMutation = false;
+      return _this8.ignoreMutation = false;
     });
 
     if (newItems === this.items) {
@@ -820,12 +836,30 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec4 = (0, _aureliaTemplating.cust
     }
   };
 
+  VirtualRepeat.prototype._resetCalculation = function _resetCalculation() {
+    this._first = 0;
+    this._previousFirst = 0;
+    this._viewsLength = 0;
+    this._lastRebind = 0;
+    this._topBufferHeight = 0;
+    this._bottomBufferHeight = 0;
+    this._scrollingDown = false;
+    this._scrollingUp = false;
+    this._switchedDirection = false;
+    this._ticking = false;
+    this._hasCalculatedSizes = false;
+    this._isAtTop = true;
+    this.isLastIndex = false;
+    this.elementsInView = 0;
+    this._adjustBufferHeights();
+  };
+
   VirtualRepeat.prototype._onScroll = function _onScroll() {
-    var _this8 = this;
+    var _this9 = this;
 
     if (!this._ticking && !this._handlingMutations) {
       requestAnimationFrame(function () {
-        return _this8._handleScroll();
+        return _this9._handleScroll();
       });
       this._ticking = true;
     }
@@ -841,6 +875,9 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec4 = (0, _aureliaTemplating.cust
     }
     if (this._skipNextScrollHandle) {
       this._skipNextScrollHandle = false;
+      return;
+    }
+    if (!this.items) {
       return;
     }
     var itemHeight = this.itemHeight;
@@ -903,45 +940,45 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec4 = (0, _aureliaTemplating.cust
   };
 
   VirtualRepeat.prototype._getMore = function _getMore(force) {
-    var _this9 = this;
+    var _this10 = this;
 
     if (this.isLastIndex || this._first === 0 || force) {
       if (!this._calledGetMore) {
         var executeGetMore = function executeGetMore() {
-          _this9._calledGetMore = true;
-          var func = _this9.view(0) && _this9.view(0).firstChild && _this9.view(0).firstChild.au && _this9.view(0).firstChild.au['infinite-scroll-next'] ? _this9.view(0).firstChild.au['infinite-scroll-next'].instruction.attributes['infinite-scroll-next'] : undefined;
-          var topIndex = _this9._first;
-          var isAtBottom = _this9._bottomBufferHeight === 0;
-          var isAtTop = _this9._isAtTop;
+          _this10._calledGetMore = true;
+          var func = _this10.view(0) && _this10.view(0).firstChild && _this10.view(0).firstChild.au && _this10.view(0).firstChild.au['infinite-scroll-next'] ? _this10.view(0).firstChild.au['infinite-scroll-next'].instruction.attributes['infinite-scroll-next'] : undefined;
+          var topIndex = _this10._first;
+          var isAtBottom = _this10._bottomBufferHeight === 0;
+          var isAtTop = _this10._isAtTop;
           var scrollContext = {
             topIndex: topIndex,
             isAtBottom: isAtBottom,
             isAtTop: isAtTop
           };
 
-          _this9.scope.overrideContext.$scrollContext = scrollContext;
+          _this10.scope.overrideContext.$scrollContext = scrollContext;
 
           if (func === undefined) {
             return null;
           } else if (typeof func === 'string') {
-            var getMoreFuncName = _this9.view(0).firstChild.getAttribute('infinite-scroll-next');
-            var funcCall = _this9.scope.overrideContext.bindingContext[getMoreFuncName];
+            var getMoreFuncName = _this10.view(0).firstChild.getAttribute('infinite-scroll-next');
+            var funcCall = _this10.scope.overrideContext.bindingContext[getMoreFuncName];
 
             if (typeof funcCall === 'function') {
-              var result = funcCall.call(_this9.scope.overrideContext.bindingContext, topIndex, isAtBottom, isAtTop);
+              var result = funcCall.call(_this10.scope.overrideContext.bindingContext, topIndex, isAtBottom, isAtTop);
               if (!(result instanceof Promise)) {
-                _this9._calledGetMore = false;
+                _this10._calledGetMore = false;
               } else {
                 return result.then(function () {
-                  _this9._calledGetMore = false;
+                  _this10._calledGetMore = false;
                 });
               }
             } else {
               throw new Error("'infinite-scroll-next' must be a function or evaluate to one");
             }
           } else if (func.sourceExpression) {
-            _this9._calledGetMore = false;
-            return func.sourceExpression.evaluate(_this9.scope);
+            _this10._calledGetMore = false;
+            return func.sourceExpression.evaluate(_this10.scope);
           } else {
             throw new Error("'infinite-scroll-next' must be a function or evaluate to one");
           }
@@ -997,7 +1034,7 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec4 = (0, _aureliaTemplating.cust
   };
 
   VirtualRepeat.prototype._moveViews = function _moveViews(length) {
-    var _this10 = this;
+    var _this11 = this;
 
     var getNextIndex = this._scrollingDown ? function (index, i) {
       return index + i;
@@ -1005,7 +1042,7 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec4 = (0, _aureliaTemplating.cust
       return index - i;
     };
     var isAtFirstOrLastIndex = function isAtFirstOrLastIndex() {
-      return _this10._scrollingDown ? _this10.isLastIndex : _this10._isAtTop;
+      return _this11._scrollingDown ? _this11.isLastIndex : _this11._isAtTop;
     };
     var childrenLength = this.viewCount();
     var viewIndex = this._scrollingDown ? 0 : childrenLength - 1;
@@ -1051,9 +1088,14 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec4 = (0, _aureliaTemplating.cust
   };
 
   VirtualRepeat.prototype._calcInitialHeights = function _calcInitialHeights(itemsLength) {
-    var _this11 = this;
+    var _this12 = this;
 
-    if (this._viewsLength > 0 && this._itemsLength === itemsLength || this._viewsLength > 0 && itemsLength < 0) {
+    var isSameLength = this._viewsLength > 0 && this._itemsLength === itemsLength;
+    if (isSameLength) {
+      return;
+    }
+    if (itemsLength < 1) {
+      this._resetCalculation();
       return;
     }
     this._hasCalculatedSizes = true;
@@ -1063,8 +1105,8 @@ var VirtualRepeat = exports.VirtualRepeat = (_dec4 = (0, _aureliaTemplating.cust
       this._sizeInterval = setInterval(function () {
         var newCalcSize = calcOuterHeight(firstViewElement);
         if (newCalcSize > 0) {
-          clearInterval(_this11._sizeInterval);
-          _this11.itemsChanged();
+          clearInterval(_this12._sizeInterval);
+          _this12.itemsChanged();
         }
       }, 500);
       return;
