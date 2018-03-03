@@ -1,4 +1,4 @@
-import { NullRepeatStrategy } from "aurelia-templating-resources";
+import { NullRepeatStrategy } from 'aurelia-templating-resources';
 
 export class NullVirtualRepeatStrategy extends NullRepeatStrategy {
   instanceChanged(repeat) {
