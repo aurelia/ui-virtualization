@@ -56,9 +56,10 @@ export class TableStrategy {
 
   moveViewFirst(view: View, topBuffer: Element): void {
     const tbody = this._getTbodyElement(topBuffer.nextSibling);
-    const tr = tbody.firstChild;
-    const firstElement = DOM.nextElementSibling(tr);
-    insertBeforeNode(view, firstElement);
+    // Buffer for table doesn't reside inside the table
+    // so tbody first element child is the first child
+    // old behavior was to skip the first child, which was a bug
+    insertBeforeNode(view, tbody.firstElementChild);
   }
 
   moveViewLast(view: View, bottomBuffer: Element): void {
