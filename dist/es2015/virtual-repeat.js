@@ -415,8 +415,8 @@ export let VirtualRepeat = (_dec = customAttribute('virtual-repeat'), _dec2 = in
   }
 
   _adjustBufferHeights() {
-    this.topBuffer.style.height = `${ this._topBufferHeight }px`;
-    this.bottomBuffer.style.height = `${ this._bottomBufferHeight }px`;
+    this.topBuffer.style.height = `${this._topBufferHeight}px`;
+    this.bottomBuffer.style.height = `${this._bottomBufferHeight}px`;
   }
 
   _unsubscribeCollection() {
