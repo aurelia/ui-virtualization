@@ -8,7 +8,7 @@ export class DomHelper {
     return  Math.round(top);
   }
 
-  hasOverflowScroll(element: Element): boolean {
+  hasOverflowScroll(element: HTMLElement): boolean {
     let style = element.style;
     return style.overflowY === 'scroll' || style.overflow === 'scroll' || style.overflowY === 'auto' || style.overflow === 'auto';
   }

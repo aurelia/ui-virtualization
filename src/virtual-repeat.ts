@@ -1,14 +1,11 @@
-import {inject} from 'aurelia-dependency-injection';
-import {ObserverLocator} from 'aurelia-binding';
+import {ObserverLocator, Scope, Expression, Disposable, ICollectionObserverSplice} from 'aurelia-binding';
 import {
   BoundViewFactory,
   ViewSlot,
   ViewResources,
   TargetInstruction,
-  customAttribute,
-  bindable,
-  templateController,
-  View
+  View,
+  IStaticResourceConfig
 } from 'aurelia-templating';
 import {
   AbstractRepeater,
@@ -16,7 +13,7 @@ import {
   isOneTime,
   unwrapExpression,
   updateOneTimeBinding,
-  viewsRequireLifecycle
+  viewsRequireLifecycle,
 } from 'aurelia-templating-resources';
 import {DOM} from 'aurelia-pal';
 import {
@@ -26,33 +23,105 @@ import {
 } from './utilities';
 import {DomHelper} from './dom-helper';
 import {VirtualRepeatStrategyLocator} from './virtual-repeat-strategy-locator';
-import {TemplateStrategyLocator} from './template-strategy';
+import {TemplateStrategyLocator, ITemplateStrategy} from './template-strategy';
+import { IVirtualRepeat, IVirtualRepeatStrategy } from './interfaces';
 
-@customAttribute('virtual-repeat')
-@templateController
-@inject(DOM.Element, BoundViewFactory, TargetInstruction, ViewSlot, ViewResources, ObserverLocator, VirtualRepeatStrategyLocator, TemplateStrategyLocator, DomHelper)
-export class VirtualRepeat extends AbstractRepeater {
-  _first = 0;
-  _previousFirst = 0;
-  _viewsLength = 0;
-  _lastRebind = 0;
-  _topBufferHeight = 0;
-  _bottomBufferHeight = 0;
-  _bufferSize = 5;
-  _scrollingDown = false;
-  _scrollingUp = false;
-  _switchedDirection = false;
-  _isAttached = false;
-  _ticking = false;
-  _fixedHeightContainer = false;
-  _hasCalculatedSizes = false;
-  _isAtTop = true;
-  _calledGetMore = false;
+export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
 
-  @bindable items
-  @bindable local
+  /**@internal */
+  static inject() {
+    return [DOM.Element, BoundViewFactory, TargetInstruction, ViewSlot, ViewResources, ObserverLocator, VirtualRepeatStrategyLocator, TemplateStrategyLocator, DomHelper];
+  }
+
+  /**@internal */
+  static $resource: IStaticResourceConfig = {
+    type: 'attribute',
+    name: 'virtual-repeat',
+    templateController: true,
+    bindables: ['items', 'local'] as any // Wrong typings in templating
+  }
+
+  /**@internal*/ _first = 0;
+  /**@internal*/ _previousFirst = 0;
+  /**@internal*/ _viewsLength = 0;
+  /**@internal*/ _lastRebind = 0;
+  /**@internal*/ _topBufferHeight = 0;
+  /**@internal*/ _bottomBufferHeight = 0;
+  /**@internal*/ _bufferSize = 5;
+  /**@internal*/ _scrollingDown = false;
+  /**@internal*/ _scrollingUp = false;
+  /**@internal*/ _switchedDirection = false;
+  /**@internal*/ _isAttached = false;
+  /**@internal*/ _ticking = false;
+  /**@internal*/ _fixedHeightContainer = false;
+  /**@internal*/ _hasCalculatedSizes = false;
+  /**@internal*/ _isAtTop = true;
+  /**@internal*/ _calledGetMore = false;
+  /**@internal*/ _skipNextScrollHandle: boolean = false;
+  /**@internal*/ _handlingMutations: boolean = false;
+  /**@internal*/ _isScrolling: boolean = false;
+
+  // Inherited properties declaration
+  key: any;
+  value: any;
+  // Array repeat specific properties
+  /**@internal */ __queuedSplices: any[];
+  /**@internal */ __array: any[];
+
+  /**
+   * @bindable
+   */
+  items: any[];
+
+  /**
+   * @bindable
+   */
+  local: string;
+
+  scope: Scope;
+
+  viewSlot: ViewSlot & { children: (View & Scope)[] };
+  readonly viewFactory: BoundViewFactory;
+  private element: HTMLElement;
+  private instruction: TargetInstruction;
+  private lookupFunctions: any;
+  private observerLocator: ObserverLocator;
+  private strategyLocator: VirtualRepeatStrategyLocator;
+  private templateStrategyLocator: TemplateStrategyLocator;
+  private sourceExpression: Expression;
+  private isOneTime: boolean;
+  private domHelper: DomHelper;
+
+  
+  private _itemsLength: number
+  templateStrategy: ITemplateStrategy;
+  private scrollContainer: HTMLElement;
+  topBuffer: HTMLElement;
+  bottomBuffer: HTMLElement;
+  private scrollListener: () => any;
+
+  calcDistanceToTopInterval: any;
+
+  itemHeight: number;
+  movedViewsCount: number
+  distanceToTop: number;
+  // When dealing with tables, there can be gaps between elements, causing distances to be messed up. Might need to handle this case here.
+  topBufferDistance: number;
+  scrollContainerHeight: number;
+  scrollHandler: Disposable;
+
+  _sizeInterval: any;
+  isLastIndex: boolean;
+  elementsInView: number;
+
+  strategy: IVirtualRepeatStrategy;
+  ignoreMutation: boolean;
+
+  callContext: 'handleInnerCollectionMutated' | 'handleCollectionMutated';
+  collectionObserver: any;
+
   constructor(
-    element: Element,
+    element: HTMLElement,
     viewFactory: BoundViewFactory,
     instruction: TargetInstruction,
     viewSlot: ViewSlot,
@@ -69,8 +138,8 @@ export class VirtualRepeat extends AbstractRepeater {
     this.element = element;
     this.viewFactory = viewFactory;
     this.instruction = instruction;
-    this.viewSlot = viewSlot;
-    this.lookupFunctions = viewResources.lookupFunctions;
+    this.viewSlot = viewSlot as any;
+    this.lookupFunctions = viewResources['lookupFunctions'];
     this.observerLocator = observerLocator;
     this.strategyLocator = strategyLocator;
     this.templateStrategyLocator = templateStrategyLocator;
@@ -130,7 +199,7 @@ export class VirtualRepeat extends AbstractRepeater {
     this.scrollContainer = null;
     this.scrollContainerHeight = null;
     this.distanceToTop = null;
-    this.removeAllViews(true);
+    this.removeAllViews(true, false);
     if (this.scrollHandler) {
       this.scrollHandler.dispose();
     }
@@ -172,7 +241,7 @@ export class VirtualRepeat extends AbstractRepeater {
     if (!this.isOneTime && !this._observeInnerCollection()) {
       this._observeCollection();
     }
-    this.strategy.instanceChanged(this, items, this._first);
+    this.strategy.instanceChanged(this as IVirtualRepeat, items, this._first);
 
     if (shouldCalculateSize) {
       this._lastRebind = this._first; //Reset rebinding
@@ -182,7 +251,7 @@ export class VirtualRepeat extends AbstractRepeater {
         //We only want to execute this line if we're reducing such that it brings us to the bottom of the new list
         //Make sure we handle the special case of tables
         if (this.scrollContainer.tagName === 'TBODY') {
-          let realScrollContainer = this.scrollContainer.parentNode.parentNode; //tbody > table > container
+          let realScrollContainer = this.scrollContainer.parentNode.parentNode as Element; //tbody > table > container
           realScrollContainer.scrollTop = realScrollContainer.scrollTop + (this.viewCount() * this.itemHeight);
         } else {
           this.scrollContainer.scrollTop = this.scrollContainer.scrollTop + (this.viewCount() * this.itemHeight);
@@ -209,7 +278,7 @@ export class VirtualRepeat extends AbstractRepeater {
     this._itemsLength = null;
   }
 
-  handleCollectionMutated(collection, changes): void {
+  handleCollectionMutated(collection: any[], changes: ICollectionObserverSplice[]): void {
     this._handlingMutations = true;
     this._itemsLength = collection.length;
     this.strategy.instanceMutated(this, collection, changes);
@@ -335,7 +404,7 @@ export class VirtualRepeat extends AbstractRepeater {
     this._ticking = false;
   }
 
-  _getMore(force): void {
+  _getMore(force?: boolean): void {
     if (this.isLastIndex || this._first === 0 || force) {
       if (!this._calledGetMore) {
         let executeGetMore = () => {
@@ -355,7 +424,7 @@ export class VirtualRepeat extends AbstractRepeater {
           if (func === undefined) {
             return null;
           } else if (typeof func === 'string') {
-            let getMoreFuncName = this.view(0).firstChild.getAttribute('infinite-scroll-next');
+            let getMoreFuncName = (this.view(0).firstChild as Element).getAttribute('infinite-scroll-next');
             let funcCall = this.scope.overrideContext.bindingContext[getMoreFuncName];
 
             if (typeof funcCall === 'function') {
@@ -428,7 +497,7 @@ export class VirtualRepeat extends AbstractRepeater {
   }
 
   _moveViews(length: number): number {
-    let getNextIndex = this._scrollingDown ? (index, i) =>  index + i : (index, i) =>  index - i;
+    let getNextIndex = this._scrollingDown ? (index: number, i: number) =>  index + i : (index: number, i: number) =>  index - i;
     let isAtFirstOrLastIndex = () => this._scrollingDown ? this.isLastIndex : this._isAtTop;
     let childrenLength = this.viewCount();
     let viewIndex = this._scrollingDown ? 0 : childrenLength - 1;
@@ -483,7 +552,7 @@ export class VirtualRepeat extends AbstractRepeater {
       return;
     }
     this._hasCalculatedSizes = true;
-    let firstViewElement = this.view(0).lastChild;
+    let firstViewElement = this.view(0).lastChild as Element;
     this.itemHeight = calcOuterHeight(firstViewElement);
     if (this.itemHeight <= 0) {
       this._sizeInterval = setInterval(()=>{

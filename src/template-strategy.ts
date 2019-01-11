@@ -1,38 +1,44 @@
-import {inject, Container} from 'aurelia-dependency-injection';
-import {DOM} from 'aurelia-pal';
-import {View} from 'aurelia-templating';
-import {insertBeforeNode} from './utilities';
-import {DomHelper} from './dom-helper';
+import { Container } from 'aurelia-dependency-injection';
+import { DOM } from 'aurelia-pal';
+import { View } from 'aurelia-templating';
+import { DomHelper } from './dom-helper';
+import { insertBeforeNode } from './utilities';
 
-interface TemplateStrategy {
-  getScrollContainer(element: Element): Element;
+export interface ITemplateStrategy {
+  getScrollContainer(element: Element): HTMLElement;
   moveViewFirst(view: View, topBuffer: Element): void;
   moveViewLast(view: View, bottomBuffer: Element): void;
-  createTopBufferElement(element: Element): Element;
-  createBottomBufferElement(element: Element): Element;
+  createTopBufferElement(element: Element): HTMLElement;
+  createBottomBufferElement(element: Element): HTMLElement;
   removeBufferElements(element: Element, topBuffer: Element, bottomBuffer: Element): void;
   getFirstElement(topBuffer: Element): Element;
+  getLastElement(bottomBuffer: Element): Element;
   getLastView(bottomBuffer: Element): Element;
   getTopBufferDistance(topBuffer: Element): number;
 }
 
-@inject(Container)
 export class TemplateStrategyLocator {
+
+  static inject = [Container];
+
+  container: Container;
 
   constructor(container: Container) {
     this.container = container;
   }
 
-  getStrategy(element: Element): TemplateStrategy {
-    if (element.parentNode && element.parentNode.localName === 'tbody') {
+  getStrategy(element: Element): ITemplateStrategy {
+    if (element.parentNode && (element.parentNode as Element).tagName === 'TBODY') {
       return this.container.get(TableStrategy);
     }
     return this.container.get(DefaultTemplateStrategy);
   }
 }
 
-@inject(DomHelper)
-export class TableStrategy {
+export class TableStrategy implements ITemplateStrategy {
+
+  static inject = [DomHelper];
+
   tableCssReset = '\
     display: block;\
     width: auto;\
@@ -46,16 +52,18 @@ export class TableStrategy {
     -webkit-border-horizontal-spacing: 0;\
     -webkit-border-vertical-spacing: 0;';
 
-  constructor(domHelper) {
+  domHelper: DomHelper;
+
+  constructor(domHelper: DomHelper) {
     this.domHelper = domHelper;
   }
 
-  getScrollContainer(element: Element): Element {
-    return element.parentNode;
+  getScrollContainer(element: Element): HTMLElement {
+    return element.parentNode as HTMLElement;
   }
 
   moveViewFirst(view: View, topBuffer: Element): void {
-    const tbody = this._getTbodyElement(topBuffer.nextSibling);
+    const tbody = this._getTbodyElement(topBuffer.nextSibling as Element);
     const tr = tbody.firstChild;
     const firstElement = DOM.nextElementSibling(tr);
     insertBeforeNode(view, firstElement);
@@ -63,12 +71,12 @@ export class TableStrategy {
 
   moveViewLast(view: View, bottomBuffer: Element): void {
     const lastElement = this.getLastElement(bottomBuffer).nextSibling;
-    const referenceNode = lastElement.nodeType === 8 && lastElement.data === 'anchor' ? lastElement : lastElement;
-    insertBeforeNode(view, referenceNode);
+    const referenceNode = lastElement.nodeType === 8 && (lastElement as Comment).data === 'anchor' ? lastElement : lastElement;
+    insertBeforeNode(view, referenceNode as Element);
   }
 
-  createTopBufferElement(element: Element): Element {
-    const elementName = /^[uo]l$/.test(element.parentNode.localName) ? 'li' : 'div';
+  createTopBufferElement(element: Element): HTMLElement {
+    const elementName = /^[UO]L$/.test((element.parentNode as Element).tagName) ? 'li' : 'div';
     const buffer = DOM.createElement(elementName);
     const tableElement = element.parentNode.parentNode;
     tableElement.parentNode.insertBefore(buffer, tableElement);
@@ -76,8 +84,8 @@ export class TableStrategy {
     return buffer;
   }
 
-  createBottomBufferElement(element: Element): Element {
-    const elementName = /^[uo]l$/.test(element.parentNode.localName) ? 'li' : 'div';
+  createBottomBufferElement(element: Element): HTMLElement {
+    const elementName = /^[UO]L$/.test((element.parentNode as Element).tagName) ? 'li' : 'div';
     const buffer = DOM.createElement(elementName);
     const tableElement = element.parentNode.parentNode;
     tableElement.parentNode.insertBefore(buffer, tableElement.nextSibling);
@@ -91,23 +99,27 @@ export class TableStrategy {
 
   getFirstElement(topBuffer: Element): Element {
     const tbody = this._getTbodyElement(DOM.nextElementSibling(topBuffer));
-    const tr = tbody.firstChild;
+    const tr = tbody.firstChild as HTMLTableRowElement;
     return tr; //since the buffer is outside table, first element _is_ first element.
   }
 
   getLastElement(bottomBuffer: Element): Element {
-    const tbody = this._getTbodyElement(bottomBuffer.previousSibling);
+    const tbody = this._getTbodyElement(bottomBuffer.previousSibling as Element);
     const trs = tbody.children;
     return trs[trs.length - 1];
   }
 
   getTopBufferDistance(topBuffer: Element): number {
-    const tbody = this._getTbodyElement(topBuffer.nextSibling);
+    const tbody = this._getTbodyElement(topBuffer.nextSibling as Element);
     return this.domHelper.getElementDistanceToTopOfDocument(tbody) - this.domHelper.getElementDistanceToTopOfDocument(topBuffer);
   }
 
-  _getTbodyElement(tableElement: Element): Element {
-    let tbodyElement;
+  getLastView(bottomBuffer: Element): Element {
+    throw new Error('Method getLastView() not implemented.');
+  }
+
+  private _getTbodyElement(tableElement: Element): Element {
+    let tbodyElement: Element;
     const children = tableElement.children;
     for (let i = 0, ii = children.length; i < ii; ++i) {
       if (children[i].localName === 'tbody') {
@@ -119,9 +131,13 @@ export class TableStrategy {
   }
 }
 
-export class DefaultTemplateStrategy {
-  getScrollContainer(element: Element): Element {
-    return element.parentNode;
+export class DefaultTemplateStrategy implements ITemplateStrategy {
+
+  getLastView(bottomBuffer: Element): Element {
+    throw new Error("Method getLastView() not implemented.");
+  }
+  getScrollContainer(element: Element): HTMLElement {
+    return element.parentNode as HTMLElement;
   }
 
   moveViewFirst(view: View, topBuffer: Element): void {
@@ -130,19 +146,19 @@ export class DefaultTemplateStrategy {
 
   moveViewLast(view: View, bottomBuffer: Element): void {
     const previousSibling = bottomBuffer.previousSibling;
-    const referenceNode = previousSibling.nodeType === 8 && previousSibling.data === 'anchor' ? previousSibling : bottomBuffer;
-    insertBeforeNode(view, referenceNode);
+    const referenceNode = previousSibling.nodeType === 8 && (previousSibling as Comment).data === 'anchor' ? previousSibling : bottomBuffer;
+    insertBeforeNode(view, referenceNode as Element);
   }
 
-  createTopBufferElement(element: Element): Element {
-    const elementName = /^[uo]l$/.test(element.parentNode.localName) ? 'li' : 'div';
+  createTopBufferElement(element: Element): HTMLElement {
+    const elementName = /^[UO]L$/.test((element.parentNode as Element).tagName) ? 'li' : 'div';
     const buffer = DOM.createElement(elementName);
     element.parentNode.insertBefore(buffer, element);
     return buffer;
   }
 
-  createBottomBufferElement(element: Element): Element {
-    const elementName = /^[uo]l$/.test(element.parentNode.localName) ? 'li' : 'div';
+  createBottomBufferElement(element: Element): HTMLElement {
+    const elementName = /^[UO]L$/.test((element.parentNode as Element).tagName) ? 'li' : 'div';
     const buffer = DOM.createElement(elementName);
     element.parentNode.insertBefore(buffer, element.nextSibling);
     return buffer;

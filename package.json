@@ -19,6 +19,9 @@
     "type": "git",
     "url": "http://github.com/aurelia/ui-virtualization"
   },
+  "scripts": {
+    "build": "rollup -c"
+  },
   "jspm": {
     "registry": "npm",
     "jspmPackage": true,
@@ -117,39 +120,8 @@
     "run-sequence": "^1.2.2",
     "through2": "^2.0.1",
     "typedoc": "^0.4.4",
-    "typescript": "^1.9.0-dev.20160627-1.0",
+    "typescript": "^3.2.2",
     "vinyl-paths": "^2.1.0",
     "yargs": "^4.8.1"
-  },
-  "aurelia": {
-    "usedBy": [],
-    "build": {
-      "resources": [
-        "virtual-repeat",
-        "infinite-scroll-next"
-      ]
-    },
-    "documentation": {
-      "links": [
-        {
-          "rel": "license",
-          "mediaType": "text/plain",
-          "title": "The MIT License (MIT)",
-          "href": "LICENSE"
-        },
-        {
-          "rel": "describedby",
-          "mediaType": "application/aurelia-doc+json",
-          "title": "API",
-          "href": "doc/api.json"
-        },
-        {
-          "rel": "version-history",
-          "mediaType": "text/markdown",
-          "title": "Change Log",
-          "href": "doc/CHANGELOG.md"
-        }
-      ]
-    }
   }
 }
