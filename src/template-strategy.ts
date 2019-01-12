@@ -100,7 +100,8 @@ export class TableStrategy implements ITemplateStrategy {
   getFirstElement(topBuffer: Element): Element {
     const tbody = this._getTbodyElement(DOM.nextElementSibling(topBuffer));
     const tr = tbody.firstChild as HTMLTableRowElement;
-    return tr; //since the buffer is outside table, first element _is_ first element.
+    // since the buffer is outside table, first element _is_ first element.
+    return tr;
   }
 
   getLastElement(bottomBuffer: Element): Element {
@@ -134,7 +135,7 @@ export class TableStrategy implements ITemplateStrategy {
 export class DefaultTemplateStrategy implements ITemplateStrategy {
 
   getLastView(bottomBuffer: Element): Element {
-    throw new Error("Method getLastView() not implemented.");
+    throw new Error('Method getLastView() not implemented.');
   }
   getScrollContainer(element: Element): HTMLElement {
     return element.parentNode as HTMLElement;

@@ -32,7 +32,7 @@ declare module 'aurelia-templating' {
   }
 
   interface Controller {
-    boundProperties: { binding: Binding }[]
+    boundProperties: { binding: Binding }[];
   }
 }
 
@@ -51,56 +51,39 @@ export interface IVirtualRepeatStrategy extends RepeatStrategy {
 
 export interface IVirtualRepeat extends Repeat {
 
-  /**@internal */
-  _first: number;
-  
-  /**@internal */
-  _previousFirst: number;
-  
-  /**@internal */
-  _viewsLength: number;
-  
-  /**@internal */
-  _lastRebind: number;
-  
-  /**@internal */
-  _topBufferHeight: number;
-  
-  /**@internal */
-  _bottomBufferHeight: number;
-  
-  /**@internal */
-  _bufferSize: number;
-  
-  /**@internal */
-  _scrollingDown: boolean;
-  
-  /**@internal */
-  _scrollingUp: boolean;
-  
-  /**@internal */
-  _switchedDirection: boolean;
-  
-  /**@internal */
-  _isAttached: boolean;
-  
-  /**@internal */
-  _ticking: boolean;
-  
-  /**@internal */
-  _fixedHeightContainer: boolean;
-  
-  /**@internal */
-  _hasCalculatedSizes: boolean;
-  
-  /**@internal */
-  _isAtTop: boolean;
-  
-  /**@internal */
-  _calledGetMore: boolean;
+  /**@internal */ _first: number;
 
-  /**@internal */
-  viewSlot: ViewSlot & { children: (View & Scope)[] };
+  /**@internal */ _previousFirst: number;
+
+  /**@internal */ _viewsLength: number;
+
+  /**@internal */ _lastRebind: number;
+
+  /**@internal */ _topBufferHeight: number;
+
+  /**@internal */ _bottomBufferHeight: number;
+
+  /**@internal */ _bufferSize: number;
+
+  /**@internal */ _scrollingDown: boolean;
+
+  /**@internal */ _scrollingUp: boolean;
+
+  /**@internal */ _switchedDirection: boolean;
+
+  /**@internal */ _isAttached: boolean;
+
+  /**@internal */ _ticking: boolean;
+
+  /**@internal */ _fixedHeightContainer: boolean;
+
+  /**@internal */ _hasCalculatedSizes: boolean;
+
+  /**@internal */ _isAtTop: boolean;
+
+  /**@internal */ _calledGetMore: boolean;
+
+  /**@internal */ viewSlot: ViewSlot & { children: (View & Scope)[] };
 
   itemHeight: number;
 
@@ -108,24 +91,27 @@ export interface IVirtualRepeat extends Repeat {
 
   templateStrategy: ITemplateStrategy;
 
-  topBuffer: Element;
-  bottomBuffer: Element;
+  topBuffer: HTMLElement;
+  bottomBuffer: HTMLElement;
 
   isLastIndex: boolean;
 
   readonly viewFactory: BoundViewFactory;
 
-  _adjustBufferHeights(): void;
+  /**@internal*/ _adjustBufferHeights(): void;
 
-  _calcInitialHeights(itemsLength: number): void;
+  /**@internal*/ _calcInitialHeights(itemsLength: number): void;
 
-  _getIndexOfFirstView(): number;
+  /**@internal*/ _getIndexOfFirstView(): number;
 
-  _getLastViewItem(): any;
+  /**@internal*/ _getLastViewItem(): any;
 
-  _resetCalculation(): void;
+  /**
+   * Set all calculation to default state
+   */
+  resetCalculation(): void;
 
   // Array repeat specific properties
-  __queuedSplices: any[];
-  __array: any[];
+  /**@internal*/ __queuedSplices: any[];
+  /**@internal*/ __array: any[];
 }

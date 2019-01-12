@@ -3,11 +3,11 @@ import { IVirtualRepeat } from './interfaces';
 
 export class NullVirtualRepeatStrategy extends NullRepeatStrategy {
   instanceMutated() {
-
+    // empty
   }
 
   instanceChanged(repeat: IVirtualRepeat) {
     super.instanceChanged(repeat);
-    repeat._resetCalculation();
+    repeat.resetCalculation();
   }
 }

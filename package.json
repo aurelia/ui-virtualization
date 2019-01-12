@@ -14,6 +14,9 @@
   "license": "MIT",
   "author": "Rob Eisenberg <rob@bluespire.com> (http://robeisenberg.com/)",
   "main": "dist/commonjs/aurelia-ui-virtualization.js",
+  "module": "dist/es2015/aurelia-ui-virtualization.js",
+  "browser": "dist/umd/aurelia-ui-virtualization.js",
+  "unpkg": "dist/umd/aurelia-ui-virtualization.js",
   "typings": "dist/aurelia-ui-virtualization.d.ts",
   "repository": {
     "type": "git",
@@ -22,8 +25,10 @@
   "scripts": {
     "prebuild": "npm run rimraf",
     "build": "rollup -c",
+    "postbuild": "dts-bundle-generator -o dist/aurelia-ui-virtualization.d.ts src/aurelia-ui-virtualization.ts",
     "test": "karma start",
     "test:debugger": "karma start --browsers ChromeDebugging",
+    "lint": "tslint -c tslint.json 'src/**/*.ts'",
     "rimraf": "rimraf dist"
   },
   "jspm": {
@@ -101,6 +106,7 @@
     "babel-preset-stage-1": "^6.5.0",
     "browser-sync": "^2.13.0",
     "del": "^2.2.1",
+    "dts-bundle-generator": "^2.0.0",
     "gulp": "^3.9.1",
     "gulp-babel": "^6.1.2",
     "gulp-bump": "^2.2.0",
@@ -136,6 +142,7 @@
     "through2": "^2.0.1",
     "ts-loader": "^5.3.3",
     "tslib": "^1.9.3",
+    "tslint": "^5.12.1",
     "typedoc": "^0.4.4",
     "typescript": "^3.2.2",
     "vinyl-paths": "^2.1.0",

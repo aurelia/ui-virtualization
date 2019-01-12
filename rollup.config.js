@@ -20,7 +20,7 @@ export default [
   {
     input: 'src/aurelia-ui-virtualization.ts',
     output: {
-      file: 'dist/es2015/aurelia-ui-virtualization.js',
+      file: 'dist/es2017/aurelia-ui-virtualization.js',
       format: 'esm'
     },
     plugins: [
@@ -77,4 +77,13 @@ export default [
       })
     ]
   },
-]
+].map(config => {
+  config.external = [
+    'aurelia-binding',
+    'aurelia-dependency-injection',
+    'aurelia-pal',
+    'aurelia-templating',
+    'aurelia-templating-resources'
+  ];
+  return config;
+});

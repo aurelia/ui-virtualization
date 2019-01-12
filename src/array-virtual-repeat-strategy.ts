@@ -129,7 +129,9 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
       for (let i = 0; i < splices.length; i++) {
         let splice = splices[i];
         for (let collectionIndex = splice.index; collectionIndex < splice.index + splice.addedCount; collectionIndex++) {
-          if (!this._isIndexBeforeViewSlot(repeat, repeat.viewSlot, collectionIndex) && !this._isIndexAfterViewSlot(repeat, repeat.viewSlot, collectionIndex) ) {
+          if (!this._isIndexBeforeViewSlot(repeat, repeat.viewSlot, collectionIndex)
+            && !this._isIndexAfterViewSlot(repeat, repeat.viewSlot, collectionIndex)
+          ) {
             let viewIndex = this._getViewIndex(repeat, repeat.viewSlot, collectionIndex);
             let overrideContext = createFullOverrideContext(repeat, array[collectionIndex], collectionIndex, array.length);
             repeat.removeView(viewIndex, true, true);
@@ -255,7 +257,12 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
       let end = splice.index + splice.addedCount;
       for (; addIndex < end; ++addIndex) {
         let hasDistanceToBottomViewPort = getElementDistanceToBottomViewPort(repeat.templateStrategy.getLastElement(repeat.bottomBuffer)) > 0;
-        if (repeat.viewCount() === 0 || (!this._isIndexBeforeViewSlot(repeat, viewSlot, addIndex) && !this._isIndexAfterViewSlot(repeat, viewSlot, addIndex)) || hasDistanceToBottomViewPort)  {
+        if (repeat.viewCount() === 0
+          || (!this._isIndexBeforeViewSlot(repeat, viewSlot, addIndex)
+            && !this._isIndexAfterViewSlot(repeat, viewSlot, addIndex)
+          )
+          || hasDistanceToBottomViewPort
+        )  {
           let overrideContext = createFullOverrideContext(repeat, array[addIndex], addIndex, arrayLength);
           repeat.insertView(addIndex, overrideContext.bindingContext, overrideContext);
           if (!repeat._hasCalculatedSizes) {
