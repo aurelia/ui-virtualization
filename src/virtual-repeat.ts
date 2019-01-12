@@ -62,8 +62,8 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
   /**@internal*/ _isScrolling: boolean = false;
 
   // Inherited properties declaration
-  key: any;
-  value: any;
+  /**@internal*/ key: any;
+  /**@internal*/ value: any;
   // Array repeat specific properties
   /**@internal */ __queuedSplices: any[];
   /**@internal */ __array: any[];

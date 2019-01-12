@@ -1,7 +1,9 @@
-import {Container} from 'aurelia-dependency-injection';
-import {TaskQueue} from 'aurelia-task-queue'
-import {StageComponent} from './component-tester';
-import {TableStrategy} from '../src/template-strategy';
+import './setup';
+// import {Container} from 'aurelia-dependency-injection';
+// import {TaskQueue} from 'aurelia-task-queue'
+import {StageComponent, ComponentTester} from './component-tester';
+import { PLATFORM } from 'aurelia-pal';
+// import {TableStrategy} from '../src/template-strategy';
 
 // async queue
 function createAssertionQueue() {
@@ -91,7 +93,7 @@ describe('VirtualRepeat Integration', () => {
     }
   }
 
-  function validateScroll(virtualRepeat, viewModel, done, element) {
+  function validateScroll(virtualRepeat, viewModel, done, element?) {
       let elem = document.getElementById(element || 'scrollContainer');
       let event = new Event('scroll');
       elem.scrollTop = elem.scrollHeight;
@@ -104,7 +106,7 @@ describe('VirtualRepeat Integration', () => {
       });
   }
 
-  function validateScrollUp(virtualRepeat, viewModel, done, element) {
+  function validateScrollUp(virtualRepeat, viewModel, done, element?) {
       let elem = document.getElementById(element || 'scrollContainer');
       let event = new Event('scroll');
       elem.scrollTop = elem.scrollHeight/2; //Scroll down but not far enough to reach bottom and call 'getNext'
@@ -215,7 +217,7 @@ describe('VirtualRepeat Integration', () => {
         items.push('item' + i);
       }
       component = StageComponent
-        .withResources('src/virtual-repeat')
+        .withResources(PLATFORM.moduleName('src/virtual-repeat'))
         .inView(`<div style="height: ${itemHeight}px;" virtual-repeat.for="item of items">\${item}</div>`)
         .boundTo({ items: items });
 
@@ -248,6 +250,12 @@ describe('VirtualRepeat Integration', () => {
         containerViewModel = containerComponent.viewModel;
         spyOn(containerVirtualRepeat, '_onScroll').and.callThrough();
       });
+
+      create = Promise.all([
+        create,
+        hiddenCreate,
+        containerCreate
+      ])
     });
 
     afterEach(() => {
@@ -257,12 +265,10 @@ describe('VirtualRepeat Integration', () => {
     });
 
     describe('handles delete', () => {
-      it('can delete one at start', done => {
-        create.then(() => {
-          viewModel.items.splice(0, 1);
-          nq(() => validateState(virtualRepeat, viewModel));
-          nq(() => done());
-        });
+      it('can delete one at start', async () => {
+        await create
+        viewModel.items.splice(0, 1);
+        nq(() => validateState(virtualRepeat, viewModel));
       });
 
       it('can delete one at end', done => {
@@ -391,7 +397,7 @@ describe('VirtualRepeat Integration', () => {
   });
 
   describe('iterating table', () => {
-    let component;
+    let component: ComponentTester;
     let virtualRepeat;
     let viewModel;
     let create;
@@ -404,7 +410,7 @@ describe('VirtualRepeat Integration', () => {
         items.push('item' + i);
       }
       component = StageComponent
-        .withResources(['src/virtual-repeat', 'test/noop-value-converter'])
+        .withResources(['src/virtual-repeat', PLATFORM.moduleName('test/noop-value-converter')])
         .inView(`<table><tr style="height: ${itemHeight}px;" virtual-repeat.for="item of items"><td>\${item}</td></tr></table>`)
         .boundTo({ items: items });
 
@@ -418,8 +424,9 @@ describe('VirtualRepeat Integration', () => {
       component.cleanUp();
     });
 
-    it('handles push', done => {
-      create.then(() => validatePush(virtualRepeat, viewModel, done));
+    it('handles push', async (done) => {
+      await create;
+      validatePush(virtualRepeat, viewModel, done);
     });
     it('handles array changes', done => {
       create.then(() => validateArrayChange(virtualRepeat, viewModel, done));
@@ -545,7 +552,7 @@ describe('VirtualRepeat Integration', () => {
       spyOn(nestedVm, 'getNextPage').and.callThrough();
 
       component = StageComponent
-        .withResources(['src/virtual-repeat', 'src/infinite-scroll-next'])
+        .withResources(['src/virtual-repeat', PLATFORM.moduleName('src/infinite-scroll-next')])
         .inView(`<div id="scrollContainer" style="height: 500px; overflow-y: scroll">
                       <div style="height: ${itemHeight}px;" virtual-repeat.for="item of items" infinite-scroll-next="getNextPage">\${item}</div>
                   </div>`)
@@ -576,6 +583,12 @@ describe('VirtualRepeat Integration', () => {
         promisedVirtualRepeat = promisedComponent.sut;
         promisedViewModel = promisedComponent.viewModel;
       });
+
+      create = Promise.all([
+        create,
+        nestedCreate,
+        promisedCreate
+      ])
     });
 
     afterEach(() => {
