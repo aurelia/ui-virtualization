@@ -1,51 +1,57 @@
+// tslint:disable
+import { View } from 'aurelia-templating';
+
 export class ViewSlotMock {
+  children: any[];
   constructor() {
     this.children = [];
   }
-  removeAll(){}
-  add(view){
+  removeAll() {}
+  add(view) {
     this.children.push(view);
   }
-  insert(index, view){
+  insert(index, view) {
     this.children.splice(index, 0, view);
   }
-  removeAt(index){
-    if(index < 0) {
-      throw "negative index";
+  removeAt(index) {
+    if (index < 0) {
+      throw 'negative index';
     }
     this.children.splice(index, 1);
   }
 }
 
 export class ViewMock {
+  bindingContext: any;
+  overrideContext: any;
   bind(bindingContext, overrideContext) {
     this.bindingContext = bindingContext;
     this.overrideContext = overrideContext;
   }
-  attached(){}
-  detached(){}
-  unbind(){}
-  returnToCache(){}
+  attached() {}
+  detached() {}
+  unbind() {}
+  returnToCache() {}
 }
 
 export class BoundViewFactoryMock {
   _viewsRequireLifecycle = true;
-  create(){
-    return { bind(){} };
-  };
-  removeAll(){};
+  create() {
+    return { bind() {} };
+  }
+  removeAll() {}
 }
 
 export class ViewFactoryMock {
   _viewsRequireLifecycle = true;
-  create(){
+  create() {
     return new ViewMock();
   }
 }
 
 export class ArrayObserverMock {
-  subscribe(){};
-  unsubscribe(){};
+  subscribe() {}
+  unsubscribe() {}
 }
 
 export class TemplateStrategyMock {
@@ -55,8 +61,12 @@ export class TemplateStrategyMock {
   createTopBufferElement(element: Element) { }
   createBottomBufferElement(element: Element) { }
   removeBufferElements(element: Element, topBuffer: Element, bottomBuffer: Element) { }
-  getFirstElement(topBuffer: Element): Element {}
-  getLastElement(bottomBuffer: Element): Element {}
+  getFirstElement(topBuffer: Element): Element {
+    throw new Error('Method "getFirstElement" not implemented');
+  }
+  getLastElement(bottomBuffer: Element): Element {
+    throw new Error('Method "getLastElement" not implemented');
+  }
 }
 
 export const instructionMock = {

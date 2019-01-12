@@ -1,105 +1,99 @@
-var isparta = require('isparta');
-var paths = require('./build/paths');
-// Karma configuration
+const path = require('path');
+const { AureliaPlugin } = require('aurelia-webpack-plugin');
 
 module.exports = function(config) {
+  const browsers = config.browsers;
   config.set({
 
-    // base path that will be used to resolve all patterns (eg. files, exclude)
     basePath: '',
-
-
-    // frameworks to use
-    // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-    frameworks: ['jspm', 'jasmine'],
-
-    jspm: {
-      // Edit this to your needs
-      loadFiles: ['test/**/*.js'],
-      serveFiles : ['src/**/*.js']
-    },
-
-
-    // list of files / patterns to load in the browser
-    files: [],
-
-
-    // list of files to exclude
-    exclude: [
-    ],
-
-
-    // preprocess matching files before serving them to the browser
-    // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
+    frameworks: ["jasmine"],
+    files: ["test/*.spec.ts"],
     preprocessors: {
-      'test/**/*.js': ['babel'],
-      'src/**/*.js': ['babel', 'coverage'],
+      "test/*.spec.ts": ["webpack", "sourcemap"]
     },
-    'babelPreprocessor': {
-      options: {
-        sourceMap: 'inline',
-        presets: [ 'es2015-loose', 'stage-1'],
-        plugins: [
-          'syntax-flow',
-          'transform-decorators-legacy',
-          'transform-flow-strip-types'
+    webpack: {
+      mode: "development",
+      resolve: {
+        extensions: [".ts", ".js"],
+        modules: ["src", 'test', "node_modules"],
+        alias: {
+          src: path.resolve(__dirname, "src"),
+          test: path.resolve(__dirname, 'test')
+        }
+      },
+      devtool: browsers.indexOf('ChromeDebugging') > -1 ? 'eval-source-map' : 'inline-source-map',
+      module: {
+        rules: [
+          {
+            test: /\.ts$/,
+            loader: "ts-loader",
+            exclude: /node_modules/
+          },
+          {
+            test: /\.html$/i,
+            loader: 'html-loader'
+          }
+        ]
+      },
+      plugins: [
+        new AureliaPlugin({
+          noHtmlLoader: true,
+          noWebpackLoader: true,
+          aureliaApp: undefined,
+          features: { 
+            ie: false,
+            svg: false,
+            unparser: false,
+            polyfills: "esnext"
+          }
+        })
+      ]
+    },
+    mime: {
+      "text/x-typescript": ["ts"]
+    },
+    reporters: ["mocha"],
+    webpackServer: { noInfo: config.noInfo },
+    browsers: browsers && browsers.length > 0 ? browsers : ['ChromeHeadlessOpt'],
+    customLaunchers: {
+      ChromeDebugging: {
+        base: "Chrome",
+        flags: [...commonChromeFlags, "--remote-debugging-port=9333"],
+        debug: true
+      },
+      ChromeHeadlessOpt: {
+        base: 'ChromeHeadless',
+        flags: [
+          ...commonChromeFlags
         ]
       }
     },
-
-
-    // test results reporter to use
-    // possible values: 'dots', 'progress'
-    // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-    reporters: ['coverage', 'progress'],
-
-    coverageReporter: {
-      instrumenters: {
-        isparta: isparta
-      },
-
-      instrumenter: {
-        [paths.source]: 'isparta'
-      },
-
-      dir: 'build/reports/coverage/',
-
-      reporters: [{
-        type: 'text-summary'
-      }, {
-        type: 'html',
-        subdir: 'html'
-      }, {
-        type: 'lcovonly',
-        subdir: 'lcov',
-        file: 'report-lcovonly.txt'
-      }]
-    },
-
-    // web server port
-    port: 9876,
-
-
-    // enable / disable colors in the output (reporters and logs)
-    colors: true,
-
-
-    // level of logging
-    // possible values: config.LOG_DISABLE || config.LOG_ERROR || config.LOG_WARN || config.LOG_INFO || config.LOG_DEBUG
-    logLevel: config.LOG_INFO,
-
-
-    // enable / disable watching file and executing tests whenever any file changes
-    autoWatch: true,
-
-
-    // start these browsers
-    // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: ['Chrome'],
-
-
-    // Continuous Integration mode
-    // if true, Karma captures browsers, runs the tests and exits
     singleRun: false
   });
 };
+
+
+const commonChromeFlags = [
+  '--no-default-browser-check',
+  '--no-first-run',
+  '--no-managed-user-acknowledgment-check',
+  '--no-pings',
+  '--no-sandbox',
+  '--no-wifi',
+  '--no-zygote',
+  '--disable-background-networking',
+  '--disable-background-timer-throttling',
+  '--disable-backing-store-limit',
+  '--disable-boot-animation',
+  '--disable-breakpad',
+  '--disable-cache',
+  '--disable-clear-browsing-data-counters',
+  '--disable-cloud-import',
+  '--disable-component-extensions-with-background-pages',
+  '--disable-contextual-search',
+  '--disable-default-apps',
+  '--disable-extensions',
+  '--disable-infobars',
+  '--disable-translate',
+  '--disable-sync'
+];

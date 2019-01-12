@@ -1,15 +1,16 @@
 import {updateOverrideContext} from 'aurelia-templating-resources';
 import {View} from 'aurelia-templating';
+import { IVirtualRepeat } from './interfaces';
 
 export function calcOuterHeight(element: Element): number {
-  let height;
+  let height: number;
   height = element.getBoundingClientRect().height;
   height += getStyleValue(element, 'marginTop');
   height += getStyleValue(element, 'marginBottom');
   return height;
 }
 
-export function insertBeforeNode(view: View, bottomBuffer: number): void {
+export function insertBeforeNode(view: View, bottomBuffer: Element): void {
   let parentElement = bottomBuffer.parentElement || bottomBuffer.parentNode;
   parentElement.insertBefore(view.lastChild, bottomBuffer);
 }
@@ -18,7 +19,7 @@ export function insertBeforeNode(view: View, bottomBuffer: number): void {
 * Update the override context.
 * @param startIndex index in collection where to start updating.
 */
-export function updateVirtualOverrideContexts(repeat: VirtualRepeat, startIndex: number): void {
+export function updateVirtualOverrideContexts(repeat: IVirtualRepeat, startIndex: number): void {
   let views = repeat.viewSlot.children;
   let viewLength = views.length;
   let collectionLength = repeat.items.length;
@@ -34,7 +35,7 @@ export function updateVirtualOverrideContexts(repeat: VirtualRepeat, startIndex:
   }
 }
 
-export function rebindAndMoveView(repeat: VirtualRepeat, view: View, index: number, moveToBottom: boolean): void {
+export function rebindAndMoveView(repeat: IVirtualRepeat, view: View, index: number, moveToBottom: boolean): void {
   let items = repeat.items;
   let viewSlot = repeat.viewSlot;
   updateOverrideContext(view.overrideContext, index, items.length);
@@ -48,10 +49,10 @@ export function rebindAndMoveView(repeat: VirtualRepeat, view: View, index: numb
   }
 }
 
-export function getStyleValue(element: Element, style: string): any {
-  let currentStyle;
-  let styleValue;
-  currentStyle = element.currentStyle || window.getComputedStyle(element);
+export function getStyleValue(element: Element, style: string): number {
+  let currentStyle: CSSStyleDeclaration;
+  let styleValue: number;
+  currentStyle = element['currentStyle'] || window.getComputedStyle(element);
   styleValue = parseInt(currentStyle[style], 10);
   return Number.isNaN(styleValue) ? 0 : styleValue;
 }

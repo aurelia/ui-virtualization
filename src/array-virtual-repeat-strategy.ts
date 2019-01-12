@@ -1,12 +1,15 @@
-import {ArrayRepeatStrategy, createFullOverrideContext} from 'aurelia-templating-resources';
-import {updateVirtualOverrideContexts, rebindAndMoveView, getElementDistanceToBottomViewPort} from './utilities';
+import { ArrayRepeatStrategy, createFullOverrideContext } from 'aurelia-templating-resources';
+import { updateVirtualOverrideContexts, rebindAndMoveView, getElementDistanceToBottomViewPort } from './utilities';
+import { IVirtualRepeat, IVirtualRepeatStrategy } from './interfaces';
+import { ViewSlot } from 'aurelia-templating';
+import { mergeSplice } from 'aurelia-binding';
 
 /**
 * A strategy for repeating a template over an array.
 */
-export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
+export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements IVirtualRepeatStrategy {
   // create first item to calculate the heights
-  createFirstItem(repeat: VirtualRepeat): void {
+  createFirstItem(repeat: IVirtualRepeat): void {
     let overrideContext = createFullOverrideContext(repeat, repeat.items[0], 0, 1);
     repeat.addView(overrideContext.bindingContext, overrideContext);
   }
@@ -15,18 +18,18 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
   * @param repeat The repeater instance.
   * @param items The new array instance.
   */
-  instanceChanged(repeat: VirtualRepeat, items: Array<any>, ...rest): void {
+  instanceChanged(repeat: IVirtualRepeat, items: Array<any>, ...rest: any[]): void {
     this._inPlaceProcessItems(repeat, items, rest[0]);
   }
 
-  _standardProcessInstanceChanged(repeat: VirtualRepeat, items: Array<any>): void {
+  _standardProcessInstanceChanged(repeat: IVirtualRepeat, items: Array<any>): void {
     for (let i = 1, ii = repeat._viewsLength; i < ii; ++i) {
       let overrideContext = createFullOverrideContext(repeat, items[i], i, ii);
       repeat.addView(overrideContext.bindingContext, overrideContext);
     }
   }
 
-  _inPlaceProcessItems(repeat: VirtualRepeat, items: Array<any>, first: number): void {
+  _inPlaceProcessItems(repeat: IVirtualRepeat, items: Array<any>, first: number): void {
     let itemsLength = items.length;
     let viewsLength = repeat.viewCount();
     /*
@@ -74,11 +77,11 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
   * @param array The modified array.
   * @param splices Records of array changes.
   */
-  instanceMutated(repeat: VirtualRepeat, array: Array<any>, splices: any): void {
+  instanceMutated(repeat: IVirtualRepeat, array: Array<any>, splices: any): void {
     this._standardProcessInstanceMutated(repeat, array, splices);
   }
 
-  _standardProcessInstanceMutated(repeat: VirtualRepeat, array: Array<any>, splices: any): void {
+  _standardProcessInstanceMutated(repeat: IVirtualRepeat, array: Array<any>, splices: any): void {
     if (repeat.__queuedSplices) {
       for (let i = 0, ii = splices.length; i < ii; ++i) {
         let {index, removed, addedCount} = splices[i];
@@ -107,7 +110,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
     }
   }
 
-  _runSplices(repeat: VirtualRepeat, array: Array<any>, splices: any): any {
+  _runSplices(repeat: IVirtualRepeat, array: Array<any>, splices: any): any {
     let removeDelta = 0;
     let rmPromises = [];
 
@@ -126,7 +129,9 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
       for (let i = 0; i < splices.length; i++) {
         let splice = splices[i];
         for (let collectionIndex = splice.index; collectionIndex < splice.index + splice.addedCount; collectionIndex++) {
-          if (!this._isIndexBeforeViewSlot(repeat, repeat.viewSlot, collectionIndex) && !this._isIndexAfterViewSlot(repeat, repeat.viewSlot, collectionIndex) ) {
+          if (!this._isIndexBeforeViewSlot(repeat, repeat.viewSlot, collectionIndex)
+            && !this._isIndexAfterViewSlot(repeat, repeat.viewSlot, collectionIndex)
+          ) {
             let viewIndex = this._getViewIndex(repeat, repeat.viewSlot, collectionIndex);
             let overrideContext = createFullOverrideContext(repeat, array[collectionIndex], collectionIndex, array.length);
             repeat.removeView(viewIndex, true, true);
@@ -161,7 +166,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
     return undefined;
   }
 
-  _removeViewAt(repeat: VirtualRepeat, collectionIndex: number, returnToCache: boolean, j: number, removedLength: number): any {
+  _removeViewAt(repeat: IVirtualRepeat, collectionIndex: number, returnToCache: boolean, j: number, removedLength: number): any {
     let viewOrPromise;
     let view;
     let viewSlot = repeat.viewSlot;
@@ -224,17 +229,17 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
     repeat._adjustBufferHeights();
   }
 
-  _isIndexBeforeViewSlot(repeat: VirtualRepeat, viewSlot: ViewSlot, index: number): number {
+  _isIndexBeforeViewSlot(repeat: IVirtualRepeat, viewSlot: ViewSlot, index: number): boolean {
     let viewIndex = this._getViewIndex(repeat, viewSlot, index);
     return viewIndex < 0;
   }
 
-  _isIndexAfterViewSlot(repeat: VirtualRepeat, viewSlot: ViewSlot, index: number): number {
+  _isIndexAfterViewSlot(repeat: IVirtualRepeat, viewSlot: ViewSlot, index: number): boolean {
     let viewIndex = this._getViewIndex(repeat, viewSlot, index);
     return viewIndex > repeat._viewsLength - 1;
   }
 
-  _getViewIndex(repeat: VirtualRepeat, viewSlot: ViewSlot, index: number): number {
+  _getViewIndex(repeat: IVirtualRepeat, viewSlot: ViewSlot, index: number): number {
     if (repeat.viewCount() === 0) {
       return -1;
     }
@@ -243,7 +248,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
     return index - topBufferItems;
   }
 
-  _handleAddedSplices(repeat: VirtualRepeat, array: Array<any>, splices: any): void {
+  _handleAddedSplices(repeat: IVirtualRepeat, array: Array<any>, splices: any): void {
     let arrayLength = array.length;
     let viewSlot = repeat.viewSlot;
     for (let i = 0, ii = splices.length; i < ii; ++i) {
@@ -252,7 +257,12 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
       let end = splice.index + splice.addedCount;
       for (; addIndex < end; ++addIndex) {
         let hasDistanceToBottomViewPort = getElementDistanceToBottomViewPort(repeat.templateStrategy.getLastElement(repeat.bottomBuffer)) > 0;
-        if (repeat.viewCount() === 0 || (!this._isIndexBeforeViewSlot(repeat, viewSlot, addIndex) && !this._isIndexAfterViewSlot(repeat, viewSlot, addIndex)) || hasDistanceToBottomViewPort)  {
+        if (repeat.viewCount() === 0
+          || (!this._isIndexBeforeViewSlot(repeat, viewSlot, addIndex)
+            && !this._isIndexAfterViewSlot(repeat, viewSlot, addIndex)
+          )
+          || hasDistanceToBottomViewPort
+        )  {
           let overrideContext = createFullOverrideContext(repeat, array[addIndex], addIndex, arrayLength);
           repeat.insertView(addIndex, overrideContext.bindingContext, overrideContext);
           if (!repeat._hasCalculatedSizes) {

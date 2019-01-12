@@ -14,10 +14,23 @@
   "license": "MIT",
   "author": "Rob Eisenberg <rob@bluespire.com> (http://robeisenberg.com/)",
   "main": "dist/commonjs/aurelia-ui-virtualization.js",
+  "module": "dist/es2015/aurelia-ui-virtualization.js",
+  "browser": "dist/umd/aurelia-ui-virtualization.js",
+  "unpkg": "dist/umd/aurelia-ui-virtualization.js",
   "typings": "dist/aurelia-ui-virtualization.d.ts",
   "repository": {
     "type": "git",
     "url": "http://github.com/aurelia/ui-virtualization"
+  },
+  "scripts": {
+    "prebuild": "npm run rimraf",
+    "build": "rollup -c",
+    "changelog": "node build/changelog.js",
+    "postbuild": "dts-bundle-generator -o dist/aurelia-ui-virtualization.d.ts src/aurelia-ui-virtualization.ts",
+    "test": "karma start",
+    "test:debugger": "karma start --browsers ChromeDebugging",
+    "lint": "tslint -c tslint.json 'src/**/*.ts'",
+    "rimraf": "rimraf dist"
   },
   "jspm": {
     "registry": "npm",
@@ -28,127 +41,75 @@
       "dist": "dist/amd"
     },
     "peerDependencies": {
-      "aurelia-binding": "^2.0.0",
+      "aurelia-binding": "^2.1.7",
       "aurelia-dependency-injection": "^1.0.0",
-      "aurelia-framework": "^1.0.0",
+      "aurelia-framework": "^1.3.0",
       "aurelia-logging": "^1.0.0",
       "aurelia-logging-console": "^1.0.0",
-      "aurelia-pal": "^1.0.0",
+      "aurelia-pal": "^1.8.0",
       "aurelia-path": "^1.0.0",
       "aurelia-task-queue": "^1.0.0",
-      "aurelia-templating": "^1.0.0",
+      "aurelia-templating": "^1.10.1",
       "aurelia-templating-resources": "^1.0.0"
     },
     "dependencies": {
-      "aurelia-binding": "^2.0.0",
+      "aurelia-binding": "^2.1.7",
       "aurelia-dependency-injection": "^1.0.0",
-      "aurelia-framework": "^1.0.0",
+      "aurelia-framework": "^1.3.0",
       "aurelia-logging": "^1.0.0",
       "aurelia-logging-console": "^1.0.0",
-      "aurelia-pal": "^1.0.0",
+      "aurelia-pal": "^1.8.0",
       "aurelia-path": "^1.0.0",
       "aurelia-task-queue": "^1.0.0",
-      "aurelia-templating": "^1.0.0",
+      "aurelia-templating": "^1.10.1",
       "aurelia-templating-resources": "^1.0.0"
     },
     "devDependencies": {
-      "aurelia-bootstrapper": "^1.0.0-beta.1.2.0",
-      "aurelia-pal-browser": "^1.0.0-rc.1.0.0",
-      "aurelia-polyfills": "^1.0.0-rc.1.0.0",
-      "babel": "babel-core@^5.8.22",
-      "babel-runtime": "^5.8.20",
-      "core-js": "^1.1.4"
+      "aurelia-bootstrapper": "^2.3.1",
+      "aurelia-pal-browser": "^1.8.0",
+      "aurelia-polyfills": "^1.3.0"
     }
   },
   "dependencies": {
-    "aurelia-binding": "^2.0.0",
+    "aurelia-binding": "^2.1.7",
     "aurelia-dependency-injection": "^1.0.0",
-    "aurelia-framework": "^1.0.0",
     "aurelia-logging": "^1.0.0",
     "aurelia-logging-console": "^1.0.0",
     "aurelia-path": "^1.0.0",
     "aurelia-task-queue": "^1.0.0",
-    "aurelia-templating": "^1.0.0",
+    "aurelia-templating": "^1.10.1",
     "aurelia-templating-resources": "^1.0.0"
   },
   "devDependencies": {
-    "aurelia-tools": "^0.2.4",
-    "babel-dts-generator": "^0.6.1",
-    "babel-eslint": "^6.1.2",
-    "babel-plugin-syntax-flow": "^6.8.0",
-    "babel-plugin-transform-decorators-legacy": "^1.3.4",
-    "babel-plugin-transform-es2015-modules-amd": "^6.8.0",
-    "babel-plugin-transform-es2015-modules-commonjs": "^6.11.5",
-    "babel-plugin-transform-es2015-modules-systemjs": "^6.11.6",
-    "babel-plugin-transform-flow-strip-types": "^6.8.0",
-    "babel-preset-es2015": "^6.9.0",
-    "babel-preset-es2015-loose": "^7.0.0",
-    "babel-preset-es2015-loose-native-modules": "^1.0.0",
-    "babel-preset-stage-1": "^6.5.0",
-    "browser-sync": "^2.13.0",
-    "del": "^2.2.1",
-    "gulp": "^3.9.1",
-    "gulp-babel": "^6.1.2",
-    "gulp-bump": "^2.2.0",
-    "gulp-concat": "^2.6.0",
-    "gulp-conventional-changelog": "^1.1.0",
-    "gulp-eslint": "^3.0.1",
-    "gulp-ignore": "^2.0.1",
-    "gulp-insert": "^0.5.0",
-    "gulp-rename": "^1.2.2",
-    "gulp-typedoc": "^2.0.0",
-    "gulp-typescript": "^2.13.6",
-    "gulp-util": "^3.0.7",
-    "gulp-yuidoc": "^0.1.2",
-    "isparta": "^4.0.0",
-    "jasmine-core": "^2.4.1",
-    "karma": "^1.1.2",
-    "karma-babel-preprocessor": "^6.0.1",
-    "karma-chrome-launcher": "^1.0.1",
+    "@types/jasmine": "^3.3.5",
+    "aurelia-bootstrapper": "^2.3.1",
+    "aurelia-framework": "^1.3.0",
+    "aurelia-loader-webpack": "^2.2.1",
+    "aurelia-pal": "^1.8.0",
+    "aurelia-pal-browser": "^1.8.0",
+    "aurelia-polyfills": "^1.3.0",
+    "aurelia-router": "^1.6.3",
+    "aurelia-templating-router": "^1.3.3",
+    "aurelia-webpack-plugin": "^3.0.0",
+    "conventional-changelog": "^3.0.5",
+    "dts-bundle-generator": "^2.0.0",
+    "jasmine-core": "^3.3.0",
+    "karma": "^3.1.4",
+    "karma-chrome-launcher": "^2.2.0",
     "karma-coverage": "^1.1.1",
-    "karma-ie-launcher": "^1.0.0",
-    "karma-jasmine": "^1.0.2",
-    "karma-jspm": "^2.2.0",
+    "karma-jasmine": "^2.0.1",
+    "karma-mocha-reporter": "^2.2.5",
     "karma-sourcemap-loader": "^0.3.7",
-    "merge2": "^1.0.2",
-    "object.assign": "^4.0.4",
-    "require-dir": "^0.3.0",
-    "run-sequence": "^1.2.2",
-    "through2": "^2.0.1",
-    "typedoc": "^0.11.1",
-    "typescript": "^1.9.0-dev.20160622-1.0",
-    "vinyl-paths": "^2.1.0",
+    "karma-webpack": "^3.0.5",
+    "rimraf": "^2.6.3",
+    "rollup": "^1.1.0",
+    "rollup-plugin-typescript2": "^0.18.1",
+    "ts-loader": "^5.3.3",
+    "tslib": "^1.9.3",
+    "tslint": "^5.12.1",
+    "typescript": "^3.2.2",
+    "webpack": "^4.28.4",
+    "webpack-cli": "^3.2.1",
     "yargs": "^4.8.1"
-  },
-  "aurelia": {
-    "usedBy": [],
-    "build": {
-      "resources": [
-        "virtual-repeat",
-        "infinite-scroll-next"
-      ]
-    },
-    "documentation": {
-      "links": [
-        {
-          "rel": "license",
-          "mediaType": "text/plain",
-          "title": "The MIT License (MIT)",
-          "href": "LICENSE"
-        },
-        {
-          "rel": "describedby",
-          "mediaType": "application/aurelia-doc+json",
-          "title": "API",
-          "href": "doc/api.json"
-        },
-        {
-          "rel": "version-history",
-          "mediaType": "text/markdown",
-          "title": "Change Log",
-          "href": "doc/CHANGELOG.md"
-        }
-      ]
-    }
   }
 }

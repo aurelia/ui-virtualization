@@ -1,4 +1,5 @@
-import {bootstrap} from 'aurelia-bootstrapper';
+import { bootstrap } from 'aurelia-bootstrapper';
+import { Aurelia } from 'aurelia-framework';
 
 export const StageComponent = {
   withResources(resources): ComponentTester {
