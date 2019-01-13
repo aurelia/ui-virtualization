@@ -10,7 +10,7 @@ export function createAssertionQueue(): Queue {
         let func = queue.shift();
         func();
         next();
-      });
+      }, 1);
     }
   };
 
@@ -22,7 +22,11 @@ export function createAssertionQueue(): Queue {
   };
 }
 
-export function validateState(virtualRepeat: VirtualRepeat, viewModel: any, itemHeight: number) {
+/**
+ *
+ * @param extraHeight height of static content that contributes to overall heigh. Happen in case of table
+ */
+export function validateState(virtualRepeat: VirtualRepeat, viewModel: any, itemHeight: number, extraHeight?: number) {
   let views = virtualRepeat.viewSlot.children;
   let expectedHeight = viewModel.items.length * itemHeight;
   let topBufferHeight = virtualRepeat.topBuffer.getBoundingClientRect().height;

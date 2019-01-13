@@ -7,6 +7,9 @@ import { PLATFORM } from 'aurelia-pal';
 import { createAssertionQueue, validateState, validateScrolledState } from './utilities';
 import { VirtualRepeat } from '../src/virtual-repeat';
 
+PLATFORM.moduleName('src/virtual-repeat');
+PLATFORM.moduleName('test/noop-value-converter');
+PLATFORM.moduleName('src/infinite-scroll-next');
 
 describe('VirtualRepeat Integration', () => {
 
@@ -95,7 +98,7 @@ describe('VirtualRepeat Integration', () => {
       nq(() => done());
   }
 
-  function validateSplice(virtualRepeat, viewModel, done) {
+  function validateSplice(virtualRepeat: VirtualRepeat, viewModel: any, done: Function) {
     viewModel.items.splice(2, 1, 'x', 'y');
       nq(() => validateState(virtualRepeat, viewModel, itemHeight));
       nq(() => done());
@@ -138,7 +141,7 @@ describe('VirtualRepeat Integration', () => {
         items.push('item' + i);
       }
       component = StageComponent
-        .withResources(PLATFORM.moduleName('src/virtual-repeat'))
+        .withResources('src/virtual-repeat')
         .inView(`<div style="height: ${itemHeight}px;" virtual-repeat.for="item of items">\${item}</div>`)
         .boundTo({ items: items });
 
@@ -436,7 +439,7 @@ describe('VirtualRepeat Integration', () => {
       spyOn(nestedVm, 'getNextPage').and.callThrough();
 
       component = StageComponent
-        .withResources(['src/virtual-repeat', PLATFORM.moduleName('src/infinite-scroll-next')])
+        .withResources(['src/virtual-repeat', 'src/infinite-scroll-next'])
         .inView(`<div id="scrollContainer" style="height: 500px; overflow-y: scroll">
                       <div style="height: ${itemHeight}px;" virtual-repeat.for="item of items" infinite-scroll-next="getNextPage">\${item}</div>
                   </div>`)

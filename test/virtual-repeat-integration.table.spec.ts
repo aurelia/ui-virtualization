@@ -7,7 +7,7 @@ import { VirtualRepeat } from '../src/virtual-repeat';
 PLATFORM.moduleName('src/virtual-repeat');
 PLATFORM.moduleName('test/noop-value-converter');
 
-fdescribe('VirtualRepeat Integration', () => {
+describe('VirtualRepeat Integration', () => {
   const itemHeight = 100;
   const nq = createAssertionQueue();
 
@@ -80,8 +80,10 @@ fdescribe('VirtualRepeat Integration', () => {
     });
 
     afterEach(() => {
-      if (component) {
-        return component.cleanUp();
+      try {
+        component.cleanUp();
+      } catch (ex) {
+        console.log('Error cleaning up component');
       }
     });
 
@@ -92,7 +94,6 @@ fdescribe('VirtualRepeat Integration', () => {
           virtualRepeat = component.sut;
           viewModel = component.viewModel;
         });
-        const element = virtualRepeat['element'];
         const { topBuffer, bottomBuffer } = virtualRepeat;
         expect(topBuffer.nextElementSibling.tagName).toBe('TBODY');
         expect(topBuffer.tagName).toBe('TR');
@@ -123,6 +124,36 @@ fdescribe('VirtualRepeat Integration', () => {
         });
         nq(() => validateState(virtualRepeat, viewModel, itemHeight));
         nq(() => done());
+      } catch (ex) {
+        done.fail(ex);
+      }
+    });
+
+    it('works with static row', async done => {
+      try {
+        component.inView(
+        // there is a small border spacing between tbodies, rows that will add up
+        // need to add border spacing 0 for testing purposes
+        `<table style="border-spacing: 0">
+          <tr><td>Name</td></tr>
+          <tbody virtual-repeat.for="item of items">
+            <tr style="height: ${itemHeight}px;"><td>\${item}</td></tr>
+          </tbody>
+        </table>`);
+
+        await component.create().then(() => {
+          virtualRepeat = component.sut;
+          viewModel = component.viewModel;
+        });
+        const element = virtualRepeat['element'];
+        const table = element.parentNode;
+        expect(table.firstElementChild).toBe(virtualRepeat.topBuffer.previousElementSibling);
+        expect(table.firstElementChild.innerHTML.trim()).toBe('<tr><td>Name</td></tr>');
+        nq(() => validateState(virtualRepeat, viewModel, itemHeight));
+        nq(() => validatePush(virtualRepeat, viewModel, () => {
+
+          done();
+        }));
       } catch (ex) {
         done.fail(ex);
       }
