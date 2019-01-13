@@ -503,10 +503,6 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
   }
 
   _adjustBufferHeights(): void {
-    // let templateStrategy = this.templateStrategy;
-    // let { topBuffer, _topBufferHeight, bottomBuffer, _bottomBufferHeight } = this;
-    // templateStrategy.adjustBufferHeight(topBuffer, _topBufferHeight);
-    // templateStrategy.adjustBufferHeight(bottomBuffer, _bottomBufferHeight);
     this.topBuffer.style.height = `${this._topBufferHeight}px`;
     this.bottomBuffer.style.height = `${this._bottomBufferHeight}px`;
   }
