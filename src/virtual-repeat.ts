@@ -23,8 +23,12 @@ import {
 } from './utilities';
 import { DomHelper } from './dom-helper';
 import { VirtualRepeatStrategyLocator } from './virtual-repeat-strategy-locator';
-import { TemplateStrategyLocator, ITemplateStrategy } from './template-strategy';
-import { IVirtualRepeat, IVirtualRepeatStrategy } from './interfaces';
+import { TemplateStrategyLocator } from './template-strategy';
+import {
+  IVirtualRepeat,
+  IVirtualRepeatStrategy,
+  ITemplateStrategy
+} from './interfaces';
 
 export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
 
@@ -499,6 +503,10 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
   }
 
   _adjustBufferHeights(): void {
+    // let templateStrategy = this.templateStrategy;
+    // let { topBuffer, _topBufferHeight, bottomBuffer, _bottomBufferHeight } = this;
+    // templateStrategy.adjustBufferHeight(topBuffer, _topBufferHeight);
+    // templateStrategy.adjustBufferHeight(bottomBuffer, _bottomBufferHeight);
     this.topBuffer.style.height = `${this._topBufferHeight}px`;
     this.bottomBuffer.style.height = `${this._bottomBufferHeight}px`;
   }

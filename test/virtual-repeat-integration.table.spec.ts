@@ -11,7 +11,7 @@ fdescribe('VirtualRepeat Integration', () => {
   const itemHeight = 100;
   const nq = createAssertionQueue();
 
-  describe('iterating table', () => {
+  describe('<tr virtual-repeat.for>', () => {
     let component: ComponentTester;
     let virtualRepeat;
     let viewModel;
@@ -52,7 +52,7 @@ fdescribe('VirtualRepeat Integration', () => {
     });
   });
 
-  fdescribe('<tbody virtual-repeat.for>', () => {
+  describe('<tbody virtual-repeat.for>', () => {
     let component: ComponentTester;
     let virtualRepeat: VirtualRepeat;
     let viewModel;
@@ -85,17 +85,47 @@ fdescribe('VirtualRepeat Integration', () => {
       }
     });
 
-    it('works', async (done) => {
+    it('creates right structure', async (done) => {
+      try {
+        component.inView('<table><tbody virtual-repeat.for="item of items"><tr><td>\${item}</td></tr></tbody>');
+        await component.create().then(() => {
+          virtualRepeat = component.sut;
+          viewModel = component.viewModel;
+        });
+        const element = virtualRepeat['element'];
+        const { topBuffer, bottomBuffer } = virtualRepeat;
+        expect(topBuffer.nextElementSibling.tagName).toBe('TBODY');
+        expect(topBuffer.tagName).toBe('TR');
+        expect(topBuffer.childNodes.length).toBe(0);
+        expect(bottomBuffer.previousSibling.nodeType).toBe(Node.COMMENT_NODE);
+        expect(bottomBuffer.previousElementSibling.tagName).toBe('TBODY');
+        expect(bottomBuffer.tagName).toBe('TR');
+        expect(bottomBuffer.childNodes.length).toBe(0);
+        done();
+      } catch (ex) {
+        done.fail(ex);
+      }
+    });
 
-      component.inView('<table><tbody virtual-repeat.for="item of items"><tr><td>\${item}</td></tr></tbody>');
-      await component.create().then(() => {
-        virtualRepeat = component.sut;
-        viewModel = component.viewModel;
-      });
-      const element = virtualRepeat['element'];
-      expect(virtualRepeat.topBuffer.nextElementSibling.tagName).toBe('TABLE');
-      expect(virtualRepeat.bottomBuffer.previousElementSibling.tagName).toBe('TABLE');
-      done();
+    it('works', async (done) => {
+      try {
+        component.inView(
+        // there is a small border spacing between tbodies, rows that will add up
+        // need to add border spacing 0 for testing purposes
+        `<table style="border-spacing: 0">
+          <tbody virtual-repeat.for="item of items">
+            <tr style="height: ${itemHeight}px;"><td>\${item}</td></tr>
+          </tbody>
+        </table>`);
+        await component.create().then(() => {
+          virtualRepeat = component.sut;
+          viewModel = component.viewModel;
+        });
+        nq(() => validateState(virtualRepeat, viewModel, itemHeight));
+        nq(() => done());
+      } catch (ex) {
+        done.fail(ex);
+      }
     });
   });
 

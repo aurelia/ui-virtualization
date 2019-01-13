@@ -28,7 +28,10 @@ export function validateState(virtualRepeat: VirtualRepeat, viewModel: any, item
   let topBufferHeight = virtualRepeat.topBuffer.getBoundingClientRect().height;
   let bottomBufferHeight = virtualRepeat.bottomBuffer.getBoundingClientRect().height;
   let renderedItemsHeight = views.length * itemHeight;
-  expect(topBufferHeight + renderedItemsHeight + bottomBufferHeight).toBe(expectedHeight);
+  expect(topBufferHeight + renderedItemsHeight + bottomBufferHeight).toBe(
+    expectedHeight,
+    `Top buffer (${topBufferHeight}) + items height (${renderedItemsHeight}) + bottom buffer (${bottomBufferHeight}) should have been correct`
+  );
 
   if (viewModel.items.length > views.length) {
     expect(topBufferHeight + bottomBufferHeight).toBeGreaterThan(0);
