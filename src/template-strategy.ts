@@ -42,7 +42,6 @@ export class TemplateStrategyLocator {
 
 export class TableBodyStrategy implements ITemplateStrategy {
 
-
   getScrollContainer(element: Element): HTMLElement {
     return this.getTable(element).parentNode as HTMLElement;
   }
@@ -81,22 +80,6 @@ export class TableBodyStrategy implements ITemplateStrategy {
 
   getTopBufferDistance(topBuffer: Element): number {
     return 0;
-  }
-
-  private getFirstTbody(tableElement: HTMLTableElement): HTMLTableSectionElement {
-    let child = tableElement.firstElementChild;
-    while (child !== null && child.tagName !== 'TBODY') {
-      child = child.nextElementSibling;
-    }
-    return child.tagName === 'TBODY' ? child as HTMLTableSectionElement : null;
-  }
-
-  private _getLastTbody(tableElement: HTMLTableElement): HTMLTableSectionElement {
-    let child = tableElement.lastElementChild;
-    while (child !== null && child.tagName !== 'TBODY') {
-      child = child.previousElementSibling;
-    }
-    return child.tagName === 'TBODY' ? child as HTMLTableSectionElement : null;
   }
 
   /**
@@ -156,13 +139,6 @@ export class TableRowStrategy implements ITemplateStrategy {
 
   getTopBufferDistance(topBuffer: Element): number {
     return 0;
-  }
-
-  /**
-   * `element` is actually a comment, acting as anchor for `virtual-repeat` attribute
-   */
-  private getTable(element: Element): HTMLTableElement {
-    return element.parentNode.parentNode as HTMLTableElement;
   }
 }
 
