@@ -4,109 +4,30 @@ import './setup';
 import {StageComponent, ComponentTester} from './component-tester';
 import { PLATFORM } from 'aurelia-pal';
 // import {TableStrategy} from '../src/template-strategy';
+import { createAssertionQueue, validateState, validateScrolledState } from './utilities';
+import { VirtualRepeat } from '../src/virtual-repeat';
 
-// async queue
-function createAssertionQueue() {
-  let queue = [];
-
-  let next;
-  next = () => {
-    if (queue.length) {
-      setTimeout(() => {
-        let func = queue.shift();
-        func();
-        next();
-      });
-    }
-  };
-
-  return func => {
-    queue.push(func);
-    if (queue.length === 1) {
-      next();
-    }
-  };
-}
-let nq = createAssertionQueue();
 
 describe('VirtualRepeat Integration', () => {
+
+  // async queue
+  let nq = createAssertionQueue();
   let itemHeight = 100;
 
-  function validateState(virtualRepeat, viewModel) {
-    let views = virtualRepeat.viewSlot.children;
-    let expectedHeight = viewModel.items.length * itemHeight;
-    let topBufferHeight = virtualRepeat.topBuffer.getBoundingClientRect().height;
-    let bottomBufferHeight = virtualRepeat.bottomBuffer.getBoundingClientRect().height;
-    let renderedItemsHeight = views.length * itemHeight;
-    expect(topBufferHeight + renderedItemsHeight + bottomBufferHeight).toBe(expectedHeight);
-
-    if (viewModel.items.length > views.length) {
-      expect(topBufferHeight + bottomBufferHeight).toBeGreaterThan(0);
-    }
-
-    // validate contextual data
-    for (let i = 0; i < views.length; i++) {
-      expect(views[i].bindingContext.item).toBe(viewModel.items[i]);
-      let overrideContext = views[i].overrideContext;
-      expect(overrideContext.parentOverrideContext.bindingContext).toBe(viewModel);
-      expect(overrideContext.bindingContext).toBe(views[i].bindingContext);
-      let first = i === 0;
-      let last = i === viewModel.items.length - 1;
-      let even = i % 2 === 0;
-      expect(overrideContext.$index).toBe(i);
-      expect(overrideContext.$first).toBe(first);
-      expect(overrideContext.$last).toBe(last);
-      expect(overrideContext.$middle).toBe(!first && !last);
-      expect(overrideContext.$odd).toBe(!even);
-      expect(overrideContext.$even).toBe(even);
-    }
-  }
-
-  function validateScrolledState(virtualRepeat, viewModel) {
-    let views = virtualRepeat.viewSlot.children;
-    let expectedHeight = viewModel.items.length * itemHeight;
-    let topBufferHeight = virtualRepeat.topBuffer.getBoundingClientRect().height;
-    let bottomBufferHeight = virtualRepeat.bottomBuffer.getBoundingClientRect().height;
-    let renderedItemsHeight = views.length * itemHeight;
-    expect(topBufferHeight + renderedItemsHeight + bottomBufferHeight).toBe(expectedHeight);
-
-    if (viewModel.items.length > views.length) {
-      expect(topBufferHeight + bottomBufferHeight).toBeGreaterThan(0);
-    }
-
-    // validate contextual data
-    let startingLoc = viewModel.items.indexOf(views[0].bindingContext.item);
-    for (let i = startingLoc; i < views.length; i++) {
-      expect(views[i].bindingContext.item).toBe(viewModel.items[i]);
-      let overrideContext = views[i].overrideContext;
-      expect(overrideContext.parentOverrideContext.bindingContext).toBe(viewModel);
-      expect(overrideContext.bindingContext).toBe(views[i].bindingContext);
-      let first = i === 0;
-      let last = i === viewModel.items.length - 1;
-      let even = i % 2 === 0;
-      expect(overrideContext.$index).toBe(i);
-      expect(overrideContext.$first).toBe(first);
-      expect(overrideContext.$last).toBe(last);
-      expect(overrideContext.$middle).toBe(!first && !last);
-      expect(overrideContext.$odd).toBe(!even);
-      expect(overrideContext.$even).toBe(even);
-    }
-  }
-
-  function validateScroll(virtualRepeat, viewModel, done, element?) {
+  function validateScroll(virtualRepeat: VirtualRepeat, viewModel: any, done: Function, element?: string) {
       let elem = document.getElementById(element || 'scrollContainer');
       let event = new Event('scroll');
       elem.scrollTop = elem.scrollHeight;
       elem.dispatchEvent(event);
       window.setTimeout(() => {
           window.requestAnimationFrame(() => {
-              validateScrolledState(virtualRepeat, viewModel);
+              validateScrolledState(virtualRepeat, viewModel, itemHeight);
               done();
           });
       });
   }
 
-  function validateScrollUp(virtualRepeat, viewModel, done, element?) {
+  function validateScrollUp(virtualRepeat: VirtualRepeat, viewModel: any, done: Function, element?: string) {
       let elem = document.getElementById(element || 'scrollContainer');
       let event = new Event('scroll');
       elem.scrollTop = elem.scrollHeight / 2; // Scroll down but not far enough to reach bottom and call 'getNext'
@@ -118,7 +39,7 @@ describe('VirtualRepeat Integration', () => {
             elem.dispatchEvent(eventUp);
             window.setTimeout(() => {
                 window.requestAnimationFrame(() => {
-                  validateScrolledState(virtualRepeat, viewModel);
+                  validateScrolledState(virtualRepeat, viewModel, itemHeight);
                   done();
                 });
             });
@@ -126,57 +47,57 @@ describe('VirtualRepeat Integration', () => {
       });
   }
 
-  function validatePush(virtualRepeat, viewModel, done) {
+  function validatePush(virtualRepeat: VirtualRepeat, viewModel: any, done: Function) {
     viewModel.items.push('Foo');
-    nq(() => validateState(virtualRepeat, viewModel));
+    nq(() => validateState(virtualRepeat, viewModel, itemHeight));
 
     for (let i = 0; i < 5; ++i) {
       viewModel.items.push(`Foo ${i}`);
     }
 
-    nq(() => validateState(virtualRepeat, viewModel));
+    nq(() => validateState(virtualRepeat, viewModel, itemHeight));
     nq(() => done());
   }
 
-  function validatePop(virtualRepeat, viewModel, done) {
+  function validatePop(virtualRepeat: VirtualRepeat, viewModel: any, done: Function) {
     viewModel.items.pop();
-      nq(() => validateState(virtualRepeat, viewModel));
+      nq(() => validateState(virtualRepeat, viewModel, itemHeight));
       nq(() => viewModel.items.pop());
-      nq(() => validateState(virtualRepeat, viewModel));
+      nq(() => validateState(virtualRepeat, viewModel, itemHeight));
       nq(() => viewModel.items.pop());
-      nq(() => validateState(virtualRepeat, viewModel));
+      nq(() => validateState(virtualRepeat, viewModel, itemHeight));
       nq(() => done());
   }
 
   function validateUnshift(virtualRepeat, viewModel, done) {
     viewModel.items.unshift('z');
-      nq(() => validateState(virtualRepeat, viewModel));
+      nq(() => validateState(virtualRepeat, viewModel, itemHeight));
       nq(() => viewModel.items.unshift('y', 'x'));
-      nq(() => validateState(virtualRepeat, viewModel));
+      nq(() => validateState(virtualRepeat, viewModel, itemHeight));
       nq(() => viewModel.items.unshift());
-      nq(() => validateState(virtualRepeat, viewModel));
+      nq(() => validateState(virtualRepeat, viewModel, itemHeight));
       nq(() => done());
   }
 
   function validateShift(virtualRepeat, viewModel, done) {
     viewModel.items.shift();
-      nq(() => validateState(virtualRepeat, viewModel));
+      nq(() => validateState(virtualRepeat, viewModel, itemHeight));
       nq(() => viewModel.items.shift());
-      nq(() => validateState(virtualRepeat, viewModel));
+      nq(() => validateState(virtualRepeat, viewModel, itemHeight));
       nq(() => viewModel.items.shift());
-      nq(() => validateState(virtualRepeat, viewModel));
+      nq(() => validateState(virtualRepeat, viewModel, itemHeight));
       nq(() => done());
   }
 
   function validateReverse(virtualRepeat, viewModel, done) {
     viewModel.items.reverse();
-      nq(() => validateState(virtualRepeat, viewModel));
+      nq(() => validateState(virtualRepeat, viewModel, itemHeight));
       nq(() => done());
   }
 
   function validateSplice(virtualRepeat, viewModel, done) {
     viewModel.items.splice(2, 1, 'x', 'y');
-      nq(() => validateState(virtualRepeat, viewModel));
+      nq(() => validateState(virtualRepeat, viewModel, itemHeight));
       nq(() => done());
   }
 
@@ -184,13 +105,13 @@ describe('VirtualRepeat Integration', () => {
     const createItems = (name, amount) => new Array(amount).map((v, index) => name + index);
 
     viewModel.items = createItems('A', 4);
-    nq(() => validateState(virtualRepeat, viewModel));
+    nq(() => validateState(virtualRepeat, viewModel, itemHeight));
     nq(() => viewModel.items = createItems('B', 0));
-    nq(() => validateState(virtualRepeat, viewModel));
+    nq(() => validateState(virtualRepeat, viewModel, itemHeight));
     nq(() => viewModel.items = createItems('C', 101));
-    nq(() => validateState(virtualRepeat, viewModel));
+    nq(() => validateState(virtualRepeat, viewModel, itemHeight));
     nq(() => viewModel.items = createItems('D', 0));
-    nq(() => validateState(virtualRepeat, viewModel));
+    nq(() => validateState(virtualRepeat, viewModel, itemHeight));
     nq(() => done());
   }
 
@@ -268,13 +189,13 @@ describe('VirtualRepeat Integration', () => {
       it('can delete one at start', async () => {
         await create;
         viewModel.items.splice(0, 1);
-        nq(() => validateState(virtualRepeat, viewModel));
+        nq(() => validateState(virtualRepeat, viewModel, itemHeight));
       });
 
       it('can delete one at end', done => {
         create.then(() => {
           viewModel.items.splice(viewModel.items.length - 1, 1);
-          nq(() => validateState(virtualRepeat, viewModel));
+          nq(() => validateState(virtualRepeat, viewModel, itemHeight));
           nq(() => done());
         });
       });
@@ -283,7 +204,7 @@ describe('VirtualRepeat Integration', () => {
         create.then(() => {
           viewModel.items.splice(0, 1);
           viewModel.items.splice(0, 1);
-          nq(() => validateState(virtualRepeat, viewModel));
+          nq(() => validateState(virtualRepeat, viewModel, itemHeight));
           nq(() => done());
         });
       });
@@ -292,7 +213,7 @@ describe('VirtualRepeat Integration', () => {
         create.then(() => {
           viewModel.items.splice(viewModel.items.length - 1, 1);
           viewModel.items.splice(viewModel.items.length - 1, 1);
-          nq(() => validateState(virtualRepeat, viewModel));
+          nq(() => validateState(virtualRepeat, viewModel, itemHeight));
           nq(() => done());
         });
       });
@@ -303,7 +224,7 @@ describe('VirtualRepeat Integration', () => {
           for (let i = 0; i < deleteCount; ++i) {
             viewModel.items.splice(0, 1);
           }
-          nq(() => validateState(virtualRepeat, viewModel));
+          nq(() => validateState(virtualRepeat, viewModel, itemHeight));
           nq(() => done());
         });
       });
@@ -314,7 +235,7 @@ describe('VirtualRepeat Integration', () => {
           for (let i = 0; i < deleteCount; ++i) {
             viewModel.items.splice(0, 1);
           }
-          nq(() => validateState(virtualRepeat, viewModel));
+          nq(() => validateState(virtualRepeat, viewModel, itemHeight));
           nq(() => done());
         });
       });
@@ -325,7 +246,7 @@ describe('VirtualRepeat Integration', () => {
           for (let i = 0; i < deleteCount; ++i) {
             viewModel.items.splice(0, 1);
           }
-          nq(() => validateState(virtualRepeat, viewModel));
+          nq(() => validateState(virtualRepeat, viewModel, itemHeight));
           nq(() => done());
         });
       });
@@ -360,7 +281,7 @@ describe('VirtualRepeat Integration', () => {
         hiddenVirtualRepeat.scrollContainer.style.display = 'block';
         window.requestAnimationFrame(() => {
           window.setTimeout(() => {
-            validateState(hiddenVirtualRepeat, hiddenViewModel);
+            validateState(hiddenVirtualRepeat, hiddenViewModel, itemHeight);
             done();
           }, 750);
         });
@@ -393,43 +314,6 @@ describe('VirtualRepeat Integration', () => {
           validateArrayChange(virtualRepeat, viewModel, done);
         }, 1000);
       });
-    });
-  });
-
-  describe('iterating table', () => {
-    let component: ComponentTester;
-    let virtualRepeat;
-    let viewModel;
-    let create;
-    let items;
-
-    beforeEach(() => {
-
-      items = [];
-      for (let i = 0; i < 1000; ++i) {
-        items.push('item' + i);
-      }
-      component = StageComponent
-        .withResources(['src/virtual-repeat', PLATFORM.moduleName('test/noop-value-converter')])
-        .inView(`<table><tr style="height: ${itemHeight}px;" virtual-repeat.for="item of items"><td>\${item}</td></tr></table>`)
-        .boundTo({ items: items });
-
-      create = component.create().then(() => {
-        virtualRepeat = component.sut;
-        viewModel = component.viewModel;
-      });
-    });
-
-    afterEach(() => {
-      component.cleanUp();
-    });
-
-    it('handles push', async (done) => {
-      await create;
-      validatePush(virtualRepeat, viewModel, done);
-    });
-    it('handles array changes', done => {
-      create.then(() => validateArrayChange(virtualRepeat, viewModel, done));
     });
   });
 
@@ -471,7 +355,7 @@ describe('VirtualRepeat Integration', () => {
     it('handles unshift', done => {
       create.then(() => {
         viewModel.items.unshift('z');
-        nq(() => validateState(virtualRepeat, viewModel));
+        nq(() => validateState(virtualRepeat, viewModel, itemHeight));
         nq(() => done());
       });
     });

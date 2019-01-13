@@ -17,13 +17,13 @@ import {
 } from 'aurelia-templating-resources';
 import {DOM} from 'aurelia-pal';
 import {
-  getStyleValue,
   calcOuterHeight,
-  rebindAndMoveView
+  rebindAndMoveView,
+  getStyleValues
 } from './utilities';
-import {DomHelper} from './dom-helper';
-import {VirtualRepeatStrategyLocator} from './virtual-repeat-strategy-locator';
-import {TemplateStrategyLocator, ITemplateStrategy} from './template-strategy';
+import { DomHelper } from './dom-helper';
+import { VirtualRepeatStrategyLocator } from './virtual-repeat-strategy-locator';
+import { TemplateStrategyLocator, ITemplateStrategy } from './template-strategy';
 import { IVirtualRepeat, IVirtualRepeatStrategy } from './interfaces';
 
 export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
@@ -628,10 +628,8 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
 
   /**@internal*/
   _calcScrollHeight(element: Element): number {
-    let height;
-    height = element.getBoundingClientRect().height;
-    height -= getStyleValue(element, 'borderTopWidth');
-    height -= getStyleValue(element, 'borderBottomWidth');
+    let height = element.getBoundingClientRect().height;
+    height -= getStyleValues(element, 'borderTopWidth', 'borderBottomWidth');
     return height;
   }
 

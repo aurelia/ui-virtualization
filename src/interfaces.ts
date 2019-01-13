@@ -17,6 +17,11 @@ declare module 'aurelia-binding' {
       isAtBottom: boolean;
       isAtTop: boolean;
     };
+    $first: boolean;
+    $last: boolean;
+    $middle: boolean;
+    $odd: boolean;
+    $even: boolean;
   }
 }
 

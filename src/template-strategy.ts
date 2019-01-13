@@ -13,7 +13,6 @@ export interface ITemplateStrategy {
   removeBufferElements(element: Element, topBuffer: Element, bottomBuffer: Element): void;
   getFirstElement(topBuffer: Element): Element;
   getLastElement(bottomBuffer: Element): Element;
-  getLastView(bottomBuffer: Element): Element;
   getTopBufferDistance(topBuffer: Element): number;
 }
 
@@ -27,6 +26,9 @@ export class TemplateStrategyLocator {
     this.container = container;
   }
 
+  /**
+   * Selects the template strategy based on element hosting `virtual-repeat` custom attribute
+   */
   getStrategy(element: Element): ITemplateStrategy {
     if (element.parentNode && (element.parentNode as Element).tagName === 'TBODY') {
       return this.container.get(TableStrategy);
@@ -39,18 +41,18 @@ export class TableStrategy implements ITemplateStrategy {
 
   static inject = [DomHelper];
 
-  tableCssReset = '\
-    display: block;\
-    width: auto;\
-    height: auto;\
-    margin: 0;\
-    padding: 0;\
-    border: none;\
-    border-collapse: inherit;\
-    border-spacing: 0;\
-    background-color: transparent;\
-    -webkit-border-horizontal-spacing: 0;\
-    -webkit-border-vertical-spacing: 0;';
+  // tableCssReset = '\
+  //   display: block;\
+  //   width: auto;\
+  //   height: auto;\
+  //   margin: 0;\
+  //   padding: 0;\
+  //   border: none;\
+  //   border-collapse: inherit;\
+  //   border-spacing: 0;\
+  //   background-color: transparent;\
+  //   -webkit-border-horizontal-spacing: 0;\
+  //   -webkit-border-vertical-spacing: 0;';
 
   domHelper: DomHelper;
 
@@ -63,7 +65,7 @@ export class TableStrategy implements ITemplateStrategy {
   }
 
   moveViewFirst(view: View, topBuffer: Element): void {
-    const tbody = this._getTbodyElement(topBuffer.nextSibling as Element);
+    const tbody = this._getFirstTbody(topBuffer.nextSibling as HTMLTableElement);
     const tr = tbody.firstChild;
     const firstElement = DOM.nextElementSibling(tr);
     insertBeforeNode(view, firstElement);
@@ -98,45 +100,41 @@ export class TableStrategy implements ITemplateStrategy {
   }
 
   getFirstElement(topBuffer: Element): Element {
-    const tbody = this._getTbodyElement(DOM.nextElementSibling(topBuffer));
-    const tr = tbody.firstChild as HTMLTableRowElement;
+    const tbody = this._getFirstTbody(DOM.nextElementSibling(topBuffer) as HTMLTableElement);
+    const tr = tbody.firstElementChild as HTMLTableRowElement;
     // since the buffer is outside table, first element _is_ first element.
     return tr;
   }
 
   getLastElement(bottomBuffer: Element): Element {
-    const tbody = this._getTbodyElement(bottomBuffer.previousSibling as Element);
-    const trs = tbody.children;
-    return trs[trs.length - 1];
+    const tbody = this._getLastTbody(bottomBuffer.previousSibling as HTMLTableElement);
+    return tbody.lastElementChild as HTMLTableRowElement;
   }
 
   getTopBufferDistance(topBuffer: Element): number {
-    const tbody = this._getTbodyElement(topBuffer.nextSibling as Element);
+    const tbody = this._getFirstTbody(topBuffer.nextSibling as HTMLTableElement);
     return this.domHelper.getElementDistanceToTopOfDocument(tbody) - this.domHelper.getElementDistanceToTopOfDocument(topBuffer);
   }
 
-  getLastView(bottomBuffer: Element): Element {
-    throw new Error('Method getLastView() not implemented.');
+  private _getFirstTbody(tableElement: HTMLTableElement): HTMLTableSectionElement {
+    let child = tableElement.firstElementChild;
+    while (child !== null && child.tagName !== 'TBODY') {
+      child = child.nextElementSibling;
+    }
+    return child.tagName === 'TBODY' ? child as HTMLTableSectionElement : null;
   }
 
-  private _getTbodyElement(tableElement: Element): Element {
-    let tbodyElement: Element;
-    const children = tableElement.children;
-    for (let i = 0, ii = children.length; i < ii; ++i) {
-      if (children[i].localName === 'tbody') {
-        tbodyElement = children[i];
-        break;
-      }
+  private _getLastTbody(tableElement: HTMLTableElement): HTMLTableSectionElement {
+    let child = tableElement.lastElementChild;
+    while (child !== null && child.tagName !== 'TBODY') {
+      child = child.previousElementSibling;
     }
-    return tbodyElement;
+    return child.tagName === 'TBODY' ? child as HTMLTableSectionElement : null;
   }
 }
 
 export class DefaultTemplateStrategy implements ITemplateStrategy {
 
-  getLastView(bottomBuffer: Element): Element {
-    throw new Error('Method getLastView() not implemented.');
-  }
   getScrollContainer(element: Element): HTMLElement {
     return element.parentNode as HTMLElement;
   }

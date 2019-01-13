@@ -132,6 +132,10 @@ There are three parameters that are passed to the function (`getMore(topIndex, i
 3. `isAtTop` - A boolean value that indicates whether the list has been scrolled to the top of the items list.
 
 
+## Caveats
+
+  - `<template/>` is not supported as root element of a virtual repeat template. This is due to the requirement of aurelia ui virtualization technique: item height needs to be calculatable. With `<tempate/>`, there is no easy and performant way to acquire this value.
+
 ## [Demo](http://aurelia.io/ui-virtualization/)
 
 ## Platform Support

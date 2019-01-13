@@ -68,7 +68,15 @@ module.exports = function(config) {
         ]
       }
     },
-    singleRun: false
+    singleRun: false,
+    mochaReporter: {
+      ignoreSkipped: true
+    },
+    webpackMiddleware: {
+      // webpack-dev-middleware configuration
+      // i. e.
+      stats: 'errors-only'
+    }
   });
 };
 
