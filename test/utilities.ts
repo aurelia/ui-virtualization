@@ -7,9 +7,11 @@ export function createAssertionQueue(): Queue {
   let next = () => {
     if (queue.length) {
       setTimeout(() => {
-        let func = queue.shift();
-        func();
-        next();
+        if (queue.length) {
+          let func = queue.shift();
+          func();
+          next();
+        }
       }, 1);
     }
   };

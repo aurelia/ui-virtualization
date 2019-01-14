@@ -120,6 +120,10 @@ export interface IVirtualRepeat extends Repeat {
   /**@internal*/ __array: any[];
 }
 
+/**
+ * Templating strategy to handle virtual repeat views
+ * Typically related to moving views, creating buffer and locating view range range in the DOM
+ */
 export interface ITemplateStrategy {
   getScrollContainer(element: Element): HTMLElement;
   moveViewFirst(view: View, topBuffer: Element): void;

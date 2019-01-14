@@ -77,11 +77,11 @@ module.exports = function(config) {
     mochaReporter: {
       ignoreSkipped: true
     },
-    webpackMiddleware: {
-      // webpack-dev-middleware configuration
-      // i. e.
-      stats: 'errors-only'
-    }
+    // webpackMiddleware: {
+    //   // webpack-dev-middleware configuration
+    //   // i. e.
+    //   stats: 'errors-only'
+    // }
   });
 };
 

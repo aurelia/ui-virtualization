@@ -102,7 +102,7 @@ export class TableRowStrategy implements ITemplateStrategy {
   }
 
   getScrollContainer(element: Element): HTMLElement {
-    return element.parentNode as HTMLElement;
+    return this.getTable(element).parentNode as HTMLElement;
   }
 
   moveViewFirst(view: View, topBuffer: Element): void {
@@ -139,6 +139,14 @@ export class TableRowStrategy implements ITemplateStrategy {
 
   getTopBufferDistance(topBuffer: Element): number {
     return 0;
+  }
+
+  /**
+   * `element` is actually a comment, acting as anchor for `virtual-repeat` attribute
+   * `element` will be placed next to a tbody
+   */
+  private getTable(element: Element): HTMLTableElement {
+    return element.parentNode.parentNode as HTMLTableElement;
   }
 }
 
