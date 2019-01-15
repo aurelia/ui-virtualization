@@ -1,0 +1,19 @@
+<template>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <template replaceable part="headers"> </template>
+        <th scope="col">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr virtual-repeat.for="person of people" infinite-scroll-next.call="nextChunkLoader($scrollContext)">
+        <template replaceable part="row"> </template>
+        <td>
+          <button type="button" class="btn btn-link"><i class="far fa-edit"></i></button>
+          <button type="button" class="btn btn-link"><i class="far fa-trash-alt"></i></button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</template>

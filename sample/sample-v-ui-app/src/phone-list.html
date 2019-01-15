@@ -1,0 +1,55 @@
+<template>
+  <div class="mb-1">
+    <button class="btn btn-success" click.trigger="addItems(1000)">Add 1000</button>
+    <button class="btn btn-success" click.trigger="addItems(10000)">Add 10 000</button>
+    <button class="btn btn-success" click.trigger="addItems(100000)">Add 100 000</button>
+    <button class="btn btn-success" click.trigger="addItemFirst()">Add 1 at top</button>
+    <button class="btn btn-success" click.trigger="addItemLast()">Add 1 at bottom</button>
+    <button class="btn btn-success" click.trigger="removeItems(1)">Remove 1 at top</button>
+    <button class="btn btn-success" click.trigger="removeLast()">Remove 1 at bottom</button>
+    <button class="btn btn-success" click.trigger="toggle()">Toggle visibility</button>
+    <button class="btn btn-success" click.trigger="swap()">Swap</button>
+
+    <label class="d-block" style="width: 300px;">
+      Example:
+      <select value.bind="selectedMarkup" class="form-control">
+        <option value="div">div</option>
+        <option value="table">table</option>
+      </select>
+    </label>
+  </div>
+
+  <div if.bind="isVisible && selectedMarkup === 'div'">
+    <div virtual-repeat.for="item of objectArray" class="contact-list-item ${item.name}">
+      <div class="contact-item">
+        <div class="avatar" click.trigger="click()" css="background-color: ${item.color}">${item.firstLetter}</div>
+        <div class="name">
+          ${$index} ${item.name}
+        </div>
+        <div class="content">
+          <strong>Phone:</strong> ${item.phone} <br />
+          <strong>Country:</strong> ${item.country} <br />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div if.bind="isVisible && selectedMarkup === 'table'">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Name</th>
+          <th>Phone</th>
+          <th>Country</th>
+        </tr>
+      </thead>
+      <tr virtual-repeat.for="item of objectArray" class="contact-list-item ${item.name}">
+        <td class="avatar" click.trigger="click()" css="background-color: ${item.color}">${item.firstLetter}</td>
+        <td class="name">${$index} ${item.name}</td>
+        <td><strong>Phone:</strong> ${item.phone} </td>
+        <td>Country:</strong> ${item.country} </td>
+      </tr>
+    </table>
+  </div>
+</template>

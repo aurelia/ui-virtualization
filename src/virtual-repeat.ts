@@ -55,7 +55,8 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
   /**@internal*/ _topBufferHeight = 0;
   /**@internal*/ _bottomBufferHeight = 0;
   /**
-   * @internal The amount of views before and after first visible part
+   * @internal The amount of views before/after (scrolling direction dependent) visible parts
+   * to avoid blank screen while scrolling
    */
   _bufferSize = 0;
 

@@ -1,0 +1,34 @@
+<template>
+  <require from="./people-list"></require>
+  <div class="">
+    <div class="d-flex justify-content-around">
+      <people-list people.bind="people" next-chunk-loader.bind="push30">
+        <list-column header="#"> ${$index} </list-column>
+        <list-column header="First Name"> ${person.fname} </list-column>
+        <list-column header="Last Name"> ${person.lname} </list-column>
+      </people-list>
+
+      <!-- <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th scope="col">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr virtual-repeat.for="person of people" infinite-scroll-next.call="push30($scrollContext)">
+            <td>${$index}</td>
+            <td>${person.fname}</td>
+            <td>${person.lname}</td>
+            <td>
+              <button type="button" class="btn btn-link"><i class="far fa-edit"></i></button>
+              <button type="button" class="btn btn-link"><i class="far fa-trash-alt"></i></button>
+            </td>
+          </tr>
+        </tbody>
+      </table> -->
+    </div>
+  </div>
+</template>

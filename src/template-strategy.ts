@@ -19,7 +19,7 @@ export class TemplateStrategyLocator {
    * Selects the template strategy based on element hosting `virtual-repeat` custom attribute
    */
   getStrategy(element: Element): ITemplateStrategy {
-    const parent = element.parentElement;
+    const parent = element.parentNode as Element;
     if (parent === null) {
       return this.container.get(DefaultTemplateStrategy);
     }
