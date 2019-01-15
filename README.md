@@ -135,7 +135,18 @@ There are three parameters that are passed to the function (`getMore(topIndex, i
 ## Caveats
 
   1. `<template/>` is not supported as root element of a virtual repeat template. This is due to the requirement of aurelia ui virtualization technique: item height needs to be calculatable. With `<tempate/>`, there is no easy and performant way to acquire this value.
-  2. Similar to (1), other template controllers cannot be used in conjunction with `virtual-repeat`, unline `repeat`. I.e: built-in template controllers: `with`, `if`, `replaceable` cannot be used with `virtual-repeat`.
+  2. Similar to (1), other template controllers cannot be used in conjunction with `virtual-repeat`, unline `repeat`. I.e: built-in template controllers: `with`, `if`, `replaceable` cannot be used with `virtual-repeat`. This can be workaround'd by nesting other template controllers inside the repeated element, with `<template/>` element, for example:
+
+  ```html
+  <template>
+    <h1>${message}</h1>
+    <div virtual-repeat.for="person of persons">
+      <template with.bind="person">
+        ${Name}
+      </template>
+    </div>
+  </template>
+  ```
 
 ## [Demo](http://aurelia.io/ui-virtualization/)
 
