@@ -22,6 +22,17 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     this._inPlaceProcessItems(repeat, items, rest[0]);
   }
 
+  /**
+  * Handle the repeat's collection instance mutating.
+  * @param repeat The repeat instance.
+  * @param array The modified array.
+  * @param splices Records of array changes.
+  */
+  instanceMutated(repeat: IVirtualRepeat, array: Array<any>, splices: any): void {
+    this._standardProcessInstanceMutated(repeat, array, splices);
+  }
+
+  /**@internal */
   _standardProcessInstanceChanged(repeat: IVirtualRepeat, items: Array<any>): void {
     for (let i = 1, ii = repeat._viewsLength; i < ii; ++i) {
       let overrideContext = createFullOverrideContext(repeat, items[i], i, ii);
@@ -29,6 +40,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     }
   }
 
+  /**@internal */
   _inPlaceProcessItems(repeat: IVirtualRepeat, items: Array<any>, first: number): void {
     let itemsLength = items.length;
     let viewsLength = repeat.viewCount();
@@ -71,16 +83,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     }
   }
 
-  /**
-  * Handle the repeat's collection instance mutating.
-  * @param repeat The repeat instance.
-  * @param array The modified array.
-  * @param splices Records of array changes.
-  */
-  instanceMutated(repeat: IVirtualRepeat, array: Array<any>, splices: any): void {
-    this._standardProcessInstanceMutated(repeat, array, splices);
-  }
-
+  /**@internal */
   _standardProcessInstanceMutated(repeat: IVirtualRepeat, array: Array<any>, splices: any): void {
     if (repeat.__queuedSplices) {
       for (let i = 0, ii = splices.length; i < ii; ++i) {
@@ -110,6 +113,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     }
   }
 
+  /**@internal */
   _runSplices(repeat: IVirtualRepeat, array: Array<any>, splices: any): any {
     let removeDelta = 0;
     let rmPromises = [];
@@ -185,7 +189,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
       viewOrPromise = repeat.removeView(viewIndex, returnToCache);
       if (repeat.items.length > viewCount) {
         // TODO: do not trigger view lifecycle here
-        let collectionAddIndex;
+        let collectionAddIndex: number;
         if (repeat._bottomBufferHeight > repeat.itemHeight) {
           viewAddIndex = viewCount;
           if (!removeMoreThanInDom) {

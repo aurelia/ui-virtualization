@@ -1,6 +1,6 @@
 import { Repeat, RepeatStrategy } from 'aurelia-templating-resources';
 import { ViewSlot, View, ViewFactory, BoundViewFactory, Controller } from 'aurelia-templating';
-import { Scope, Binding } from 'aurelia-binding';
+import { Scope, Binding, OverrideContext } from 'aurelia-binding';
 import { TaskQueue } from 'aurelia-task-queue';
 
 /**@internal */
