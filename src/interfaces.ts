@@ -1,7 +1,6 @@
 import { Repeat, RepeatStrategy } from 'aurelia-templating-resources';
 import { ViewSlot, View, ViewFactory, BoundViewFactory, Controller } from 'aurelia-templating';
-import { Scope, Binding } from 'aurelia-binding';
-import { ITemplateStrategy } from './template-strategy';
+import { Scope, Binding, OverrideContext } from 'aurelia-binding';
 import { TaskQueue } from 'aurelia-task-queue';
 
 /**@internal */
@@ -17,6 +16,11 @@ declare module 'aurelia-binding' {
       isAtBottom: boolean;
       isAtTop: boolean;
     };
+    $first: boolean;
+    $last: boolean;
+    $middle: boolean;
+    $odd: boolean;
+    $even: boolean;
   }
 }
 
@@ -114,4 +118,20 @@ export interface IVirtualRepeat extends Repeat {
   // Array repeat specific properties
   /**@internal*/ __queuedSplices: any[];
   /**@internal*/ __array: any[];
+}
+
+/**
+ * Templating strategy to handle virtual repeat views
+ * Typically related to moving views, creating buffer and locating view range range in the DOM
+ */
+export interface ITemplateStrategy {
+  getScrollContainer(element: Element): HTMLElement;
+  moveViewFirst(view: View, topBuffer: Element): void;
+  moveViewLast(view: View, bottomBuffer: Element): void;
+  createTopBufferElement(element: Element): HTMLElement;
+  createBottomBufferElement(element: Element): HTMLElement;
+  removeBufferElements(element: Element, topBuffer: Element, bottomBuffer: Element): void;
+  getFirstElement(topBuffer: Element): Element;
+  getLastElement(bottomBuffer: Element): Element;
+  getTopBufferDistance(topBuffer: Element): number;
 }

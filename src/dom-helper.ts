@@ -4,7 +4,7 @@ export class DomHelper {
     let documentElement = document.documentElement;
     let scrollTop = window.pageYOffset;
     let clientTop = documentElement.clientTop;
-    let top  = box.top +  scrollTop - clientTop;
+    let top  = box.top + scrollTop - clientTop;
     return  Math.round(top);
   }
 

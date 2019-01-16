@@ -1,10 +1,10 @@
-body {
+/* body {
   margin: 0;
-  background-color: #000 !important;
+  background-color: #dedede !important;
   color: #fff;
   padding-left: 15px;
   padding-right: 15px;
-}
+} */
 
 .splash {
   text-align: center;
@@ -26,7 +26,7 @@ body {
   font-size: 72px;
   margin-top: 50px;
 }
-
+/* 
 section {
   margin: 0 20px;
 }
@@ -37,7 +37,7 @@ section {
 
 .pictureDetail {
   max-width: 425px;
-}
+} */
 
 
 .simple-item {
@@ -93,25 +93,6 @@ section {
   color: #666;
 }
 
-.array-actions {
-  text-align: center;
-  margin-top: 20px;
-}
-
-.navbar-default {
-  background-color: #222526 !important;
-}
-
-.navbar-default .navbar-brand {
-  color: #fff !important;
-}
-
-.btn-primary {
-  background-color: #33B544 !important;
-  border-color: #33B544 !important;
-  text-transform: uppercase;
-}
-
 .avatar {
   width: 65px;
   height: 65px;
@@ -123,15 +104,7 @@ section {
   line-height: 65px;
 }
 
-.array-actions select {
-  width: 100px;
-}
-
-table.table {
-  margin-top: 200px;
-  border-top: 0px solid red;
-}
-
-table.table td, table.table th {
+.nav-item.active {
+  background-color: blue;
   color: #fff;
 }

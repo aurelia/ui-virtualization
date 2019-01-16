@@ -1,10 +1,10 @@
+.idea
 .vscode
 .rollupcache
+.circleci
 jspm_packages
 bower_components
 node_modules
 src
-dist
 sample
 test
-.idea

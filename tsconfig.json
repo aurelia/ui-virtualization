@@ -15,7 +15,6 @@
     "dist",
     "build",
     "doc",
-    "test",
     "config.js",
     "gulpfile.js",
     "karma.conf.js"

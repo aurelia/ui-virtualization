@@ -3,10 +3,8 @@ import {View} from 'aurelia-templating';
 import { IVirtualRepeat } from './interfaces';
 
 export function calcOuterHeight(element: Element): number {
-  let height: number;
-  height = element.getBoundingClientRect().height;
-  height += getStyleValue(element, 'marginTop');
-  height += getStyleValue(element, 'marginBottom');
+  let height = element.getBoundingClientRect().height;
+  height += getStyleValues(element, 'marginTop', 'marginBottom');
   return height;
 }
 
@@ -49,12 +47,15 @@ export function rebindAndMoveView(repeat: IVirtualRepeat, view: View, index: num
   }
 }
 
-export function getStyleValue(element: Element, style: string): number {
-  let currentStyle: CSSStyleDeclaration;
-  let styleValue: number;
-  currentStyle = element['currentStyle'] || window.getComputedStyle(element);
-  styleValue = parseInt(currentStyle[style], 10);
-  return Number.isNaN(styleValue) ? 0 : styleValue;
+export function getStyleValues(element: Element, ...styles: string[]): number {
+  let currentStyle = window.getComputedStyle(element);
+  let value: number = 0;
+  let styleValue: number = 0;
+  for (let i = 0, ii = styles.length; ii > i; ++i) {
+    styleValue = parseInt(currentStyle[styles[i]], 10);
+    value += Number.isNaN(styleValue) ? 0 : styleValue;
+  }
+  return value;
 }
 
 export function getElementDistanceToBottomViewPort(element: Element): number {

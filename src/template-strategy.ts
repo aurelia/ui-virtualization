@@ -3,19 +3,7 @@ import { DOM } from 'aurelia-pal';
 import { View } from 'aurelia-templating';
 import { DomHelper } from './dom-helper';
 import { insertBeforeNode } from './utilities';
-
-export interface ITemplateStrategy {
-  getScrollContainer(element: Element): HTMLElement;
-  moveViewFirst(view: View, topBuffer: Element): void;
-  moveViewLast(view: View, bottomBuffer: Element): void;
-  createTopBufferElement(element: Element): HTMLElement;
-  createBottomBufferElement(element: Element): HTMLElement;
-  removeBufferElements(element: Element, topBuffer: Element, bottomBuffer: Element): void;
-  getFirstElement(topBuffer: Element): Element;
-  getLastElement(bottomBuffer: Element): Element;
-  getLastView(bottomBuffer: Element): Element;
-  getTopBufferDistance(topBuffer: Element): number;
-}
+import { ITemplateStrategy } from './interfaces';
 
 export class TemplateStrategyLocator {
 
@@ -27,30 +15,85 @@ export class TemplateStrategyLocator {
     this.container = container;
   }
 
+  /**
+   * Selects the template strategy based on element hosting `virtual-repeat` custom attribute
+   */
   getStrategy(element: Element): ITemplateStrategy {
-    if (element.parentNode && (element.parentNode as Element).tagName === 'TBODY') {
-      return this.container.get(TableStrategy);
+    const parent = element.parentNode as Element;
+    if (parent === null) {
+      return this.container.get(DefaultTemplateStrategy);
     }
+    const parentTagName = parent.tagName;
+    // placed on tr, as it is automatically wrapped in a TBODY
+    // if not wrapped, then it is already inside a thead or tfoot
+    if (parentTagName === 'TBODY' || parentTagName === 'THEAD' || parentTagName === 'TFOOT') {
+      return this.container.get(TableRowStrategy);
+    }
+    // place on a tbody/thead/tfoot
+    if (parentTagName === 'TABLE') {
+      return this.container.get(TableBodyStrategy);
+    }
+    // if (element.parentNode && (element.parentNode as Element).tagName === 'TBODY') {
+    //   return this.container.get(TableStrategy);
+    // }
     return this.container.get(DefaultTemplateStrategy);
   }
 }
 
-export class TableStrategy implements ITemplateStrategy {
+export class TableBodyStrategy implements ITemplateStrategy {
+
+  getScrollContainer(element: Element): HTMLElement {
+    return this.getTable(element).parentNode as HTMLElement;
+  }
+
+  moveViewFirst(view: View, topBuffer: Element): void {
+    insertBeforeNode(view, DOM.nextElementSibling(topBuffer));
+  }
+
+  moveViewLast(view: View, bottomBuffer: Element): void {
+    const previousSibling = bottomBuffer.previousSibling;
+    const referenceNode = previousSibling.nodeType === 8 && (previousSibling as Comment).data === 'anchor' ? previousSibling : bottomBuffer;
+    insertBeforeNode(view, referenceNode as Element);
+  }
+
+  createTopBufferElement(element: Element): HTMLElement {
+    // append tbody with empty row before the element
+    return element.parentNode.insertBefore(DOM.createElement('tr'), element);
+  }
+
+  createBottomBufferElement(element: Element): HTMLElement {
+    return element.parentNode.insertBefore(DOM.createElement('tr'), element.nextSibling);
+  }
+
+  removeBufferElements(element: Element, topBuffer: Element, bottomBuffer: Element): void {
+    DOM.removeNode(topBuffer);
+    DOM.removeNode(bottomBuffer);
+  }
+
+  getFirstElement(topBuffer: Element): Element {
+    return topBuffer.nextElementSibling;
+  }
+
+  getLastElement(bottomBuffer: Element): Element {
+    return bottomBuffer.previousElementSibling;
+  }
+
+  getTopBufferDistance(topBuffer: Element): number {
+    return 0;
+  }
+
+  /**
+   * `element` is actually a comment, acting as anchor for `virtual-repeat` attribute
+   * `element` will be placed next to a tbody
+   */
+  private getTable(element: Element): HTMLTableElement {
+    return element.parentNode as HTMLTableElement;
+  }
+}
+
+export class TableRowStrategy implements ITemplateStrategy {
 
   static inject = [DomHelper];
-
-  tableCssReset = '\
-    display: block;\
-    width: auto;\
-    height: auto;\
-    margin: 0;\
-    padding: 0;\
-    border: none;\
-    border-collapse: inherit;\
-    border-spacing: 0;\
-    background-color: transparent;\
-    -webkit-border-horizontal-spacing: 0;\
-    -webkit-border-vertical-spacing: 0;';
 
   domHelper: DomHelper;
 
@@ -59,84 +102,56 @@ export class TableStrategy implements ITemplateStrategy {
   }
 
   getScrollContainer(element: Element): HTMLElement {
-    return element.parentNode as HTMLElement;
+    return this.getTable(element).parentNode as HTMLElement;
   }
 
   moveViewFirst(view: View, topBuffer: Element): void {
-    const tbody = this._getTbodyElement(topBuffer.nextSibling as Element);
-    const tr = tbody.firstChild;
-    const firstElement = DOM.nextElementSibling(tr);
-    insertBeforeNode(view, firstElement);
+    insertBeforeNode(view, topBuffer.nextElementSibling);
   }
 
   moveViewLast(view: View, bottomBuffer: Element): void {
-    const lastElement = this.getLastElement(bottomBuffer).nextSibling;
-    const referenceNode = lastElement.nodeType === 8 && (lastElement as Comment).data === 'anchor' ? lastElement : lastElement;
+    const previousSibling = bottomBuffer.previousSibling;
+    const referenceNode = previousSibling.nodeType === 8 && (previousSibling as Comment).data === 'anchor' ? previousSibling : bottomBuffer;
     insertBeforeNode(view, referenceNode as Element);
   }
 
   createTopBufferElement(element: Element): HTMLElement {
-    const elementName = /^[UO]L$/.test((element.parentNode as Element).tagName) ? 'li' : 'div';
-    const buffer = DOM.createElement(elementName);
-    const tableElement = element.parentNode.parentNode;
-    tableElement.parentNode.insertBefore(buffer, tableElement);
-    buffer.innerHTML = '&nbsp;';
-    return buffer;
+    // append tbody with empty row before the element
+    return element.parentNode.insertBefore(DOM.createElement('tr'), element);
   }
 
   createBottomBufferElement(element: Element): HTMLElement {
-    const elementName = /^[UO]L$/.test((element.parentNode as Element).tagName) ? 'li' : 'div';
-    const buffer = DOM.createElement(elementName);
-    const tableElement = element.parentNode.parentNode;
-    tableElement.parentNode.insertBefore(buffer, tableElement.nextSibling);
-    return buffer;
+    return element.parentNode.insertBefore(DOM.createElement('tr'), element.nextSibling);
   }
 
   removeBufferElements(element: Element, topBuffer: Element, bottomBuffer: Element): void {
-    topBuffer.parentNode.removeChild(topBuffer);
-    bottomBuffer.parentNode.removeChild(bottomBuffer);
+    DOM.removeNode(topBuffer);
+    DOM.removeNode(bottomBuffer);
   }
 
   getFirstElement(topBuffer: Element): Element {
-    const tbody = this._getTbodyElement(DOM.nextElementSibling(topBuffer));
-    const tr = tbody.firstChild as HTMLTableRowElement;
-    // since the buffer is outside table, first element _is_ first element.
-    return tr;
+    return topBuffer.nextElementSibling;
   }
 
   getLastElement(bottomBuffer: Element): Element {
-    const tbody = this._getTbodyElement(bottomBuffer.previousSibling as Element);
-    const trs = tbody.children;
-    return trs[trs.length - 1];
+    return bottomBuffer.previousElementSibling;
   }
 
   getTopBufferDistance(topBuffer: Element): number {
-    const tbody = this._getTbodyElement(topBuffer.nextSibling as Element);
-    return this.domHelper.getElementDistanceToTopOfDocument(tbody) - this.domHelper.getElementDistanceToTopOfDocument(topBuffer);
+    return 0;
   }
 
-  getLastView(bottomBuffer: Element): Element {
-    throw new Error('Method getLastView() not implemented.');
-  }
-
-  private _getTbodyElement(tableElement: Element): Element {
-    let tbodyElement: Element;
-    const children = tableElement.children;
-    for (let i = 0, ii = children.length; i < ii; ++i) {
-      if (children[i].localName === 'tbody') {
-        tbodyElement = children[i];
-        break;
-      }
-    }
-    return tbodyElement;
+  /**
+   * `element` is actually a comment, acting as anchor for `virtual-repeat` attribute
+   * `element` will be placed next to a tbody
+   */
+  private getTable(element: Element): HTMLTableElement {
+    return element.parentNode.parentNode as HTMLTableElement;
   }
 }
 
 export class DefaultTemplateStrategy implements ITemplateStrategy {
 
-  getLastView(bottomBuffer: Element): Element {
-    throw new Error('Method getLastView() not implemented.');
-  }
   getScrollContainer(element: Element): HTMLElement {
     return element.parentNode as HTMLElement;
   }

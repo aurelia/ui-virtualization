@@ -1,15 +1,16 @@
+declare const faker: any;
+
 export class PhoneList {
+
+  objectArray = [];
+  objectArray2 = [];
+  numberOfItems = 1000;
+  isSelected = false;
+  isVisible = true;
   selectedMarkup = 'div';
+  viewStrategy: any;
 
-  constructor() {
-    this.objectArray = [];
-    this.objectArray2 = [];
-    this.numberOfItems = 100;
-    this.isSelected = false;
-    this.isVisible = true;
-  }
-
-  setViewStrategy(strategy){
+  setViewStrategy(strategy) {
     this.viewStrategy = strategy;
   }
 
@@ -17,16 +18,16 @@ export class PhoneList {
     this.isVisible = !this.isVisible;
   }
 
-  click(){
+  click() {
     console.log('click');
   }
 
-  setIsSelected(){
+  setIsSelected() {
     this.isSelected = true;
   }
 
-  createItem(index){
-    var name = faker.name.findName();
+  createItem(index?: number) {
+    let name = faker.name.findName();
     return {
       firstLetter: name.charAt(0),
       name: name,
@@ -36,52 +37,52 @@ export class PhoneList {
     };
   }
 
-  activate(){
-    var name;
-    for (var i = 0; i < this.numberOfItems; ++i) {
+  activate() {
+    let name;
+    for (let i = 0; i < this.numberOfItems; ++i) {
       name = faker.name.findName();
       this.objectArray.push(this.createItem(i));
     }
 
-    for (var i = 0; i < this.numberOfItems; ++i) {
+    for (let i = 0; i < this.numberOfItems; ++i) {
       name = faker.name.findName();
       this.objectArray2.push(this.createItem());
     }
   }
 
-  swap(){
+  swap() {
     this.objectArray = this.objectArray2;
   }
 
-  addItems(count){
+  addItems(count) {
     console.log(`adding ${count} items...`);
-    for (var i = 0; i < count; ++i) {
+    for (let i = 0; i < count; ++i) {
       this.objectArray.push(this.createItem(i));
     }
     console.log(`finsihed adding ${count} items`);
     this.numberOfItems = this.objectArray.length;
   }
 
-  addItem2(){
-    var item = this.createItem();
+  addItem2() {
+    let item = this.createItem();
     this.objectArray.splice(1, 0, item);
   }
 
-  addItemFirst(count = 10){
-    for(let i = 0; i < count; ++i) {
+  addItemFirst(count = 10) {
+    for (let i = 0; i < count; ++i) {
       this.objectArray.unshift(this.createItem());
     }
   }
 
-  removeItems(count){
+  removeItems(count) {
     this.objectArray.splice(0, count);
   }
 
-  unshift5(){
-    this.objectArray.unshift(this.createItem(),this.createItem(),this.createItem(),this.createItem(),this.createItem());
+  unshift5() {
+    this.objectArray.unshift(this.createItem(), this.createItem(), this.createItem(), this.createItem(), this.createItem());
   }
 
-  addItemLast(){
+  addItemLast() {
     this.objectArray.push(this.createItem());
   }
 

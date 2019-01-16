@@ -7,9 +7,9 @@ module.exports = function(config) {
 
     basePath: '',
     frameworks: ["jasmine"],
-    files: ["test/*.spec.ts"],
+    files: ["test/**/*.spec.ts"],
     preprocessors: {
-      "test/*.spec.ts": ["webpack", "sourcemap"]
+      "test/**/*.spec.ts": ["webpack", "sourcemap"]
     },
     webpack: {
       mode: "development",
@@ -27,7 +27,12 @@ module.exports = function(config) {
           {
             test: /\.ts$/,
             loader: "ts-loader",
-            exclude: /node_modules/
+            exclude: /node_modules/,
+            options: {
+              compilerOptions: {
+                sourceMap: true
+              }
+            }
           },
           {
             test: /\.html$/i,
@@ -68,7 +73,15 @@ module.exports = function(config) {
         ]
       }
     },
-    singleRun: false
+    singleRun: false,
+    mochaReporter: {
+      ignoreSkipped: true
+    },
+    // webpackMiddleware: {
+    //   // webpack-dev-middleware configuration
+    //   // i. e.
+    //   stats: 'errors-only'
+    // }
   });
 };
 

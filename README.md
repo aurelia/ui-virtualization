@@ -132,6 +132,22 @@ There are three parameters that are passed to the function (`getMore(topIndex, i
 3. `isAtTop` - A boolean value that indicates whether the list has been scrolled to the top of the items list.
 
 
+## Caveats
+
+  1. `<template/>` is not supported as root element of a virtual repeat template. This is due to the requirement of aurelia ui virtualization technique: item height needs to be calculatable. With `<tempate/>`, there is no easy and performant way to acquire this value.
+  2. Similar to (1), other template controllers cannot be used in conjunction with `virtual-repeat`, unlike `repeat`. I.e: built-in template controllers: `with`, `if`, `replaceable` cannot be used with `virtual-repeat`. This can be workaround'd by nesting other template controllers inside the repeated element, with `<template/>` element, for example:
+
+  ```html
+  <template>
+    <h1>${message}</h1>
+    <div virtual-repeat.for="person of persons">
+      <template with.bind="person">
+        ${Name}
+      </template>
+    </div>
+  </template>
+  ```
+
 ## [Demo](http://aurelia.io/ui-virtualization/)
 
 ## Platform Support
@@ -148,42 +164,19 @@ To build the code, follow these steps.
   ```shell
   npm install
   ```
-3. Ensure that [Gulp](http://gulpjs.com/) is installed. If you need to install it, use the following command:
-
-  ```shell
-  npm install -g gulp
-  ```
-4. To build the code, you can now run:
+3. To build the code, you can now run:
 
   ```shell
   gulp build
   ```
-5. You will find the compiled code in the `dist` folder, available in three module formats: AMD, CommonJS and ES6.
-
-6. See `gulpfile.js` for other tasks related to generating the docs and linting.
+4. You will find the compiled code in the `dist` folder, available in module formats: es2015, es2017, AMD, CommonJS and UMD.
 
 ## Running The Tests
 
 To run the unit tests, first ensure that you have followed the steps above in order to install all dependencies and successfully build the library. Once you have done that, proceed with these additional steps:
 
-1. Ensure that the [Karma](http://karma-runner.github.io/) CLI is installed. If you need to install it, use the following command:
+1. Run the tests with this command:
 
   ```shell
-  npm install -g karma-cli
-  ```
-2. Ensure that [jspm](http://jspm.io/) is installed. If you need to install it, use the following commnand:
-
-  ```shell
-  npm install -g jspm
-  ```
-3. Install the client-side dependencies with jspm:
-
-  ```shell
-  jspm install
-  ```
-
-4. You can now run the tests with this command:
-
-  ```shell
-  karma start
+  npm run test
   ```
