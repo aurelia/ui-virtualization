@@ -87,7 +87,7 @@ export interface IVirtualRepeat extends Repeat {
 
   /**@internal */ _calledGetMore: boolean;
 
-  /**@internal */ viewSlot: ViewSlot & { children: (View & Scope)[] };
+  /**@internal */ viewSlot: ViewSlot & { children: IView[] };
 
   itemHeight: number;
 
@@ -111,9 +111,10 @@ export interface IVirtualRepeat extends Repeat {
   /**@internal*/ _getLastViewItem(): any;
 
   /**
+   * @internal
    * Set all calculation to default state
    */
-  resetCalculation(): void;
+  _resetCalculation(): void;
 
   // Array repeat specific properties
   /**@internal*/ __queuedSplices: any[];
@@ -135,3 +136,8 @@ export interface ITemplateStrategy {
   getLastElement(bottomBuffer: Element): Element;
   getTopBufferDistance(topBuffer: Element): number;
 }
+
+/**
+ * Override `bindingContext` and `overrideContext` on `View` interface
+ */
+export type IView = View & Scope;

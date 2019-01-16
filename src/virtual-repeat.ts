@@ -15,7 +15,7 @@ import {
   updateOneTimeBinding,
   viewsRequireLifecycle
 } from 'aurelia-templating-resources';
-import {DOM} from 'aurelia-pal';
+import { DOM, PLATFORM } from 'aurelia-pal';
 import {
   calcOuterHeight,
   rebindAndMoveView,
@@ -27,8 +27,14 @@ import { TemplateStrategyLocator } from './template-strategy';
 import {
   IVirtualRepeat,
   IVirtualRepeatStrategy,
-  ITemplateStrategy
+  ITemplateStrategy,
+  IView
 } from './interfaces';
+
+const enum VirtualRepeatCallContext {
+  handleCollectionMutated = 'handleCollectionMutated',
+  handleInnerCollectionMutated = 'handleInnerCollectionMutated'
+}
 
 export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
 
@@ -94,27 +100,56 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
    */
   local: string;
 
+  /**@internal */
   scope: Scope;
 
-  viewSlot: ViewSlot & { children: (View & Scope)[] };
+  /**@internal */
+  viewSlot: ViewSlot & { children: IView[] };
+
   readonly viewFactory: BoundViewFactory;
+
+  /**@internal */
   private element: HTMLElement;
+
+  /**@internal */
   private instruction: TargetInstruction;
+
+  /**@internal */
   private lookupFunctions: any;
+
+  /**@internal */
   private observerLocator: ObserverLocator;
+
+  /**@internal */
   private strategyLocator: VirtualRepeatStrategyLocator;
+
+  /**@internal */
   private templateStrategyLocator: TemplateStrategyLocator;
+
+  /**@internal */
   private sourceExpression: Expression;
+
+  /**@internal */
   private isOneTime: boolean;
+
+  /**@internal */
   private domHelper: DomHelper;
 
-
+  /**@internal */
   private _itemsLength: number;
-  templateStrategy: ITemplateStrategy;
+
+  /**@internal */
   private scrollContainer: HTMLElement;
+
+  /**@internal */
+  private scrollListener: () => any;
+
+  /**@internal */
+  _sizeInterval: any;
+
+  templateStrategy: ITemplateStrategy;
   topBuffer: HTMLElement;
   bottomBuffer: HTMLElement;
-  private scrollListener: () => any;
 
   calcDistanceToTopInterval: any;
 
@@ -127,14 +162,14 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
   topBufferDistance: number;
   scrollContainerHeight: number;
 
-  _sizeInterval: any;
   isLastIndex: boolean;
   elementsInView: number;
 
   strategy: IVirtualRepeatStrategy;
   ignoreMutation: boolean;
 
-  callContext: 'handleInnerCollectionMutated' | 'handleCollectionMutated';
+  /**@internal */
+  callContext: VirtualRepeatCallContext;
   collectionObserver: any;
 
   constructor(
@@ -165,6 +200,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     this.domHelper = domHelper;
   }
 
+  /**@override */
   attached(): void {
     this._isAttached = true;
     let element = this.element;
@@ -197,6 +233,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     }
   }
 
+  /**@override */
   bind(bindingContext: any, overrideContext: OverrideContext): void {
     this.scope = { bindingContext, overrideContext };
     if (this._isAttached) {
@@ -204,24 +241,25 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     }
   }
 
-  call(context: 'handleInnerCollectionMutated' | 'handleCollectionMutated', changes: ICollectionObserverSplice[]): void {
+  /**@override */
+  call(context: 'handleCollectionMutated' | 'handleInnerCollectionMutated', changes: ICollectionObserverSplice[]): void {
     this[context](this.items, changes);
   }
 
+  /**@override */
   detached(): void {
     if (this.domHelper.hasOverflowScroll(this.scrollContainer)) {
-      this._fixedHeightContainer = true;
       this.scrollContainer.removeEventListener('scroll', this.scrollListener);
     } else {
       document.removeEventListener('scroll', this.scrollListener);
     }
-    // this.scrollContainer.removeEventListener('scroll', this.scrollListener);
-    this.resetCalculation();
+    this._fixedHeightContainer = false;
+    this._resetCalculation();
     this._isAttached = false;
     this.templateStrategy.removeBufferElements(this.element, this.topBuffer, this.bottomBuffer);
     this.scrollContainer = null;
-    this.scrollContainerHeight = null;
-    this.distanceToTop = null;
+    this.scrollContainerHeight = 0;
+    this.distanceToTop = 0;
     this.removeAllViews(true, false);
     this._unsubscribeCollection();
     clearInterval(this.calcDistanceToTopInterval);
@@ -230,6 +268,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     }
   }
 
+  /**@override */
   itemsChanged(): void {
     this._unsubscribeCollection();
     // still bound?
@@ -293,12 +332,14 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     }
   }
 
+  /**@override */
   unbind(): void {
     this.scope = null;
     this.items = null;
     this._itemsLength = null;
   }
 
+  /**@override */
   handleCollectionMutated(collection: any[], changes: ICollectionObserverSplice[]): void {
     if (this.ignoreMutation) {
       return;
@@ -308,6 +349,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     this.strategy.instanceMutated(this, collection, changes);
   }
 
+  /**@override */
   handleInnerCollectionMutated(collection: any[], changes: ICollectionObserverSplice[]): void {
     // guard against source expressions that have observable side-effects that could
     // cause an infinite loop- eg a value converter that mutates the source array.
@@ -329,7 +371,8 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     }
   }
 
-  resetCalculation(): void {
+  /**@internal */
+  _resetCalculation(): void {
     this._first = 0;
     this._previousFirst = 0;
     this._viewsLength = 0;
@@ -557,12 +600,12 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
   }
 
   /**@internal */
-  _getFirstView(): (View & Scope) | null {
+  _getFirstView(): View | null {
     return this.view(0);
   }
 
   /**@internal */
-  _getLastView(): (View & Scope) | null {
+  _getLastView(): View | null {
     return this.view(this.viewCount() - 1);
   }
 
@@ -593,46 +636,54 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
   }
 
   /**@internal */
-  get _isAtFirstOrLastIndex() {
+  get _isAtFirstOrLastIndex(): boolean {
     return this._scrollingDown ? this.isLastIndex : this._isAtTop;
   }
 
   /**@internal*/
   _getIndexOfLastView(): number {
-    const lastView = this._getLastView();
+    const lastView = this._getLastView() as IView;
     return lastView === null ? -1 : lastView.overrideContext.$index;
   }
 
   /**@internal*/
-  _getLastViewItem() {
-    let lastView = this._getLastView();
+  _getLastViewItem(): IView {
+    let lastView = this._getLastView() as IView;
     return lastView === null ? undefined : lastView.bindingContext[this.local];
   }
 
   /**@internal*/
   _getIndexOfFirstView(): number {
-    let firstView = this._getFirstView();
+    let firstView = this._getFirstView() as IView;
     return firstView === null ? -1 : firstView.overrideContext.$index;
   }
 
-  /**@internal*/
+  /**
+   * @internal Calculate the necessary initial heights. Including:
+   *
+   * - item height
+   * - scroll container height
+   * - number of elements in view port
+   * - first item index
+   * - top/bottom buffers' height
+   */
   _calcInitialHeights(itemsLength: number): void {
     const isSameLength = this._viewsLength > 0 && this._itemsLength === itemsLength;
     if (isSameLength) {
       return;
     }
     if (itemsLength < 1) {
-      this.resetCalculation();
+      this._resetCalculation();
       return;
     }
     this._hasCalculatedSizes = true;
     let firstViewElement = this.view(0).lastChild as Element;
     this.itemHeight = calcOuterHeight(firstViewElement);
     if (this.itemHeight <= 0) {
-      this._sizeInterval = setInterval(() => {
+      this._sizeInterval = PLATFORM.global.setInterval(() => {
         let newCalcSize = calcOuterHeight(firstViewElement);
         if (newCalcSize > 0) {
-          clearInterval(this._sizeInterval);
+          PLATFORM.global.clearInterval(this._sizeInterval);
           this.itemsChanged();
         }
       }, 500);
@@ -640,16 +691,18 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     }
 
     this._itemsLength = itemsLength;
-    this.scrollContainerHeight = this._fixedHeightContainer ? this._calcScrollHeight(this.scrollContainer) : document.documentElement.clientHeight;
+    this.scrollContainerHeight = this._fixedHeightContainer
+      ? this._calcScrollHeight(this.scrollContainer)
+      : document.documentElement.clientHeight;
     this.elementsInView = Math.ceil(this.scrollContainerHeight / this.itemHeight) + 1;
-    this._viewsLength = (this.elementsInView * 2) + this._bufferSize;
+    let viewsCount = this._viewsLength = (this.elementsInView * 2) + this._bufferSize;
 
     // Look at top buffer height (how far we've scrolled down)
     // If top buffer height is greater than the new bottom buffer height (how far we *can* scroll down)
     //    Then set top buffer height to max it can be (bottom buffer height - views in length?) and bottom buffer height to 0
 
     // Calc how much buffer room to the bottom if you were at the top
-    let newBottomBufferHeight = this.itemHeight * itemsLength - this.itemHeight * this._viewsLength;
+    let newBottomBufferHeight = this.itemHeight * (itemsLength - viewsCount);
 
     // In case of small lists, ensure that we never set the buffer heights to impossible values
     if (newBottomBufferHeight < 0) {
@@ -660,7 +713,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     if (this._topBufferHeight >= newBottomBufferHeight) {
       this._topBufferHeight = newBottomBufferHeight;
       this._bottomBufferHeight = 0;
-      this._first = this._itemsLength - this._viewsLength;
+      this._first = this._itemsLength - viewsCount;
       if (this._first < 0) { // In case of small lists, ensure that we never set first to less than possible
         this._first = 0;
       }
@@ -692,12 +745,14 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     if (!strategy) {
       return false;
     }
-    this.collectionObserver = strategy.getCollectionObserver(this.observerLocator, items);
-    if (!this.collectionObserver) {
+    let collectionObserver = strategy.getCollectionObserver(this.observerLocator, items);
+    if (!collectionObserver) {
       return false;
     }
-    this.callContext = 'handleInnerCollectionMutated';
-    this.collectionObserver.subscribe(this.callContext, this);
+    let context = VirtualRepeatCallContext.handleInnerCollectionMutated;
+    this.collectionObserver = collectionObserver;
+    this.callContext = context;
+    collectionObserver.subscribe(context, this);
     return true;
   }
 
@@ -712,10 +767,9 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
 
   /**@internal*/
   _observeCollection(): void {
-    let items = this.items;
-    this.collectionObserver = this.strategy.getCollectionObserver(this.observerLocator, items);
+    this.collectionObserver = this.strategy.getCollectionObserver(this.observerLocator, this.items);
     if (this.collectionObserver) {
-      this.callContext = 'handleCollectionMutated';
+      this.callContext = VirtualRepeatCallContext.handleCollectionMutated;
       this.collectionObserver.subscribe(this.callContext, this);
     }
   }
