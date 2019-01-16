@@ -2,7 +2,7 @@ import './setup';
 import { StageComponent, ComponentTester } from 'aurelia-testing';
 import { PLATFORM } from 'aurelia-pal';
 import { bootstrap } from 'aurelia-bootstrapper';
-import { createAssertionQueue, validateState } from './utilities';
+import { createAssertionQueue, validateState, Queue } from './utilities';
 import { VirtualRepeat } from '../src/virtual-repeat';
 
 PLATFORM.moduleName('src/virtual-repeat');
@@ -11,7 +11,7 @@ PLATFORM.moduleName('src/infinite-scroll-next');
 
 describe('VirtualRepeat Integration', () => {
   const itemHeight = 100;
-  const queue = createAssertionQueue();
+  const queue: Queue = createAssertionQueue();
   let component: ComponentTester<VirtualRepeat>;
   let virtualRepeat: VirtualRepeat;
   let viewModel: any;

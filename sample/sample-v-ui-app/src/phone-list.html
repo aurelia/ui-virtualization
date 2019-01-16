@@ -1,14 +1,14 @@
 <template>
   <div class="mb-1">
-    <button class="btn btn-success" click.trigger="addItems(1000)">Add 1000</button>
-    <button class="btn btn-success" click.trigger="addItems(10000)">Add 10 000</button>
-    <button class="btn btn-success" click.trigger="addItems(100000)">Add 100 000</button>
-    <button class="btn btn-success" click.trigger="addItemFirst()">Add 1 at top</button>
-    <button class="btn btn-success" click.trigger="addItemLast()">Add 1 at bottom</button>
-    <button class="btn btn-success" click.trigger="removeItems(1)">Remove 1 at top</button>
-    <button class="btn btn-success" click.trigger="removeLast()">Remove 1 at bottom</button>
-    <button class="btn btn-success" click.trigger="toggle()">Toggle visibility</button>
-    <button class="btn btn-success" click.trigger="swap()">Swap</button>
+    <button class="btn btn-success btn-sm" click.trigger="addItems(1000)">Add 1000</button>
+    <button class="btn btn-success btn-sm" click.trigger="addItems(10000)">Add 10 000</button>
+    <button class="btn btn-success btn-sm" click.trigger="addItems(100000)">Add 100 000</button>
+    <button class="btn btn-success btn-sm" click.trigger="addItemFirst()">Add 1 at top</button>
+    <button class="btn btn-success btn-sm" click.trigger="addItemLast()">Add 1 at bottom</button>
+    <button class="btn btn-success btn-sm" click.trigger="removeItems(1)">Remove 1 at top</button>
+    <button class="btn btn-success btn-sm" click.trigger="removeLast()">Remove 1 at bottom</button>
+    <button class="btn btn-success btn-sm" click.trigger="toggle()">Toggle visibility</button>
+    <button class="btn btn-success btn-sm" click.trigger="swap()">Swap</button>
 
     <label class="d-block" style="width: 300px;">
       Example:
@@ -23,12 +23,12 @@
     <div virtual-repeat.for="item of objectArray" class="contact-list-item ${item.name}">
       <div class="contact-item">
         <div class="avatar" click.trigger="click()" css="background-color: ${item.color}">${item.firstLetter}</div>
-        <div class="name">
-          ${$index} ${item.name}
+        <div class="name text-primary">
+          <b>${$index} ${item.name}</b>
         </div>
         <div class="content">
-          <strong>Phone:</strong> ${item.phone} <br />
-          <strong>Country:</strong> ${item.country} <br />
+          <b class="text-success">Phone:</b> ${item.phone} <br>
+          <b class="text-success">Country:</b> ${item.country} <br>
         </div>
       </div>
     </div>

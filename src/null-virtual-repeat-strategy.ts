@@ -8,6 +8,6 @@ export class NullVirtualRepeatStrategy extends NullRepeatStrategy {
 
   instanceChanged(repeat: IVirtualRepeat) {
     super.instanceChanged(repeat);
-    repeat.resetCalculation();
+    repeat._resetCalculation();
   }
 }
