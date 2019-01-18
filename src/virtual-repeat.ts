@@ -210,7 +210,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     this.element = element;
     this.viewFactory = viewFactory;
     this.instruction = instruction;
-    this.viewSlot = viewSlot as any;
+    this.viewSlot = viewSlot as ViewSlot & { children: IView[] };
     this.lookupFunctions = viewResources['lookupFunctions'];
     this.observerLocator = observerLocator;
     this.taskQueue = observerLocator.taskQueue;
@@ -230,18 +230,21 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
   /**@override */
   attached(): void {
     this._isAttached = true;
-    let element = this.element;
     this._itemsLength = this.items.length;
-    this.templateStrategy = this.templateStrategyLocator.getStrategy(element);
-    this.scrollContainer = this.templateStrategy.getScrollContainer(element);
-    this.topBuffer = this.templateStrategy.createTopBufferElement(element);
-    this.bottomBuffer = this.templateStrategy.createBottomBufferElement(element);
-    this.itemsChanged();
-    this.scrollListener = () => this._onScroll();
 
-    this._calcDistanceToTopInterval = setInterval(() => {
+    let element = this.element;
+    let templateStrategy = this.templateStrategy = this.templateStrategyLocator.getStrategy(element);
+
+    let scrollListener = this.scrollListener = () => this._onScroll();
+    let scrollContainer = this.scrollContainer = templateStrategy.getScrollContainer(element);
+    let topBuffer = this.topBuffer = templateStrategy.createTopBufferElement(element);
+
+    this.bottomBuffer = templateStrategy.createBottomBufferElement(element);
+    this.itemsChanged();
+
+    this._calcDistanceToTopInterval = PLATFORM.global.setInterval(() => {
       let prevDistanceToTop = this.distanceToTop;
-      let currDistanceToTop = this._calcDistanceToTop();
+      let currDistanceToTop = this.domHelper.getElementDistanceToTopOfDocument(topBuffer) + this.topBufferDistance;
       this.distanceToTop = currDistanceToTop;
       if (prevDistanceToTop !== currDistanceToTop) {
         this._handleScroll();
@@ -249,15 +252,15 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     }, 500);
 
     // When dealing with tables, there can be gaps between elements, causing distances to be messed up. Might need to handle this case here.
-    this.topBufferDistance = this.templateStrategy.getTopBufferDistance(this.topBuffer);
-    this.distanceToTop = this._calcDistanceToTop();
-    // this.distanceToTop = this.domHelper.getElementDistanceToTopOfDocument(this.templateStrategy.getFirstElement(this.topBuffer));
+    this.topBufferDistance = templateStrategy.getTopBufferDistance(topBuffer);
+    this.distanceToTop = this.domHelper
+      .getElementDistanceToTopOfDocument(templateStrategy.getFirstElement(topBuffer));
 
-    if (this.domHelper.hasOverflowScroll(this.scrollContainer)) {
+    if (this.domHelper.hasOverflowScroll(scrollContainer)) {
       this._fixedHeightContainer = true;
-      this.scrollContainer.addEventListener('scroll', this.scrollListener);
+      scrollContainer.addEventListener('scroll', scrollListener);
     } else {
-      document.addEventListener('scroll', this.scrollListener);
+      document.addEventListener('scroll', scrollListener);
     }
   }
 
@@ -276,8 +279,9 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     this._fixedHeightContainer = false;
     this._resetCalculation();
     this._isAttached = false;
+    this._itemsLength = 0;
     this.templateStrategy.removeBufferElements(this.element, this.topBuffer, this.bottomBuffer);
-    this.scrollContainer = null;
+    this.topBuffer = this.bottomBuffer = this.scrollContainer = this.scrollListener = null;
     this.scrollContainerHeight = 0;
     this.distanceToTop = 0;
     this.removeAllViews(true, false);
@@ -295,7 +299,19 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     this._itemsLength = 0;
   }
 
-  /**@override */
+  /**
+   * @override
+   *
+   * If `items` is truthy, do the following calculation/work:
+   *
+   * - container fixed height flag
+   * - necessary initial heights
+   * - create new collection observer & observe for changes
+   * - invoke `instanceChanged` on repeat strategy to create views / move views
+   * - update indices
+   * - update scrollbar position in special scenarios
+   * - handle scroll as if scroll event happened
+   */
   itemsChanged(): void {
     this._unsubscribeCollection();
     // still bound?
@@ -337,8 +353,12 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
         // Do we need to set scrolltop so that we appear at the bottom of the list to match scrolling as far as we could?
         // We only want to execute this line if we're reducing such that it brings us to the bottom of the new list
         // Make sure we handle the special case of tables
+        // -------
+        // Note: if branch is never the case anymore,
+        // keeping this code to keep the history of logic for future work
         if (this.scrollContainer.tagName === 'TBODY') {
-          let realScrollContainer = this.scrollContainer.parentNode.parentNode as Element; // tbody > table > container
+          // tbody > table > container
+          let realScrollContainer = this.scrollContainer.parentNode.parentNode as Element;
           realScrollContainer.scrollTop = realScrollContainer.scrollTop + (this.viewCount() * this.itemHeight);
         } else {
           this.scrollContainer.scrollTop = this.scrollContainer.scrollTop + (this.viewCount() * this.itemHeight);
@@ -624,11 +644,6 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
       this.collectionObserver = null;
       this.callContext = null;
     }
-  }
-
-  /**@internal */
-  _calcDistanceToTop(): number {
-    return this.domHelper.getElementDistanceToTopOfDocument(this.topBuffer) + this.topBufferDistance;
   }
 
   /**@internal */
