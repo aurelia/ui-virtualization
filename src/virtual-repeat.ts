@@ -225,7 +225,6 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
   /**@override */
   bind(bindingContext: any, overrideContext: OverrideContext): void {
     this.scope = { bindingContext, overrideContext };
-    window['virtualRepeat'] = this;
   }
 
   /**@override */
