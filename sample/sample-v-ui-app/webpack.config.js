@@ -57,9 +57,7 @@ module.exports = {
     ]
   },
   plugins: [
-    new AureliaPlugin({
-      dist: 'es2015'
-    }),
+    new AureliaPlugin(),
     // Standard plugin to build index.html
     new HtmlWebpackPlugin({
       template: 'index.ejs'

@@ -28,7 +28,8 @@ import {
   IVirtualRepeat,
   IVirtualRepeatStrategy,
   ITemplateStrategy,
-  IView
+  IView,
+  IScrollNextScrollContext
 } from './interfaces';
 import { TaskQueue } from '../sample/sample-v-ui-app/node_modules/aurelia-framework/dist/aurelia-framework';
 
@@ -262,6 +263,9 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     } else {
       document.addEventListener('scroll', scrollListener);
     }
+    if (this.items.length < this.elementsInView && this.isLastIndex === undefined) {
+      this._getMore(true);
+    }
   }
 
   /**@override */
@@ -276,6 +280,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     } else {
       document.removeEventListener('scroll', this.scrollListener);
     }
+    this.isLastIndex = undefined;
     this._fixedHeightContainer = false;
     this._resetCalculation();
     this._isAttached = false;
@@ -537,7 +542,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
 
   /**@internal*/
   _getMore(force?: boolean): void {
-    if (this.isLastIndex || this._first === 0 || force) {
+    if (this.isLastIndex || this._first === 0 || force === true) {
       if (!this._calledGetMore) {
         let executeGetMore = () => {
           this._calledGetMore = true;
@@ -552,22 +557,28 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
           let topIndex = this._first;
           let isAtBottom = this._bottomBufferHeight === 0;
           let isAtTop = this._isAtTop;
-          let scrollContext = {
+          let scrollContext: IScrollNextScrollContext = {
             topIndex: topIndex,
             isAtBottom: isAtBottom,
             isAtTop: isAtTop
           };
 
-          this.scope.overrideContext.$scrollContext = scrollContext;
+          let overrideContext = this.scope.overrideContext;
+          overrideContext.$scrollContext = scrollContext;
 
           if (func === undefined) {
+            // Still reset `_calledGetMore` flag as if it was invoked
+            // though this should not happen as presence of infinite-scroll-next attribute
+            // will make the value at least be an empty string
+            // keeping this logic here for future enhancement/evolution
+            this._calledGetMore = false;
             return null;
           } else if (typeof func === 'string') {
-            let getMoreFuncName = (this.view(0).firstChild as Element).getAttribute(scrollNextAttrName);
-            let funcCall = this.scope.overrideContext.bindingContext[getMoreFuncName];
+            let getMoreFuncName = (firstView.firstChild as Element).getAttribute(scrollNextAttrName);
+            let funcCall = overrideContext.bindingContext[getMoreFuncName];
 
             if (typeof funcCall === 'function') {
-              let result = funcCall.call(this.scope.overrideContext.bindingContext, topIndex, isAtBottom, isAtTop);
+              let result = funcCall.call(overrideContext.bindingContext, topIndex, isAtBottom, isAtTop);
               if (!(result instanceof Promise)) {
                 // Reset for the next time
                 this._calledGetMore = false;
@@ -639,10 +650,10 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
 
   /**@internal*/
   _unsubscribeCollection(): void {
-    if (this.collectionObserver) {
-      this.collectionObserver.unsubscribe(this.callContext, this);
-      this.collectionObserver = null;
-      this.callContext = null;
+    let collectionObserver = this.collectionObserver;
+    if (collectionObserver) {
+      collectionObserver.unsubscribe(this.callContext, this);
+      this.collectionObserver = this.callContext = null;
     }
   }
 
@@ -815,10 +826,11 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
 
   /**@internal*/
   _observeCollection(): void {
-    this.collectionObserver = this.strategy.getCollectionObserver(this.observerLocator, this.items);
-    if (this.collectionObserver) {
+    let collectionObserver = this.strategy.getCollectionObserver(this.observerLocator, this.items);
+    if (collectionObserver) {
       this.callContext = VirtualRepeatCallContext.handleCollectionMutated;
-      this.collectionObserver.subscribe(this.callContext, this);
+      this.collectionObserver = collectionObserver;
+      collectionObserver.subscribe(this.callContext, this);
     }
   }
 

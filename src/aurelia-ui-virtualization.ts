@@ -12,3 +12,7 @@ export {
   VirtualRepeat,
   InfiniteScrollNext
 };
+
+export {
+  IScrollNextScrollContext
+} from './interfaces';

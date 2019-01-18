@@ -3,6 +3,12 @@ import { ViewSlot, View, ViewFactory, BoundViewFactory, Controller } from 'aurel
 import { Scope, Binding, OverrideContext } from 'aurelia-binding';
 import { TaskQueue } from 'aurelia-task-queue';
 
+export interface IScrollNextScrollContext {
+  topIndex: number;
+  isAtBottom: boolean;
+  isAtTop: boolean;
+}
+
 /**@internal */
 declare module 'aurelia-binding' {
   interface ObserverLocator {
@@ -11,11 +17,7 @@ declare module 'aurelia-binding' {
 
   interface OverrideContext {
     $index: number;
-    $scrollContext: {
-      topIndex: number;
-      isAtBottom: boolean;
-      isAtTop: boolean;
-    };
+    $scrollContext: IScrollNextScrollContext;
     $first: boolean;
     $last: boolean;
     $middle: boolean;

@@ -30,9 +30,10 @@ export class App {
   }
 
   public push30(scrollContext?: IScrollContext, count = 30) {
-    if (scrollContext) {
-      console.log('Issue-129 getting more:', JSON.stringify(scrollContext, undefined, 2));
-    }
+    console.log('Issue-129 getting more...');
+    // if (scrollContext) {
+    //   console.log('Issue-129 getting more:', JSON.stringify(scrollContext, undefined, 2));
+    // }
     if (!scrollContext || scrollContext.isAtBottom) {
       for (let i = 0; i < count; i++) {
         this.people.push({
