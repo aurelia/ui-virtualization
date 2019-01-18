@@ -549,6 +549,11 @@ describe('VirtualRepeat Integration', () => {
         });
       });
     });
+    // The following test used to pass because there was no getMore() invoked during initialization
+    // so `validateScroll()` would not have been able to trigger all flow within _handleScroll of VirtualRepeat instance
+    // with the commit to fix issue 129, it starts to have more item and thus, scrollContainer has real scrollbar
+    // making synthesized scroll event in `validateScroll` work, resulting in failed test
+    // kept but commented out for history reason
     // it('handles not scrolling if number of items less than elements in view', done => {
     //   vm.items = [];
     //   for (let i = 0; i < 5; ++i) {
