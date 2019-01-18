@@ -1,6 +1,6 @@
 import { ArrayRepeatStrategy, createFullOverrideContext } from 'aurelia-templating-resources';
 import { updateVirtualOverrideContexts, rebindAndMoveView, getElementDistanceToBottomViewPort } from './utilities';
-import { IVirtualRepeat, IVirtualRepeatStrategy } from './interfaces';
+import { IVirtualRepeat, IVirtualRepeatStrategy, IView } from './interfaces';
 import { ViewSlot } from 'aurelia-templating';
 import { mergeSplice } from 'aurelia-binding';
 
@@ -14,6 +14,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     repeat.addView(overrideContext.bindingContext, overrideContext);
   }
   /**
+   * @override
   * Handle the repeat's collection instance changing.
   * @param repeat The repeater instance.
   * @param items The new array instance.
@@ -23,6 +24,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
   }
 
   /**
+   * @override
   * Handle the repeat's collection instance mutating.
   * @param repeat The repeat instance.
   * @param array The modified array.
@@ -170,14 +172,15 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     return undefined;
   }
 
-  _removeViewAt(repeat: IVirtualRepeat, collectionIndex: number, returnToCache: boolean, j: number, removedLength: number): any {
-    let viewOrPromise;
-    let view;
+  /**@internal */
+  _removeViewAt(repeat: IVirtualRepeat, collectionIndex: number, returnToCache: boolean, removeIndex: number, removedLength: number): any {
+    let viewOrPromise: IView | Promise<IView>;
+    let view: IView;
     let viewSlot = repeat.viewSlot;
     let viewCount = repeat.viewCount();
-    let viewAddIndex;
+    let viewAddIndex: number;
     let removeMoreThanInDom = removedLength > viewCount;
-    if (repeat._viewsLength <= j) {
+    if (repeat._viewsLength <= removeIndex) {
       repeat._bottomBufferHeight = repeat._bottomBufferHeight - (repeat.itemHeight);
       repeat._adjustBufferHeights();
       return;
@@ -196,7 +199,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
             let lastViewItem = repeat._getLastViewItem();
             collectionAddIndex = repeat.items.indexOf(lastViewItem) + 1;
           } else {
-            collectionAddIndex = j;
+            collectionAddIndex = removeIndex;
           }
           repeat._bottomBufferHeight = repeat._bottomBufferHeight - (repeat.itemHeight);
         } else if (repeat._topBufferHeight > 0) {
@@ -207,7 +210,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
         let data = repeat.items[collectionAddIndex];
         if (data) {
           let overrideContext = createFullOverrideContext(repeat, data, collectionAddIndex, repeat.items.length);
-          view = repeat.viewFactory.create();
+          view = repeat.viewFactory.create() as IView;
           view.bind(overrideContext.bindingContext, overrideContext);
         }
       }
@@ -233,16 +236,22 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     repeat._adjustBufferHeights();
   }
 
+  /**@internal */
   _isIndexBeforeViewSlot(repeat: IVirtualRepeat, viewSlot: ViewSlot, index: number): boolean {
     let viewIndex = this._getViewIndex(repeat, viewSlot, index);
     return viewIndex < 0;
   }
 
+  /**@internal */
   _isIndexAfterViewSlot(repeat: IVirtualRepeat, viewSlot: ViewSlot, index: number): boolean {
     let viewIndex = this._getViewIndex(repeat, viewSlot, index);
     return viewIndex > repeat._viewsLength - 1;
   }
 
+  /**
+   * @internal
+   * Calculate real index of a given index, based on existing buffer height and item height
+   */
   _getViewIndex(repeat: IVirtualRepeat, viewSlot: ViewSlot, index: number): number {
     if (repeat.viewCount() === 0) {
       return -1;
@@ -252,6 +261,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     return index - topBufferItems;
   }
 
+  /**@internal */
   _handleAddedSplices(repeat: IVirtualRepeat, array: Array<any>, splices: any): void {
     let arrayLength = array.length;
     let viewSlot = repeat.viewSlot;

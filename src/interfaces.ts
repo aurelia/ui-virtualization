@@ -55,13 +55,25 @@ export interface IVirtualRepeatStrategy extends RepeatStrategy {
 
 export interface IVirtualRepeat extends Repeat {
 
-  /**@internal */ _first: number;
+  /**
+   * @internal
+   * First view index, for proper follow up calculations
+   */
+  _first: number;
 
-  /**@internal */ _previousFirst: number;
+  /**
+   * @internal
+   * Preview first view index, for proper determination of delta
+   */
+  _previousFirst: number;
 
   /**@internal */ _viewsLength: number;
 
-  /**@internal */ _lastRebind: number;
+  /**
+   * @internal
+   * Last rebound view index, for determining rendered range
+   */
+  _lastRebind: number;
 
   /**@internal */ _topBufferHeight: number;
 
@@ -89,6 +101,7 @@ export interface IVirtualRepeat extends Repeat {
 
   /**@internal */ viewSlot: ViewSlot & { children: IView[] };
 
+  items: any[];
   itemHeight: number;
 
   strategy: IVirtualRepeatStrategy;
@@ -141,3 +154,19 @@ export interface ITemplateStrategy {
  * Override `bindingContext` and `overrideContext` on `View` interface
  */
 export type IView = View & Scope;
+
+// export const enum IVirtualRepeatState {
+//   isAtTop = 0b0_000000_000,
+//   isLastIndex = 0b0_000000_000,
+//   scrollingDown = 0b0_000000_000,
+//   scrollingUp = 0b0_000000_000,
+//   switchedDirection = 0b0_000000_000,
+//   isAttached = 0b0_000000_000,
+//   ticking = 0b0_000000_000,
+//   fixedHeightContainer = 0b0_000000_000,
+//   hasCalculatedSizes = 0b0_000000_000,
+//   calledGetMore = 0b0_000000_000,
+//   skipNextScrollHandle = 0b0_000000_000,
+//   handlingMutations = 0b0_000000_000,
+//   isScrolling = 0b0_000000_000
+// }

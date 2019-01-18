@@ -1,4 +1,4 @@
-import {ObserverLocator, Scope, Expression, Disposable, ICollectionObserverSplice, OverrideContext} from 'aurelia-binding';
+import {ObserverLocator, Scope, Expression, Disposable, ICollectionObserverSplice, OverrideContext, BindingExpression} from 'aurelia-binding';
 import {
   BoundViewFactory,
   ViewSlot,
@@ -30,6 +30,7 @@ import {
   ITemplateStrategy,
   IView
 } from './interfaces';
+import { TaskQueue } from '../sample/sample-v-ui-app/node_modules/aurelia-framework/dist/aurelia-framework';
 
 const enum VirtualRepeatCallContext {
   handleCollectionMutated = 'handleCollectionMutated',
@@ -50,12 +51,23 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
       type: 'attribute',
       name: 'virtual-repeat',
       templateController: true,
-      bindables: ['items', 'local'] as any // Wrong typings in templating
+      // Wrong typings in templating
+      bindables: ['items', 'local'] as any
     };
   }
 
-  /**@internal*/ _first = 0;
-  /**@internal*/ _previousFirst = 0;
+  /**
+   * @internal
+   * First view index, for proper follow up calculations
+   */
+  _first = 0;
+
+  /**
+   * @internal
+   * Preview first view index, for proper determination of delta
+   */
+  _previousFirst = 0;
+
   /**@internal*/ _viewsLength = 0;
   /**@internal*/ _lastRebind = 0;
   /**@internal*/ _topBufferHeight = 0;
@@ -135,7 +147,10 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
   /**@internal */
   private domHelper: DomHelper;
 
-  /**@internal */
+  /**
+   * @internal
+   * Temporary snapshot of items list count. Updated regularly to determinate calculation need
+   */
   private _itemsLength: number;
 
   /**@internal */
@@ -145,13 +160,18 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
   private scrollListener: () => any;
 
   /**@internal */
-  _sizeInterval: any;
+  private _sizeInterval: any;
+
+  /**@internal */
+  private _calcDistanceToTopInterval: any;
+
+  /**@internal */
+  private taskQueue: TaskQueue;
 
   templateStrategy: ITemplateStrategy;
   topBuffer: HTMLElement;
   bottomBuffer: HTMLElement;
 
-  calcDistanceToTopInterval: any;
 
   itemHeight: number;
   movedViewsCount: number;
@@ -193,11 +213,18 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     this.viewSlot = viewSlot as any;
     this.lookupFunctions = viewResources['lookupFunctions'];
     this.observerLocator = observerLocator;
+    this.taskQueue = observerLocator.taskQueue;
     this.strategyLocator = strategyLocator;
     this.templateStrategyLocator = templateStrategyLocator;
     this.sourceExpression = getItemsSourceExpression(this.instruction, 'virtual-repeat.for');
     this.isOneTime = isOneTime(this.sourceExpression);
     this.domHelper = domHelper;
+  }
+
+  /**@override */
+  bind(bindingContext: any, overrideContext: OverrideContext): void {
+    this.scope = { bindingContext, overrideContext };
+    window['virtualRepeat'] = this;
   }
 
   /**@override */
@@ -212,32 +239,25 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     this.itemsChanged();
     this.scrollListener = () => this._onScroll();
 
-    this.calcDistanceToTopInterval = setInterval(() => {
-      let distanceToTop = this.distanceToTop;
-      this.distanceToTop = this.domHelper.getElementDistanceToTopOfDocument(this.topBuffer);
-      this.distanceToTop += this.topBufferDistance;
-      if (distanceToTop !== this.distanceToTop) {
+    this._calcDistanceToTopInterval = setInterval(() => {
+      let prevDistanceToTop = this.distanceToTop;
+      let currDistanceToTop = this._calcDistanceToTop();
+      this.distanceToTop = currDistanceToTop;
+      if (prevDistanceToTop !== currDistanceToTop) {
         this._handleScroll();
       }
     }, 500);
 
-    this.distanceToTop = this.domHelper.getElementDistanceToTopOfDocument(this.templateStrategy.getFirstElement(this.topBuffer));
     // When dealing with tables, there can be gaps between elements, causing distances to be messed up. Might need to handle this case here.
     this.topBufferDistance = this.templateStrategy.getTopBufferDistance(this.topBuffer);
+    this.distanceToTop = this._calcDistanceToTop();
+    // this.distanceToTop = this.domHelper.getElementDistanceToTopOfDocument(this.templateStrategy.getFirstElement(this.topBuffer));
 
     if (this.domHelper.hasOverflowScroll(this.scrollContainer)) {
       this._fixedHeightContainer = true;
       this.scrollContainer.addEventListener('scroll', this.scrollListener);
     } else {
       document.addEventListener('scroll', this.scrollListener);
-    }
-  }
-
-  /**@override */
-  bind(bindingContext: any, overrideContext: OverrideContext): void {
-    this.scope = { bindingContext, overrideContext };
-    if (this._isAttached) {
-      this.itemsChanged();
     }
   }
 
@@ -262,10 +282,17 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     this.distanceToTop = 0;
     this.removeAllViews(true, false);
     this._unsubscribeCollection();
-    clearInterval(this.calcDistanceToTopInterval);
+    clearInterval(this._calcDistanceToTopInterval);
     if (this._sizeInterval) {
       clearInterval(this._sizeInterval);
     }
+  }
+
+  /**@override */
+  unbind(): void {
+    this.scope = null;
+    this.items = null;
+    this._itemsLength = 0;
   }
 
   /**@override */
@@ -303,7 +330,8 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     this.strategy.instanceChanged(this, items, this._first);
 
     if (shouldCalculateSize) {
-      this._lastRebind = this._first; // Reset rebinding
+      // Reset rebinding
+      this._lastRebind = this._first;
 
       if (reducingItems && previousLastViewIndex > this.items.length - 1) {
         // Do we need to set scrolltop so that we appear at the bottom of the list to match scrolling as far as we could?
@@ -319,7 +347,8 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
       if (!reducingItems) {
         // If we're expanding our items, then we need to reset our previous first for the next go around of scroll handling
         this._previousFirst = this._first;
-        this._scrollingDown = true; // Simulating the down scroll event to load up data appropriately
+        // Simulating the down scroll event to load up data appropriately
+        this._scrollingDown = true;
         this._scrollingUp = false;
 
         // Make sure we fix any state (we could have been at the last index before, but this doesn't get set until too late for scrolling)
@@ -333,14 +362,8 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
   }
 
   /**@override */
-  unbind(): void {
-    this.scope = null;
-    this.items = null;
-    this._itemsLength = null;
-  }
-
-  /**@override */
   handleCollectionMutated(collection: any[], changes: ICollectionObserverSplice[]): void {
+    // guard against multiple mutation, or mutation combined with instance mutation
     if (this.ignoreMutation) {
       return;
     }
@@ -358,7 +381,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     }
     this.ignoreMutation = true;
     let newItems = this.sourceExpression.evaluate(this.scope, this.lookupFunctions);
-    this.observerLocator.taskQueue.queueMicroTask(() => this.ignoreMutation = false);
+    this.taskQueue.queueMicroTask(() => this.ignoreMutation = false);
 
     // call itemsChanged...
     if (newItems === this.items) {
@@ -499,11 +522,12 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
         let executeGetMore = () => {
           this._calledGetMore = true;
           let firstView = this._getFirstView();
-          let func = (firstView
+          let scrollNextAttrName = 'infinite-scroll-next';
+          let func: string | (BindingExpression & { sourceExpression: Expression }) = (firstView
             && firstView.firstChild
             && firstView.firstChild.au
-            && firstView.firstChild.au['infinite-scroll-next'])
-              ? firstView.firstChild.au['infinite-scroll-next'].instruction.attributes['infinite-scroll-next']
+            && firstView.firstChild.au[scrollNextAttrName])
+              ? firstView.firstChild.au[scrollNextAttrName].instruction.attributes[scrollNextAttrName]
               : undefined;
           let topIndex = this._first;
           let isAtBottom = this._bottomBufferHeight === 0;
@@ -519,31 +543,34 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
           if (func === undefined) {
             return null;
           } else if (typeof func === 'string') {
-            let getMoreFuncName = (this.view(0).firstChild as Element).getAttribute('infinite-scroll-next');
+            let getMoreFuncName = (this.view(0).firstChild as Element).getAttribute(scrollNextAttrName);
             let funcCall = this.scope.overrideContext.bindingContext[getMoreFuncName];
 
             if (typeof funcCall === 'function') {
               let result = funcCall.call(this.scope.overrideContext.bindingContext, topIndex, isAtBottom, isAtTop);
               if (!(result instanceof Promise)) {
-                this._calledGetMore = false; // Reset for the next time
+                // Reset for the next time
+                this._calledGetMore = false;
               } else {
                 return result.then(() => {
-                  this._calledGetMore = false; // Reset for the next time
+                  // Reset for the next time
+                  this._calledGetMore = false;
                 });
               }
             } else {
-              throw new Error("'infinite-scroll-next' must be a function or evaluate to one");
+              throw new Error(`'${scrollNextAttrName}' must be a function or evaluate to one`);
             }
           } else if (func.sourceExpression) {
-            this._calledGetMore = false; // Reset for the next time
+            // Reset for the next time
+            this._calledGetMore = false;
             return func.sourceExpression.evaluate(this.scope);
           } else {
-            throw new Error("'infinite-scroll-next' must be a function or evaluate to one");
+            throw new Error(`'${scrollNextAttrName}' must be a function or evaluate to one`);
           }
           return null;
         };
 
-        this.observerLocator.taskQueue.queueMicroTask(executeGetMore);
+        this.taskQueue.queueMicroTask(executeGetMore);
       }
     }
   }
@@ -600,12 +627,17 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
   }
 
   /**@internal */
-  _getFirstView(): View | null {
+  _calcDistanceToTop(): number {
+    return this.domHelper.getElementDistanceToTopOfDocument(this.topBuffer) + this.topBufferDistance;
+  }
+
+  /**@internal */
+  _getFirstView(): IView | null {
     return this.view(0);
   }
 
   /**@internal */
-  _getLastView(): View | null {
+  _getLastView(): IView | null {
     return this.view(this.viewCount() - 1);
   }
 
@@ -642,19 +674,19 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
 
   /**@internal*/
   _getIndexOfLastView(): number {
-    const lastView = this._getLastView() as IView;
+    const lastView = this._getLastView();
     return lastView === null ? -1 : lastView.overrideContext.$index;
   }
 
   /**@internal*/
   _getLastViewItem(): IView {
-    let lastView = this._getLastView() as IView;
+    let lastView = this._getLastView();
     return lastView === null ? undefined : lastView.bindingContext[this.local];
   }
 
   /**@internal*/
   _getIndexOfFirstView(): number {
-    let firstView = this._getFirstView() as IView;
+    let firstView = this._getFirstView();
     return firstView === null ? -1 : firstView.overrideContext.$index;
   }
 
@@ -720,7 +752,8 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     } else { // Use case when items are added (we are adding scrollable space to the bottom)
       // We need to re-evaluate which is the true "first". If we've added items, then the previous "first" is actually too far down the list
       this._first = this._getIndexOfFirstView();
-      let adjustedTopBufferHeight = this._first * this.itemHeight; // appropriate buffer height for top, might be 1 too long...
+      // appropriate buffer height for top, might be 1 too long...
+      let adjustedTopBufferHeight = this._first * this.itemHeight;
       this._topBufferHeight = adjustedTopBufferHeight;
       // But what about when we've only scrolled slightly down the list? We need to readjust the top buffer height then
       this._bottomBufferHeight = newBottomBufferHeight - adjustedTopBufferHeight;

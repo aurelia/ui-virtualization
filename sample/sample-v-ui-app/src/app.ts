@@ -10,14 +10,20 @@ export class App {
       {
         route: ['', 'phone-list'],
         moduleId: PLATFORM.moduleName('./phone-list'),
-        nav: true,
+        nav: 1,
         title: 'Contacts'
       },
       {
         route: 'issue-138',
         moduleId: PLATFORM.moduleName('./issue-138/sub-app'),
-        nav: true,
+        nav: 2,
         title: 'Issue 138'
+      },
+      {
+        route: 'issue-129',
+        moduleId: PLATFORM.moduleName('./issue-129/sub-app'),
+        nav: 3,
+        title: 'Issue 129'
       }
     ]);
 
