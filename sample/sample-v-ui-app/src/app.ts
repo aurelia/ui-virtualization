@@ -24,6 +24,12 @@ export class App {
         moduleId: PLATFORM.moduleName('./issue-129/sub-app'),
         nav: 3,
         title: 'Issue 129'
+      },
+      {
+        route: 'issue-102',
+        moduleId: PLATFORM.moduleName('./issue-102/sub-app'),
+        nav: 4,
+        title: 'Issue 102'
       }
     ]);
 
@@ -31,13 +37,5 @@ export class App {
     window['app'] = this;
   }
 
-  bind() {
-    this.check();
-  }
-
-  check() {
-    setInterval(() => {
-      this.virtualRepeat = window['virtualRepeat'];
-    }, 1500);
-  }
+  window = window;
 }
