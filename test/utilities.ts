@@ -67,7 +67,10 @@ export function validateScrolledState(virtualRepeat: VirtualRepeat, viewModel: a
   let topBufferHeight = virtualRepeat.topBuffer.getBoundingClientRect().height;
   let bottomBufferHeight = virtualRepeat.bottomBuffer.getBoundingClientRect().height;
   let renderedItemsHeight = views.length * itemHeight;
-  expect(topBufferHeight + renderedItemsHeight + bottomBufferHeight).toBe(expectedHeight);
+  expect(topBufferHeight + renderedItemsHeight + bottomBufferHeight).toBe(
+    expectedHeight,
+    `Top buffer (${topBufferHeight}) + items height (${renderedItemsHeight}) + bottom buffer (${bottomBufferHeight}) should have been correct`
+  );
 
   if (viewModel.items.length > views.length) {
     expect(topBufferHeight + bottomBufferHeight).toBeGreaterThan(0);
@@ -90,4 +93,22 @@ export function validateScrolledState(virtualRepeat: VirtualRepeat, viewModel: a
     expect(overrideContext.$odd).toBe(!even);
     expect(overrideContext.$even).toBe(even);
   }
+}
+
+/**
+ * Manually dispatch a scroll event and validate scrolled state of virtual repeat
+ *
+ * Programatically set `scrollTop` of element specified with `elementSelector` query string
+ * (or `#scrollContainer` by default) to be equal with its `scrollHeight`
+ */
+export function validateScroll(virtualRepeat: VirtualRepeat, viewModel: any, itemHeight: number, element: Element, done: Function): void {
+  let event = new Event('scroll');
+  element.scrollTop = element.scrollHeight;
+  element.dispatchEvent(event);
+  window.setTimeout(() => {
+    window.requestAnimationFrame(() => {
+      validateScrolledState(virtualRepeat, viewModel, itemHeight);
+      done();
+    });
+  });
 }

@@ -2,8 +2,9 @@ import './setup';
 import { StageComponent, ComponentTester } from 'aurelia-testing';
 import { PLATFORM } from 'aurelia-pal';
 import { bootstrap } from 'aurelia-bootstrapper';
-import { createAssertionQueue, validateState, Queue } from './utilities';
+import { createAssertionQueue, validateState, Queue, validateScroll } from './utilities';
 import { VirtualRepeat } from '../src/virtual-repeat';
+import { IScrollNextScrollContext } from '../src/interfaces';
 
 PLATFORM.moduleName('src/virtual-repeat');
 PLATFORM.moduleName('test/noop-value-converter');
@@ -109,6 +110,95 @@ describe('VirtualRepeat Integration', () => {
       queue(() => validateState(virtualRepeat, viewModel, itemHeight));
       queue(() => validatePush(virtualRepeat, viewModel, done));
     });
+
+    describe('with [infinite-scroll-next]', () => {
+
+      beforeEach(() => {
+        resources.push('src/infinite-scroll-next');
+      });
+
+      describe('invoke "_getMore()" when initial amount of items is small', () => {
+
+        it('works with string as value of scroll-next attribute', async () => {
+          view =
+          `<div style="height: 500px; overflow-y: scroll">
+            <table>
+              <tbody
+                virtual-repeat.for="item of items"
+                infinite-scroll-next="getNextPage">
+                <tr style="height: 50px;"><td>\${item}</td></tr>
+              </tbody>
+            </table>
+          </div>`;
+
+          let called = false;
+          viewModel.items = createItems(5);
+          viewModel.getNextPage = jasmine.createSpy('getNextPage()').and.callFake(
+            (topIndex: number, isAtTop: boolean, isAtBottom: boolean) => {
+              expect(topIndex).toBe(0);
+              expect(isAtTop).toBe(true);
+              expect(isAtBottom).toBe(true);
+              called = true;
+            }
+          );
+
+          await bootstrapComponent();
+
+          expect(virtualRepeat['_fixedHeightContainer']).toBe(true);
+          expect(called).toBe(true);
+          expect(viewModel.getNextPage).toHaveBeenCalledTimes(1);
+        });
+
+        it('works with call binding expression', async () => {
+          view =
+          `<div style="height: 500px; overflow-y: scroll">
+            <table>
+              <tbody
+                virtual-repeat.for="item of items"
+                infinite-scroll-next.call="getNextPage($scrollContext)">
+                <tr style="height: 50px;"><td>\${item}</td></tr>
+              </tbody>
+            </table>
+          </div>`;
+
+          let scrollContext: IScrollNextScrollContext;
+          viewModel.items = createItems(5);
+          viewModel.getNextPage = jasmine.createSpy('getNextPage()').and.callFake(($scrollContext: IScrollNextScrollContext) => {
+            scrollContext = $scrollContext;
+          });
+
+          await bootstrapComponent();
+
+          expect(virtualRepeat['_fixedHeightContainer']).toBe(true);
+          expect(scrollContext).toBeDefined();
+          expect(scrollContext.isAtTop).toBe(true);
+          expect(scrollContext.isAtBottom).toBe(true, 'Expected is at bottom to be true, recevied:' + scrollContext.isAtBottom);
+          expect(scrollContext.topIndex).toBe(0);
+          expect(viewModel.getNextPage).toHaveBeenCalledTimes(1);
+        });
+
+        it('does not work with normal binding expression', async () => {
+          view =
+          `<div style="height: 500px; overflow-y: scroll">
+            <table>
+              <tbody
+                virtual-repeat.for="item of items"
+                infinite-scroll-next.bind="getNextPage">
+                <tr style="height: 50px;"><td>\${item}</td></tr>
+              </tbody>
+            </table>
+          </div>`;
+
+          viewModel.items = createItems(5);
+          viewModel.getNextPage = jasmine.createSpy('getNextPage()');
+
+          await bootstrapComponent();
+
+          expect(virtualRepeat['_fixedHeightContainer']).toBe(true);
+          expect(viewModel.getNextPage).not.toHaveBeenCalled();
+        });
+      });
+    });
   });
 
   function validatePush(virtualRepeat: VirtualRepeat, viewModel: any, done: Function) {
@@ -124,15 +214,14 @@ describe('VirtualRepeat Integration', () => {
   }
 
   function validateArrayChange(virtualRepeat, viewModel, done) {
-    const createItems = (name: string, amount: number) => new Array(amount).map((v, index) => name + index);
 
-    viewModel.items = createItems('A', 4);
+    viewModel.items = createItems(4, 'A');
     queue(() => validateState(virtualRepeat, viewModel, itemHeight));
-    queue(() => viewModel.items = createItems('B', 0));
+    queue(() => viewModel.items = createItems(0, 'B'));
     queue(() => validateState(virtualRepeat, viewModel, itemHeight));
-    queue(() => viewModel.items = createItems('C', 101));
+    queue(() => viewModel.items = createItems(101, 'C'));
     queue(() => validateState(virtualRepeat, viewModel, itemHeight));
-    queue(() => viewModel.items = createItems('D', 0));
+    queue(() => viewModel.items = createItems(0, 'D'));
     queue(() => validateState(virtualRepeat, viewModel, itemHeight));
     queue(() => done());
   }
@@ -145,5 +234,9 @@ describe('VirtualRepeat Integration', () => {
     await component.create(bootstrap);
     virtualRepeat = component.viewModel;
     return { virtualRepeat, viewModel, component: component };
+  }
+
+  function createItems(amount: number, name: string = 'item') {
+    return Array.from({ length: amount }, (_, index) => name + index);
   }
 });
