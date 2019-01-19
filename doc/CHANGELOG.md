@@ -1,3 +1,24 @@
+# [1.0.0-beta.4](https://github.com/aurelia/ui-virtualization/compare/1.0.0-beta.3.3.2...1.0.0-beta.4) (2019-01-19)
+
+
+### Bug Fixes
+
+* **doc:** adjust development doc ([45d12ab](https://github.com/aurelia/ui-virtualization/commit/45d12ab))
+* **doc:** readme typo, thanks [@avrahamcool](https://github.com/avrahamcool) ([14a810c](https://github.com/aurelia/ui-virtualization/commit/14a810c))
+* **scroll-next:** invoke get more items in init if items length small ([fa6af8c](https://github.com/aurelia/ui-virtualization/commit/fa6af8c)), closes [#129](https://github.com/aurelia/ui-virtualization/issues/129)
+* **virtual-repeat:** better handles repeating with table row / table body ([a09d2a8](https://github.com/aurelia/ui-virtualization/commit/a09d2a8)), closes [#84](https://github.com/aurelia/ui-virtualization/issues/84) [#128](https://github.com/aurelia/ui-virtualization/issues/128)
+* **virtual-repeat:** remove buffer size ([c9de65b](https://github.com/aurelia/ui-virtualization/commit/c9de65b))
+* **virtual-repeat:** remove debug statement ([bf2c872](https://github.com/aurelia/ui-virtualization/commit/bf2c872))
+
+
+### Features
+
+* **template-strategy:** adjust tbody template strategy ([c1fe513](https://github.com/aurelia/ui-virtualization/commit/c1fe513))
+* **template-strategy:** diff between tbody and tr ([8271abe](https://github.com/aurelia/ui-virtualization/commit/8271abe))
+* **template-strategy:** fix issue with calculating top buffer distance ([a5cb084](https://github.com/aurelia/ui-virtualization/commit/a5cb084))
+
+
+
 <a name="1.0.0-beta.3.3.1"></a>
 # [1.0.0-beta.3.3.1](https://github.com/aurelia/ui-virtualization/compare/1.0.0-beta.3.3.0...1.0.0-beta.3.3.1) (2018-06-21)
 

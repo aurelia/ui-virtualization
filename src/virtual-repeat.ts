@@ -31,7 +31,7 @@ import {
   IView,
   IScrollNextScrollContext
 } from './interfaces';
-import { TaskQueue } from '../sample/sample-v-ui-app/node_modules/aurelia-framework/dist/aurelia-framework';
+import { TaskQueue } from 'aurelia-framework';
 
 const enum VirtualRepeatCallContext {
   handleCollectionMutated = 'handleCollectionMutated',

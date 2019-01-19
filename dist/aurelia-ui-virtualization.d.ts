@@ -1,149 +1,144 @@
-import {
-  NullRepeatStrategy,
-  updateOverrideContext,
-  ArrayRepeatStrategy,
-  createFullOverrideContext,
-  RepeatStrategyLocator,
-  AbstractRepeater,
-  getItemsSourceExpression,
-  isOneTime,
-  unwrapExpression,
-  updateOneTimeBinding,
-  viewsRequireLifecycle
-} from 'aurelia-templating-resources';
-import {
-  customAttribute,
-  View,
-  BoundViewFactory,
-  ViewSlot,
-  ViewResources,
-  TargetInstruction,
-  bindable,
-  templateController
-} from 'aurelia-templating';
-import {
-  inject,
-  Container
-} from 'aurelia-dependency-injection';
-import {
-  DOM
-} from 'aurelia-pal';
-import {
-  ObserverLocator
-} from 'aurelia-binding';
-export declare interface TemplateStrategy {
-  getScrollContainer(element: Element): Element;
-  moveViewFirst(view: View, topBuffer: Element): void;
-  moveViewLast(view: View, bottomBuffer: Element): void;
-  createTopBufferElement(element: Element): Element;
-  createBottomBufferElement(element: Element): Element;
-  removeBufferElements(element: Element, topBuffer: Element, bottomBuffer: Element): void;
-  getFirstElement(topBuffer: Element): Element;
-  getLastView(bottomBuffer: Element): Element;
-  getTopBufferDistance(topBuffer: Element): number;
-}
-export declare class NullVirtualRepeatStrategy extends NullRepeatStrategy {
-  instanceChanged(repeat?: any): any;
-}
-export declare class DomHelper {
-  getElementDistanceToTopOfDocument(element: Element): number;
-  hasOverflowScroll(element: Element): boolean;
-}
+import { ICollectionObserverSplice, ObserverLocator, OverrideContext, Scope } from 'aurelia-binding';
+import { Container } from 'aurelia-dependency-injection';
+import { BoundViewFactory, TargetInstruction, View, ViewResources, ViewSlot } from 'aurelia-templating';
+import { AbstractRepeater, Repeat, RepeatStrategy, RepeatStrategyLocator } from 'aurelia-templating-resources';
 
-//Placeholder attribute to prohibit use of this attribute name in other places
+declare class DomHelper {
+	getElementDistanceToTopOfDocument(element: Element): number;
+	hasOverflowScroll(element: HTMLElement): boolean;
+}
+export interface IScrollNextScrollContext {
+	topIndex: number;
+	isAtBottom: boolean;
+	isAtTop: boolean;
+}
+export interface IVirtualRepeatStrategy extends RepeatStrategy {
+	/**
+	 * create first item to calculate the heights
+	 */
+	createFirstItem(repeat: IVirtualRepeat): void;
+	/**
+  * Handle the repeat's collection instance changing.
+  * @param repeat The repeater instance.
+  * @param items The new array instance.
+  */
+	instanceChanged(repeat: IVirtualRepeat, items: Array<any>, ...rest: any[]): void;
+}
+export interface IVirtualRepeat extends Repeat {
+	items: any[];
+	itemHeight: number;
+	strategy: IVirtualRepeatStrategy;
+	templateStrategy: ITemplateStrategy;
+	topBuffer: HTMLElement;
+	bottomBuffer: HTMLElement;
+	isLastIndex: boolean;
+	readonly viewFactory: BoundViewFactory;
+}
+/**
+ * Templating strategy to handle virtual repeat views
+ * Typically related to moving views, creating buffer and locating view range range in the DOM
+ */
+export interface ITemplateStrategy {
+	getScrollContainer(element: Element): HTMLElement;
+	moveViewFirst(view: View, topBuffer: Element): void;
+	moveViewLast(view: View, bottomBuffer: Element): void;
+	createTopBufferElement(element: Element): HTMLElement;
+	createBottomBufferElement(element: Element): HTMLElement;
+	removeBufferElements(element: Element, topBuffer: Element, bottomBuffer: Element): void;
+	getFirstElement(topBuffer: Element): Element;
+	getLastElement(bottomBuffer: Element): Element;
+	getTopBufferDistance(topBuffer: Element): number;
+}
+/**
+ * Override `bindingContext` and `overrideContext` on `View` interface
+ */
+export declare type IView = View & Scope;
+declare class VirtualRepeatStrategyLocator extends RepeatStrategyLocator {
+	constructor();
+	getStrategy(items: any): IVirtualRepeatStrategy;
+}
+declare class TemplateStrategyLocator {
+	static inject: (typeof Container)[];
+	container: Container;
+	constructor(container: Container);
+	/**
+	 * Selects the template strategy based on element hosting `virtual-repeat` custom attribute
+	 */
+	getStrategy(element: Element): ITemplateStrategy;
+}
+export declare class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
+	key: any;
+	value: any;
+	/**
+	 * @bindable
+	 */
+	items: any[];
+	/**
+	 * @bindable
+	 */
+	local: string;
+	readonly viewFactory: BoundViewFactory;
+	templateStrategy: ITemplateStrategy;
+	topBuffer: HTMLElement;
+	bottomBuffer: HTMLElement;
+	itemHeight: number;
+	movedViewsCount: number;
+	distanceToTop: number;
+	/**
+	 * When dealing with tables, there can be gaps between elements, causing distances to be messed up. Might need to handle this case here.
+	 */
+	topBufferDistance: number;
+	scrollContainerHeight: number;
+	isLastIndex: boolean;
+	elementsInView: number;
+	strategy: IVirtualRepeatStrategy;
+	ignoreMutation: boolean;
+	collectionObserver: any;
+	constructor(element: HTMLElement, viewFactory: BoundViewFactory, instruction: TargetInstruction, viewSlot: ViewSlot, viewResources: ViewResources, observerLocator: ObserverLocator, strategyLocator: VirtualRepeatStrategyLocator, templateStrategyLocator: TemplateStrategyLocator, domHelper: DomHelper);
+	/**@override */
+	bind(bindingContext: any, overrideContext: OverrideContext): void;
+	/**@override */
+	attached(): void;
+	/**@override */
+	call(context: 'handleCollectionMutated' | 'handleInnerCollectionMutated', changes: ICollectionObserverSplice[]): void;
+	/**@override */
+	detached(): void;
+	/**@override */
+	unbind(): void;
+	/**
+	 * @override
+	 *
+	 * If `items` is truthy, do the following calculation/work:
+	 *
+	 * - container fixed height flag
+	 * - necessary initial heights
+	 * - create new collection observer & observe for changes
+	 * - invoke `instanceChanged` on repeat strategy to create views / move views
+	 * - update indices
+	 * - update scrollbar position in special scenarios
+	 * - handle scroll as if scroll event happened
+	 */
+	itemsChanged(): void;
+	/**@override */
+	handleCollectionMutated(collection: any[], changes: ICollectionObserverSplice[]): void;
+	/**@override */
+	handleInnerCollectionMutated(collection: any[], changes: ICollectionObserverSplice[]): void;
+	/**@override */
+	viewCount(): number;
+	/**@override */
+	views(): IView[];
+	/**@override */
+	view(index: number): IView;
+	/**@override */
+	addView(bindingContext: any, overrideContext: OverrideContext): void;
+	/**@override */
+	insertView(index: number, bindingContext: any, overrideContext: OverrideContext): void;
+	/**@override */
+	removeAllViews(returnToCache: boolean, skipAnimation: boolean): void | Promise<any>;
+	/**@override */
+	removeView(index: number, returnToCache: boolean, skipAnimation: boolean): View | Promise<View>;
+	updateBindings(view: View): void;
+}
 export declare class InfiniteScrollNext {
-  constructor();
-  attached(): any;
-  bind(bindingContext?: any, overrideContext?: any): void;
 }
-export declare function calcOuterHeight(element: Element): number;
-export declare function insertBeforeNode(view: View, bottomBuffer: number): void;
-
-/**
-* Update the override context.
-* @param startIndex index in collection where to start updating.
-*/
-export declare function updateVirtualOverrideContexts(repeat: VirtualRepeat, startIndex: number): void;
-export declare function rebindAndMoveView(repeat: VirtualRepeat, view: View, index: number, moveToBottom: boolean): void;
-export declare function getStyleValue(element: Element, style: string): any;
-export declare function getElementDistanceToBottomViewPort(element: Element): number;
-export declare function getElementDistanceToTopViewPort(element: Element): number;
-
-/**
-* A strategy for repeating a template over an array.
-*/
-export declare class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
-  
-  // create first item to calculate the heights
-  createFirstItem(repeat: VirtualRepeat): void;
-  
-  /**
-    * Handle the repeat's collection instance changing.
-    * @param repeat The repeater instance.
-    * @param items The new array instance.
-    */
-  instanceChanged(repeat: VirtualRepeat, items: Array<any>, ...rest: any[]): void;
-  
-  /**
-    * Handle the repeat's collection instance mutating.
-    * @param repeat The repeat instance.
-    * @param array The modified array.
-    * @param splices Records of array changes.
-    */
-  instanceMutated(repeat: VirtualRepeat, array: Array<any>, splices: any): void;
-}
-export declare class TemplateStrategyLocator {
-  constructor(container: Container);
-  getStrategy(element: Element): TemplateStrategy;
-}
-export declare class TableStrategy {
-  tableCssReset: any;
-  constructor(domHelper?: any);
-  getScrollContainer(element: Element): Element;
-  moveViewFirst(view: View, topBuffer: Element): void;
-  moveViewLast(view: View, bottomBuffer: Element): void;
-  createTopBufferElement(element: Element): Element;
-  createBottomBufferElement(element: Element): Element;
-  removeBufferElements(element: Element, topBuffer: Element, bottomBuffer: Element): void;
-  getFirstElement(topBuffer: Element): Element;
-  getLastElement(bottomBuffer: Element): Element;
-  getTopBufferDistance(topBuffer: Element): number;
-}
-export declare class DefaultTemplateStrategy {
-  getScrollContainer(element: Element): Element;
-  moveViewFirst(view: View, topBuffer: Element): void;
-  moveViewLast(view: View, bottomBuffer: Element): void;
-  createTopBufferElement(element: Element): Element;
-  createBottomBufferElement(element: Element): Element;
-  removeBufferElements(element: Element, topBuffer: Element, bottomBuffer: Element): void;
-  getFirstElement(topBuffer: Element): Element;
-  getLastElement(bottomBuffer: Element): Element;
-  getTopBufferDistance(topBuffer: Element): number;
-}
-export declare class VirtualRepeatStrategyLocator extends RepeatStrategyLocator {
-  constructor();
-}
-export declare class VirtualRepeat extends AbstractRepeater {
-  items: any;
-  local: any;
-  constructor(element: Element, viewFactory: BoundViewFactory, instruction: TargetInstruction, viewSlot: ViewSlot, viewResources: ViewResources, observerLocator: ObserverLocator, strategyLocator: VirtualRepeatStrategyLocator, templateStrategyLocator: TemplateStrategyLocator, domHelper: DomHelper);
-  attached(): void;
-  bind(bindingContext?: any, overrideContext?: any): void;
-  call(context?: any, changes?: any): void;
-  detached(): void;
-  itemsChanged(): void;
-  unbind(): void;
-  handleCollectionMutated(collection?: any, changes?: any): void;
-  handleInnerCollectionMutated(collection?: any, changes?: any): void;
-  
-  // @override AbstractRepeater
-  // How will these behaviors need to change since we are in a virtual list instead?
-  viewCount(): any;
-  views(): any;
-  view(index?: any): any;
-  addView(bindingContext?: any, overrideContext?: any): any;
-  insertView(index?: any, bindingContext?: any, overrideContext?: any): any;
-  removeAllViews(returnToCache?: any, skipAnimation?: any): any;
-  removeView(index?: any, returnToCache?: any, skipAnimation?: any): any;
-  updateBindings(view: View): any;
-}
+export declare function configure(config: any): void;
