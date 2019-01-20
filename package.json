@@ -27,7 +27,8 @@
     "build": "rollup -c",
     "changelog": "node build/changelog.js",
     "postbuild": "dts-bundle-generator -o dist/aurelia-ui-virtualization.d.ts src/aurelia-ui-virtualization.ts --external-types",
-    "test": "karma start",
+    "test": "karma start --single-run",
+    "test:watch": "karma start",
     "test:debugger": "karma start --browsers ChromeDebugging",
     "lint": "tslint -c tslint.json 'src/**/*.ts'",
     "rimraf": "rimraf dist"
