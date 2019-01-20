@@ -9,13 +9,8 @@
     "declaration": false,
     "lib": ["es2015", "dom"]
   },
-  "exclude": [
-    "node_modules",
-    "dist",
-    "build",
-    "doc",
-    "config.js",
-    "gulpfile.js",
-    "karma.conf.js"
+  "include": [
+    "src",
+    "test"
   ]
 }
