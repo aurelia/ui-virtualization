@@ -150,6 +150,8 @@ There are three parameters that are passed to the function (`getMore(topIndex, i
 
 ## [Demo](https://aurelia-ui-virtualization.now.sh/)
 
+## [Online Playground](https://codesandbox.io/s/m781l8oyqj)
+
 ## Platform Support
 
 This library can be used in the **browser** only.
