@@ -1,21 +1,27 @@
-version: 2
-jobs:
-  test:
-    working_directory: ~/repo
+version: 2.1
+
+executors:
+  docker-circleci:
+    working_directory: "~/repo"
     docker:
-      - image: circleci/node:9-jessie-browsers
+      - image: "circleci/node:10.12-stretch-browsers"
+
+jobs:
+  unit_test:
+    executor: docker-circleci
     steps:
       - checkout
-      - run: npm install
-      - run:
-          name: Tests
-          command: 'npm run test'
+      - run: npm ci
+      - run: npm test
+  prepare_release:
+    executor: docker-circleci
+    steps:
+      - checkout
+      - run: npm ci
+      - run: npm build
 
 workflows:
-  version: 2
-  build_and_test:
+  build_test:
     jobs:
-      - test:
-          filters:
-            branches:
-              only: master
+      - unit_test
+      - prepare_release

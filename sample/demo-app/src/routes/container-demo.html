@@ -1,0 +1,26 @@
+<template>
+  <div style="overflow-y:scroll; height: 80vh"
+    scrolltop.bind="scrollTop"
+    ref="parentElement">
+    <div virtual-repeat.for="item of objectArray"
+      class="contact-list-item ${item.name}">
+      <div class="contact-item">
+        <div class="avatar"
+          click.delegate="click()"
+          css="background-color: ${item.color}">${item.firstLetter}</div>
+        <div class="name"> ${$index} ${item.name} </div>
+        <div class="content">
+            <strong>Phone:</strong> ${item.phone} <br>
+            <strong>Country:</strong> ${item.country} <br>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div
+    class="bg-white shadow-lg p-2 border"
+    style="position: fixed; bottom: 0; right: 0">
+    Item Count: ${itemsCount}<br>
+    DOM elements Count: ${childrenCount}<br>
+    Container Scroll top: ${scrollTop || 0}px
+  </div>
+</template>

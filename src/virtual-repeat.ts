@@ -290,9 +290,9 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     this.distanceToTop = 0;
     this.removeAllViews(true, false);
     this._unsubscribeCollection();
-    clearInterval(this._calcDistanceToTopInterval);
+    PLATFORM.global.clearInterval(this._calcDistanceToTopInterval);
     if (this._sizeInterval) {
-      clearInterval(this._sizeInterval);
+      PLATFORM.global.clearInterval(this._sizeInterval);
     }
   }
 

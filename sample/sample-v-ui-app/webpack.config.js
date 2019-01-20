@@ -4,9 +4,26 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 const path = require('path');
 const isProduction = process.env.NODE_ENV === 'production';
 
-const aureliaModules = ['binding', 'templating', 'framework', 'bootstrapper', 'templating-resources', 'dependency-injection', 'pal', 'pal-browser', 'router', 'templating-router',
-  'metadata', 'task-queue', 'history', 'history-browser', 'logging', 'logging-console', 'path'
-]
+const aureliaModules = [
+  'binding',
+  'templating',
+  'framework',
+  'bootstrapper',
+  'event-aggregator',
+  'templating-resources',
+  'dependency-injection',
+  'pal',
+  'pal-browser',
+  'router',
+  'templating-router',
+  'metadata',
+  'task-queue',
+  'history',
+  'history-browser',
+  'logging',
+  'logging-console',
+  'path'
+];
 
 module.exports = {
   mode: isProduction ? 'production' : 'development',
