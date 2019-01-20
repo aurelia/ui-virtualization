@@ -1,0 +1,49 @@
+{
+  "name": "aurelia-ui-virtualization-demo-app",
+  "version": "0.1.0",
+  "description": "A demo application demonstrating features of Aurelia UI virtualization plugin",
+  "keywords": [
+    "aurelia",
+    "virtualization"
+  ],
+  "author": "bigopon <bigopon.777@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "dev": "webpack-dev-server",
+    "prebuild": "npm run rimraf",
+    "build": "webpack --env.prod",
+    "prebuild:watch": "npm run rimraf",
+    "build:watch": "webpack --watch",
+    "prebuild:prod": "npm run rimraf",
+    "build:prod": "cross-env NODE_ENV=production webpack -p",
+    "rimraf": "rimraf dist"
+  },
+  "dependencies": {
+    "aurelia-binding": "^2.1.3",
+    "aurelia-bootstrapper": "^2.3.0",
+    "aurelia-framework": "^1.3.0",
+    "aurelia-router": "^1.6.2",
+    "aurelia-templating-binding": "^1.4.3",
+    "aurelia-templating-resources": "^1.7.1",
+    "aurelia-templating-router": "^1.3.2",
+    "bootstrap": "^4.1.2",
+    "faker": "^4.1.0",
+    "jquery": "^3.3.1"
+  },
+  "devDependencies": {
+    "@types/faker": "^4.1.5",
+    "@types/jquery": "^3.3.5",
+    "aurelia-webpack-plugin": "^3.0.0",
+    "awesome-typescript-loader": "^5.2.0",
+    "copy-webpack-plugin": "^4.5.2",
+    "cross-env": "^5.2.0",
+    "html-loader": "^0.5.5",
+    "html-webpack-plugin": "^3.2.0",
+    "rimraf": "^2.6.2",
+    "tslib": "^1.9.3",
+    "typescript": "^2.9.2",
+    "webpack": "^4.16.3",
+    "webpack-cli": "^3.1.0",
+    "webpack-dev-server": "^3.1.14"
+  }
+}

@@ -1,0 +1,17 @@
+<template>
+  <nav class="d-flex pt-2 border-bottom w-100"
+    role="navigation"
+    style="position: fixed; background:#f2f2f2">
+    <a class="nav-link px-1 mx-1" href="#">
+      <img class="d-inline-block align-text-bottom"
+        src='static/aurelia-icon.png' height="18">
+      ${router.title}
+    </a>
+
+    <a repeat.for="nav of router.navigation"
+      class='nav-link'
+      data-toggle="collapse"
+      href.bind="nav.href"
+      css="font-weight: ${nav.isActive ? 'bold' : ''}; color: #ed2b88">${nav.config.title}</a>
+  </nav>
+</template>

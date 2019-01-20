@@ -148,7 +148,7 @@ There are three parameters that are passed to the function (`getMore(topIndex, i
   </template>
   ```
 
-## [Demo](http://aurelia.io/ui-virtualization/)
+## [Demo](https://aurelia-ui-virtualization.now.sh/)
 
 ## Platform Support
 
@@ -167,7 +167,7 @@ To build the code, follow these steps.
 3. To build the code, you can now run:
 
   ```shell
-  gulp build
+  npm run build
   ```
 4. You will find the compiled code in the `dist` folder, available in module formats: es2015, es2017, AMD, CommonJS and UMD.
 

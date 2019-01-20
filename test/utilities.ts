@@ -112,3 +112,11 @@ export function validateScroll(virtualRepeat: VirtualRepeat, viewModel: any, ite
     });
   });
 }
+
+export function waitForTimeout(time = 1): Promise<void> {
+  return new Promise(r => setTimeout(r, time));
+}
+
+export function waitForNextFrame(): Promise<void> {
+  return new Promise(r => requestAnimationFrame(() => r()));
+}

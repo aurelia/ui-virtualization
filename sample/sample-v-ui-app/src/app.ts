@@ -30,6 +30,12 @@ export class App {
         moduleId: PLATFORM.moduleName('./issue-102/sub-app'),
         nav: 4,
         title: 'Issue 102'
+      },
+      {
+        route: 'issue-97',
+        moduleId: PLATFORM.moduleName('./issue-97/phone-list'),
+        nav: 5,
+        title: 'Issue 97'
       }
     ]);
 

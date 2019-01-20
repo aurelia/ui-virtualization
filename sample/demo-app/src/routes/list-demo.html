@@ -1,0 +1,42 @@
+<template>
+  <div class="array-actions">
+    <button class="btn btn-primary btn-sm" click.trigger="addItems(1000)">Add 1000</button>
+    <button class="btn btn-primary btn-sm" click.trigger="addItems(10000)">Add 10 000</button>
+    <button class="btn btn-primary btn-sm" click.trigger="addItems(100000)">Add 100 000</button>
+    <button class="btn btn-primary btn-sm" click.trigger="addItemFirst()">Add 1 at top</button>
+    <button class="btn btn-primary btn-sm" click.trigger="removeItems(1)">Remove 1 at top</button>
+    <h4>Item Count: ${itemsCount}</h4>
+    <h4>Number of DOM elements: ${childrenCount}</h4>
+  </div>
+
+  <div ref="parentElement">
+    <div virtual-repeat.for="item of objectArray" class="contact-list-item ${item.name}">
+      <div class="contact-item">
+        <div class="avatar" click.trigger="click(item)" css="background-color: ${item.color}">${item.firstLetter}</div>
+        <div class="name"> ${$index} ${item.name} </div>
+        <div class="content">
+          <strong>Phone:</strong> ${item.phone} <br>
+          <strong>Country:</strong> ${item.country} <br>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="array-actions">
+        <button class="btn btn-primary" click.trigger="addItems(1000)">Add 1000</button>
+        <button class="btn btn-primary" click.trigger="addItems(10000)">Add 10 000</button>
+        <button class="btn btn-primary" click.trigger="addItems(100000)">Add 100 000</button>
+        <button class="btn btn-primary" click.trigger="addItemFirst()">Add 1 at top</button>
+        <button class="btn btn-primary" click.trigger="addItemLast()">Add 1 at bottom</button>
+        <button class="btn btn-primary" click.trigger="removeItems(1)">Remove 1 at top</button>
+        <h4>Item Count: ${itemsCount}</h4>
+        <h4>DOM elements Count: ${childrenCount}</h4>
+      </div>
+    </div>
+  </div>
+  <div
+    class="bg-white shadow-lg p-2 border"
+    style="position: fixed; bottom: 0; right: 0">
+    Item Count: ${itemsCount}<br>
+    DOM elements Count: ${childrenCount}
+  </div>
+</template>
