@@ -1,4 +1,4 @@
-declare const faker: any;
+import * as faker from 'faker';
 
 export class PhoneList {
 

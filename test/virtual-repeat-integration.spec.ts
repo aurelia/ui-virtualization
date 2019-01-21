@@ -98,8 +98,14 @@ describe('VirtualRepeat Integration', () => {
     nq(() => done());
   }
 
-  function validateReverse(virtualRepeat, viewModel, done) {
+  function validateReverse(virtualRepeat: VirtualRepeat, viewModel: any, done: Function) {
     viewModel.items.reverse();
+    console.log(
+      virtualRepeat.items.length,
+      virtualRepeat._requiredViewsCount,
+      virtualRepeat.elementsInView,
+      virtualRepeat.viewSlot.children.length
+    );
     nq(() => validateState(virtualRepeat, viewModel, itemHeight));
     nq(() => done());
   }
@@ -143,7 +149,7 @@ describe('VirtualRepeat Integration', () => {
 
     beforeEach(() => {
       items = [];
-      for (let i = 0; i < 1000; ++i) {
+      for (let i = 0; i < 100; ++i) {
         items.push('item' + i);
       }
       component = StageComponent
@@ -277,8 +283,9 @@ describe('VirtualRepeat Integration', () => {
       create.then(() => validateShift(virtualRepeat, viewModel, done));
     });
 
-    it('handles reverse', done => {
-      create.then(() => validateReverse(virtualRepeat, viewModel, done));
+    it('handles reverse', async done => {
+      await create;
+      validateReverse(virtualRepeat, viewModel, done);
     });
 
     it('handles splice', done => {
@@ -528,6 +535,7 @@ describe('VirtualRepeat Integration', () => {
         });
       });
     });
+
     it('handles getting next data set with promises', done => {
       promisedCreate.then(() => {
         validateScroll(promisedVirtualRepeat, promisedViewModel, () => {
@@ -537,16 +545,16 @@ describe('VirtualRepeat Integration', () => {
         }, 'scrollContainerPromise');
       });
     });
-    it('handles getting next data set with small page size', done => {
+
+    it('handles getting next data set with small page size',  async done => {
       vm.items = [];
       for (let i = 0; i < 7; ++i) {
         vm.items.push('item' + i);
       }
-      create.then(() => {
-        validateScroll(virtualRepeat, viewModel, () => {
-          expect(vm.getNextPage).toHaveBeenCalled();
-          done();
-        });
+      await create;
+      validateScroll(virtualRepeat, viewModel, () => {
+        expect(vm.getNextPage).toHaveBeenCalled();
+        done();
       });
     });
     // The following test used to pass because there was no getMore() invoked during initialization

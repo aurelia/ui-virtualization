@@ -19,7 +19,9 @@ import { DOM, PLATFORM } from 'aurelia-pal';
 import {
   calcOuterHeight,
   rebindAndMoveView,
-  getStyleValues
+  getStyleValues,
+  $max,
+  getInlineStyleValue
 } from './utilities';
 import { DomHelper } from './dom-helper';
 import { VirtualRepeatStrategyLocator } from './virtual-repeat-strategy-locator';
@@ -29,7 +31,8 @@ import {
   IVirtualRepeatStrategy,
   ITemplateStrategy,
   IView,
-  IScrollNextScrollContext
+  IScrollNextScrollContext,
+  IViewSlot
 } from './interfaces';
 import { TaskQueue } from 'aurelia-framework';
 
@@ -69,10 +72,31 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
    */
   _previousFirst = 0;
 
-  /**@internal*/ _viewsLength = 0;
-  /**@internal*/ _lastRebind = 0;
-  /**@internal*/ _topBufferHeight = 0;
-  /**@internal*/ _bottomBufferHeight = 0;
+  /**
+   * Number of minimum views required to fillup the visible part of viewport,
+   * and an additional space to have smoother scrolling experience
+   *
+   * By default, this equals to double the amount of `elementsInView`
+   * @internal
+   */
+  _requiredViewsCount = 0;
+
+  /**
+   * @internal
+   * Last rebound view index, user to determine first index of next task when scrolling/ changing viewport scroll position
+   */
+  _lastRebind = 0;
+
+  /**
+   * @internal
+   * Height of top buffer to properly push the visible rendered list items into right position
+   * Usually determined by `_first` visible index * `itemHeight`
+   */
+  _topBufferHeight = 0;
+
+  /**@internal*/
+  _bottomBufferHeight = 0;
+
   /**
    * @internal The amount of views before/after (scrolling direction dependent) visible parts
    * to avoid blank screen while scrolling
@@ -84,11 +108,14 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
   /**@internal*/ _switchedDirection = false;
   /**@internal*/ _isAttached = false;
   /**@internal*/ _ticking = false;
+
   /**
    * @internal Indicates whether virtual repeat attribute is inside a fixed height container with overflow
    *
    * This helps identifies place to add scroll event listener
-   */ _fixedHeightContainer = false;
+   */
+  _fixedHeightContainer = false;
+
   /**@internal*/ _hasCalculatedSizes = false;
   /**@internal*/ _isAtTop = true;
   /**@internal*/ _calledGetMore = false;
@@ -117,7 +144,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
   scope: Scope;
 
   /**@internal */
-  viewSlot: ViewSlot & { children: IView[] };
+  viewSlot: IViewSlot;
 
   readonly viewFactory: BoundViewFactory;
 
@@ -146,7 +173,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
   private isOneTime: boolean;
 
   /**@internal */
-  private domHelper: DomHelper;
+  domHelper: DomHelper;
 
   /**
    * @internal
@@ -155,7 +182,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
   private _itemsLength: number;
 
   /**@internal */
-  private scrollContainer: HTMLElement;
+  scrollContainer: HTMLElement;
 
   /**@internal */
   private scrollListener: () => any;
@@ -422,7 +449,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
   _resetCalculation(): void {
     this._first = 0;
     this._previousFirst = 0;
-    this._viewsLength = 0;
+    this._requiredViewsCount = 0;
     this._lastRebind = 0;
     this._topBufferHeight = 0;
     this._bottomBufferHeight = 0;
@@ -440,7 +467,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
   /**@internal*/
   _onScroll(): void {
     if (!this._ticking && !this._handlingMutations) {
-      requestAnimationFrame(() => {
+      this.taskQueue.queueMicroTask(() => {
         this._handleScroll();
         this._ticking = false;
       });
@@ -641,10 +668,27 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     }
   }
 
-  /**@internal */
+  /**
+   * Adjust the buffers height
+   * - Set `topBuffer` height based on `_topBufferHeight` (px)
+   * - Set `bottomBuffer` height based on `_bottomBufferHeight` (px)
+   * @internal
+   */
   _adjustBufferHeights(): void {
-    this.topBuffer.style.height = `${this._topBufferHeight}px`;
-    this.bottomBuffer.style.height = `${this._bottomBufferHeight}px`;
+    // comparing values to avoid trashing layout by unneccessary assignment
+    // modern DOM engines probably optimized this case, but it's relatively cheap
+    // to do it in our code so better jsut do it here and confirm with engines later
+    let currentTopBufferHeight = this._topBufferHeight;
+    let activeTopBufferHeight = getInlineStyleValue(this.topBuffer, 'height');
+    if (activeTopBufferHeight !== currentTopBufferHeight) {
+      this.topBuffer.style.height = `${currentTopBufferHeight}px`;
+    }
+
+    let currentBottomBufferHeight = this._bottomBufferHeight;
+    let activeBottomBufferHeight = getInlineStyleValue(this.bottomBuffer, 'height');
+    if (activeBottomBufferHeight !== currentBottomBufferHeight) {
+      this.bottomBuffer.style.height = `${this._bottomBufferHeight}px`;
+    }
   }
 
   /**@internal*/
@@ -674,7 +718,9 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     let childrenCount = this.viewCount();
     let viewIndex = this._scrollingDown ? 0 : childrenCount - 1;
     let items = this.items;
-    let currentIndex = this._scrollingDown ? this._getIndexOfLastView() + 1 : this._getIndexOfFirstView() - 1;
+    let currentIndex = this._scrollingDown
+      ? this._getIndexOfLastView() + 1
+      : this._getIndexOfFirstView() - 1;
     let i = 0;
     let viewToMoveLimit = viewsCount - (childrenCount * 2);
     while (i < viewsCount && !this._isAtFirstOrLastIndex) {
@@ -725,7 +771,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
    * - top/bottom buffers' height
    */
   _calcInitialHeights(itemsLength: number): void {
-    const isSameLength = this._viewsLength > 0 && this._itemsLength === itemsLength;
+    const isSameLength = this._requiredViewsCount > 0 && this._itemsLength === itemsLength;
     if (isSameLength) {
       return;
     }
@@ -752,7 +798,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
       ? this._calcScrollHeight(this.scrollContainer)
       : document.documentElement.clientHeight;
     this.elementsInView = Math.ceil(this.scrollContainerHeight / this.itemHeight) + 1;
-    let viewsCount = this._viewsLength = (this.elementsInView * 2) + this._bufferSize;
+    let viewsCount = this._requiredViewsCount = (this.elementsInView * 2) + this._bufferSize;
 
     // Look at top buffer height (how far we've scrolled down)
     // If top buffer height is greater than the new bottom buffer height (how far we *can* scroll down)
@@ -871,8 +917,8 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
   }
 
   /**@override */
-  removeView(index: number, returnToCache: boolean, skipAnimation: boolean) {
-    return this.viewSlot.removeAt(index, returnToCache, skipAnimation);
+  removeView(index: number, returnToCache: boolean, skipAnimation?: boolean): IView | Promise<IView> {
+    return this.viewSlot.removeAt(index, returnToCache, skipAnimation) as IView | Promise<IView>;
   }
 
   updateBindings(view: View) {
@@ -893,5 +939,3 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
 
 const $minus = (index: number, i: number) => index - i;
 const $plus = (index: number, i: number) => index + i;
-const $max = Math.max;
-const $min = Math.min;

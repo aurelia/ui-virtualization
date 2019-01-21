@@ -1,6 +1,6 @@
 import {updateOverrideContext} from 'aurelia-templating-resources';
 import {View} from 'aurelia-templating';
-import { IVirtualRepeat } from './interfaces';
+import { IVirtualRepeat, IView } from './interfaces';
 
 export function calcOuterHeight(element: Element): number {
   let height = element.getBoundingClientRect().height;
@@ -33,11 +33,36 @@ export function updateVirtualOverrideContexts(repeat: IVirtualRepeat, startIndex
   }
 }
 
-export function rebindAndMoveView(repeat: IVirtualRepeat, view: View, index: number, moveToBottom: boolean): void {
+/**
+ * Update a view by re-assigning item value in binding context of associated view of an `collectionIndex`
+ */
+export function rebindView(repeat: IVirtualRepeat, selectedView: IView, collectionIndex: number) {
   let items = repeat.items;
+  updateOverrideContext(selectedView.overrideContext, collectionIndex, items.length);
+  selectedView.bindingContext[repeat.local] = items[collectionIndex];
+}
+
+/**
+ * Update local value of a binding context created on the fly by repeat.
+ *
+ * Additionally move specified view to either top/bottom based on 4th parameter value:
+ * - `true` = move to bottom of children list of `repeat.viewSlot`
+ * - `false` = move to top of children list of `repeat.viewSlot`
+ *
+ * The value of 4th parameter should be defined by scrolling direction:
+ * - `true` = scrolling down
+ * - `false` = scrolling up
+ */
+export function rebindAndMoveView(repeat: IVirtualRepeat, view: IView, collectionIndex: number, moveToBottom: boolean): void {
+  // let items = repeat.items;
+  // updateOverrideContext(view.overrideContext, index, items.length);
+  // view.bindingContext[repeat.local] = items[index];
+  // rebindView(repeat, view, index);
+  let items = repeat.items;
+  updateOverrideContext(view.overrideContext, collectionIndex, items.length);
+  view.bindingContext[repeat.local] = items[collectionIndex];
+
   let viewSlot = repeat.viewSlot;
-  updateOverrideContext(view.overrideContext, index, items.length);
-  view.bindingContext[repeat.local] = items[index];
   if (moveToBottom) {
     viewSlot.children.push(viewSlot.children.shift());
     repeat.templateStrategy.moveViewLast(view, repeat.bottomBuffer);
@@ -58,6 +83,10 @@ export function getStyleValues(element: Element, ...styles: string[]): number {
   return value;
 }
 
+export function getInlineStyleValue(element: HTMLElement, propertyName: string): number {
+  return parseFloat(element.style.getPropertyValue(propertyName));
+}
+
 export function getElementDistanceToBottomViewPort(element: Element): number {
   return document.documentElement.clientHeight - element.getBoundingClientRect().bottom;
 }
@@ -65,3 +94,9 @@ export function getElementDistanceToBottomViewPort(element: Element): number {
 export function getElementDistanceToTopViewPort(element: Element): number {
   return element.getBoundingClientRect().top;
 }
+
+export const $max = Math.max;
+export const $min = Math.min;
+export const $round = Math.round;
+export const $isNaN = isNaN;
+export const $toClosestMultiplicationOf = (value: number, base: number) => $round(value / base) * base;

@@ -147,6 +147,16 @@ There are three parameters that are passed to the function (`getMore(topIndex, i
     </div>
   </template>
   ```
+  3. Beware of CSS selector `:nth-child` and similar selectors. Virtualization requires appropriate removing and inserting visible items, based on scroll position. This means DOM elements order will not stay the same, thus creating unexpected `:nth-child` CSS selector behavior. To work around this, you can use contextual properties `$index`, `$odd`, `$even` etc... to determine an item position, and apply CSS classes/styles against it, like the following example:
+
+  ```html
+  <template>
+    <div virtual-repeat.for="person of persons" class="${$odd ? 'odd' : 'even'}-row">
+      ${person.name}
+    </div>
+  </template>
+  ```
+  4. Similar to (3), virtualization requires appropriate removing and inserting visible items, corresponding lifecycle of items view will also be triggered while inserting (`bind`, `attached`) or removing (`unbind`, `detached`)
 
 ## [Demo](https://aurelia-ui-virtualization.now.sh/)
 

@@ -9,18 +9,23 @@
     <button class="btn btn-success btn-sm" click.trigger="removeLast()">Remove 1 at bottom</button>
     <button class="btn btn-success btn-sm" click.trigger="toggle()">Toggle visibility</button>
     <button class="btn btn-success btn-sm" click.trigger="swap()">Swap</button>
-    <label>
-      Name start with:
-      <input value.bind="value" input.trigger="search()" class="form-control"/>
-    </label>
-
-    <label class="d-block" style="width: 300px;">
-      Example:
-      <select value.bind="selectedMarkup" class="form-control">
-        <option value="div">div</option>
-        <option value="table">table</option>
-      </select>
-    </label>
+    <div class='form-group m-0'>
+      <label>
+        Example:
+        <select value.bind="selectedMarkup" class="form-control form-control-sm">
+          <option value="div">div</option>
+          <option value="table">table</option>
+        </select>
+      </label>
+      <label>
+        Name contains:
+        <input value.bind="value" class="form-control form-control-sm" />
+      </label>
+      <label>
+        Filter results: ${objectArray3.length}
+        <input class="form-control form-control-sm" style="visibility: hidden" />
+      </label>
+    </div>
   </div>
 
   <div if.bind="isVisible && selectedMarkup === 'div'">

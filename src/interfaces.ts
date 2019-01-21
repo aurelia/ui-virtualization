@@ -69,7 +69,7 @@ export interface IVirtualRepeat extends Repeat {
    */
   _previousFirst: number;
 
-  /**@internal */ _viewsLength: number;
+  /**@internal */ _requiredViewsCount: number;
 
   /**
    * @internal
@@ -101,7 +101,9 @@ export interface IVirtualRepeat extends Repeat {
 
   /**@internal */ _calledGetMore: boolean;
 
-  /**@internal */ viewSlot: ViewSlot & { children: IView[] };
+  /**@internal */ viewSlot: IViewSlot;
+
+  /**@internal */ _skipNextScrollHandle: boolean;
 
   items: any[];
   itemHeight: number;
@@ -119,7 +121,16 @@ export interface IVirtualRepeat extends Repeat {
 
   /**@internal*/ _adjustBufferHeights(): void;
 
-  /**@internal*/ _calcInitialHeights(itemsLength: number): void;
+  /**
+   * @internal Calculate the necessary initial heights. Including:
+   *
+   * - item height
+   * - scroll container height
+   * - number of elements in view port
+   * - first item index
+   * - top/bottom buffers' height
+   */
+  _calcInitialHeights(itemsLength: number): void;
 
   /**@internal*/ _getIndexOfFirstView(): number;
 
@@ -156,6 +167,10 @@ export interface ITemplateStrategy {
  * Override `bindingContext` and `overrideContext` on `View` interface
  */
 export type IView = View & Scope;
+/**
+ * Expose property `children` to help manipulation/calculation
+ */
+export type IViewSlot = ViewSlot & { children: IView[] };
 
 // export const enum IVirtualRepeatState {
 //   isAtTop = 0b0_000000_000,

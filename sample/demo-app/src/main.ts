@@ -2,6 +2,14 @@ import { Aurelia, PLATFORM } from 'aurelia-framework';
 
 declare const PRODUCTION: boolean;
 
+const { VirtualRepeat } = require('aurelia-ui-virtualization');
+VirtualRepeat.prototype.bind = (fn => {
+  return function(...args: any[]) {
+    window['virtualRepeat'] = this;
+    return fn.apply(this, args);
+  };
+})(VirtualRepeat.prototype.bind);
+
 export async function configure(aurelia: Aurelia) {
   try {
     aurelia.use

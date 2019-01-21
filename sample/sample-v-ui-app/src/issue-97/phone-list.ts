@@ -1,14 +1,18 @@
-declare const faker: any;
+import { observable } from 'aurelia-framework';
+import { IDemoItem } from 'interfaces';
+import * as faker from 'faker';
 
 export class PhoneList {
 
-  objectArray = [];
+  objectArray: IDemoItem[] = [];
   objectArray2 = [];
-  objectArray3 = [];
+  objectArray3: IDemoItem[] = [];
   numberOfItems = 1000;
   isSelected = false;
   isVisible = true;
   selectedMarkup = 'div';
+
+  @observable()
   value: string = '';
 
   toggle() {
@@ -23,7 +27,7 @@ export class PhoneList {
     this.isSelected = true;
   }
 
-  createItem(index?: number) {
+  createItem(): IDemoItem {
     let name = faker.name.findName();
     return {
       firstLetter: name.charAt(0),
@@ -40,16 +44,17 @@ export class PhoneList {
       this.objectArray2.push(this.createItem());
       this.objectArray3.push(this.createItem());
     }
+    this.objectArray = this.objectArray3.slice(0);
   }
 
-  swap() {
+  swap(): void {
     [this.objectArray3, this.objectArray2] = [this.objectArray2, this.objectArray3];
   }
 
-  addItems(count) {
+  addItems(count: number): void {
     console.log(`adding ${count} items...`);
     for (let i = 0; i < count; ++i) {
-      this.objectArray3.push(this.createItem(i));
+      this.objectArray3.push(this.createItem());
     }
     console.log(`finsihed adding ${count} items`);
     this.numberOfItems = this.objectArray3.length;
@@ -66,7 +71,7 @@ export class PhoneList {
     }
   }
 
-  removeItems(count) {
+  removeItems(count: number) {
     this.objectArray3.splice(0, count);
   }
 
@@ -84,15 +89,21 @@ export class PhoneList {
 
   search () {
     let results = [];
+    let value = this.value.toLowerCase();
 
-    for (let i = 0; i < this.objectArray3.length; i++) {
-      let item = this.objectArray3[i];
+    for (let i = 0; i < this.objectArray.length; i++) {
+      let item = this.objectArray[i];
 
-      if (item.name.toLowerCase().startsWith(this.value.toLowerCase())) {
+      if (item.name.toLowerCase().includes(value)) {
         results.push(item);
       }
     }
 
     this.objectArray3.splice.apply(this.objectArray3, [0, this.objectArray3.length].concat(results));
+  }
+
+  valueChanged() {
+    console.log('%cSearch triggered', 'color:red');
+    this.search();
   }
 }
