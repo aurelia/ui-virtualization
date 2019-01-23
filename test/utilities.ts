@@ -1,8 +1,8 @@
 import { VirtualRepeat } from '../src/virtual-repeat';
 
-export type Queue = (func: (...args: any[]) => any) => void;
+export type AsyncQueue = (func: (...args: any[]) => any) => void;
 
-export function createAssertionQueue(): Queue {
+export function createAssertionQueue(): AsyncQueue {
   let queue: Array<() => any> = [];
   let next = () => {
     if (queue.length) {
@@ -103,6 +103,7 @@ export function validateScrolledState(virtualRepeat: VirtualRepeat, viewModel: a
  */
 export function validateScroll(virtualRepeat: VirtualRepeat, viewModel: any, itemHeight: number, element: Element, done: Function): void {
   let event = new Event('scroll');
+  element = element || document.scrollingElement;
   element.scrollTop = element.scrollHeight;
   element.dispatchEvent(event);
   window.setTimeout(() => {
@@ -111,6 +112,35 @@ export function validateScroll(virtualRepeat: VirtualRepeat, viewModel: any, ite
       done();
     });
   });
+}
+
+export async function scrollToEnd(virtualRepeat: VirtualRepeat, insuranceTime = 50): Promise<void> {
+  let event = new Event('scroll');
+  let element = virtualRepeat._fixedHeightContainer ? virtualRepeat.scrollContainer : (document.scrollingElement || document.documentElement);
+  element.scrollTop = element.scrollHeight;
+  element.dispatchEvent(event);
+  await ensureScrolled(insuranceTime);
+}
+
+/**
+ * Manually dispatch a scroll event and validate scrolled state of virtual repeat
+ *
+ * Programatically set `scrollTop` of element specified with `elementSelector` query string
+ * (or `#scrollContainer` by default) to be equal with its `scrollHeight`
+ */
+export async function scrollToEndAndValidateAsync(virtualRepeat: VirtualRepeat, viewModel: any, itemHeight: number): Promise<void> {
+  // let event = new Event('scroll');
+  // let element = virtualRepeat._fixedHeightContainer ? virtualRepeat.scrollContainer : document.scrollingElement;
+  // element.scrollTop = element.scrollHeight;
+  // element.dispatchEvent(event);
+  // await ensureScrolled(50);
+  await scrollToEnd(virtualRepeat);
+  validateScrolledState(virtualRepeat, viewModel, itemHeight);
+}
+
+export async function ensureScrolled(time: number = 1) {
+  await waitForTimeout(time);
+  await waitForNextFrame();
 }
 
 export function waitForTimeout(time = 1): Promise<void> {

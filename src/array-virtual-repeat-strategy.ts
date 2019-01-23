@@ -309,8 +309,9 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
    * @internal
    */
   _isIndexVisible(repeat: VirtualRepeat, viewSlot: ViewSlot, collectionIndex: number): boolean {
-    let viewIndex = this._getViewIndex(repeat, viewSlot, collectionIndex);
-    return viewIndex > -1 && viewIndex < repeat._requiredViewsCount - 1;
+    return !this._isIndexBeforeViewSlot(repeat, viewSlot, collectionIndex) && !this._isIndexAfterViewSlot(repeat, viewSlot, collectionIndex);
+    // let viewIndex = this._getViewIndex(repeat, viewSlot, collectionIndex);
+    // return viewIndex > -1 && viewIndex < repeat._requiredViewsCount - 1;
   }
 
   /**@internal */

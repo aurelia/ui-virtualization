@@ -50,7 +50,11 @@ export class ComponentTester {
           this.sut = aurelia.root.controllers[0].viewModel;
           this.viewModel = aurelia.root.bindingContext;
           this.element = host.firstElementChild;
-          this.cleanUp = () => host.parentNode.removeChild(host);
+          this.cleanUp = () => {
+            if (host.parentNode) {
+              host.parentNode.removeChild(host);
+            }
+          };
         });
       });
     });

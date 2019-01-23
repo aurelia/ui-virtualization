@@ -4,7 +4,7 @@ import './setup';
 import { StageComponent, ComponentTester } from './component-tester';
 import { PLATFORM } from 'aurelia-pal';
 // import {TableStrategy} from '../src/template-strategy';
-import { createAssertionQueue, validateState, validateScrolledState, Queue as AsyncQueue } from './utilities';
+import { createAssertionQueue, validateState, validateScrolledState, AsyncQueue } from './utilities';
 import { VirtualRepeat } from '../src/virtual-repeat';
 
 PLATFORM.moduleName('src/virtual-repeat');
@@ -100,12 +100,6 @@ describe('VirtualRepeat Integration', () => {
 
   function validateReverse(virtualRepeat: VirtualRepeat, viewModel: any, done: Function) {
     viewModel.items.reverse();
-    console.log(
-      virtualRepeat.items.length,
-      virtualRepeat._requiredViewsCount,
-      virtualRepeat.elementsInView,
-      virtualRepeat.viewSlot.children.length
-    );
     nq(() => validateState(virtualRepeat, viewModel, itemHeight));
     nq(() => done());
   }
@@ -391,7 +385,7 @@ describe('VirtualRepeat Integration', () => {
 
   describe('infinite scroll', () => {
     let component;
-    let virtualRepeat;
+    let virtualRepeat: VirtualRepeat;
     let viewModel;
     let create;
     let items;
@@ -602,146 +596,6 @@ describe('VirtualRepeat Integration', () => {
       });
     });
 
-    xdescribe('scrolling div', () => {
-      beforeEach(() => {
-        items = [];
-        for (let i = 0; i < 1000; ++i) {
-          items.push('item' + i);
-        }
-
-        component = StageComponent
-          .withResources(['src/virtual-repeat'])
-          .inView(`<div id="scrollContainer" style="height: 500px; overflow-y: scroll;">
-                    <div style="height: ${itemHeight}px;" virtual-repeat.for="item of items">\${item}</div>
-                  </div>`)
-          .boundTo({ items: items });
-
-        create = component.create().then(() => {
-          virtualRepeat = component.sut;
-          viewModel = component.viewModel;
-        });
-      });
-
-      afterEach(() => {
-        component.cleanUp();
-      });
-
-      it('handles splice when scrolled to end', done => {
-        create.then(() => {
-          validateScroll(virtualRepeat, viewModel, () => {
-            viewModel.items.splice(995, 1, 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j');
-            nq(() => validateScrolledState(virtualRepeat, viewModel, itemHeight));
-            nq(() => validateScroll(virtualRepeat, viewModel, () => {
-              let views = virtualRepeat.viewSlot.children;
-              setTimeout(() => {
-                expect(views[views.length - 1].bindingContext.item).toBe(viewModel.items[viewModel.items.length - 1]);
-                done();
-              }, 500);
-            }));
-          });
-        });
-      });
-
-      it('handles splice removing non-consecutive when scrolled to end', done => {
-        create.then(() => {
-          validateScroll(virtualRepeat, viewModel, () => {
-            for (let i = 0, ii = 100; i < ii; i++) {
-              viewModel.items.splice(i + 1, 9);
-            }
-            nq(() => validateScrolledState(virtualRepeat, viewModel, itemHeight));
-            nq(() => validateScroll(virtualRepeat, viewModel, () => {
-              let views = virtualRepeat.viewSlot.children;
-              setTimeout(() => {
-                expect(views[views.length - 1].bindingContext.item).toBe(viewModel.items[viewModel.items.length - 1]);
-                done();
-              }, 500);
-            }));
-          });
-        });
-      });
-
-      it('handles splice non-consecutive when scrolled to end', done => {
-        create.then(() => {
-          validateScroll(virtualRepeat, viewModel, () => {
-            for (let i = 0, ii = 80; i < ii; i++) {
-              viewModel.items.splice(10 * i, 3, i);
-            }
-            nq(() => validateScrolledState(virtualRepeat, viewModel, itemHeight));
-            nq(() => validateScroll(virtualRepeat, viewModel, () => {
-              let views = virtualRepeat.viewSlot.children;
-              setTimeout(() => {
-                expect(views[views.length - 1].bindingContext.item).toBe(viewModel.items[viewModel.items.length - 1]);
-                done();
-              }, 500);
-            }));
-          });
-        });
-      });
-
-      it('handles splice removing many', done => {
-        create.then(() => {
-          // more items remaining than viewslot capacity
-          viewModel.items.splice(5, 1000 - virtualRepeat._viewsLength - 10);
-          nq(() => validateScrolledState(virtualRepeat, viewModel, itemHeight));
-          nq(() => done());
-        });
-      });
-
-      it('handles splice removing more', done => {
-        // number of items remaining exactly as viewslot capacity
-        create.then(() => {
-          viewModel.items.splice(5, 1000 - virtualRepeat._viewsLength);
-          nq(() => expect(virtualRepeat.viewSlot.children.length).toBe(viewModel.items.length));
-          nq(() => validateScrolledState(virtualRepeat, viewModel, itemHeight));
-          nq(() => done());
-        });
-      });
-
-      it('handles splice removing even more', done => {
-        // less items remaining than viewslot capacity
-        create.then(() => {
-          viewModel.items.splice(5, 1000 - virtualRepeat._viewsLength + 10);
-          nq(() => expect(virtualRepeat.viewSlot.children.length).toBe(viewModel.items.length));
-          nq(() => validateScrolledState(virtualRepeat, viewModel, itemHeight));
-          nq(() => done());
-        });
-      });
-
-      it('handles splice removing non-consecutive', done => {
-        create.then(() => {
-          for (let i = 0, ii = 100; i < ii; i++) {
-            viewModel.items.splice(i + 1, 9);
-          }
-          nq(() => validateScrolledState(virtualRepeat, viewModel, itemHeight));
-          nq(() => done());
-        });
-      });
-
-      it('handles splice non-consecutive', done => {
-        create.then(() => {
-          for (let i = 0, ii = 100; i < ii; i++) {
-            viewModel.items.splice(3 * (i + 1), 3, i);
-          }
-          nq(() => validateScrolledState(virtualRepeat, viewModel, itemHeight));
-          nq(() => done());
-        });
-      });
-
-      it('handles splice removing many + add', done => {
-        create.then(() => {
-          viewModel.items.splice(5, 990, 'a', 'b', 'c');
-          nq(() => validateScrolledState(virtualRepeat, viewModel, itemHeight));
-          nq(() => done());
-        });
-      });
-
-      it('handles splice remove remaining + add', done => {
-        create.then(() => {
-          viewModel.items.splice(5, 995, 'a', 'b', 'c');
-          nq(() => validateScrolledState(virtualRepeat, viewModel, itemHeight));
-          nq(() => done());
-        });
-      });
-    });
   });
+
 });

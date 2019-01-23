@@ -894,7 +894,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
   /**@override */
   view(index: number) {
     const viewSlot = this.viewSlot;
-    return index < 0 || index > viewSlot.children.length - 1 ? null : viewSlot.children[index];
+    return index < 0 || index > viewSlot.children.length - 1 ? null : (viewSlot.children[index] || null);
   }
 
   /**@override */
