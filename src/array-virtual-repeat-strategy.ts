@@ -2,7 +2,7 @@ import { ICollectionObserverSplice, mergeSplice } from 'aurelia-binding';
 import { ViewSlot } from 'aurelia-templating';
 import { ArrayRepeatStrategy, createFullOverrideContext } from 'aurelia-templating-resources';
 import { IView, IVirtualRepeatStrategy } from './interfaces';
-import { $min, $round, getElementDistanceToBottomViewPort, rebindAndMoveView, updateVirtualOverrideContexts } from './utilities';
+import { $min, $round, getElementDistanceToBottomViewPort, rebindAndMoveView, updateVirtualOverrideContexts, $max } from './utilities';
 import { VirtualRepeat } from './virtual-repeat';
 
 /**
@@ -96,6 +96,9 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
       repeat.__array = array.slice(0);
       return;
     }
+    let scrollPositionBeforeRunningSplice = repeat._fixedHeightContainer
+      ? repeat.scrollContainer.scrollTop
+      : document.documentElement.scrollTop;
 
     // After a mutation, if there is no items left in the array,
     // it's safe to remove all current view, reset all of repeat calculation
@@ -124,12 +127,160 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
 
       maybePromise.then(runQueuedSplices);
     }
+    let firstViewIndex = repeat._getFirstViewIndex();
+    // there is no view after mutation,
+    // or maybe there is on going work that hasn't been stablized?
+    // bail as doing work her is not safe
+    if (firstViewIndex < 0) {
+      return;
+    }
+    let shouldAdjustVisibleViews = firstViewIndex * repeat.itemHeight > repeat._topBufferHeight;
+    console.log(firstViewIndex * repeat.itemHeight, repeat._topBufferHeight);
+    // console.log(scrollPositionBeforeRunningSplice, firstViewIndex, shouldAdjustVisibleViews, firstViewIndex * repeat.itemHeight + repeat._topBufferHeight);
+    if (shouldAdjustVisibleViews) {
+      repeat._topBufferHeight = firstViewIndex * repeat.itemHeight;
+      repeat._bottomBufferHeight = $max(repeat.items.length * repeat.itemHeight - repeat._topBufferHeight - repeat.viewCount() * repeat.itemHeight, 0);
+      repeat._adjustBufferHeights();
+    }
   }
+
+  // _runSplices(repeat: VirtualRepeat, array: Array<any>, splices: any): any {
+  //   let removeDelta = 0;
+  //   let rmPromises = [];
+
+  //   // do all splices replace existing entries?
+  //   let allSplicesAreInplace = true;
+  //   for (let i = 0; i < splices.length; i++) {
+  //     let splice = splices[i];
+  //     if (splice.removed.length !== splice.addedCount) {
+  //       allSplicesAreInplace = false;
+  //       break;
+  //     }
+  //   }
+
+  //   // if so, optimise by just replacing affected visible views
+  //   if (allSplicesAreInplace) {
+  //     for (let i = 0; i < splices.length; i++) {
+  //       let splice = splices[i];
+  //       for (let collectionIndex = splice.index; collectionIndex < splice.index + splice.addedCount; collectionIndex++) {
+  //         if (!this._isIndexBeforeViewSlot(repeat, repeat.viewSlot, collectionIndex)
+  //           && !this._isIndexAfterViewSlot(repeat, repeat.viewSlot, collectionIndex)
+  //         ) {
+  //           let viewIndex = this._getViewIndex(repeat, repeat.viewSlot, collectionIndex);
+  //           let overrideContext = createFullOverrideContext(repeat, array[collectionIndex], collectionIndex, array.length);
+  //           repeat.removeView(viewIndex, true, true);
+  //           repeat.insertView(viewIndex, overrideContext.bindingContext, overrideContext);
+  //         }
+  //       }
+  //     }
+  //   } else {
+  //     for (let i = 0, k = 0, ii = splices.length; i < ii; ++i) {
+  //       let splice = splices[i];
+  //       let removed = splice.removed;
+  //       let removedLength = removed.length;
+
+  //       for (let j = 0, jj = removedLength; j < jj; ++j, ++k) {
+  //         let viewOrPromise = this._removeViewAt(repeat, splice.index + removeDelta + rmPromises.length, true, k);
+  //         if (viewOrPromise instanceof Promise) {
+  //           rmPromises.push(viewOrPromise);
+  //         }
+  //       }
+  //       removeDelta -= splice.addedCount;
+  //     }
+
+  //     if (rmPromises.length > 0) {
+  //       return Promise.all(rmPromises).then(() => {
+  //         this._fillUpViewSlot(repeat, array, splices);
+  //         this._handleAddedSplices(repeat, array, splices);
+  //         updateVirtualOverrideContexts(repeat, 0);
+  //       });
+  //     }
+  //     this._fillUpViewSlot(repeat, array, splices);
+  //     this._handleAddedSplices(repeat, array, splices);
+  //     updateVirtualOverrideContexts(repeat, 0);
+  //   }
+
+  //   return undefined;
+  // }
+
+  // _fillUpViewSlot(repeat: VirtualRepeat, array: Array<any>, splices: Array<any>) {
+  //   if (repeat.viewCount() >= repeat._requiredViewsCount) {
+  //     return;
+  //   }
+
+  //   // replace removed views by adding new views at the bottom
+  //   let currDelta = 0;
+  //   let addDelta = 0;
+  //   for (let i = 0, ii = splices.length; i < ii; i++) {
+  //     let splice = splices[i];
+  //     let collectionIndex = splice.index + currDelta + splice.addedCount;
+  //     currDelta = Math.max(0, splice.addedCount - splice.removed.length);
+  //     addDelta += splice.addedCount;
+  //     let end = array.length;
+  //     let nextSplice = splices[i + 1];
+  //     if (nextSplice) {
+  //       end = nextSplice.index;
+  //     }
+  //     for (; collectionIndex < end; collectionIndex++) {
+  //       let viewCount = repeat.viewCount();
+  //       let viewIndex = viewCount === 0 ? 0 : this._getViewIndex(repeat, repeat.viewSlot, collectionIndex) - addDelta;
+  //       if (viewIndex >= repeat._requiredViewsCount) {
+  //         return;
+  //       }
+  //       if (viewIndex >= viewCount) {
+  //         let data = repeat.items[collectionIndex];
+  //         let view;
+  //         if (data) {
+  //           let overrideContext = createFullOverrideContext(repeat, data, collectionIndex, array.length);
+  //           view = repeat.viewFactory.create();
+  //           view.bind(overrideContext.bindingContext, overrideContext);
+  //         }
+  //         if (view) {
+  //           repeat.viewSlot.insert(viewIndex, view);
+  //         } else {
+  //           return;
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
+
+  // _removeViewAt(repeat: VirtualRepeat, collectionIndex: number, returnToCache: boolean, j: number): any {
+  //   let viewOrPromise;
+  //   let viewSlot = repeat.viewSlot;
+  //   let viewCount = repeat.viewCount();
+
+  //   // index in view slot?
+  //   if (!this._isIndexBeforeViewSlot(repeat, viewSlot, collectionIndex) && !this._isIndexAfterViewSlot(repeat, viewSlot, collectionIndex)) {
+  //     let viewIndex = this._getViewIndex(repeat, viewSlot, collectionIndex);
+  //     viewOrPromise = viewIndex < viewCount ? repeat.removeView(viewIndex, returnToCache) : undefined;
+  //     if (repeat._bottomBufferHeight > 0) {
+  //       repeat._bottomBufferHeight = repeat._bottomBufferHeight - (repeat.itemHeight);
+  //     }
+  //   } else if (this._isIndexBeforeViewSlot(repeat, viewSlot, collectionIndex)) {
+  //     if (repeat._bottomBufferHeight > 0) {
+  //       repeat._bottomBufferHeight = repeat._bottomBufferHeight - (repeat.itemHeight);
+  //       if (viewCount > 0) {
+  //         rebindAndMoveView(repeat, repeat.view(0), repeat.view(0).overrideContext.$index, true);
+  //       }
+  //     } else if (repeat._topBufferHeight > 0) {
+  //       repeat._topBufferHeight = repeat._topBufferHeight - (repeat.itemHeight);
+  //     }
+  //   } else if (this._isIndexAfterViewSlot(repeat, viewSlot, collectionIndex)) {
+  //     repeat._bottomBufferHeight = repeat._bottomBufferHeight - (repeat.itemHeight);
+  //   }
+
+  //   if (viewOrPromise instanceof Promise) {
+  //     return viewOrPromise.then(() => {
+  //       repeat._adjustBufferHeights();
+  //     });
+  //   }
+  //   repeat._adjustBufferHeights();
+  //   return viewOrPromise;
+  // }
 
   /**@internal */
   _runSplices(repeat: VirtualRepeat, array: any[], splices: ICollectionObserverSplice[]): any {
-    let removeDelta = 0;
-    let rmPromises = [];
 
     // do all splices replace existing entries?
     // this is determine by checking if all splices are balanced between addedCount and removed.length
@@ -148,8 +299,8 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
       for (let i = 0; i < splices.length; i++) {
         let splice = splices[i];
         for (let collectionIndex = splice.index; collectionIndex < splice.index + splice.addedCount; collectionIndex++) {
-          if (this._isIndexVisible(repeat, repeat.viewSlot, collectionIndex)) {
-            let viewIndex = this._getViewIndex(repeat, repeat.viewSlot, collectionIndex);
+          if (this._isIndexInViewport(repeat, collectionIndex)) {
+            let viewIndex = this._getViewIndex(repeat, collectionIndex);
             let overrideContext = createFullOverrideContext(repeat, array[collectionIndex], collectionIndex, array.length);
             repeat.removeView(viewIndex, true, true);
             repeat.insertView(viewIndex, overrideContext.bindingContext, overrideContext);
@@ -159,17 +310,20 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
       return;
     }
 
-    for (let i = 0, k = 0, ii = splices.length; i < ii; ++i) {
+    let removeDelta = 0;
+    let rmPromises = [];
+
+    for (let i = 0, removedDelta = 0, ii = splices.length; i < ii; ++i) {
       let splice = splices[i];
       let removed = splice.removed;
       let removedLength = removed.length;
 
-      for (let j = 0, jj = removedLength; j < jj; ++j, ++k) {
+      for (let j = 0, jj = removedLength; j < jj; ++j, ++removedDelta) {
         let viewOrPromise = this._removeViewAt(
           repeat,
           splice.index + removeDelta + rmPromises.length,
           true,
-          k
+          removedDelta
         );
         if (viewOrPromise instanceof Promise) {
           rmPromises.push(viewOrPromise);
@@ -211,7 +365,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
       }
       for (; collectionIndex < end; collectionIndex++) {
         let viewCount = repeat.viewCount();
-        let viewIndex = viewCount === 0 ? 0 : this._getViewIndex(repeat, repeat.viewSlot, collectionIndex) - addDelta;
+        let viewIndex = viewCount === 0 ? 0 : this._getViewIndex(repeat, collectionIndex) - addDelta;
         if (viewIndex >= repeat._requiredViewsCount) {
           return;
         }
@@ -234,7 +388,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
   }
 
   /**@internal */
-  _removeViewAt(repeat: VirtualRepeat, collectionIndex: number, returnToCache: boolean, j: number): any {
+  _removeViewAt(repeat: VirtualRepeat, collectionIndex: number, returnToCache: boolean, j: number): IView | Promise<IView> {
     let viewOrPromise: IView | Promise<IView>;
     let viewSlot = repeat.viewSlot;
     let viewCount = repeat.viewCount();
@@ -244,33 +398,34 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     let itemHeight = repeat.itemHeight;
 
     // index in view slot?
-    if (this._isIndexVisible(repeat, viewSlot, collectionIndex)) {
-      let viewIndex = this._getViewIndex(repeat, viewSlot, collectionIndex);
-      if (viewIndex < viewCount) {
+    if (this._isIndexInViewport(repeat, collectionIndex)) {
+      let viewIndex = this._getViewIndex(repeat, collectionIndex);
+      if (viewCount > viewIndex && viewIndex > -1) {
         viewOrPromise = repeat.removeView(viewIndex, returnToCache);
       }
       if (currentBottomBufferHeight > 0) {
-        repeat._bottomBufferHeight = currentBottomBufferHeight - (itemHeight);
+        repeat._bottomBufferHeight = $max(currentBottomBufferHeight - itemHeight, 0);
       }
     } else {
-      if (this._isIndexBeforeViewSlot(repeat, viewSlot, collectionIndex)) {
+      if (this._isIndexBeforeViewport(repeat, collectionIndex)) {
         if (currentTopBufferHeight > 0) {
-          repeat._topBufferHeight = currentTopBufferHeight - (itemHeight);
+          repeat._topBufferHeight = currentTopBufferHeight - itemHeight;
         } else if (currentBottomBufferHeight > 0) {
-          repeat._bottomBufferHeight = currentBottomBufferHeight - (itemHeight);
+          repeat._bottomBufferHeight = currentBottomBufferHeight - itemHeight;
           if (viewCount > 0) {
             let firstView = repeat._getFirstView();
             rebindAndMoveView(repeat, firstView, firstView.overrideContext.$index, true);
           }
         }
-      } else if (this._isIndexAfterViewSlot(repeat, viewSlot, collectionIndex)) {
-        repeat._bottomBufferHeight = currentBottomBufferHeight - (itemHeight);
+      } else if (this._isIndexAfterViewport(repeat, collectionIndex)) {
+        repeat._bottomBufferHeight = currentBottomBufferHeight - itemHeight;
       }
     }
 
     if (viewOrPromise instanceof Promise) {
-      return viewOrPromise.then(() => {
+      return viewOrPromise.then((v) => {
         repeat._adjustBufferHeights();
+        return v;
       });
     }
     repeat._adjustBufferHeights();
@@ -308,21 +463,22 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
    * `false` = not visible
    * @internal
    */
-  _isIndexVisible(repeat: VirtualRepeat, viewSlot: ViewSlot, collectionIndex: number): boolean {
-    return !this._isIndexBeforeViewSlot(repeat, viewSlot, collectionIndex) && !this._isIndexAfterViewSlot(repeat, viewSlot, collectionIndex);
+  private _isIndexInViewport(repeat: VirtualRepeat, collectionIndex: number): boolean {
+    return !this._isIndexBeforeViewport(repeat, collectionIndex)
+      && !this._isIndexAfterViewport(repeat, collectionIndex);
     // let viewIndex = this._getViewIndex(repeat, viewSlot, collectionIndex);
     // return viewIndex > -1 && viewIndex < repeat._requiredViewsCount - 1;
   }
 
   /**@internal */
-  _isIndexBeforeViewSlot(repeat: VirtualRepeat, viewSlot: ViewSlot, collectionIndex: number): boolean {
-    let viewIndex = this._getViewIndex(repeat, viewSlot, collectionIndex);
+  private _isIndexBeforeViewport(repeat: VirtualRepeat, collectionIndex: number): boolean {
+    let viewIndex = this._getViewIndex(repeat, collectionIndex);
     return viewIndex < 0;
   }
 
   /**@internal */
-  _isIndexAfterViewSlot(repeat: VirtualRepeat, viewSlot: ViewSlot, collectionIndex: number): boolean {
-    let viewIndex = this._getViewIndex(repeat, viewSlot, collectionIndex);
+  private _isIndexAfterViewport(repeat: VirtualRepeat, collectionIndex: number): boolean {
+    let viewIndex = this._getViewIndex(repeat, collectionIndex);
     return viewIndex > repeat._requiredViewsCount - 1;
   }
 
@@ -330,7 +486,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
    * @internal
    * Calculate real index of a given index, based on existing buffer height and item height
    */
-  _getViewIndex(repeat: VirtualRepeat, viewSlot: ViewSlot, index: number): number {
+  private _getViewIndex(repeat: VirtualRepeat, index: number): number {
     if (repeat.viewCount() === 0) {
       return -1;
     }
@@ -352,7 +508,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
       for (; addIndex < end; ++addIndex) {
         let hasDistanceToBottomViewPort = getElementDistanceToBottomViewPort(repeat.templateStrategy.getLastElement(repeat.bottomBuffer)) > 0;
         if (repeat.viewCount() === 0
-          || this._isIndexVisible(repeat, viewSlot, addIndex)
+          || this._isIndexInViewport(repeat, addIndex)
           || hasDistanceToBottomViewPort
         )  {
           let overrideContext = createFullOverrideContext(repeat, array[addIndex], addIndex, arrayLength);
@@ -369,9 +525,9 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
               repeat._bottomBufferHeight = repeat._bottomBufferHeight + repeat.itemHeight;
             }
           }
-        } else if (this._isIndexBeforeViewSlot(repeat, viewSlot, addIndex)) {
+        } else if (this._isIndexBeforeViewport(repeat, addIndex)) {
           repeat._topBufferHeight = repeat._topBufferHeight + repeat.itemHeight;
-        } else if (this._isIndexAfterViewSlot(repeat, viewSlot, addIndex)) {
+        } else if (this._isIndexAfterViewport(repeat, addIndex)) {
           repeat._bottomBufferHeight = repeat._bottomBufferHeight + repeat.itemHeight;
           repeat.isLastIndex = false;
         }

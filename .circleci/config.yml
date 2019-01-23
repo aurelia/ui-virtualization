@@ -18,7 +18,8 @@ jobs:
     steps:
       - checkout
       - run: npm ci
-      - run: npm build
+      - run: npm run build
+      - run: npm run lint
 
 workflows:
   build_test:

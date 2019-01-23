@@ -132,7 +132,7 @@ export interface IVirtualRepeat extends Repeat {
    */
   _calcInitialHeights(itemsLength: number): void;
 
-  /**@internal*/ _getIndexOfFirstView(): number;
+  /**@internal*/ _getFirstViewIndex(): number;
 
   /**@internal*/ _getLastViewItem(): any;
 

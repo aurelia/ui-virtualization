@@ -1,0 +1,64 @@
+<template>
+  <div class="mb-1">
+    <button class="btn btn-success btn-sm" click.trigger="addItems(1000)">Add 1000</button>
+    <button class="btn btn-success btn-sm" click.trigger="addItems(10000)">Add 10 000</button>
+    <button class="btn btn-success btn-sm" click.trigger="addItems(100000)">Add 100 000</button>
+    <button class="btn btn-success btn-sm" click.trigger="addItemFirst()">Add 1 at top</button>
+    <button class="btn btn-success btn-sm" click.trigger="addItemLast()">Add 1 at bottom</button>
+    <button class="btn btn-success btn-sm" click.trigger="removeItems(1)">Remove 1 at top</button>
+    <button class="btn btn-success btn-sm" click.trigger="removeLast()">Remove 1 at bottom</button>
+    <button class="btn btn-success btn-sm" click.trigger="toggle()">Toggle visibility</button>
+    <button class="btn btn-success btn-sm" click.trigger="swap()">Swap</button>
+    <div class='form-group m-0'>
+      <label>
+        Example:
+        <select value.bind="selectedMarkup" class="form-control form-control-sm">
+          <option value="div">div</option>
+          <option value="table">table</option>
+        </select>
+      </label>
+      <label>
+        Name contains:
+        <input value.bind="value" class="form-control form-control-sm" />
+      </label>
+      <label>
+        Filter results: ${objectArray3.length}
+        <input class="form-control form-control-sm" style="visibility: hidden" />
+      </label>
+    </div>
+  </div>
+
+  <div if.bind="isVisible && selectedMarkup === 'div'" style="overflow: auto; width: 400px; height: 500px; margin: auto;">
+    <div virtual-repeat.for="item of objectArray3" class="contact-list-item ${item.name} ${$index}">
+      <div class="contact-item">
+        <div class="avatar" click.trigger="click()" css="background-color: ${item.color}">${item.firstLetter}</div>
+        <div class="name text-primary">
+          <b>${$index} ${item.name}</b>
+        </div>
+        <div class="content">
+          <b class="text-success">Phone:</b> ${item.phone} <br>
+          <b class="text-success">Country:</b> ${item.country} <br>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div if.bind="isVisible && selectedMarkup === 'table'" style="overflow: auto; height: 500px;">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Name</th>
+          <th>Phone</th>
+          <th>Country</th>
+        </tr>
+      </thead>
+      <tr virtual-repeat.for="item of objectArray3" class="contact-list-item ${item.name} ${$index}">
+        <td class="avatar" click.trigger="click()" css="background-color: ${item.color}">${item.firstLetter}</td>
+        <td class="name">${$index} ${item.name}</td>
+        <td><strong>Phone:</strong> ${item.phone} </td>
+        <td>Country:</strong> ${item.country} </td>
+      </tr>
+    </table>
+  </div>
+</template>

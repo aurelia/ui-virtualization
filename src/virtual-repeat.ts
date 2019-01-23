@@ -25,7 +25,7 @@ import {
 } from './utilities';
 import { DomHelper } from './dom-helper';
 import { VirtualRepeatStrategyLocator } from './virtual-repeat-strategy-locator';
-import { TemplateStrategyLocator } from './template-strategy';
+import { TemplateStrategyLocator } from './template-strategy-locator';
 import {
   IVirtualRepeat,
   IVirtualRepeatStrategy,
@@ -149,7 +149,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
   readonly viewFactory: BoundViewFactory;
 
   /**@internal */
-  private element: HTMLElement;
+  element: HTMLElement;
 
   /**@internal */
   private instruction: TargetInstruction;
@@ -172,9 +172,6 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
   /**@internal */
   private isOneTime: boolean;
 
-  /**@internal */
-  domHelper: DomHelper;
-
   /**
    * @internal
    * Temporary snapshot of items list count. Updated regularly to determinate calculation need
@@ -185,7 +182,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
   scrollContainer: HTMLElement;
 
   /**@internal */
-  private scrollListener: () => any;
+  private _scrollListener: () => void;
 
   /**@internal */
   private _sizeInterval: any;
@@ -228,8 +225,8 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     viewResources: ViewResources,
     observerLocator: ObserverLocator,
     strategyLocator: VirtualRepeatStrategyLocator,
-    templateStrategyLocator: TemplateStrategyLocator,
-    domHelper: DomHelper) {
+    templateStrategyLocator: TemplateStrategyLocator
+  ) {
     super({
       local: 'item',
       viewsRequireLifecycle: viewsRequireLifecycle(viewFactory)
@@ -246,7 +243,6 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     this.templateStrategyLocator = templateStrategyLocator;
     this.sourceExpression = getItemsSourceExpression(this.instruction, 'virtual-repeat.for');
     this.isOneTime = isOneTime(this.sourceExpression);
-    this.domHelper = domHelper;
   }
 
   /**@override */
@@ -262,7 +258,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     let element = this.element;
     let templateStrategy = this.templateStrategy = this.templateStrategyLocator.getStrategy(element);
 
-    let scrollListener = this.scrollListener = () => this._onScroll();
+    let scrollListener = this._scrollListener = () => { this._onScroll(); };
     let scrollContainer = this.scrollContainer = templateStrategy.getScrollContainer(element);
     let topBuffer = this.topBuffer = templateStrategy.createTopBufferElement(element);
 
@@ -271,7 +267,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
 
     this._calcDistanceToTopInterval = PLATFORM.global.setInterval(() => {
       let prevDistanceToTop = this.distanceToTop;
-      let currDistanceToTop = this.domHelper.getElementDistanceToTopOfDocument(topBuffer) + this.topBufferDistance;
+      let currDistanceToTop = DomHelper.getElementDistanceToTopOfDocument(topBuffer) + this.topBufferDistance;
       this.distanceToTop = currDistanceToTop;
       if (prevDistanceToTop !== currDistanceToTop) {
         this._handleScroll();
@@ -280,15 +276,19 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
 
     // When dealing with tables, there can be gaps between elements, causing distances to be messed up. Might need to handle this case here.
     this.topBufferDistance = templateStrategy.getTopBufferDistance(topBuffer);
-    this.distanceToTop = this.domHelper
+    this.distanceToTop = DomHelper
       .getElementDistanceToTopOfDocument(templateStrategy.getFirstElement(topBuffer));
 
-    if (this.domHelper.hasOverflowScroll(scrollContainer)) {
+    if (DomHelper.hasOverflowScroll(scrollContainer)) {
       this._fixedHeightContainer = true;
       scrollContainer.addEventListener('scroll', scrollListener);
     } else {
       document.addEventListener('scroll', scrollListener);
     }
+    // if initial amount of items during attached is lower than number of elements required
+    // just to fit 1 screen of viewport, then do a force get more
+    // _getMore function has guard condition so that when there is nothing specified
+    // it will not do anything, making the call safe
     if (this.items.length < this.elementsInView && this.isLastIndex === undefined) {
       this._getMore(true);
     }
@@ -301,10 +301,10 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
 
   /**@override */
   detached(): void {
-    if (this.domHelper.hasOverflowScroll(this.scrollContainer)) {
-      this.scrollContainer.removeEventListener('scroll', this.scrollListener);
+    if (DomHelper.hasOverflowScroll(this.scrollContainer)) {
+      this.scrollContainer.removeEventListener('scroll', this._scrollListener);
     } else {
-      document.removeEventListener('scroll', this.scrollListener);
+      document.removeEventListener('scroll', this._scrollListener);
     }
     this.isLastIndex = undefined;
     this._fixedHeightContainer = false;
@@ -312,7 +312,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     this._isAttached = false;
     this._itemsLength = 0;
     this.templateStrategy.removeBufferElements(this.element, this.topBuffer, this.bottomBuffer);
-    this.topBuffer = this.bottomBuffer = this.scrollContainer = this.scrollListener = null;
+    this.topBuffer = this.bottomBuffer = this.scrollContainer = null;
     this.scrollContainerHeight = 0;
     this.distanceToTop = 0;
     this.removeAllViews(true, false);
@@ -350,7 +350,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
       return;
     }
     let reducingItems = false;
-    let previousLastViewIndex = this._getIndexOfLastView();
+    let previousLastViewIndex = this._getLastViewIndex();
 
     let items = this.items;
     let shouldCalculateSize = !!items;
@@ -403,7 +403,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
         this._scrollingUp = false;
 
         // Make sure we fix any state (we could have been at the last index before, but this doesn't get set until too late for scrolling)
-        this.isLastIndex = this._getIndexOfLastView() >= this.items.length - 1;
+        this.isLastIndex = this._getLastViewIndex() >= this.items.length - 1;
       }
 
       // Need to readjust the scroll position to "move" us back to the appropriate position,
@@ -464,7 +464,10 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     this._adjustBufferHeights();
   }
 
-  /**@internal*/
+  /**
+   * Used to handle scroll event using
+   * @internal
+   */
   _onScroll(): void {
     if (!this._ticking && !this._handlingMutations) {
       this.taskQueue.queueMicroTask(() => {
@@ -663,7 +666,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
 
   /**@internal*/
   _checkFixedHeightContainer(): void {
-    if (this.domHelper.hasOverflowScroll(this.scrollContainer)) {
+    if (DomHelper.hasOverflowScroll(this.scrollContainer)) {
       this._fixedHeightContainer = true;
     }
   }
@@ -719,8 +722,8 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     let viewIndex = this._scrollingDown ? 0 : childrenCount - 1;
     let items = this.items;
     let currentIndex = this._scrollingDown
-      ? this._getIndexOfLastView() + 1
-      : this._getIndexOfFirstView() - 1;
+      ? this._getLastViewIndex() + 1
+      : this._getFirstViewIndex() - 1;
     let i = 0;
     let viewToMoveLimit = viewsCount - (childrenCount * 2);
     while (i < viewsCount && !this._isAtFirstOrLastIndex) {
@@ -738,13 +741,17 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     return viewsCount - (viewsCount - i);
   }
 
-  /**@internal */
+  /**
+   * Determine if viewport is at first/last view
+   * Should only be accessed inside scroll handler
+   * @internal
+   */
   get _isAtFirstOrLastIndex(): boolean {
     return this._scrollingDown ? this.isLastIndex : this._isAtTop;
   }
 
   /**@internal*/
-  _getIndexOfLastView(): number {
+  _getLastViewIndex(): number {
     const lastView = this._getLastView();
     return lastView === null ? -1 : lastView.overrideContext.$index;
   }
@@ -756,7 +763,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
   }
 
   /**@internal*/
-  _getIndexOfFirstView(): number {
+  _getFirstViewIndex(): number {
     let firstView = this._getFirstView();
     return firstView === null ? -1 : firstView.overrideContext.$index;
   }
@@ -822,7 +829,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
       }
     } else { // Use case when items are added (we are adding scrollable space to the bottom)
       // We need to re-evaluate which is the true "first". If we've added items, then the previous "first" is actually too far down the list
-      this._first = this._getIndexOfFirstView();
+      this._first = this._getFirstViewIndex();
       // appropriate buffer height for top, might be 1 too long...
       let adjustedTopBufferHeight = this._first * this.itemHeight;
       this._topBufferHeight = adjustedTopBufferHeight;
