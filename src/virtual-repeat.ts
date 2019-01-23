@@ -418,6 +418,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     if (this.ignoreMutation) {
       return;
     }
+    this._skipNextScrollHandle = true;
     this._handlingMutations = true;
     this._itemsLength = collection.length;
     this.strategy.instanceMutated(this, collection, changes);
@@ -444,6 +445,11 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
       this.items = newItems;
     }
   }
+
+  /**@internal */
+  // _subscribeScrollEvent() {
+
+  // }
 
   /**@internal */
   _resetCalculation(): void {
@@ -692,6 +698,12 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     if (activeBottomBufferHeight !== currentBottomBufferHeight) {
       this.bottomBuffer.style.height = `${this._bottomBufferHeight}px`;
     }
+  }
+
+  /**@internal */
+  _emulateScroll() {
+    let dispatcher = this._fixedHeightContainer ? this.scrollContainer : document;
+    dispatcher.dispatchEvent(new CustomEvent('scroll', { bubbles: true }));
   }
 
   /**@internal*/

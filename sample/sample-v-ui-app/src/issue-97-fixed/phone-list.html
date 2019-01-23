@@ -28,8 +28,8 @@
     </div>
   </div>
 
-  <div if.bind="isVisible && selectedMarkup === 'div'" style="overflow: auto; width: 400px; height: 500px; margin: auto;">
-    <div virtual-repeat.for="item of objectArray3" class="contact-list-item ${item.name} ${$index}">
+  <div if.bind="isVisible && selectedMarkup === 'div'" class="border" style="overflow: auto; width: 400px; height: 500px; margin: auto;">
+    <div virtual-repeat.for="item of objectArray3" class="contact-list-item ${item.name} i-${$index}">
       <div class="contact-item">
         <div class="avatar" click.trigger="click()" css="background-color: ${item.color}">${item.firstLetter}</div>
         <div class="name text-primary">
@@ -43,7 +43,7 @@
     </div>
   </div>
 
-  <div if.bind="isVisible && selectedMarkup === 'table'" style="overflow: auto; height: 500px;">
+  <div if.bind="isVisible && selectedMarkup === 'table'" class="border" style="overflow: auto; height: 500px;">
     <table class="table">
       <thead>
         <tr>
@@ -53,7 +53,7 @@
           <th>Country</th>
         </tr>
       </thead>
-      <tr virtual-repeat.for="item of objectArray3" class="contact-list-item ${item.name} ${$index}">
+      <tr virtual-repeat.for="item of objectArray3" class="contact-list-item ${item.name} i-${$index}">
         <td class="avatar" click.trigger="click()" css="background-color: ${item.color}">${item.firstLetter}</td>
         <td class="name">${$index} ${item.name}</td>
         <td><strong>Phone:</strong> ${item.phone} </td>

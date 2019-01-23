@@ -14,6 +14,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     let overrideContext = createFullOverrideContext(repeat, repeat.items[0], 0, 1);
     repeat.addView(overrideContext.bindingContext, overrideContext);
   }
+
   /**
    * @override
   * Handle the repeat's collection instance changing.
@@ -88,6 +89,11 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
 
   /**@internal */
   _standardProcessInstanceMutated(repeat: VirtualRepeat, array: any[], splices: any): void {
+
+    // A queued splices means there are some pending running states
+    // that is about to run next micro task
+    // Processing immediately will cause conflicts with previous-not-yet-run splices
+    // Queue up splices instead
     if (repeat.__queuedSplices) {
       for (let i = 0, ii = splices.length; i < ii; ++i) {
         let {index, removed, addedCount} = splices[i];
@@ -96,9 +102,6 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
       repeat.__array = array.slice(0);
       return;
     }
-    let scrollPositionBeforeRunningSplice = repeat._fixedHeightContainer
-      ? repeat.scrollContainer.scrollTop
-      : document.documentElement.scrollTop;
 
     // After a mutation, if there is no items left in the array,
     // it's safe to remove all current view, reset all of repeat calculation
@@ -112,10 +115,10 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
 
     let maybePromise = this._runSplices(repeat, array.slice(0), splices);
     if (maybePromise instanceof Promise) {
-      let queuedSplices = repeat.__queuedSplices = [];
+      let queuedSplices = repeat.__queuedSplices = repeat.__queuedSplices || [];
 
       let runQueuedSplices = () => {
-        if (! queuedSplices.length) {
+        if (!queuedSplices.length) {
           delete repeat.__queuedSplices;
           delete repeat.__array;
           return;
@@ -126,7 +129,11 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
       };
 
       maybePromise.then(runQueuedSplices);
+      return;
     }
+
+    delete repeat.__queuedSplices;
+    delete repeat.__array;
     let firstViewIndex = repeat._getFirstViewIndex();
     // there is no view after mutation,
     // or maybe there is on going work that hasn't been stablized?
@@ -134,153 +141,16 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     if (firstViewIndex < 0) {
       return;
     }
-    let shouldAdjustVisibleViews = firstViewIndex * repeat.itemHeight > repeat._topBufferHeight;
-    console.log(firstViewIndex * repeat.itemHeight, repeat._topBufferHeight);
-    // console.log(scrollPositionBeforeRunningSplice, firstViewIndex, shouldAdjustVisibleViews, firstViewIndex * repeat.itemHeight + repeat._topBufferHeight);
-    if (shouldAdjustVisibleViews) {
-      repeat._topBufferHeight = firstViewIndex * repeat.itemHeight;
-      repeat._bottomBufferHeight = $max(repeat.items.length * repeat.itemHeight - repeat._topBufferHeight - repeat.viewCount() * repeat.itemHeight, 0);
-      repeat._adjustBufferHeights();
-    }
+
+    // Treat the change as if there was a scroll action from user
+    // as the action potentially triggered scroll
+    repeat._first = firstViewIndex;
+    repeat._lastRebind = firstViewIndex;
+    repeat._handleScroll();
   }
 
-  // _runSplices(repeat: VirtualRepeat, array: Array<any>, splices: any): any {
-  //   let removeDelta = 0;
-  //   let rmPromises = [];
-
-  //   // do all splices replace existing entries?
-  //   let allSplicesAreInplace = true;
-  //   for (let i = 0; i < splices.length; i++) {
-  //     let splice = splices[i];
-  //     if (splice.removed.length !== splice.addedCount) {
-  //       allSplicesAreInplace = false;
-  //       break;
-  //     }
-  //   }
-
-  //   // if so, optimise by just replacing affected visible views
-  //   if (allSplicesAreInplace) {
-  //     for (let i = 0; i < splices.length; i++) {
-  //       let splice = splices[i];
-  //       for (let collectionIndex = splice.index; collectionIndex < splice.index + splice.addedCount; collectionIndex++) {
-  //         if (!this._isIndexBeforeViewSlot(repeat, repeat.viewSlot, collectionIndex)
-  //           && !this._isIndexAfterViewSlot(repeat, repeat.viewSlot, collectionIndex)
-  //         ) {
-  //           let viewIndex = this._getViewIndex(repeat, repeat.viewSlot, collectionIndex);
-  //           let overrideContext = createFullOverrideContext(repeat, array[collectionIndex], collectionIndex, array.length);
-  //           repeat.removeView(viewIndex, true, true);
-  //           repeat.insertView(viewIndex, overrideContext.bindingContext, overrideContext);
-  //         }
-  //       }
-  //     }
-  //   } else {
-  //     for (let i = 0, k = 0, ii = splices.length; i < ii; ++i) {
-  //       let splice = splices[i];
-  //       let removed = splice.removed;
-  //       let removedLength = removed.length;
-
-  //       for (let j = 0, jj = removedLength; j < jj; ++j, ++k) {
-  //         let viewOrPromise = this._removeViewAt(repeat, splice.index + removeDelta + rmPromises.length, true, k);
-  //         if (viewOrPromise instanceof Promise) {
-  //           rmPromises.push(viewOrPromise);
-  //         }
-  //       }
-  //       removeDelta -= splice.addedCount;
-  //     }
-
-  //     if (rmPromises.length > 0) {
-  //       return Promise.all(rmPromises).then(() => {
-  //         this._fillUpViewSlot(repeat, array, splices);
-  //         this._handleAddedSplices(repeat, array, splices);
-  //         updateVirtualOverrideContexts(repeat, 0);
-  //       });
-  //     }
-  //     this._fillUpViewSlot(repeat, array, splices);
-  //     this._handleAddedSplices(repeat, array, splices);
-  //     updateVirtualOverrideContexts(repeat, 0);
-  //   }
-
-  //   return undefined;
-  // }
-
-  // _fillUpViewSlot(repeat: VirtualRepeat, array: Array<any>, splices: Array<any>) {
-  //   if (repeat.viewCount() >= repeat._requiredViewsCount) {
-  //     return;
-  //   }
-
-  //   // replace removed views by adding new views at the bottom
-  //   let currDelta = 0;
-  //   let addDelta = 0;
-  //   for (let i = 0, ii = splices.length; i < ii; i++) {
-  //     let splice = splices[i];
-  //     let collectionIndex = splice.index + currDelta + splice.addedCount;
-  //     currDelta = Math.max(0, splice.addedCount - splice.removed.length);
-  //     addDelta += splice.addedCount;
-  //     let end = array.length;
-  //     let nextSplice = splices[i + 1];
-  //     if (nextSplice) {
-  //       end = nextSplice.index;
-  //     }
-  //     for (; collectionIndex < end; collectionIndex++) {
-  //       let viewCount = repeat.viewCount();
-  //       let viewIndex = viewCount === 0 ? 0 : this._getViewIndex(repeat, repeat.viewSlot, collectionIndex) - addDelta;
-  //       if (viewIndex >= repeat._requiredViewsCount) {
-  //         return;
-  //       }
-  //       if (viewIndex >= viewCount) {
-  //         let data = repeat.items[collectionIndex];
-  //         let view;
-  //         if (data) {
-  //           let overrideContext = createFullOverrideContext(repeat, data, collectionIndex, array.length);
-  //           view = repeat.viewFactory.create();
-  //           view.bind(overrideContext.bindingContext, overrideContext);
-  //         }
-  //         if (view) {
-  //           repeat.viewSlot.insert(viewIndex, view);
-  //         } else {
-  //           return;
-  //         }
-  //       }
-  //     }
-  //   }
-  // }
-
-  // _removeViewAt(repeat: VirtualRepeat, collectionIndex: number, returnToCache: boolean, j: number): any {
-  //   let viewOrPromise;
-  //   let viewSlot = repeat.viewSlot;
-  //   let viewCount = repeat.viewCount();
-
-  //   // index in view slot?
-  //   if (!this._isIndexBeforeViewSlot(repeat, viewSlot, collectionIndex) && !this._isIndexAfterViewSlot(repeat, viewSlot, collectionIndex)) {
-  //     let viewIndex = this._getViewIndex(repeat, viewSlot, collectionIndex);
-  //     viewOrPromise = viewIndex < viewCount ? repeat.removeView(viewIndex, returnToCache) : undefined;
-  //     if (repeat._bottomBufferHeight > 0) {
-  //       repeat._bottomBufferHeight = repeat._bottomBufferHeight - (repeat.itemHeight);
-  //     }
-  //   } else if (this._isIndexBeforeViewSlot(repeat, viewSlot, collectionIndex)) {
-  //     if (repeat._bottomBufferHeight > 0) {
-  //       repeat._bottomBufferHeight = repeat._bottomBufferHeight - (repeat.itemHeight);
-  //       if (viewCount > 0) {
-  //         rebindAndMoveView(repeat, repeat.view(0), repeat.view(0).overrideContext.$index, true);
-  //       }
-  //     } else if (repeat._topBufferHeight > 0) {
-  //       repeat._topBufferHeight = repeat._topBufferHeight - (repeat.itemHeight);
-  //     }
-  //   } else if (this._isIndexAfterViewSlot(repeat, viewSlot, collectionIndex)) {
-  //     repeat._bottomBufferHeight = repeat._bottomBufferHeight - (repeat.itemHeight);
-  //   }
-
-  //   if (viewOrPromise instanceof Promise) {
-  //     return viewOrPromise.then(() => {
-  //       repeat._adjustBufferHeights();
-  //     });
-  //   }
-  //   repeat._adjustBufferHeights();
-  //   return viewOrPromise;
-  // }
-
   /**@internal */
-  _runSplices(repeat: VirtualRepeat, array: any[], splices: ICollectionObserverSplice[]): any {
+  _runSplices(repeat: VirtualRepeat, array: any[], splices: ICollectionObserverSplice[]): void | Promise<void> {
 
     // do all splices replace existing entries?
     // this is determine by checking if all splices are balanced between addedCount and removed.length
@@ -400,7 +270,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     // index in view slot?
     if (this._isIndexInViewport(repeat, collectionIndex)) {
       let viewIndex = this._getViewIndex(repeat, collectionIndex);
-      if (viewCount > viewIndex && viewIndex > -1) {
+      if (viewCount > viewIndex) {
         viewOrPromise = repeat.removeView(viewIndex, returnToCache);
       }
       if (currentBottomBufferHeight > 0) {
