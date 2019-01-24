@@ -2,7 +2,6 @@ const { AureliaPlugin } = require('aurelia-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const path = require('path');
-const isProduction = process.env.NODE_ENV === 'production';
 const webpack = require ('webpack');
 
 const aureliaModules = [
@@ -27,6 +26,7 @@ const aureliaModules = [
 ];
 
 module.exports = (env = {}) => {
+  const isProduction = env.prod === 'production';
   return {
     mode: isProduction ? 'production' : 'development',
     resolve: {

@@ -4,4 +4,8 @@
   <div class="container" style="padding-top: 70px;">
     <router-view></router-view>
   </div>
+  <div class="d-flex justify-content-center align-items-center w-100 h-100" style="position: fixed; top: 0; left: 0;"
+    show.bind="router.isNavigating & debounce:50">
+    <img src='static/logo.svg'>
+  </div>
 </template>

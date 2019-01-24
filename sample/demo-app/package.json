@@ -11,11 +11,11 @@
   "scripts": {
     "dev": "webpack-dev-server",
     "prebuild": "npm run rimraf",
-    "build": "webpack --env.prod",
+    "build": "webpack --env.prod=production",
     "prebuild:watch": "npm run rimraf",
     "build:watch": "webpack --watch",
     "prebuild:prod": "npm run rimraf",
-    "build:prod": "cross-env NODE_ENV=production webpack -p",
+    "build:prod": "webpack --env.prod=production",
     "rimraf": "rimraf dist"
   },
   "dependencies": {

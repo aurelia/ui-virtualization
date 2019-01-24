@@ -11,7 +11,7 @@ export class MultipleListsDemoRoute {
 
   constructor() {
     this.objectArray = [];
-    this.numberOfItems = 1e4;
+    this.numberOfItems = 1e3;
     this.isSelected = false;
   }
 
