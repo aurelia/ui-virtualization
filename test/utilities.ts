@@ -1,5 +1,10 @@
 import { VirtualRepeat } from '../src/virtual-repeat';
 
+export interface ITestViewModel {
+  items: any[];
+  getNextPage: jasmine.Spy;
+}
+
 export type AsyncQueue = (func: (...args: any[]) => any) => void;
 
 export function createAssertionQueue(): AsyncQueue {
@@ -95,6 +100,7 @@ export function validateScrolledState(virtualRepeat: VirtualRepeat, viewModel: a
   }
 }
 
+
 /**
  * Manually dispatch a scroll event and validate scrolled state of virtual repeat
  *
@@ -114,12 +120,20 @@ export function validateScroll(virtualRepeat: VirtualRepeat, viewModel: any, ite
   });
 }
 
-export async function scrollToEnd(virtualRepeat: VirtualRepeat, insuranceTime = 50): Promise<void> {
+export async function scrollToEnd(virtualRepeat: VirtualRepeat, insuranceTime = 5): Promise<void> {
   let event = new Event('scroll');
   let element = virtualRepeat._fixedHeightContainer ? virtualRepeat.scrollContainer : (document.scrollingElement || document.documentElement);
   element.scrollTop = element.scrollHeight;
   element.dispatchEvent(event);
   await ensureScrolled(insuranceTime);
+}
+
+export async function scrollToIndex(virtualRepeat: VirtualRepeat, itemIndex: number): Promise<void> {
+  let event = new Event('scroll');
+  let element = virtualRepeat._fixedHeightContainer ? virtualRepeat.scrollContainer : (document.scrollingElement || document.documentElement);
+  element.scrollTop = virtualRepeat.itemHeight * (itemIndex + 1);
+  element.dispatchEvent(event);
+  await ensureScrolled();
 }
 
 /**

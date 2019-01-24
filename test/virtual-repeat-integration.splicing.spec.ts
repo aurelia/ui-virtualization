@@ -11,7 +11,8 @@ import {
   ensureScrolled,
   validateScroll,
   scrollToEnd,
-  waitForNextFrame
+  waitForNextFrame,
+  ITestViewModel
 } from './utilities';
 import { VirtualRepeat } from '../src/virtual-repeat';
 
@@ -19,12 +20,8 @@ PLATFORM.moduleName('src/virtual-repeat');
 PLATFORM.moduleName('test/noop-value-converter');
 PLATFORM.moduleName('src/infinite-scroll-next');
 
-interface ITestViewModel {
-  items: any[];
-  getNextPage: () => void;
-}
 
-fdescribe('VirtualRepeat Integration + Splicing', () => {
+describe('VirtualRepeat Integration + Splicing + Scrolling (To end)', () => {
 
   let itemHeight = 100;
   let component: ComponentTester<VirtualRepeat>;
@@ -38,7 +35,7 @@ fdescribe('VirtualRepeat Integration + Splicing', () => {
   beforeEach(() => {
     component = undefined;
     items = createItems(1000);
-    viewModel = { items: items, getNextPage: () => null };
+    viewModel = { items: items, getNextPage: jasmine.createSpy('getNextPage()') };
     resources = [
       'src/virtual-repeat',
       'test/noop-value-converter',
