@@ -38,10 +38,10 @@ export class App {
         title: 'Issue 97'
       },
       {
-        route: 'issue-97-fixed',
-        moduleId: PLATFORM.moduleName('./issue-97-fixed/phone-list'),
+        route: 'issue-97-with-container',
+        moduleId: PLATFORM.moduleName('./issue-97-with-container/phone-list'),
         nav: 6,
-        title: 'Issue 97 Fixed'
+        title: 'Issue 97 With Container'
       }
     ]);
 

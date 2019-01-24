@@ -1,4 +1,4 @@
-import { DOM } from 'aurelia-framework';
+import { DOM } from 'aurelia-pal';
 import { ITemplateStrategy } from './interfaces';
 import { DefaultTemplateStrategy } from './template-strategy-default';
 

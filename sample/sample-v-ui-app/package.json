@@ -2,7 +2,7 @@
   "scripts": {
     "dev": "webpack-dev-server",
     "prebuild": "npm run rimraf",
-    "build": "webpack",
+    "build": "webpack --env.prod=production",
     "prebuild:watch": "npm run rimraf",
     "build:watch": "webpack --watch",
     "prebuild:prod": "npm run rimraf",

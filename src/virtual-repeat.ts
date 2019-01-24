@@ -34,7 +34,7 @@ import {
   IScrollNextScrollContext,
   IViewSlot
 } from './interfaces';
-import { TaskQueue } from 'aurelia-framework';
+import { TaskQueue } from 'aurelia-task-queue';
 
 const enum VirtualRepeatCallContext {
   handleCollectionMutated = 'handleCollectionMutated',
@@ -191,7 +191,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
   private _calcDistanceToTopInterval: any;
 
   /**@internal */
-  private taskQueue: TaskQueue;
+  taskQueue: TaskQueue;
 
   templateStrategy: ITemplateStrategy;
   topBuffer: HTMLElement;
@@ -489,7 +489,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
   }
 
   /**@internal*/
-  _handleScroll(): void {
+  _handleScroll(ignoreCheckScrolling?: boolean): void {
     if (!this._isAttached) {
       return;
     }
@@ -516,8 +516,12 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
       this._first = firstViewIndex < 0 ? 0 : firstViewIndex;
     }
 
-    // Check scrolling states and adjust flags
-    this._checkScrolling();
+    // There are scenarios where we want to simulate a scroll behavior from user
+    // using the flag to enable such cases
+    if (!ignoreCheckScrolling) {
+      // Check scrolling states and adjust flags
+      this._checkScrolling();
+    }
 
     // store buffers' heights into local variables
     let currentTopBufferHeight = this._topBufferHeight;
@@ -532,7 +536,9 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
       this._isAtTop = false;
       this._lastRebind = this._first;
       let movedViewsCount = this._moveViews(viewsToMoveCount);
-      let adjustHeight = movedViewsCount < viewsToMoveCount ? currentBottomBufferHeight : itemHeight * movedViewsCount;
+      let adjustHeight = movedViewsCount < viewsToMoveCount
+        ? currentBottomBufferHeight
+        : itemHeight * movedViewsCount;
       if (viewsToMoveCount > 0) {
         this._getMore();
       }
@@ -573,6 +579,35 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     }
     this._previousFirst = this._first;
     this._isScrolling = false;
+  }
+
+  /**
+   * @internal Set flags based on internal values of first view index, previous view index
+   *
+   * Determines scrolling state, scroll direction, switching scroll direction
+   */
+  _checkScrolling(): void {
+    if (this._first > this._previousFirst && (this._bottomBufferHeight > 0 || !this.isLastIndex)) {
+      if (!this._scrollingDown) {
+        this._scrollingDown = true;
+        this._scrollingUp = false;
+        this._switchedDirection = true;
+      } else {
+        this._switchedDirection = false;
+      }
+      this._isScrolling = true;
+    } else if (this._first < this._previousFirst && (this._topBufferHeight >= 0 || !this._isAtTop)) {
+      if (!this._scrollingUp) {
+        this._scrollingDown = false;
+        this._scrollingUp = true;
+        this._switchedDirection = true;
+      } else {
+        this._switchedDirection = false;
+      }
+      this._isScrolling = true;
+    } else {
+      this._isScrolling = false;
+    }
   }
 
   /**@internal*/
@@ -641,35 +676,6 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     }
   }
 
-  /**
-   * @internal Set flags based on internal values of first view index, previous view index
-   *
-   * Determines scrolling state, scroll direction, switching scroll direction
-   */
-  _checkScrolling(): void {
-    if (this._first > this._previousFirst && (this._bottomBufferHeight > 0 || !this.isLastIndex)) {
-      if (!this._scrollingDown) {
-        this._scrollingDown = true;
-        this._scrollingUp = false;
-        this._switchedDirection = true;
-      } else {
-        this._switchedDirection = false;
-      }
-      this._isScrolling = true;
-    } else if (this._first < this._previousFirst && (this._topBufferHeight >= 0 || !this._isAtTop)) {
-      if (!this._scrollingUp) {
-        this._scrollingDown = false;
-        this._scrollingUp = true;
-        this._switchedDirection = true;
-      } else {
-        this._switchedDirection = false;
-      }
-      this._isScrolling = true;
-    } else {
-      this._isScrolling = false;
-    }
-  }
-
   /**@internal*/
   _checkFixedHeightContainer(): void {
     if (DomHelper.hasOverflowScroll(this.scrollContainer)) {
@@ -726,7 +732,8 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
   }
 
   /**
-   * @internal Move views based on scrolling direction and number of views to move
+   * Move views based on scrolling direction and number of views to move
+   * @internal
    */
   _moveViews(viewsCount: number): number {
     let getNextIndex = this._scrollingDown ? $plus : $minus;
