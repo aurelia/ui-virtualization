@@ -155,13 +155,29 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     // do all splices replace existing entries?
     // this is determine by checking if all splices are balanced between addedCount and removed.length
     let allSplicesAreInplace = true;
+    let totalAdded = 0;
+    let totalRemoved = 0;
     for (let i = 0; i < splices.length; i++) {
       let splice = splices[i];
+      let addedCount = splice.addedCount;
       let removedCount = splice.removed.length;
-      if (removedCount !== splice.addedCount) {
+      totalAdded += addedCount;
+      totalRemoved += removedCount;
+      if (removedCount !== addedCount) {
         allSplicesAreInplace = false;
-        break;
       }
+    }
+
+    // when the existing number of view count is 0
+    // removing views step can be short circuited by reseting repeat calculation
+    // handle added splices after removing
+    let viewCount = repeat.viewCount();
+    if (viewCount === 0) {
+      repeat._resetCalculation();
+      if (totalAdded > 0) {
+        this._handleAddedSplices(repeat, array, splices);
+      }
+      return;
     }
 
     // if so, optimise by just replacing affected visible views
@@ -180,6 +196,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
       return;
     }
 
+    let originalFirstViewIndex = repeat.firstView().overrideContext.$index;
     let removeDelta = 0;
     let rmPromises = [];
 
@@ -283,7 +300,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
         } else if (currentBottomBufferHeight > 0) {
           repeat._bottomBufferHeight = currentBottomBufferHeight - itemHeight;
           if (viewCount > 0) {
-            let firstView = repeat._getFirstView();
+            let firstView = repeat.firstView();
             rebindAndMoveView(repeat, firstView, firstView.overrideContext.$index, true);
           }
         }
@@ -368,7 +385,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
   }
 
   /**@internal */
-  _handleAddedSplices(repeat: VirtualRepeat, array: Array<any>, splices: ICollectionObserverSplice[]): void {
+  private _handleAddedSplices(repeat: VirtualRepeat, array: Array<any>, splices: ICollectionObserverSplice[]): void {
     let arrayLength = array.length;
     let viewSlot = repeat.viewSlot;
     for (let i = 0, ii = splices.length; i < ii; ++i) {

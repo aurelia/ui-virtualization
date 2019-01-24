@@ -100,7 +100,6 @@ export function validateScrolledState(virtualRepeat: VirtualRepeat, viewModel: a
   }
 }
 
-
 /**
  * Manually dispatch a scroll event and validate scrolled state of virtual repeat
  *
@@ -163,4 +162,8 @@ export function waitForTimeout(time = 1): Promise<void> {
 
 export function waitForNextFrame(): Promise<void> {
   return new Promise(r => requestAnimationFrame(() => r()));
+}
+
+export function createScrollEvent(target: EventTarget): void {
+  target.dispatchEvent(new Event('scroll'));
 }

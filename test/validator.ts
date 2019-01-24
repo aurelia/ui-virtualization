@@ -1,5 +1,5 @@
 import { VirtualRepeat } from '../src/virtual-repeat';
-import { ITestViewModel } from './utilities';
+import { ITestViewModel, ensureScrolled, createScrollEvent } from './utilities';
 
 export class ScrollState {
 
@@ -38,5 +38,29 @@ export class ScrollState {
       expect(overrideContext.$odd).toBe(!even);
       expect(overrideContext.$even).toBe(even);
     }
+  }
+
+  static async scrollToIndex(virtualRepeat: VirtualRepeat, itemIndex: number): Promise<void> {
+    let element = virtualRepeat._fixedHeightContainer
+      ? virtualRepeat.scrollContainer
+      : (document.scrollingElement || document.documentElement);
+    element.scrollTop = virtualRepeat.itemHeight * (itemIndex + 1);
+    createScrollEvent(element);
+
+    await ensureScrolled();
+  }
+
+  static async scrollToMidThenTop(virtualRepeat: VirtualRepeat): Promise<void> {
+    let scroller = virtualRepeat._fixedHeightContainer
+      ? virtualRepeat.scrollContainer
+      : (document.scrollingElement || document.documentElement);
+
+    scroller.scrollTop = scroller.scrollHeight / 2; // Scroll down but not far enough to reach bottom and call 'getNext'
+    createScrollEvent(scroller);
+
+    await ensureScrolled();
+
+    scroller.scrollTop = 0;
+    createScrollEvent(scroller);
   }
 }

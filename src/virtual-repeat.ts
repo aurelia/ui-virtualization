@@ -243,6 +243,8 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     this.templateStrategyLocator = templateStrategyLocator;
     this.sourceExpression = getItemsSourceExpression(this.instruction, 'virtual-repeat.for');
     this.isOneTime = isOneTime(this.sourceExpression);
+    this.itemHeight = 0;
+    this.topBufferDistance = 0;
   }
 
   /**@override */
@@ -616,7 +618,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
       if (!this._calledGetMore) {
         let executeGetMore = () => {
           this._calledGetMore = true;
-          let firstView = this._getFirstView();
+          let firstView = this.firstView();
           let scrollNextAttrName = 'infinite-scroll-next';
           let func: string | (BindingExpression & { sourceExpression: Expression }) = (firstView
             && firstView.firstChild
@@ -722,12 +724,12 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
   }
 
   /**@internal */
-  _getFirstView(): IView | null {
+  firstView(): IView | null {
     return this.view(0);
   }
 
   /**@internal */
-  _getLastView(): IView | null {
+  lastView(): IView | null {
     return this.view(this.viewCount() - 1);
   }
 
@@ -771,19 +773,19 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
 
   /**@internal*/
   _getLastViewIndex(): number {
-    const lastView = this._getLastView();
+    const lastView = this.lastView();
     return lastView === null ? -1 : lastView.overrideContext.$index;
   }
 
   /**@internal*/
   _getLastViewItem(): IView {
-    let lastView = this._getLastView();
+    let lastView = this.lastView();
     return lastView === null ? undefined : lastView.bindingContext[this.local];
   }
 
   /**@internal*/
   _getFirstViewIndex(): number {
-    let firstView = this._getFirstView();
+    let firstView = this.firstView();
     return firstView === null ? -1 : firstView.overrideContext.$index;
   }
 
@@ -923,18 +925,36 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     return index < 0 || index > viewSlot.children.length - 1 ? null : (viewSlot.children[index] || null);
   }
 
-  /**@override */
+  /**
+   * @inheritdoc
+   * @override
+   *
+   * Also calculate `itemHeight` if attached
+   */
   addView(bindingContext: any, overrideContext: OverrideContext) {
     let view = this.viewFactory.create();
+    let viewSlot = this.viewSlot;
     view.bind(bindingContext, overrideContext);
-    this.viewSlot.add(view);
+    viewSlot.add(view);
+    if (this._isAttached && viewSlot.children.length === 1) {
+      this.itemHeight = calcOuterHeight(view.firstChild as Element);
+    }
   }
 
-  /**@override */
+  /**
+   * @inheritdoc
+   * @override
+   *
+   * Also calculate `itemHeight` if attached
+   */
   insertView(index: number, bindingContext: any, overrideContext: OverrideContext) {
     let view = this.viewFactory.create();
+    let viewSlot = this.viewSlot;
     view.bind(bindingContext, overrideContext);
-    this.viewSlot.insert(index, view);
+    viewSlot.insert(index, view);
+    if (this._isAttached && viewSlot.children.length === 1) {
+      this.itemHeight = calcOuterHeight(view.firstChild as Element);
+    }
   }
 
   /**@override */

@@ -22,7 +22,7 @@ PLATFORM.moduleName('src/virtual-repeat');
 PLATFORM.moduleName('test/noop-value-converter');
 PLATFORM.moduleName('src/infinite-scroll-next');
 
-fdescribe('VirtualRepeat Integration + Splicing', () => {
+describe('VirtualRepeat Integration + Splicing', () => {
 
   let itemHeight = 100;
   let component: ComponentTester<VirtualRepeat>;
@@ -89,6 +89,20 @@ fdescribe('VirtualRepeat Integration + Splicing', () => {
     ScrollState.validate(virtualRepeat, viewModel);
 
     await scrollToIndex(virtualRepeat, 40);
+    ScrollState.validate(virtualRepeat, viewModel);
+  });
+
+  it('adds view properly after splicing (Add, when existing collection has no item', async () => {
+    viewModel.items = [];
+
+    await bootstrapComponent();
+
+    viewModel.items.splice(0, 0, createItems(50));
+
+    await ensureScrolled();
+    ScrollState.validate(virtualRepeat, viewModel);
+
+    await scrollToIndex(virtualRepeat, 30);
     ScrollState.validate(virtualRepeat, viewModel);
   });
 
