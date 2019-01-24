@@ -107,7 +107,7 @@ describe('VirtualRepeat Integration', () => {
       const table = element.parentNode;
       expect(table.firstElementChild).toBe(virtualRepeat.topBuffer.previousElementSibling);
       expect(table.firstElementChild.innerHTML.trim()).toBe('<tr><td>Name</td></tr>');
-      queue(() => validateState(virtualRepeat, viewModel, itemHeight));
+      validateState(virtualRepeat, viewModel, itemHeight);
       queue(() => validatePush(virtualRepeat, viewModel, done));
     });
 

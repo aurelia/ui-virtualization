@@ -19,35 +19,31 @@ PLATFORM.moduleName('src/virtual-repeat');
 PLATFORM.moduleName('test/noop-value-converter');
 PLATFORM.moduleName('src/infinite-scroll-next');
 
-interface ITestItem { }
+interface ITestViewModel {
+  items: any[];
+  getNextPage: () => void;
+}
 
-fdescribe('VirtualRepeat Integration', () => {
+fdescribe('VirtualRepeat Integration + Splicing', () => {
 
-  // async queue
-  let queue: AsyncQueue = createAssertionQueue();
   let itemHeight = 100;
   let component: ComponentTester<VirtualRepeat>;
   let virtualRepeat: VirtualRepeat;
-  let viewModel: any;
+  let viewModel: ITestViewModel;
   let items: any[];
   let view: string;
   let resources: any[];
-  const SAFE_SCROLL_TIMEOUT = 20;
+  const SAFE_SCROLL_TIMEOUT = 5;
 
   beforeEach(() => {
     component = undefined;
     items = createItems(1000);
-    viewModel = { items: items };
+    viewModel = { items: items, getNextPage: () => null };
     resources = [
       'src/virtual-repeat',
-      'test/noop-value-converter'
+      'test/noop-value-converter',
+      'src/infinite-scroll-next'
     ];
-    // view =
-    //   `<div id="scrollContainer" style="height: 500px; overflow-y: scroll">
-    //   <div style="height: ${itemHeight}px;"
-    //       virtual-repeat.for="item of items"
-    //       infinite-scroll-next="getNextPage">\${item}</div>
-    // </div>`;
   });
 
   afterEach(() => {
@@ -62,7 +58,7 @@ fdescribe('VirtualRepeat Integration', () => {
   });
 
   createScrollingTests(
-    '<div/> ~~Scrolling~~',
+    '<div/> ~~Splicing + Scrolling~~',
     `<div id="scrollContainer" style="height: 500px; overflow-y: scroll">
       <div style="height: ${itemHeight}px;"
           virtual-repeat.for="item of items"
@@ -71,7 +67,7 @@ fdescribe('VirtualRepeat Integration', () => {
   );
 
   createScrollingTests(
-    '<div/> >>> <ul-ol + li/> ~~Scrolling~~',
+    '<div/> >>> <ul-ol + li/> ~~Splicing + Scrolling~~',
     `<div id="scrollContainer" style="height: 500px; overflow-y: scroll">
       <ol style="margin: 0;">
         <li style="height: ${itemHeight}px;"
@@ -82,7 +78,7 @@ fdescribe('VirtualRepeat Integration', () => {
   );
 
   createScrollingTests(
-    '<ul-ol + li/> ~~Scrolling~~',
+    '<ul-ol + li/> ~~Splicing + Scrolling~~',
     `<ol id="scrollContainer" style="height: 500px; overflow-y: scroll;">
       <li style="height: ${itemHeight}px;"
           virtual-repeat.for="item of items"
@@ -91,7 +87,7 @@ fdescribe('VirtualRepeat Integration', () => {
   );
 
   createScrollingTests(
-    '<tr/> ~~Scrolling~~',
+    '<tr/> ~~Splicing + Scrolling~~',
     `<div id="scrollContainer" style="height: 500px; overflow-y: scroll">
       <table style="border-spacing: 0">
         <tr style="height: ${itemHeight}px;"
@@ -102,8 +98,8 @@ fdescribe('VirtualRepeat Integration', () => {
   );
 
   createScrollingTests(
-    '<tbody/> ~~Scrolling~~',
-    // Note that is this test, row height is faked but in real app scenario
+    '<tbody/> ~~Splicing + Scrolling~~',
+    // Note that in this test, row height is faked but in real app scenario
     // it should behave the same as tbody has the same height with tr when border-spacing is 0
     `<div id="scrollContainer" style="height: 500px; overflow-y: scroll">
       <table style="border-spacing: 0">
