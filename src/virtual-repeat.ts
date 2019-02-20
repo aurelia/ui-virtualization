@@ -29,9 +29,10 @@ import {
   IVirtualRepeatStrategy,
   ITemplateStrategy,
   IView,
-  IScrollNextScrollContext
+  IScrollNextScrollContext,
+  IViewSlot
 } from './interfaces';
-import { TaskQueue } from 'aurelia-framework';
+import { TaskQueue } from 'aurelia-task-queue';
 
 const enum VirtualRepeatCallContext {
   handleCollectionMutated = 'handleCollectionMutated',
@@ -70,8 +71,20 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
   _previousFirst = 0;
 
   /**@internal*/ _viewsLength = 0;
-  /**@internal*/ _lastRebind = 0;
-  /**@internal*/ _topBufferHeight = 0;
+  
+  /**
+   * @internal
+   * Last rebound view index, user to determine first index of next task when scrolling/ changing viewport scroll position
+   */
+  _lastRebind = 0;
+
+  /**
+   * @internal
+   * Height of top buffer to properly push the visible rendered list items into right position
+   * Usually determined by `_first` visible index * `itemHeight`
+   */
+  _topBufferHeight = 0;
+
   /**@internal*/ _bottomBufferHeight = 0;
   /**
    * @internal The amount of views before/after (scrolling direction dependent) visible parts
@@ -88,12 +101,35 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
    * @internal Indicates whether virtual repeat attribute is inside a fixed height container with overflow
    *
    * This helps identifies place to add scroll event listener
-   */ _fixedHeightContainer = false;
+   */
+  _fixedHeightContainer = false;
   /**@internal*/ _hasCalculatedSizes = false;
   /**@internal*/ _isAtTop = true;
   /**@internal*/ _calledGetMore = false;
-  /**@internal*/ _skipNextScrollHandle: boolean = false;
-  /**@internal*/ _handlingMutations: boolean = false;
+
+  /**
+   * While handling consecutive scroll events, repeater and its strategies may need to do
+   * some of work that will not finish immediately in order to figure out visible effective elements / views.
+   * There are scenarios when doing this too quickly is unnecessary
+   * as there could be still some effect on going from previous handler.
+   *
+   * This flag is away to ensure a scroll handler always has a chance to
+   * finish all the work it starts, no matter how user interact via scrolling
+   * @internal
+   */
+  _skipNextScrollHandle: boolean = false;
+
+    /**
+   * While handling mutation, repeater and its strategies could/should modify scroll position
+   * to deliver a smooth user experience. This action may trigger a scroll event
+   * which may disrupt the mutation handling or cause unwanted effects.
+   *
+   * This flag is a way to tell the scroll listener that there are scenarios that
+   * scroll event should be ignored
+   * @internal
+   */
+  _handlingMutations: boolean = false;
+
   /**@internal*/ _isScrolling: boolean = false;
 
   // Inherited properties declaration
@@ -117,7 +153,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
   scope: Scope;
 
   /**@internal */
-  viewSlot: ViewSlot & { children: IView[] };
+  viewSlot: IViewSlot;
 
   readonly viewFactory: BoundViewFactory;
 

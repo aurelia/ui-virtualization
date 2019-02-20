@@ -157,6 +157,11 @@ export interface ITemplateStrategy {
  */
 export type IView = View & Scope;
 
+/**
+ * Expose property `children` to help manipulation/calculation
+ */
+export type IViewSlot = ViewSlot & { children: IView[] };
+
 // export const enum IVirtualRepeatState {
 //   isAtTop = 0b0_000000_000,
 //   isLastIndex = 0b0_000000_000,
