@@ -25,7 +25,6 @@ import { DomHelper } from './dom-helper';
 import { VirtualRepeatStrategyLocator } from './virtual-repeat-strategy-locator';
 import { TemplateStrategyLocator } from './template-strategy-locator';
 import {
-  IVirtualRepeat,
   IVirtualRepeatStrategy,
   ITemplateStrategy,
   IView,
@@ -39,7 +38,7 @@ const enum VirtualRepeatCallContext {
   handleInnerCollectionMutated = 'handleInnerCollectionMutated'
 }
 
-export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
+export class VirtualRepeat extends AbstractRepeater {
 
   /**@internal */
   static inject() {
@@ -252,6 +251,8 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     this.templateStrategyLocator = templateStrategyLocator;
     this.sourceExpression = getItemsSourceExpression(this.instruction, 'virtual-repeat.for');
     this.isOneTime = isOneTime(this.sourceExpression);
+    this.itemHeight = 0;
+    this.topBufferDistance = 0;
   }
 
   /**@override */
@@ -903,8 +904,8 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
   }
 
   /**@override */
-  removeView(index: number, returnToCache: boolean, skipAnimation: boolean) {
-    return this.viewSlot.removeAt(index, returnToCache, skipAnimation);
+  removeView(index: number, returnToCache: boolean, skipAnimation: boolean): IView | Promise<IView> {
+    return this.viewSlot.removeAt(index, returnToCache, skipAnimation) as IView | Promise<IView>;
   }
 
   updateBindings(view: View) {

@@ -1,12 +1,12 @@
-import { NullRepeatStrategy, RepeatStrategy } from 'aurelia-templating-resources';
-import { IVirtualRepeat } from './interfaces';
+import { NullRepeatStrategy } from 'aurelia-templating-resources';
+import { VirtualRepeat } from './virtual-repeat';
 
 export class NullVirtualRepeatStrategy extends NullRepeatStrategy {
   instanceMutated() {
     // empty
   }
 
-  instanceChanged(repeat: IVirtualRepeat) {
+  instanceChanged(repeat: VirtualRepeat) {
     super.instanceChanged(repeat);
     repeat._resetCalculation();
   }

@@ -1,15 +1,16 @@
 import { ArrayRepeatStrategy, createFullOverrideContext } from 'aurelia-templating-resources';
 import { updateVirtualOverrideContexts, rebindAndMoveView, getElementDistanceToBottomViewPort } from './utilities';
-import { IVirtualRepeat, IVirtualRepeatStrategy, IView } from './interfaces';
+import { IVirtualRepeatStrategy, IView } from './interfaces';
 import { ViewSlot } from 'aurelia-templating';
 import { mergeSplice } from 'aurelia-binding';
+import { VirtualRepeat } from './virtual-repeat';
 
 /**
 * A strategy for repeating a template over an array.
 */
 export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements IVirtualRepeatStrategy {
   // create first item to calculate the heights
-  createFirstItem(repeat: IVirtualRepeat): void {
+  createFirstItem(repeat: VirtualRepeat): void {
     let overrideContext = createFullOverrideContext(repeat, repeat.items[0], 0, 1);
     repeat.addView(overrideContext.bindingContext, overrideContext);
   }
@@ -19,7 +20,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
   * @param repeat The repeater instance.
   * @param items The new array instance.
   */
-  instanceChanged(repeat: IVirtualRepeat, items: Array<any>, ...rest: any[]): void {
+  instanceChanged(repeat: VirtualRepeat, items: Array<any>, ...rest: any[]): void {
     this._inPlaceProcessItems(repeat, items, rest[0]);
   }
 
@@ -30,12 +31,12 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
   * @param array The modified array.
   * @param splices Records of array changes.
   */
-  instanceMutated(repeat: IVirtualRepeat, array: Array<any>, splices: any): void {
+  instanceMutated(repeat: VirtualRepeat, array: Array<any>, splices: any): void {
     this._standardProcessInstanceMutated(repeat, array, splices);
   }
 
   /**@internal */
-  _standardProcessInstanceChanged(repeat: IVirtualRepeat, items: Array<any>): void {
+  _standardProcessInstanceChanged(repeat: VirtualRepeat, items: Array<any>): void {
     for (let i = 1, ii = repeat._viewsLength; i < ii; ++i) {
       let overrideContext = createFullOverrideContext(repeat, items[i], i, ii);
       repeat.addView(overrideContext.bindingContext, overrideContext);
@@ -43,7 +44,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
   }
 
   /**@internal */
-  _inPlaceProcessItems(repeat: IVirtualRepeat, items: Array<any>, first: number): void {
+  _inPlaceProcessItems(repeat: VirtualRepeat, items: Array<any>, first: number): void {
     let itemsLength = items.length;
     let viewsLength = repeat.viewCount();
     /*
@@ -56,7 +57,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     // remove unneeded views.
     while (viewsLength > itemsLength) {
       viewsLength--;
-      repeat.removeView(viewsLength, true);
+      repeat.removeView(viewsLength, /** Returns to cache */ true, /** No skip animation */ false);
     }
     // avoid repeated evaluating the property-getter for the "local" property.
     let local = repeat.local;
@@ -86,7 +87,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
   }
 
   /**@internal */
-  _standardProcessInstanceMutated(repeat: IVirtualRepeat, array: Array<any>, splices: any): void {
+  _standardProcessInstanceMutated(repeat: VirtualRepeat, array: Array<any>, splices: any): void {
     if (repeat.__queuedSplices) {
       for (let i = 0, ii = splices.length; i < ii; ++i) {
         let {index, removed, addedCount} = splices[i];
@@ -116,7 +117,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
   }
 
   /**@internal */
-  _runSplices(repeat: IVirtualRepeat, array: Array<any>, splices: any): any {
+  _runSplices(repeat: VirtualRepeat, array: Array<any>, splices: any): any {
     let removeDelta = 0;
     let rmPromises = [];
 
@@ -173,7 +174,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
   }
 
   /**@internal */
-  _removeViewAt(repeat: IVirtualRepeat, collectionIndex: number, returnToCache: boolean, removeIndex: number, removedLength: number): any {
+  _removeViewAt(repeat: VirtualRepeat, collectionIndex: number, returnToCache: boolean, removeIndex: number, removedLength: number): any {
     let viewOrPromise: IView | Promise<IView>;
     let view: IView;
     let viewSlot = repeat.viewSlot;
@@ -189,7 +190,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     // index in view slot?
     if (!this._isIndexBeforeViewSlot(repeat, viewSlot, collectionIndex) && !this._isIndexAfterViewSlot(repeat, viewSlot, collectionIndex)) {
       let viewIndex = this._getViewIndex(repeat, viewSlot, collectionIndex);
-      viewOrPromise = repeat.removeView(viewIndex, returnToCache);
+      viewOrPromise = repeat.removeView(viewIndex, returnToCache, /** No skip animation */ false);
       if (repeat.items.length > viewCount) {
         // TODO: do not trigger view lifecycle here
         let collectionAddIndex: number;
@@ -237,13 +238,13 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
   }
 
   /**@internal */
-  _isIndexBeforeViewSlot(repeat: IVirtualRepeat, viewSlot: ViewSlot, index: number): boolean {
+  _isIndexBeforeViewSlot(repeat: VirtualRepeat, viewSlot: ViewSlot, index: number): boolean {
     let viewIndex = this._getViewIndex(repeat, viewSlot, index);
     return viewIndex < 0;
   }
 
   /**@internal */
-  _isIndexAfterViewSlot(repeat: IVirtualRepeat, viewSlot: ViewSlot, index: number): boolean {
+  _isIndexAfterViewSlot(repeat: VirtualRepeat, viewSlot: ViewSlot, index: number): boolean {
     let viewIndex = this._getViewIndex(repeat, viewSlot, index);
     return viewIndex > repeat._viewsLength - 1;
   }
@@ -252,7 +253,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
    * @internal
    * Calculate real index of a given index, based on existing buffer height and item height
    */
-  _getViewIndex(repeat: IVirtualRepeat, viewSlot: ViewSlot, index: number): number {
+  _getViewIndex(repeat: VirtualRepeat, viewSlot: ViewSlot, index: number): number {
     if (repeat.viewCount() === 0) {
       return -1;
     }
@@ -262,7 +263,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
   }
 
   /**@internal */
-  _handleAddedSplices(repeat: IVirtualRepeat, array: Array<any>, splices: any): void {
+  _handleAddedSplices(repeat: VirtualRepeat, array: Array<any>, splices: any): void {
     let arrayLength = array.length;
     let viewSlot = repeat.viewSlot;
     for (let i = 0, ii = splices.length; i < ii; ++i) {

@@ -1,6 +1,6 @@
-import {updateOverrideContext} from 'aurelia-templating-resources';
-import {View} from 'aurelia-templating';
-import { IVirtualRepeat } from './interfaces';
+import { updateOverrideContext } from 'aurelia-templating-resources';
+import { View } from 'aurelia-templating';
+import { VirtualRepeat } from './virtual-repeat';
 
 export function calcOuterHeight(element: Element): number {
   let height = element.getBoundingClientRect().height;
@@ -17,7 +17,7 @@ export function insertBeforeNode(view: View, bottomBuffer: Element): void {
 * Update the override context.
 * @param startIndex index in collection where to start updating.
 */
-export function updateVirtualOverrideContexts(repeat: IVirtualRepeat, startIndex: number): void {
+export function updateVirtualOverrideContexts(repeat: VirtualRepeat, startIndex: number): void {
   let views = repeat.viewSlot.children;
   let viewLength = views.length;
   let collectionLength = repeat.items.length;
@@ -33,7 +33,7 @@ export function updateVirtualOverrideContexts(repeat: IVirtualRepeat, startIndex
   }
 }
 
-export function rebindAndMoveView(repeat: IVirtualRepeat, view: View, index: number, moveToBottom: boolean): void {
+export function rebindAndMoveView(repeat: VirtualRepeat, view: View, index: number, moveToBottom: boolean): void {
   let items = repeat.items;
   let viewSlot = repeat.viewSlot;
   updateOverrideContext(view.overrideContext, index, items.length);
