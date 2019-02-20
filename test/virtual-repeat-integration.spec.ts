@@ -1,10 +1,7 @@
 import './setup';
-// import {Container} from 'aurelia-dependency-injection';
-// import {TaskQueue} from 'aurelia-task-queue'
-import { StageComponent, ComponentTester } from './component-tester';
+import { StageComponent } from './component-tester';
 import { PLATFORM } from 'aurelia-pal';
-// import {TableStrategy} from '../src/template-strategy';
-import { createAssertionQueue, validateState, validateScrolledState, Queue as AsyncQueue } from './utilities';
+import { createAssertionQueue, validateState, validateScrolledState, AsyncQueue } from './utilities';
 import { VirtualRepeat } from '../src/virtual-repeat';
 
 PLATFORM.moduleName('src/virtual-repeat');
@@ -195,10 +192,11 @@ describe('VirtualRepeat Integration', () => {
     });
 
     describe('handles delete', () => {
-      it('can delete one at start', async () => {
+      it('can delete one at start', async done => {
         await create;
         viewModel.items.splice(0, 1);
         nq(() => validateState(virtualRepeat, viewModel, itemHeight));
+        nq(() => done());
       });
 
       it('can delete one at end', done => {

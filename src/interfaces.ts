@@ -1,7 +1,7 @@
-import { Repeat, RepeatStrategy } from 'aurelia-templating-resources';
-import { ViewSlot, View, ViewFactory, BoundViewFactory, Controller } from 'aurelia-templating';
-import { Scope, Binding, OverrideContext } from 'aurelia-binding';
+import { Binding, Scope } from 'aurelia-binding';
 import { TaskQueue } from 'aurelia-task-queue';
+import { View, ViewSlot } from 'aurelia-templating';
+import { RepeatStrategy } from 'aurelia-templating-resources';
 import { VirtualRepeat } from './virtual-repeat';
 
 export interface IScrollNextScrollContext {

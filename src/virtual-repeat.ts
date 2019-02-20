@@ -187,7 +187,7 @@ export class VirtualRepeat extends AbstractRepeater {
   private _itemsLength: number;
 
   /**@internal */
-  private scrollContainer: HTMLElement;
+  scrollContainer: HTMLElement;
 
   /**@internal */
   private scrollListener: () => any;

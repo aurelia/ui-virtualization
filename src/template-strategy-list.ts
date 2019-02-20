@@ -20,6 +20,7 @@ import { DomHelper } from './dom-helper';
  * ```html
  * <template>
  *  <div style="overflow: scroll; height: 500px;">
+ *    ... some content
  *    <ul>
  *      <li virtual-repeat.for="item of items"></li>
  *    <ul>
@@ -42,13 +43,12 @@ export class ListTemplateStrategy extends DefaultTemplateStrategy implements ITe
 
   /**@override */
   createTopBufferElement(element: Element): HTMLElement {
-    // append tbody with empty row before the element
+    // element is a comment node
     return element.parentNode.insertBefore(DOM.createElement('li'), element);
   }
 
   /**@override */
   createBottomBufferElement(element: Element): HTMLElement {
-    // append tbody with empty row after the element
     // element is a comment node
     return element.parentNode.insertBefore(DOM.createElement('li'), element.nextSibling);
   }
