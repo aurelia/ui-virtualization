@@ -65,3 +65,8 @@ export function getElementDistanceToBottomViewPort(element: Element): number {
 export function getElementDistanceToTopViewPort(element: Element): number {
   return element.getBoundingClientRect().top;
 }
+
+export const $max = Math.max;
+export const $min = Math.min;
+export const $round = Math.round;
+export const $isNaN = isNaN;

@@ -23,7 +23,7 @@ import {
 } from './utilities';
 import { DomHelper } from './dom-helper';
 import { VirtualRepeatStrategyLocator } from './virtual-repeat-strategy-locator';
-import { TemplateStrategyLocator } from './template-strategy';
+import { TemplateStrategyLocator } from './template-strategy-locator';
 import {
   IVirtualRepeat,
   IVirtualRepeatStrategy,
@@ -43,7 +43,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
   /**@internal */
   static inject() {
     // tslint:disable-next-line:max-line-length
-    return [DOM.Element, BoundViewFactory, TargetInstruction, ViewSlot, ViewResources, ObserverLocator, VirtualRepeatStrategyLocator, TemplateStrategyLocator, DomHelper];
+    return [DOM.Element, BoundViewFactory, TargetInstruction, ViewSlot, ViewResources, ObserverLocator, VirtualRepeatStrategyLocator, TemplateStrategyLocator];
   }
 
   /**@internal */
@@ -145,9 +145,6 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
   /**@internal */
   private isOneTime: boolean;
 
-  /**@internal */
-  private domHelper: DomHelper;
-
   /**
    * @internal
    * Temporary snapshot of items list count. Updated regularly to determinate calculation need
@@ -201,8 +198,8 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     viewResources: ViewResources,
     observerLocator: ObserverLocator,
     strategyLocator: VirtualRepeatStrategyLocator,
-    templateStrategyLocator: TemplateStrategyLocator,
-    domHelper: DomHelper) {
+    templateStrategyLocator: TemplateStrategyLocator
+  ) {
     super({
       local: 'item',
       viewsRequireLifecycle: viewsRequireLifecycle(viewFactory)
@@ -219,7 +216,6 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
     this.templateStrategyLocator = templateStrategyLocator;
     this.sourceExpression = getItemsSourceExpression(this.instruction, 'virtual-repeat.for');
     this.isOneTime = isOneTime(this.sourceExpression);
-    this.domHelper = domHelper;
   }
 
   /**@override */
@@ -244,7 +240,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
 
     this._calcDistanceToTopInterval = PLATFORM.global.setInterval(() => {
       let prevDistanceToTop = this.distanceToTop;
-      let currDistanceToTop = this.domHelper.getElementDistanceToTopOfDocument(topBuffer) + this.topBufferDistance;
+      let currDistanceToTop = DomHelper.getElementDistanceToTopOfDocument(topBuffer) + this.topBufferDistance;
       this.distanceToTop = currDistanceToTop;
       if (prevDistanceToTop !== currDistanceToTop) {
         this._handleScroll();
@@ -253,10 +249,10 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
 
     // When dealing with tables, there can be gaps between elements, causing distances to be messed up. Might need to handle this case here.
     this.topBufferDistance = templateStrategy.getTopBufferDistance(topBuffer);
-    this.distanceToTop = this.domHelper
+    this.distanceToTop = DomHelper
       .getElementDistanceToTopOfDocument(templateStrategy.getFirstElement(topBuffer));
 
-    if (this.domHelper.hasOverflowScroll(scrollContainer)) {
+    if (DomHelper.hasOverflowScroll(scrollContainer)) {
       this._fixedHeightContainer = true;
       scrollContainer.addEventListener('scroll', scrollListener);
     } else {
@@ -274,7 +270,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
 
   /**@override */
   detached(): void {
-    if (this.domHelper.hasOverflowScroll(this.scrollContainer)) {
+    if (DomHelper.hasOverflowScroll(this.scrollContainer)) {
       this.scrollContainer.removeEventListener('scroll', this.scrollListener);
     } else {
       document.removeEventListener('scroll', this.scrollListener);
@@ -636,7 +632,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
 
   /**@internal*/
   _checkFixedHeightContainer(): void {
-    if (this.domHelper.hasOverflowScroll(this.scrollContainer)) {
+    if (DomHelper.hasOverflowScroll(this.scrollContainer)) {
       this._fixedHeightContainer = true;
     }
   }
