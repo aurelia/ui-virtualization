@@ -46,9 +46,23 @@ export const DomHelper = new class {
 
 //   private templateStrategyLocator: TemplateStrategyLocator;
 
+//   private topBufferEl: HTMLElement;
+//   private botBufferEl: HTMLElement;
+
 //   constructor(repeat: VirtualRepeat) {
 //     this.repeat = repeat;
 //     this.templateStrategyLocator = repeat.container.get(TemplateStrategyLocator);
+//   }
+
+//   initContainer() {
+//     const vRepeat: VirtualRepeat = this.repeat;
+//     const element = vRepeat.element;
+//     const templateStrategy = vRepeat.templateStrategy = this.templateStrategyLocator.getStrategy(element);
+    
+//     let scrollContainer = vRepeat.scrollContainer = templateStrategy.getScrollContainer(element);
+//     const [topBufferEl, bottomBufferEl] = templateStrategy.createBuffers(element);
+//     this.topBufferEl = topBufferEl;
+//     this.botBufferEl = bottomBufferEl;
 //   }
 
 //   init() {
@@ -58,14 +72,14 @@ export const DomHelper = new class {
 
 //     let scrollListener = vRepeat.scrollListener = () => vRepeat._onScroll();
 //     let scrollContainer = vRepeat.scrollContainer = templateStrategy.getScrollContainer(element);
-//     let topBuffer = vRepeat.topBuffer = templateStrategy.createTopBufferElement(element);
-
-//     vRepeat.bottomBuffer = templateStrategy.createBottomBufferElement(element);
+//     const [topBufferEl, bottomBufferEl] = templateStrategy.createBuffers(element);
+//     this.topBufferEl = topBufferEl;
+//     this.botBufferEl = bottomBufferEl;
 //     vRepeat.itemsChanged();
 
 //     vRepeat._calcDistanceToTopInterval = PLATFORM.global.setInterval(() => {
 //       let prevDistanceToTop = vRepeat.distanceToTop;
-//       let currDistanceToTop = DomHelper.getElementDistanceToTopOfDocument(topBuffer) + vRepeat.topBufferDistance;
+//       let currDistanceToTop = DomHelper.getElementDistanceToTopOfDocument(topBufferEl) + vRepeat.topBufferDistance;
 //       vRepeat.distanceToTop = currDistanceToTop;
 //       if (prevDistanceToTop !== currDistanceToTop) {
 //         vRepeat._handleScroll();
@@ -73,9 +87,9 @@ export const DomHelper = new class {
 //     }, 500);
 
 //     // When dealing with tables, there can be gaps between elements, causing distances to be messed up. Might need to handle vRepeat case here.
-//     vRepeat.topBufferDistance = templateStrategy.getTopBufferDistance(topBuffer);
+//     vRepeat.topBufferDistance = templateStrategy.getTopBufferDistance(topBufferEl);
 //     vRepeat.distanceToTop = DomHelper
-//       .getElementDistanceToTopOfDocument(templateStrategy.getFirstElement(topBuffer));
+//       .getElementDistanceToTopOfDocument(templateStrategy.getFirstElement(topBufferEl));
 
 //     if (DomHelper.hasOverflowScroll(scrollContainer)) {
 //       vRepeat._fixedHeightContainer = true;

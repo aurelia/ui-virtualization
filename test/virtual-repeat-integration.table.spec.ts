@@ -69,7 +69,7 @@ describe('VirtualRepeat Integration', () => {
 
     it('creates right structure', async () => {
       await bootstrapComponent();
-      const { topBuffer, bottomBuffer } = virtualRepeat;
+      const { topBufferEl: topBuffer, bottomBufferEl: bottomBuffer } = virtualRepeat;
       expect(topBuffer.nextElementSibling.tagName).toBe('TR');
       expect(topBuffer.tagName).toBe('TR');
       expect(topBuffer.childNodes.length).toBe(0);
@@ -105,7 +105,7 @@ describe('VirtualRepeat Integration', () => {
       await bootstrapComponent();
       const element = virtualRepeat['element'];
       const table = element.parentNode;
-      expect(table.firstElementChild).toBe(virtualRepeat.topBuffer.previousElementSibling);
+      expect(table.firstElementChild).toBe(virtualRepeat.topBufferEl.previousElementSibling);
       expect(table.firstElementChild.innerHTML.trim()).toBe('<tr><td>Name</td></tr>');
       queue(() => validateState(virtualRepeat, viewModel, itemHeight));
       queue(() => validatePush(virtualRepeat, viewModel, done));

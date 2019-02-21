@@ -213,8 +213,8 @@ export class VirtualRepeat extends AbstractRepeater {
   container: Container;
 
   templateStrategy: ITemplateStrategy;
-  topBuffer: HTMLElement;
-  bottomBuffer: HTMLElement;
+  topBufferEl: HTMLElement;
+  bottomBufferEl: HTMLElement;
 
 
   itemHeight: number;
@@ -286,17 +286,17 @@ export class VirtualRepeat extends AbstractRepeater {
 
     let scrollListener = this.scrollListener = () => this._onScroll();
     let scrollContainer = this.scrollContainer = templateStrategy.getScrollContainer(element);
-    const [topBuffer, bottomBuffer] = templateStrategy.createBuffers(element);
+    const [topBufferEl, bottomBufferEl] = templateStrategy.createBuffers(element);
     // let topBuffer = this.topBuffer = templateStrategy.createTopBufferElement(element);
     
-    this.topBuffer = topBuffer;
-    this.bottomBuffer = bottomBuffer;
+    this.topBufferEl = topBufferEl;
+    this.bottomBufferEl = bottomBufferEl;
     // this.bottomBuffer = templateStrategy.createBottomBufferElement(element);
     this.itemsChanged();
 
     this._calcDistanceToTopInterval = PLATFORM.global.setInterval(() => {
       let prevDistanceToTop = this.distanceToTop;
-      let currDistanceToTop = DomHelper.getElementDistanceToTopOfDocument(topBuffer) + this.topBufferDistance;
+      let currDistanceToTop = DomHelper.getElementDistanceToTopOfDocument(topBufferEl) + this.topBufferDistance;
       this.distanceToTop = currDistanceToTop;
       if (prevDistanceToTop !== currDistanceToTop) {
         this._handleScroll();
@@ -304,9 +304,9 @@ export class VirtualRepeat extends AbstractRepeater {
     }, 500);
 
     // When dealing with tables, there can be gaps between elements, causing distances to be messed up. Might need to handle this case here.
-    this.topBufferDistance = templateStrategy.getTopBufferDistance(topBuffer);
+    this.topBufferDistance = templateStrategy.getTopBufferDistance(topBufferEl);
     this.distanceToTop = DomHelper
-      .getElementDistanceToTopOfDocument(templateStrategy.getFirstElement(topBuffer));
+      .getElementDistanceToTopOfDocument(templateStrategy.getFirstElement(topBufferEl));
 
     if (DomHelper.hasOverflowScroll(scrollContainer)) {
       this._fixedHeightContainer = true;
@@ -336,8 +336,8 @@ export class VirtualRepeat extends AbstractRepeater {
     this._resetCalculation();
     this._isAttached = false;
     this._itemsLength = 0;
-    this.templateStrategy.removeBufferElements(this.element, this.topBuffer, this.bottomBuffer);
-    this.topBuffer = this.bottomBuffer = this.scrollContainer = this.scrollListener = null;
+    this.templateStrategy.removeBufferElements(this.element, this.topBufferEl, this.bottomBufferEl);
+    this.topBufferEl = this.bottomBufferEl = this.scrollContainer = this.scrollListener = null;
     this.scrollContainerHeight = 0;
     this.distanceToTop = 0;
     this.removeAllViews(true, false);
@@ -472,6 +472,10 @@ export class VirtualRepeat extends AbstractRepeater {
 
   getContainerHeight(): number {
     return this.scrollContainer.offsetHeight;
+  }
+
+  _initContainer(): void {
+
   }
 
   /**@internal */
@@ -699,8 +703,8 @@ export class VirtualRepeat extends AbstractRepeater {
 
   /**@internal */
   _adjustBufferHeights(): void {
-    this.topBuffer.style.height = `${this._topBufferHeight}px`;
-    this.bottomBuffer.style.height = `${this._bottomBufferHeight}px`;
+    this.topBufferEl.style.height = `${this._topBufferHeight}px`;
+    this.bottomBufferEl.style.height = `${this._bottomBufferHeight}px`;
   }
 
   /**@internal*/

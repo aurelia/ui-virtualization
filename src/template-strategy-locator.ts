@@ -20,13 +20,13 @@ export class TemplateStrategyLocator {
    * Selects the template strategy based on element hosting `virtual-repeat` custom attribute
    */
   getStrategy(element: Element): ITemplateStrategy {
-    let parent = element.parentNode as Element;
-    let container = this.container;
+    const parent = element.parentNode as Element;
+    const container = this.container;
     // Todo: should this ever happen?
     if (parent === null) {
       return container.get(DefaultTemplateStrategy);
     }
-    let parentTagName = parent.tagName;
+    const parentTagName = parent.tagName;
     // placed on tr, as it is automatically wrapped in a TBODY
     // if not wrapped, then it is already inside a thead or tfoot
     if (parentTagName === 'TBODY' || parentTagName === 'THEAD' || parentTagName === 'TFOOT') {

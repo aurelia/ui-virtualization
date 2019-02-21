@@ -31,8 +31,8 @@ export function createAssertionQueue(): AsyncQueue {
 export function validateState(virtualRepeat: VirtualRepeat, viewModel: any, itemHeight: number, extraHeight?: number) {
   let views = virtualRepeat.viewSlot.children;
   let expectedHeight = viewModel.items.length * itemHeight;
-  let topBufferHeight = virtualRepeat.topBuffer.getBoundingClientRect().height;
-  let bottomBufferHeight = virtualRepeat.bottomBuffer.getBoundingClientRect().height;
+  let topBufferHeight = virtualRepeat.topBufferEl.getBoundingClientRect().height;
+  let bottomBufferHeight = virtualRepeat.bottomBufferEl.getBoundingClientRect().height;
   let renderedItemsHeight = views.length * itemHeight;
   expect(topBufferHeight + renderedItemsHeight + bottomBufferHeight).toBe(
     expectedHeight,
@@ -64,8 +64,8 @@ export function validateState(virtualRepeat: VirtualRepeat, viewModel: any, item
 export function validateScrolledState(virtualRepeat: VirtualRepeat, viewModel: any, itemHeight: number) {
   let views = virtualRepeat.viewSlot.children;
   let expectedHeight = viewModel.items.length * itemHeight;
-  let topBufferHeight = virtualRepeat.topBuffer.getBoundingClientRect().height;
-  let bottomBufferHeight = virtualRepeat.bottomBuffer.getBoundingClientRect().height;
+  let topBufferHeight = virtualRepeat.topBufferEl.getBoundingClientRect().height;
+  let bottomBufferHeight = virtualRepeat.bottomBufferEl.getBoundingClientRect().height;
   let renderedItemsHeight = views.length * itemHeight;
   expect(topBufferHeight + renderedItemsHeight + bottomBufferHeight).toBe(
     expectedHeight,
