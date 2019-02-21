@@ -1,4 +1,4 @@
-import { Binding, Scope } from 'aurelia-binding';
+import { Binding, Scope, ICollectionObserverSplice } from 'aurelia-binding';
 import { TaskQueue } from 'aurelia-task-queue';
 import { View, ViewSlot } from 'aurelia-templating';
 import { RepeatStrategy } from 'aurelia-templating-resources';
@@ -44,16 +44,28 @@ declare module 'aurelia-templating' {
 }
 
 export interface IVirtualRepeatStrategy extends RepeatStrategy {
+
   /**
    * create first item to calculate the heights
    */
   createFirstItem(repeat: VirtualRepeat): void;
-    /**
-  * Handle the repeat's collection instance changing.
-  * @param repeat The repeater instance.
-  * @param items The new array instance.
-  */
-  instanceChanged(repeat: VirtualRepeat, items: Array<any>, ...rest: any[]): void;
+
+  /**
+   * @override
+   * Handle the repeat's collection instance changing.
+   * @param repeat The repeater instance.
+   * @param items The new array instance.
+   */
+  instanceChanged(repeat: VirtualRepeat, items: any[], ...rest: any[]): void;
+
+  /**
+   * @override
+   * Handle the repeat's collection instance mutating.
+   * @param repeat The virtual repeat instance.
+   * @param array The modified array.
+   * @param splices Records of array changes.
+   */
+  instanceMutated(repeat: VirtualRepeat, array: any[], splices: ICollectionObserverSplice[]): void;
 }
 
 /**
@@ -89,6 +101,19 @@ export type IView = View & Scope;
  * Expose property `children` to help manipulation/calculation
  */
 export type IViewSlot = ViewSlot & { children: IView[] };
+
+/**
+ * Object with information about current state of a scrollable element
+ * Capturing:
+ * - current scroll height
+ * - current scroll top
+ * - real height
+ */
+export interface IScrollerInfo {
+  scrollHeight: number;
+  scrollTop: number;
+  height: number;
+}
 
 // export const enum IVirtualRepeatState {
 //   isAtTop = 0b0_000000_000,

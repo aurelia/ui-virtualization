@@ -38,7 +38,8 @@ import {
   ITemplateStrategy,
   IView,
   IScrollNextScrollContext,
-  IViewSlot
+  IViewSlot,
+  IScrollerInfo
 } from './interfaces';
 
 const enum VirtualRepeatCallContext {
@@ -113,7 +114,12 @@ export class VirtualRepeat extends AbstractRepeater {
   _fixedHeightContainer = false;
 
   /**@internal*/ _hasCalculatedSizes = false;
-  /**@internal*/ _isAtTop = true;
+
+  /**
+   * Indicate current scrolltop of scroller is 0 or less
+   * @internal
+   */
+  _isAtTop = true;
   /**@internal*/ _calledGetMore = false;
 
   /**
@@ -194,7 +200,7 @@ export class VirtualRepeat extends AbstractRepeater {
    * @internal
    * Temporary snapshot of items list count. Updated regularly to determinate calculation need
    */
-  private _prevItemsCount: number;
+  _prevItemsCount: number;
 
   /**@internal */
   scrollContainer: HTMLElement;
@@ -397,7 +403,9 @@ export class VirtualRepeat extends AbstractRepeater {
         this._skipNextScrollHandle = true;
         reducingItems = true;
       }
-      this._checkFixedHeightContainer();
+      if (DomHelper.hasOverflowScroll(this.scrollContainer)) {
+        this._fixedHeightContainer = true;
+      }
       this._calcInitialHeights(currentItemCount);
     }
     if (!this.isOneTime && !this._observeInnerCollection()) {
@@ -474,8 +482,15 @@ export class VirtualRepeat extends AbstractRepeater {
     }
   }
 
-  getContainerHeight(): number {
-    return this.scrollContainer.offsetHeight;
+  getScrollerInfo(): IScrollerInfo {
+    const scroller = this._fixedHeightContainer
+      ? this.scrollContainer
+      : document.documentElement;
+    return {
+      scrollHeight: scroller.scrollHeight,
+      scrollTop: scroller.scrollTop,
+      height: scroller.clientHeight
+    };
   }
 
   /**@internal */
@@ -694,13 +709,6 @@ export class VirtualRepeat extends AbstractRepeater {
     }
   }
 
-  /**@internal*/
-  _checkFixedHeightContainer(): void {
-    if (DomHelper.hasOverflowScroll(this.scrollContainer)) {
-      this._fixedHeightContainer = true;
-    }
-  }
-
   /**@internal */
   _adjustBufferHeights(): void {
     this.topBufferEl.style.height = `${this._topBufferHeight}px`;
@@ -830,7 +838,7 @@ export class VirtualRepeat extends AbstractRepeater {
     if (this._topBufferHeight >= newBottomBufferHeight) {
       this._topBufferHeight = newBottomBufferHeight;
       this._bottomBufferHeight = 0;
-      this._first = this._prevItemsCount - viewsCount;
+      this._first = itemsLength - viewsCount;
       if (this._first < 0) { // In case of small lists, ensure that we never set first to less than possible
         this._first = 0;
       }
