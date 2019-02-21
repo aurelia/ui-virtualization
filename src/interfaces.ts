@@ -61,6 +61,9 @@ export interface IVirtualRepeatStrategy extends RepeatStrategy {
  * Typically related to moving views, creating buffer and locating view range range in the DOM
  */
 export interface ITemplateStrategy {
+  /**
+   * Determine the scroll container of a [repeat] based on its anchor (`element` is a comment node)
+   */
   getScrollContainer(element: Element): HTMLElement;
   moveViewFirst(view: View, topBuffer: Element): void;
   moveViewLast(view: View, bottomBuffer: Element): void;
@@ -69,6 +72,9 @@ export interface ITemplateStrategy {
   removeBufferElements(element: Element, topBuffer: Element, bottomBuffer: Element): void;
   getFirstElement(topBuffer: Element): Element;
   getLastElement(bottomBuffer: Element): Element;
+  /**
+   * Distance of top buffer to the top of its offseting parent
+   */
   getTopBufferDistance(topBuffer: Element): number;
 }
 

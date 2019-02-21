@@ -32,6 +32,7 @@ import {
   IViewSlot
 } from './interfaces';
 import { TaskQueue } from 'aurelia-task-queue';
+import { Container } from 'aurelia-dependency-injection';
 
 const enum VirtualRepeatCallContext {
   handleCollectionMutated = 'handleCollectionMutated',
@@ -43,7 +44,7 @@ export class VirtualRepeat extends AbstractRepeater {
   /**@internal */
   static inject() {
     // tslint:disable-next-line:max-line-length
-    return [DOM.Element, BoundViewFactory, TargetInstruction, ViewSlot, ViewResources, ObserverLocator, VirtualRepeatStrategyLocator, TemplateStrategyLocator];
+    return [DOM.Element, Container, BoundViewFactory, TargetInstruction, ViewSlot, ViewResources, ObserverLocator, VirtualRepeatStrategyLocator, TemplateStrategyLocator];
   }
 
   /**@internal */
@@ -157,7 +158,7 @@ export class VirtualRepeat extends AbstractRepeater {
   readonly viewFactory: BoundViewFactory;
 
   /**@internal */
-  private element: HTMLElement;
+  element: HTMLElement;
 
   /**@internal */
   private instruction: TargetInstruction;
@@ -201,6 +202,9 @@ export class VirtualRepeat extends AbstractRepeater {
   /**@internal */
   private taskQueue: TaskQueue;
 
+  /**@internal */
+  container: Container;
+
   templateStrategy: ITemplateStrategy;
   topBuffer: HTMLElement;
   bottomBuffer: HTMLElement;
@@ -208,6 +212,9 @@ export class VirtualRepeat extends AbstractRepeater {
 
   itemHeight: number;
   movedViewsCount: number;
+  /**
+   * Calculate current scrolltop position
+   */
   distanceToTop: number;
   /**
    * When dealing with tables, there can be gaps between elements, causing distances to be messed up. Might need to handle this case here.
@@ -227,6 +234,7 @@ export class VirtualRepeat extends AbstractRepeater {
 
   constructor(
     element: HTMLElement,
+    container: Container,
     viewFactory: BoundViewFactory,
     instruction: TargetInstruction,
     viewSlot: ViewSlot,
@@ -241,6 +249,7 @@ export class VirtualRepeat extends AbstractRepeater {
     });
 
     this.element = element;
+    this.container = container;
     this.viewFactory = viewFactory;
     this.instruction = instruction;
     this.viewSlot = viewSlot as ViewSlot & { children: IView[] };
@@ -449,6 +458,10 @@ export class VirtualRepeat extends AbstractRepeater {
       // the items property, which will trigger the self-subscriber to call itemsChanged.
       this.items = newItems;
     }
+  }
+
+  getContainerHeight(): number {
+    return this.scrollContainer.offsetHeight;
   }
 
   /**@internal */

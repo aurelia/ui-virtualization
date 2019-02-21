@@ -8,9 +8,9 @@
   <div
     if.bind="window.virtualRepeat"
     class="bg-white border shadow-lg"
-    style="position: fixed; bottom: 0; right: 0">
+    style="position: fixed; bottom: 0; right: 0; height: 400px; overflow-y: auto;">
     <let virtual-repeat.bind='window.virtualRepeat'></let>
-    <table>
+    <table class="table table-sm table-striped table-bordered">
       <tr>
         <th>Name</th>
         <th>--- Value ---</th>
@@ -78,7 +78,8 @@
         <td><checkbox checked.bind=virtualRepeat.isLastIndex></checkbox></td>
       </tr>
       <tr>
-        <td>Called Get More${virtualRepeat._calledGetMore}</td>
+        <td>Called Get More</td>
+        <td><checkbox checked.bind=virtualRepeat._calledGetMore></checkbox></td>
       </tr>
       <tr>
         <td>Skip Next Scroll</td>

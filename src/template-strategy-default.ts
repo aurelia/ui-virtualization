@@ -19,17 +19,11 @@ export class DefaultTemplateStrategy implements ITemplateStrategy {
   }
 
   createTopBufferElement(element: Element): HTMLElement {
-    const elementName = /^[UO]L$/.test((element.parentNode as Element).tagName) ? 'li' : 'div';
-    const buffer = DOM.createElement(elementName);
-    element.parentNode.insertBefore(buffer, element);
-    return buffer;
+    return element.parentNode.insertBefore(DOM.createElement('div'), element);
   }
 
   createBottomBufferElement(element: Element): HTMLElement {
-    const elementName = /^[UO]L$/.test((element.parentNode as Element).tagName) ? 'li' : 'div';
-    const buffer = DOM.createElement(elementName);
-    element.parentNode.insertBefore(buffer, element.nextSibling);
-    return buffer;
+    return element.parentNode.insertBefore(DOM.createElement('div'), element.nextSibling);
   }
 
   removeBufferElements(element: Element, topBuffer: Element, bottomBuffer: Element): void {
