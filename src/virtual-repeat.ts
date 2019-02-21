@@ -1,4 +1,11 @@
-import {ObserverLocator, Scope, Expression, Disposable, ICollectionObserverSplice, OverrideContext, BindingExpression} from 'aurelia-binding';
+import {
+  ObserverLocator,
+  Scope,
+  Expression,
+  ICollectionObserverSplice,
+  OverrideContext,
+  BindingExpression
+} from 'aurelia-binding';
 import {
   BoundViewFactory,
   ViewSlot,
@@ -16,6 +23,8 @@ import {
   viewsRequireLifecycle
 } from 'aurelia-templating-resources';
 import { DOM, PLATFORM } from 'aurelia-pal';
+import { TaskQueue } from 'aurelia-task-queue';
+import { Container } from 'aurelia-dependency-injection';
 import {
   calcOuterHeight,
   rebindAndMoveView,
@@ -31,8 +40,6 @@ import {
   IScrollNextScrollContext,
   IViewSlot
 } from './interfaces';
-import { TaskQueue } from 'aurelia-task-queue';
-import { Container } from 'aurelia-dependency-injection';
 
 const enum VirtualRepeatCallContext {
   handleCollectionMutated = 'handleCollectionMutated',
@@ -279,9 +286,12 @@ export class VirtualRepeat extends AbstractRepeater {
 
     let scrollListener = this.scrollListener = () => this._onScroll();
     let scrollContainer = this.scrollContainer = templateStrategy.getScrollContainer(element);
-    let topBuffer = this.topBuffer = templateStrategy.createTopBufferElement(element);
-
-    this.bottomBuffer = templateStrategy.createBottomBufferElement(element);
+    const [topBuffer, bottomBuffer] = templateStrategy.createBuffers(element);
+    // let topBuffer = this.topBuffer = templateStrategy.createTopBufferElement(element);
+    
+    this.topBuffer = topBuffer;
+    this.bottomBuffer = bottomBuffer;
+    // this.bottomBuffer = templateStrategy.createBottomBufferElement(element);
     this.itemsChanged();
 
     this._calcDistanceToTopInterval = PLATFORM.global.setInterval(() => {

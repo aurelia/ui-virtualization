@@ -18,12 +18,12 @@ export class DefaultTemplateStrategy implements ITemplateStrategy {
     insertBeforeNode(view, referenceNode as Element);
   }
 
-  createTopBufferElement(element: Element): HTMLElement {
-    return element.parentNode.insertBefore(DOM.createElement('div'), element);
-  }
-
-  createBottomBufferElement(element: Element): HTMLElement {
-    return element.parentNode.insertBefore(DOM.createElement('div'), element.nextSibling);
+  createBuffers(element: Element): [HTMLElement, HTMLElement] {
+    const parent = element.parentNode;
+    return [
+      parent.insertBefore(DOM.createElement('div'), element),
+      parent.insertBefore(DOM.createElement('div'), element.nextSibling)
+    ];
   }
 
   removeBufferElements(element: Element, topBuffer: Element, bottomBuffer: Element): void {

@@ -42,15 +42,12 @@ export class ListTemplateStrategy extends DefaultTemplateStrategy implements ITe
   }
 
   /**@override */
-  createTopBufferElement(element: Element): HTMLElement {
-    // element is a comment node
-    return element.parentNode.insertBefore(DOM.createElement('li'), element);
-  }
-
-  /**@override */
-  createBottomBufferElement(element: Element): HTMLElement {
-    // element is a comment node
-    return element.parentNode.insertBefore(DOM.createElement('li'), element.nextSibling);
+  createBuffers(element: Element): [HTMLElement, HTMLElement] {
+    const parent = element.parentNode;
+    return [
+      parent.insertBefore(DOM.createElement('li'), element),
+      parent.insertBefore(DOM.createElement('li'), element.nextSibling)
+    ];
   }
 
   private getList(element: Element): HTMLOListElement | HTMLUListElement {

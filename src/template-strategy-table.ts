@@ -9,17 +9,15 @@ abstract class BaseTableTemplateStrategy extends DefaultTemplateStrategy impleme
     return this.getTable(element).parentNode as HTMLElement;
   }
 
-  /**@override */
-  createTopBufferElement(element: Element): HTMLElement {
-    // append tbody with empty row before the element
-    return element.parentNode.insertBefore(DOM.createElement('tr'), element);
-  }
-
-  /**@override */
-  createBottomBufferElement(element: Element): HTMLElement {
-    // append tbody with empty row after the element
+  createBuffers(element: Element): [HTMLElement, HTMLElement] {
+    const parent = element.parentNode;
     // element is a comment node
-    return element.parentNode.insertBefore(DOM.createElement('tr'), element.nextSibling);
+    return [
+      // append tbody with empty row before the element
+      parent.insertBefore(DOM.createElement('tr'), element),
+      // append tbody with empty row after the element
+      parent.insertBefore(DOM.createElement('tr'), element.nextSibling)
+    ];
   }
 
   protected abstract getTable(element: Element): HTMLTableElement;

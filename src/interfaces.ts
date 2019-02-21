@@ -67,8 +67,10 @@ export interface ITemplateStrategy {
   getScrollContainer(element: Element): HTMLElement;
   moveViewFirst(view: View, topBuffer: Element): void;
   moveViewLast(view: View, bottomBuffer: Element): void;
-  createTopBufferElement(element: Element): HTMLElement;
-  createBottomBufferElement(element: Element): HTMLElement;
+  /**
+   * Create top and bottom buffer elements for an anchor (`element` is a comment node)
+   */
+  createBuffers(element: Element): [HTMLElement, HTMLElement];
   removeBufferElements(element: Element, topBuffer: Element, bottomBuffer: Element): void;
   getFirstElement(topBuffer: Element): Element;
   getLastElement(bottomBuffer: Element): Element;
