@@ -16,21 +16,21 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
   }
   /**
    * @override
-  * Handle the repeat's collection instance changing.
-  * @param repeat The repeater instance.
-  * @param items The new array instance.
-  */
+   * Handle the repeat's collection instance changing.
+   * @param repeat The repeater instance.
+   * @param items The new array instance.
+   */
   instanceChanged(repeat: VirtualRepeat, items: Array<any>, ...rest: any[]): void {
     this._inPlaceProcessItems(repeat, items, rest[0]);
   }
 
   /**
    * @override
-  * Handle the repeat's collection instance mutating.
-  * @param repeat The repeat instance.
-  * @param array The modified array.
-  * @param splices Records of array changes.
-  */
+   * Handle the repeat's collection instance mutating.
+   * @param repeat The repeat instance.
+   * @param array The modified array.
+   * @param splices Records of array changes.
+   */
   instanceMutated(repeat: VirtualRepeat, array: Array<any>, splices: any): void {
     this._standardProcessInstanceMutated(repeat, array, splices);
   }

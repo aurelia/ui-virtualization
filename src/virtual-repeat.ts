@@ -77,7 +77,8 @@ export class VirtualRepeat extends AbstractRepeater {
    */
   _previousFirst = 0;
 
-  /**@internal*/ _viewsLength = 0;
+  /**@internal*/
+  _viewsLength = 0;
   
   /**
    * @internal
@@ -110,6 +111,7 @@ export class VirtualRepeat extends AbstractRepeater {
    * This helps identifies place to add scroll event listener
    */
   _fixedHeightContainer = false;
+
   /**@internal*/ _hasCalculatedSizes = false;
   /**@internal*/ _isAtTop = true;
   /**@internal*/ _calledGetMore = false;
@@ -126,7 +128,7 @@ export class VirtualRepeat extends AbstractRepeater {
    */
   _skipNextScrollHandle: boolean = false;
 
-    /**
+  /**
    * While handling mutation, repeater and its strategies could/should modify scroll position
    * to deliver a smooth user experience. This action may trigger a scroll event
    * which may disrupt the mutation handling or cause unwanted effects.
@@ -192,7 +194,7 @@ export class VirtualRepeat extends AbstractRepeater {
    * @internal
    * Temporary snapshot of items list count. Updated regularly to determinate calculation need
    */
-  private _itemsLength: number;
+  private _prevItemsCount: number;
 
   /**@internal */
   scrollContainer: HTMLElement;
@@ -259,7 +261,7 @@ export class VirtualRepeat extends AbstractRepeater {
     this.container = container;
     this.viewFactory = viewFactory;
     this.instruction = instruction;
-    this.viewSlot = viewSlot as ViewSlot & { children: IView[] };
+    this.viewSlot = viewSlot as IViewSlot;
     this.lookupFunctions = viewResources['lookupFunctions'];
     this.observerLocator = observerLocator;
     this.taskQueue = observerLocator.taskQueue;
@@ -269,6 +271,7 @@ export class VirtualRepeat extends AbstractRepeater {
     this.isOneTime = isOneTime(this.sourceExpression);
     this.itemHeight = 0;
     this.topBufferDistance = 0;
+    this._prevItemsCount = 0;
   }
 
   /**@override */
@@ -279,7 +282,7 @@ export class VirtualRepeat extends AbstractRepeater {
   /**@override */
   attached(): void {
     this._isAttached = true;
-    this._itemsLength = this.items.length;
+    this._prevItemsCount = this.items.length;
 
     let element = this.element;
     let templateStrategy = this.templateStrategy = this.templateStrategyLocator.getStrategy(element);
@@ -312,7 +315,7 @@ export class VirtualRepeat extends AbstractRepeater {
       this._fixedHeightContainer = true;
       scrollContainer.addEventListener('scroll', scrollListener);
     } else {
-      document.addEventListener('scroll', scrollListener);
+      DOM.addEventListener('scroll', scrollListener, false);
     }
     if (this.items.length < this.elementsInView && this.isLastIndex === undefined) {
       this._getMore(true);
@@ -329,13 +332,13 @@ export class VirtualRepeat extends AbstractRepeater {
     if (DomHelper.hasOverflowScroll(this.scrollContainer)) {
       this.scrollContainer.removeEventListener('scroll', this.scrollListener);
     } else {
-      document.removeEventListener('scroll', this.scrollListener);
+      DOM.removeEventListener('scroll', this.scrollListener, false);
     }
     this.isLastIndex = undefined;
     this._fixedHeightContainer = false;
     this._resetCalculation();
     this._isAttached = false;
-    this._itemsLength = 0;
+    this._prevItemsCount = 0;
     this.templateStrategy.removeBufferElements(this.element, this.topBufferEl, this.bottomBufferEl);
     this.topBufferEl = this.bottomBufferEl = this.scrollContainer = this.scrollListener = null;
     this.scrollContainerHeight = 0;
@@ -352,7 +355,7 @@ export class VirtualRepeat extends AbstractRepeater {
   unbind(): void {
     this.scope = null;
     this.items = null;
-    this._itemsLength = 0;
+    this._prevItemsCount = 0;
   }
 
   /**
@@ -370,42 +373,43 @@ export class VirtualRepeat extends AbstractRepeater {
    */
   itemsChanged(): void {
     this._unsubscribeCollection();
-    // still bound?
+    // still bound? and still attached?
     if (!this.scope || !this._isAttached) {
       return;
     }
     let reducingItems = false;
     let previousLastViewIndex = this._getIndexOfLastView();
 
-    let items = this.items;
-    let shouldCalculateSize = !!items;
-    this.strategy = this.strategyLocator.getStrategy(items);
+    const items = this.items;
+    const currentItemCount = items.length;
+    const shouldCalculateSize = !!items;
+    const strategy = this.strategy = this.strategyLocator.getStrategy(items);
 
     if (shouldCalculateSize) {
-      if (items.length > 0 && this.viewCount() === 0) {
-        this.strategy.createFirstItem(this);
+      if (currentItemCount > 0 && this.viewCount() === 0) {
+        strategy.createFirstItem(this);
       }
       // Skip scroll handling if we are decreasing item list
       // Otherwise if expanding list, call the handle scroll below
-      if (this._itemsLength >= items.length) {
+      if (this._prevItemsCount >= currentItemCount) {
         // Scroll handle is redundant in this case since the instanceChanged will re-evaluate orderings
         //  Also, when items are reduced, we're not having to move any bindings, just a straight rebind of the items in the list
         this._skipNextScrollHandle = true;
         reducingItems = true;
       }
       this._checkFixedHeightContainer();
-      this._calcInitialHeights(items.length);
+      this._calcInitialHeights(currentItemCount);
     }
     if (!this.isOneTime && !this._observeInnerCollection()) {
       this._observeCollection();
     }
-    this.strategy.instanceChanged(this, items, this._first);
+    strategy.instanceChanged(this, items, this._first);
 
     if (shouldCalculateSize) {
       // Reset rebinding
       this._lastRebind = this._first;
 
-      if (reducingItems && previousLastViewIndex > this.items.length - 1) {
+      if (reducingItems && previousLastViewIndex > currentItemCount - 1) {
         // Do we need to set scrolltop so that we appear at the bottom of the list to match scrolling as far as we could?
         // We only want to execute this line if we're reducing such that it brings us to the bottom of the new list
         // Make sure we handle the special case of tables
@@ -428,7 +432,7 @@ export class VirtualRepeat extends AbstractRepeater {
         this._scrollingUp = false;
 
         // Make sure we fix any state (we could have been at the last index before, but this doesn't get set until too late for scrolling)
-        this.isLastIndex = this._getIndexOfLastView() >= this.items.length - 1;
+        this.isLastIndex = this._getIndexOfLastView() >= currentItemCount - 1;
       }
 
       // Need to readjust the scroll position to "move" us back to the appropriate position,
@@ -444,7 +448,7 @@ export class VirtualRepeat extends AbstractRepeater {
       return;
     }
     this._handlingMutations = true;
-    this._itemsLength = collection.length;
+    this._prevItemsCount = collection.length;
     this.strategy.instanceMutated(this, collection, changes);
   }
 
@@ -472,10 +476,6 @@ export class VirtualRepeat extends AbstractRepeater {
 
   getContainerHeight(): number {
     return this.scrollContainer.offsetHeight;
-  }
-
-  _initContainer(): void {
-
   }
 
   /**@internal */
@@ -754,7 +754,7 @@ export class VirtualRepeat extends AbstractRepeater {
 
   /**@internal */
   get _isAtFirstOrLastIndex(): boolean {
-    return this._scrollingDown ? this.isLastIndex : this._isAtTop;
+    return !this._isScrolling || this._scrollingDown ? this.isLastIndex : this._isAtTop;
   }
 
   /**@internal*/
@@ -785,7 +785,7 @@ export class VirtualRepeat extends AbstractRepeater {
    * - top/bottom buffers' height
    */
   _calcInitialHeights(itemsLength: number): void {
-    const isSameLength = this._viewsLength > 0 && this._itemsLength === itemsLength;
+    const isSameLength = this._viewsLength > 0 && this._prevItemsCount === itemsLength;
     if (isSameLength) {
       return;
     }
@@ -807,7 +807,7 @@ export class VirtualRepeat extends AbstractRepeater {
       return;
     }
 
-    this._itemsLength = itemsLength;
+    this._prevItemsCount = itemsLength;
     this.scrollContainerHeight = this._fixedHeightContainer
       ? this._calcScrollHeight(this.scrollContainer)
       : document.documentElement.clientHeight;
@@ -830,7 +830,7 @@ export class VirtualRepeat extends AbstractRepeater {
     if (this._topBufferHeight >= newBottomBufferHeight) {
       this._topBufferHeight = newBottomBufferHeight;
       this._bottomBufferHeight = 0;
-      this._first = this._itemsLength - viewsCount;
+      this._first = this._prevItemsCount - viewsCount;
       if (this._first < 0) { // In case of small lists, ensure that we never set first to less than possible
         this._first = 0;
       }
@@ -856,7 +856,12 @@ export class VirtualRepeat extends AbstractRepeater {
     return height;
   }
 
-  /**@internal*/
+  /**
+   * If repeat items is behind a binding behavior or value converter
+   * the real array is "inner" part of the expression
+   * which should be observed via this method
+   * @internal
+   */
   _observeInnerCollection(): boolean {
     let items = this._getInnerCollection();
     let strategy = this.strategyLocator.getStrategy(items);
