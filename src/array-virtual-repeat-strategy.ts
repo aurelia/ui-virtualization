@@ -47,8 +47,14 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
 
   /**@internal */
   _inPlaceProcessItems(repeat: VirtualRepeat, items: any[], first: number): void {
-    const prevItemCount = repeat._prevItemsCount;
     const currItemCount = items.length;
+    if (currItemCount === 0) {
+      repeat.removeAllViews(/*return to cache?*/true, /*skip animation?*/false);
+      repeat._resetCalculation();
+      delete repeat.__queuedSplices;
+      delete repeat.__array;
+      return;
+    }
     /*
       Get index of first view is looking at the view which is from the ViewSlot
       The view slot has not yet been updated with the new list
@@ -57,24 +63,29 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
         That "first" is calculated and passed into here
     */
     // remove unneeded views.
-    let viewCount = repeat.viewCount();
-    while (viewCount > currItemCount) {
-      viewCount--;
-      repeat.removeView(viewCount, /** Returns to cache? */ true, /** skip animation? */ false);
+    let realViewsCount = repeat.viewCount();
+    while (realViewsCount > currItemCount) {
+      realViewsCount--;
+      repeat.removeView(realViewsCount, /**return to cache?*/true, /**skip animation?*/false);
     }
-    console.log({ first });
-    // avoid repeated evaluating the property-getter for the "local" property.
     const local = repeat.local;
-    const viewsCount = Math.min(repeat._viewsLength, currItemCount);
+    const lastIndex = currItemCount - 1;
+    if (first + realViewsCount > lastIndex) {
+      // first = currItemCount - realViewsCount instead of: first = currItemCount - 1 - realViewsCount;
+      //    this is because during view update
+      //    view(i) starts at 0 and ends at less than last
+      first = Math.max(0, currItemCount - realViewsCount);
+    }
     // re-evaluate bindings on existing views.
-    for (let i = 0; i < viewCount; i++) {
+    for (let i = 0; i < realViewsCount; i++) {
+      const currIndex = i + first;
       const view = repeat.view(i);
-      const last = i === currItemCount - 1;
-      const middle = i !== 0 && !last;
+      const last = currIndex === currItemCount - 1;
+      const middle = currIndex !== 0 && !last;
       const bindingContext = view.bindingContext;
       const overrideContext = view.overrideContext;
       // any changes to the binding context?
-      if (bindingContext[local] === items[i + first]
+      if (bindingContext[local] === items[currIndex]
         && overrideContext.$middle === middle
         && overrideContext.$last === last
       ) {
@@ -82,21 +93,18 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
         continue;
       }
       // update the binding context and refresh the bindings.
-      bindingContext[local] = items[i + first];
+      bindingContext[local] = items[currIndex];
       overrideContext.$middle = middle;
       overrideContext.$last = last;
-      overrideContext.$index = i + first;
+      overrideContext.$index = currIndex;
       repeat.updateBindings(view);
     }
     // add new views
     const minLength = Math.min(repeat._viewsLength, currItemCount);
-    for (let i = viewCount; i < minLength; i++) {
+    for (let i = realViewsCount; i < minLength; i++) {
       const overrideContext = createFullOverrideContext(repeat, items[i], i, currItemCount);
       repeat.addView(overrideContext.bindingContext, overrideContext);
-    }
-
-    const scrollerInfo = repeat.getScrollerInfo();
-    
+    }    
   }
 
   /**@internal */

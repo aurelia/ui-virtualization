@@ -5,95 +5,106 @@
     <nav-bar router.bind='router'></nav-bar>
     <main as-element='router-view'></main>
   </div>
+  <button
+    class="btn btn-sm btn-info"
+    show.bind="minimizedMonitor"
+    click.trigger="minimizedMonitor = false"
+    style="position: absolute; bottom: 20px; right: 20px;">Maximize monitor</button>
   <div
     if.bind="window.virtualRepeat"
-    class="bg-white border shadow-lg"
-    style="position: fixed; bottom: 0; right: 0; height: 400px; overflow-y: auto;">
+    show.bind="!minimizedMonitor"
+    class="bg-white border shadow-lg d-flex flex-column"
+    style="position: fixed; bottom: 0; right: 0; max-height: 80vh;">
     <let virtual-repeat.bind='window.virtualRepeat'></let>
-    <table class="table table-sm table-striped table-bordered">
-      <tr>
-        <th>Name</th>
-        <th>--- Value ---</th>
-      </tr>
-      <tr>
-        <td>First</td><td>${virtualRepeat._first}</td>
-      <tr>
-        <td>Previous First</td><td>${virtualRepeat._previousFirst}</td>
-      <tr>
-        <td>Views Length</td><td>${virtualRepeat._viewsLength}</td>
-      <tr>
-        <td>Last Rebind</td><td>${virtualRepeat._lastRebind}</td>
-      <tr>
-        <td>Elements In view</td>
-        <td>${virtualRepeat.elementsInView}</td>
-      <tr>
-        <td>Item height</td>
-        <td>${virtualRepeat.itemHeight}</td>
-      <tr>
-        <td>Top Buffer height</td>
-        <td>${virtualRepeat._topBufferHeight}</td>
-      <tr>
-        <td>Bottom Buffer height</td>
-        <td>${virtualRepeat._bottomBufferHeight}</td>
-      <tr>
-        <td>Buffer Size</td>
-        <td>${virtualRepeat._bufferSize}</td>
-      <tr>
-        <td>Distance to top</td>
-        <td>${virtualRepeat.distanceToTop}</td>
-      <tr>
-        <td>Top buffer distance</td>
-        <td>${virtualRepeat.topBufferDistance}</td>
-      <tr>
-        <td>Scrolling Down</td>
-        <td><checkbox checked.bind=virtualRepeat._scrollingDown></checkbox></td>
-      <tr>
-        <td>Scrolling Up</td>
-        <td><checkbox checked.bind=virtualRepeat._scrollingUp></checkbox></td>
-      <tr>
-        <td>Is First or last</td>
-        <td><checkbox checked.bind=virtualRepeat._isAtFirstOrLastIndex></checkbox></td>
-      <tr>
-        <td>Switched Direction</td>
-        <td><checkbox checked.bind=virtualRepeat._switchedDirection></checkbox></td>
-      </tr>
-      <tr>
-        <td>Is Attached</td>
-        <td><checkbox checked.bind=virtualRepeat._isAttached></checkbox></td>
-      </tr>
-      <tr>
-        <td>Ticking</td>
-        <td><checkbox checked.bind=virtualRepeat._ticking></checkbox></td>
-      <tr>
-        <td>Fixed height Container</td>
-        <td><checkbox checked.bind=virtualRepeat._fixedHeightContainer></checkbox></td>
-      <tr>
-        <td>Has Calculated Size</td><td><checkbox checked.bind=virtualRepeat._hasCalculatedSizes></checkbox></td>
-      <tr>
-        <td>Is At top</td>
-        <td><checkbox checked.bind=virtualRepeat._isAtTop></checkbox></td>
-      </tr>
-      <tr>
-        <td>Is Last Index</td>
-        <td><checkbox checked.bind=virtualRepeat.isLastIndex></checkbox></td>
-      </tr>
-      <tr>
-        <td>Called Get More</td>
-        <td><checkbox checked.bind=virtualRepeat._calledGetMore></checkbox></td>
-      </tr>
-      <tr>
-        <td>Skip Next Scroll</td>
-        <td><checkbox checked.bind=virtualRepeat._skipNextScrollHandle></checkbox></td>
-      </tr>
-      <tr>
-        <td>Handling Mutation</td>
-        <td><checkbox checked.bind=virtualRepeat._handlingMutations></checkbox></td>
-      </tr>
-      <tr>
-        <td>Is Scrolling</td>
-        <td><checkbox checked.bind=virtualRepeat._isScrolling></checkbox></td>
-      </tr>
-    </table>
+    <button
+      class="btn btn-sm btn-block btn-info"
+      click.trigger="minimizedMonitor = true">Minimize monitor</button>
+    <div class="flex-fill" style="overflow-y: auto;">
+      <table class="table table-sm table-striped table-bordered">
+        <tr>
+          <th>Name</th>
+          <th>--- Value ---</th>
+        </tr>
+        <tr>
+          <td>First</td><td>${virtualRepeat._first}</td>
+        <tr>
+          <td>Previous First</td><td>${virtualRepeat._previousFirst}</td>
+        <tr>
+          <td>Views Length</td><td>${virtualRepeat._viewsLength}</td>
+        <tr>
+          <td>Last Rebind</td><td>${virtualRepeat._lastRebind}</td>
+        <tr>
+          <td>Elements In view</td>
+          <td>${virtualRepeat.elementsInView}</td>
+        <tr>
+          <td>Item height</td>
+          <td>${virtualRepeat.itemHeight}</td>
+        <tr>
+          <td>Top Buffer height</td>
+          <td>${virtualRepeat._topBufferHeight}</td>
+        <tr>
+          <td>Bottom Buffer height</td>
+          <td>${virtualRepeat._bottomBufferHeight}</td>
+        <tr>
+          <td>Buffer Size</td>
+          <td>${virtualRepeat._bufferSize}</td>
+        <tr>
+          <td>Distance to top</td>
+          <td>${virtualRepeat.distanceToTop}</td>
+        <tr>
+          <td>Top buffer distance</td>
+          <td>${virtualRepeat.topBufferDistance}</td>
+        <tr>
+          <td>Scrolling Down</td>
+          <td><checkbox checked.bind=virtualRepeat._scrollingDown></checkbox></td>
+        <tr>
+          <td>Scrolling Up</td>
+          <td><checkbox checked.bind=virtualRepeat._scrollingUp></checkbox></td>
+        <tr>
+          <td>Is First or last</td>
+          <td><checkbox checked.bind=virtualRepeat._isAtFirstOrLastIndex></checkbox></td>
+        <tr>
+          <td>Switched Direction</td>
+          <td><checkbox checked.bind=virtualRepeat._switchedDirection></checkbox></td>
+        </tr>
+        <tr>
+          <td>Is Attached</td>
+          <td><checkbox checked.bind=virtualRepeat._isAttached></checkbox></td>
+        </tr>
+        <tr>
+          <td>Ticking</td>
+          <td><checkbox checked.bind=virtualRepeat._ticking></checkbox></td>
+        <tr>
+          <td>Fixed height Container</td>
+          <td><checkbox checked.bind=virtualRepeat._fixedHeightContainer></checkbox></td>
+        <tr>
+          <td>Has Calculated Size</td><td><checkbox checked.bind=virtualRepeat._hasCalculatedSizes></checkbox></td>
+        <tr>
+          <td>Is At top</td>
+          <td><checkbox checked.bind=virtualRepeat._isAtTop></checkbox></td>
+        </tr>
+        <tr>
+          <td>Is Last Index</td>
+          <td><checkbox checked.bind=virtualRepeat.isLastIndex></checkbox></td>
+        </tr>
+        <tr>
+          <td>Called Get More</td>
+          <td><checkbox checked.bind=virtualRepeat._calledGetMore></checkbox></td>
+        </tr>
+        <tr>
+          <td>Skip Next Scroll</td>
+          <td><checkbox checked.bind=virtualRepeat._skipNextScrollHandle></checkbox></td>
+        </tr>
+        <tr>
+          <td>Handling Mutation</td>
+          <td><checkbox checked.bind=virtualRepeat._handlingMutations></checkbox></td>
+        </tr>
+        <tr>
+          <td>Is Scrolling</td>
+          <td><checkbox checked.bind=virtualRepeat._isScrolling></checkbox></td>
+        </tr>
+      </table>
+    </div>
   </div>
 </template>
   
