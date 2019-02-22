@@ -76,6 +76,8 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
       //    view(i) starts at 0 and ends at less than last
       first = Math.max(0, currItemCount - realViewsCount);
     }
+
+    repeat._first = first;
     // re-evaluate bindings on existing views.
     for (let i = 0; i < realViewsCount; i++) {
       const currIndex = i + first;
@@ -204,7 +206,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     let removeMoreThanInDom = removedLength > viewCount;
     if (repeat._viewsLength <= removeIndex) {
       repeat._bottomBufferHeight = repeat._bottomBufferHeight - (repeat.itemHeight);
-      repeat._adjustBufferHeights();
+      repeat._updateBufferElements();
       return;
     }
 
@@ -250,12 +252,12 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     if (viewOrPromise instanceof Promise) {
       viewOrPromise.then(() => {
         repeat.viewSlot.insert(viewAddIndex, view);
-        repeat._adjustBufferHeights();
+        repeat._updateBufferElements();
       });
     } else if (view) {
       repeat.viewSlot.insert(viewAddIndex, view);
     }
-    repeat._adjustBufferHeights();
+    repeat._updateBufferElements();
   }
 
   /**@internal */
@@ -307,7 +309,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
             if (hasDistanceToBottomViewPort) {
               repeat.removeView(0, true, true);
               repeat._topBufferHeight = repeat._topBufferHeight + repeat.itemHeight;
-              repeat._adjustBufferHeights();
+              repeat._updateBufferElements();
             } else {
               repeat.removeView(repeat.viewCount() - 1, true, true);
               repeat._bottomBufferHeight = repeat._bottomBufferHeight + repeat.itemHeight;
@@ -321,6 +323,6 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
         }
       }
     }
-    repeat._adjustBufferHeights();
+    repeat._updateBufferElements();
   }
 }

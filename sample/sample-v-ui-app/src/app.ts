@@ -5,7 +5,7 @@ export class App {
   router: Router;
   virtualRepeat: any;
   configureRouter(config: RouterConfiguration, router: Router) {
-    config.title = 'Aurelia - Virtual Repeat';
+    config.title = 'Virtual Repeat';
     config.map([
       {
         route: ['', 'phone-list'],

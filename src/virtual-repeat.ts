@@ -296,11 +296,9 @@ export class VirtualRepeat extends AbstractRepeater {
     let scrollListener = this.scrollListener = () => this._onScroll();
     let scrollContainer = this.scrollContainer = templateStrategy.getScrollContainer(element);
     const [topBufferEl, bottomBufferEl] = templateStrategy.createBuffers(element);
-    // let topBuffer = this.topBuffer = templateStrategy.createTopBufferElement(element);
     
     this.topBufferEl = topBufferEl;
     this.bottomBufferEl = bottomBufferEl;
-    // this.bottomBuffer = templateStrategy.createBottomBufferElement(element);
     this.itemsChanged();
 
     this._calcDistanceToTopInterval = PLATFORM.global.setInterval(() => {
@@ -509,7 +507,7 @@ export class VirtualRepeat extends AbstractRepeater {
     this._isAtTop = true;
     this.isLastIndex = false;
     this.elementsInView = 0;
-    this._adjustBufferHeights();
+    this._updateBufferElements();
   }
 
   /**@internal*/
@@ -579,7 +577,7 @@ export class VirtualRepeat extends AbstractRepeater {
       this._topBufferHeight = currentTopBufferHeight + adjustHeight;
       this._bottomBufferHeight = $max(currentBottomBufferHeight - adjustHeight, 0);
       if (this._bottomBufferHeight >= 0) {
-        this._adjustBufferHeights();
+        this._updateBufferElements();
       }
     } else if (this._scrollingUp) {
       let viewsToMoveCount = this._lastRebind - this._first;
@@ -607,7 +605,7 @@ export class VirtualRepeat extends AbstractRepeater {
       this._topBufferHeight = $max(currentTopBufferHeight - adjustHeight, 0);
       this._bottomBufferHeight = currentBottomBufferHeight + adjustHeight;
       if (this._topBufferHeight >= 0) {
-        this._adjustBufferHeights();
+        this._updateBufferElements();
       }
     }
     this._previousFirst = this._first;
@@ -710,7 +708,7 @@ export class VirtualRepeat extends AbstractRepeater {
   }
 
   /**@internal */
-  _adjustBufferHeights(): void {
+  _updateBufferElements(): void {
     this.topBufferEl.style.height = `${this._topBufferHeight}px`;
     this.bottomBufferEl.style.height = `${this._bottomBufferHeight}px`;
   }
@@ -854,7 +852,7 @@ export class VirtualRepeat extends AbstractRepeater {
         this._bottomBufferHeight = 0;
       }
     }
-    this._adjustBufferHeights();
+    this._updateBufferElements();
   }
 
   /**@internal*/

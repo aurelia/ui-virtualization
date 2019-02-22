@@ -4,6 +4,10 @@ export class App {
   public users: any[] = [...Users];
   private order: number = 1;
 
+  constructor() {
+    window['subApp'] = this;
+  }
+
   public sortById() {
     this.order = this.order === 1
       ? -1
@@ -42,5 +46,9 @@ export class App {
     });
 
     this.users = sorted;
+  }
+
+  public reduceTo(amount: number): void {
+    this.users = Users.slice(0, amount);
   }
 }
