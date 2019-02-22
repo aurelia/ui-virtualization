@@ -345,7 +345,7 @@ export class VirtualRepeat extends AbstractRepeater {
     this._resetCalculation();
     this._isAttached = false;
     this._prevItemsCount = 0;
-    this.templateStrategy.removeBufferElements(this.element, this.topBufferEl, this.bottomBufferEl);
+    this.templateStrategy.removeBuffers(this.element, this.topBufferEl, this.bottomBufferEl);
     this.topBufferEl = this.bottomBufferEl = this.scrollContainer = this.scrollListener = null;
     this.scrollContainerHeight = 0;
     this.distanceToTop = 0;

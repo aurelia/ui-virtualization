@@ -1,8 +1,8 @@
 import { ArrayRepeatStrategy, createFullOverrideContext } from 'aurelia-templating-resources';
-import { updateVirtualOverrideContexts, rebindAndMoveView, getElementDistanceToBottomViewPort } from './utilities';
+import { updateVirtualOverrideContexts, rebindAndMoveView, getElementDistanceToBottomViewPort, $max } from './utilities';
 import { IVirtualRepeatStrategy, IView } from './interfaces';
 import { ViewSlot } from 'aurelia-templating';
-import { mergeSplice } from 'aurelia-binding';
+import { mergeSplice, ICollectionObserverSplice, ObserverLocator, InternalCollectionObserver } from 'aurelia-binding';
 import { VirtualRepeat } from './virtual-repeat';
 
 /**
@@ -14,14 +14,16 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     let overrideContext = createFullOverrideContext(repeat, repeat.items[0], 0, 1);
     repeat.addView(overrideContext.bindingContext, overrideContext);
   }
+
   /**
    * @override
    * Handle the repeat's collection instance changing.
    * @param repeat The repeater instance.
    * @param items The new array instance.
+   * @param firstIndex The index of first active view
    */
-  instanceChanged(repeat: VirtualRepeat, items: Array<any>, ...rest: any[]): void {
-    this._inPlaceProcessItems(repeat, items, rest[0]);
+  instanceChanged(repeat: VirtualRepeat, items: any[], first?: number): void {
+    this._inPlaceProcessItems(repeat, items, first);
   }
 
   /**
@@ -31,12 +33,12 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
    * @param array The modified array.
    * @param splices Records of array changes.
    */
-  instanceMutated(repeat: VirtualRepeat, array: Array<any>, splices: any): void {
+  instanceMutated(repeat: VirtualRepeat, array: any[], splices: ICollectionObserverSplice[]): void {
     this._standardProcessInstanceMutated(repeat, array, splices);
   }
 
   /**@internal */
-  _standardProcessInstanceChanged(repeat: VirtualRepeat, items: Array<any>): void {
+  _standardProcessInstanceChanged(repeat: VirtualRepeat, items: any[]): void {
     for (let i = 1, ii = repeat._viewsLength; i < ii; ++i) {
       let overrideContext = createFullOverrideContext(repeat, items[i], i, ii);
       repeat.addView(overrideContext.bindingContext, overrideContext);
@@ -44,9 +46,9 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
   }
 
   /**@internal */
-  _inPlaceProcessItems(repeat: VirtualRepeat, items: Array<any>, first: number): void {
-    let itemsLength = items.length;
-    let viewsLength = repeat.viewCount();
+  _inPlaceProcessItems(repeat: VirtualRepeat, items: any[], first: number): void {
+    const prevItemCount = repeat._prevItemsCount;
+    const currItemCount = items.length;
     /*
       Get index of first view is looking at the view which is from the ViewSlot
       The view slot has not yet been updated with the new list
@@ -55,35 +57,46 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
         That "first" is calculated and passed into here
     */
     // remove unneeded views.
-    while (viewsLength > itemsLength) {
-      viewsLength--;
-      repeat.removeView(viewsLength, /** Returns to cache */ true, /** No skip animation */ false);
+    let viewCount = repeat.viewCount();
+    while (viewCount > currItemCount) {
+      viewCount--;
+      repeat.removeView(viewCount, /** Returns to cache? */ true, /** skip animation? */ false);
     }
+    console.log({ first });
     // avoid repeated evaluating the property-getter for the "local" property.
-    let local = repeat.local;
+    const local = repeat.local;
+    const viewsCount = Math.min(repeat._viewsLength, currItemCount);
     // re-evaluate bindings on existing views.
-    for (let i = 0; i < viewsLength; i++) {
-      let view = repeat.view(i);
-      let last = i === itemsLength - 1;
-      let middle = i !== 0 && !last;
+    for (let i = 0; i < viewCount; i++) {
+      const view = repeat.view(i);
+      const last = i === currItemCount - 1;
+      const middle = i !== 0 && !last;
+      const bindingContext = view.bindingContext;
+      const overrideContext = view.overrideContext;
       // any changes to the binding context?
-      if (view.bindingContext[local] === items[i + first] && view.overrideContext.$middle === middle && view.overrideContext.$last === last) {
+      if (bindingContext[local] === items[i + first]
+        && overrideContext.$middle === middle
+        && overrideContext.$last === last
+      ) {
         // no changes. continue...
         continue;
       }
       // update the binding context and refresh the bindings.
-      view.bindingContext[local] = items[i + first];
-      view.overrideContext.$middle = middle;
-      view.overrideContext.$last = last;
-      view.overrideContext.$index = i + first;
+      bindingContext[local] = items[i + first];
+      overrideContext.$middle = middle;
+      overrideContext.$last = last;
+      overrideContext.$index = i + first;
       repeat.updateBindings(view);
     }
     // add new views
-    let minLength = Math.min(repeat._viewsLength, itemsLength);
-    for (let i = viewsLength; i < minLength; i++) {
-      let overrideContext = createFullOverrideContext(repeat, items[i], i, itemsLength);
+    const minLength = Math.min(repeat._viewsLength, currItemCount);
+    for (let i = viewCount; i < minLength; i++) {
+      const overrideContext = createFullOverrideContext(repeat, items[i], i, currItemCount);
       repeat.addView(overrideContext.bindingContext, overrideContext);
     }
+
+    const scrollerInfo = repeat.getScrollerInfo();
+    
   }
 
   /**@internal */

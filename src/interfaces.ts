@@ -1,4 +1,4 @@
-import { Binding, Scope, ICollectionObserverSplice } from 'aurelia-binding';
+import { Binding, Scope, ICollectionObserverSplice, ObserverLocator, InternalCollectionObserver } from 'aurelia-binding';
 import { TaskQueue } from 'aurelia-task-queue';
 import { View, ViewSlot } from 'aurelia-templating';
 import { RepeatStrategy } from 'aurelia-templating-resources';
@@ -51,12 +51,18 @@ export interface IVirtualRepeatStrategy extends RepeatStrategy {
   createFirstItem(repeat: VirtualRepeat): void;
 
   /**
+   * Get the observer based on collection type of `items`
+   */
+  getCollectionObserver(observerLocator: ObserverLocator, items: any[] | Map<any, any> | Set<any>): InternalCollectionObserver;
+
+  /**
    * @override
    * Handle the repeat's collection instance changing.
    * @param repeat The repeater instance.
    * @param items The new array instance.
+   * @param firstIndex The index of first active view
    */
-  instanceChanged(repeat: VirtualRepeat, items: any[], ...rest: any[]): void;
+  instanceChanged(repeat: VirtualRepeat, items: any[] | Map<any, any> | Set<any>, firstIndex?: number): void;
 
   /**
    * @override
@@ -83,7 +89,7 @@ export interface ITemplateStrategy {
    * Create top and bottom buffer elements for an anchor (`element` is a comment node)
    */
   createBuffers(element: Element): [HTMLElement, HTMLElement];
-  removeBufferElements(element: Element, topBuffer: Element, bottomBuffer: Element): void;
+  removeBuffers(element: Element, topBuffer: Element, bottomBuffer: Element): void;
   getFirstElement(topBuffer: Element): Element;
   getLastElement(bottomBuffer: Element): Element;
   /**
