@@ -46,7 +46,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
   }
 
   /**@internal */
-  _inPlaceProcessItems(repeat: VirtualRepeat, items: any[], first: number): void {
+  _inPlaceProcessItems(repeat: VirtualRepeat, items: any[], firstIndex: number): void {
     const currItemCount = items.length;
     if (currItemCount === 0) {
       repeat.removeAllViews(/*return to cache?*/true, /*skip animation?*/false);
@@ -70,17 +70,17 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     }
     const local = repeat.local;
     const lastIndex = currItemCount - 1;
-    if (first + realViewsCount > lastIndex) {
+    if (firstIndex + realViewsCount > lastIndex) {
       // first = currItemCount - realViewsCount instead of: first = currItemCount - 1 - realViewsCount;
       //    this is because during view update
       //    view(i) starts at 0 and ends at less than last
-      first = Math.max(0, currItemCount - realViewsCount);
+      firstIndex = Math.max(0, currItemCount - realViewsCount);
     }
 
-    repeat._first = first;
+    repeat._first = firstIndex;
     // re-evaluate bindings on existing views.
     for (let i = 0; i < realViewsCount; i++) {
-      const currIndex = i + first;
+      const currIndex = i + firstIndex;
       const view = repeat.view(i);
       const last = currIndex === currItemCount - 1;
       const middle = currIndex !== 0 && !last;

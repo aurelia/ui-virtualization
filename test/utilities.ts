@@ -128,7 +128,9 @@ export async function scrollToIndex(virtualRepeat: VirtualRepeat, itemIndex: num
 }
 
 /**
- * Wait for a small time for repeat to finish processing
+ * Wait for a small time for repeat to finish processing.
+ * 
+ * Default to 10
  */
 export async function ensureScrolled(time: number = 10): Promise<void> {
   await waitForTimeout(time);

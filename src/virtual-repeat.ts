@@ -70,7 +70,7 @@ export class VirtualRepeat extends AbstractRepeater {
    * @internal
    * First view index, for proper follow up calculations
    */
-  _first = 0;
+  _first: number = 0;
 
   /**
    * @internal
@@ -376,6 +376,8 @@ export class VirtualRepeat extends AbstractRepeater {
    * - handle scroll as if scroll event happened
    */
   itemsChanged(): void {
+    // the current collection subscription may be irrelevant
+    // unsubscribe and resubscribe later
     this._unsubscribeCollection();
     // still bound? and still attached?
     if (!this.scope || !this._isAttached) {
@@ -385,11 +387,11 @@ export class VirtualRepeat extends AbstractRepeater {
     let previousLastViewIndex = this._getIndexOfLastView();
 
     const items = this.items;
-    const currentItemCount = items.length;
     const shouldCalculateSize = !!items;
     const strategy = this.strategy = this.strategyLocator.getStrategy(items);
-
+    
     if (shouldCalculateSize) {
+      const currentItemCount = items.length;
       if (currentItemCount > 0 && this.viewCount() === 0) {
         strategy.createFirstItem(this);
       }
@@ -412,6 +414,7 @@ export class VirtualRepeat extends AbstractRepeater {
     strategy.instanceChanged(this, items, this._first);
 
     if (shouldCalculateSize) {
+      const currentItemCount = items.length;
       // Reset rebinding
       this._lastRebind = this._first;
 
@@ -534,31 +537,31 @@ export class VirtualRepeat extends AbstractRepeater {
       this._skipNextScrollHandle = false;
       return;
     }
-    if (!this.items) {
+    const items = this.items;
+    if (!items) {
       return;
     }
-    let itemHeight = this.itemHeight;
-    let scrollTop = this._fixedHeightContainer
+    const itemHeight = this.itemHeight;
+    const scrollTop = this._fixedHeightContainer
       ? this.scrollContainer.scrollTop
       : (pageYOffset - this.distanceToTop);
 
     // Calculate the index of first view
     // Using Math floor to ensure it has correct space for both small and large calculation
-    let firstViewIndex = itemHeight > 0 ? Math.floor(scrollTop / itemHeight) : 0;
-    this._first = firstViewIndex < 0 ? 0 : firstViewIndex;
+    let firstIndex = itemHeight > 0 ? Math.floor(scrollTop / itemHeight) : 0;
+    this._first = firstIndex < 0 ? 0 : firstIndex;
     // if first index starts somewhere after the last view
     // then readjust based on the delta
-    if (this._first > this.items.length - this.elementsInView) {
-      firstViewIndex = this.items.length - this.elementsInView;
-      this._first = firstViewIndex < 0 ? 0 : firstViewIndex;
+    if (firstIndex > items.length - this.elementsInView) {
+      this._first = Math.max(0, items.length - this.elementsInView);
     }
 
     // Check scrolling states and adjust flags
     this._checkScrolling();
 
     // store buffers' heights into local variables
-    let currentTopBufferHeight = this._topBufferHeight;
-    let currentBottomBufferHeight = this._bottomBufferHeight;
+    const currentTopBufferHeight = this._topBufferHeight;
+    const currentBottomBufferHeight = this._bottomBufferHeight;
 
     // TODO if and else paths do almost same thing, refactor?
     if (this._scrollingDown) {
