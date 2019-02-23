@@ -1,43 +1,39 @@
 import { $round } from './utilities';
-import { VirtualRepeat } from './aurelia-ui-virtualization';
-import { TemplateStrategyLocator } from './template-strategy-locator';
-import { PLATFORM } from 'aurelia-pal';
 
 /**
- * Dom utilities for virtual repeat
- * Determine scrolling, styling and related
+ * Walk up the DOM tree and determine what element will be scroller for an element
+ *
+ * If none is found, return `document.documentElement`
  */
-export const DomHelper = new class {
-
-  /**
-   * Walk up the DOM tree and determine what element will be scroller for an element
-   *
-   * If none is found, return `document.documentElement`
-   */
-  getScrollContainer(element: Node): HTMLElement {
-    let current = element.parentNode as HTMLElement;
-    while (current !== null) {
-      if (this.hasOverflowScroll(current)) {
-        return current;
-      }
-      current = current.parentNode as HTMLElement;
+export const getScrollContainer = (element: Node): HTMLElement => {
+  let current = element.parentNode as HTMLElement;
+  while (current !== null) {
+    if (this.hasOverflowScroll(current)) {
+      return current;
     }
-    return document.documentElement;
+    current = current.parentNode as HTMLElement;
   }
+  return document.documentElement;
+}
 
-  getElementDistanceToTopOfDocument(element: Element): number {
-    let box = element.getBoundingClientRect();
-    let documentElement = document.documentElement;
-    let scrollTop = window.pageYOffset;
-    let clientTop = documentElement.clientTop;
-    let top  = box.top + scrollTop - clientTop;
-    return $round(top);
-  }
+/**
+ * Determine real distance of an element to top of current document
+ */
+export const getElementDistanceToTopOfDocument = (element: Element): number => {
+  let box = element.getBoundingClientRect();
+  let documentElement = document.documentElement;
+  let scrollTop = window.pageYOffset;
+  let clientTop = documentElement.clientTop;
+  let top  = box.top + scrollTop - clientTop;
+  return $round(top);
+}
 
-  hasOverflowScroll(element: HTMLElement): boolean {
-    let style = element.style;
-    return style.overflowY === 'scroll' || style.overflow === 'scroll' || style.overflowY === 'auto' || style.overflow === 'auto';
-  }
+/**
+ * Check if an element has inline style scroll/auto for overflow/overflowY
+ */
+export const hasOverflowScroll = (element: HTMLElement): boolean => {
+  let style = element.style;
+  return style.overflowY === 'scroll' || style.overflow === 'scroll' || style.overflowY === 'auto' || style.overflow === 'auto';
 }
 
 // export class RepeatDomManager {

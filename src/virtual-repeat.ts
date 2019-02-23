@@ -30,7 +30,10 @@ import {
   rebindAndMoveView,
   getStyleValues
 } from './utilities';
-import { DomHelper } from './dom-helper';
+import {
+  getElementDistanceToTopOfDocument,
+  hasOverflowScroll
+} from './utilities-dom';
 import { VirtualRepeatStrategyLocator } from './virtual-repeat-strategy-locator';
 import { TemplateStrategyLocator } from './template-strategy-locator';
 import {
@@ -303,7 +306,7 @@ export class VirtualRepeat extends AbstractRepeater {
 
     this._calcDistanceToTopInterval = PLATFORM.global.setInterval(() => {
       let prevDistanceToTop = this.distanceToTop;
-      let currDistanceToTop = DomHelper.getElementDistanceToTopOfDocument(topBufferEl) + this.topBufferDistance;
+      let currDistanceToTop = getElementDistanceToTopOfDocument(topBufferEl) + this.topBufferDistance;
       this.distanceToTop = currDistanceToTop;
       if (prevDistanceToTop !== currDistanceToTop) {
         this._handleScroll();
@@ -312,10 +315,9 @@ export class VirtualRepeat extends AbstractRepeater {
 
     // When dealing with tables, there can be gaps between elements, causing distances to be messed up. Might need to handle this case here.
     this.topBufferDistance = templateStrategy.getTopBufferDistance(topBufferEl);
-    this.distanceToTop = DomHelper
-      .getElementDistanceToTopOfDocument(templateStrategy.getFirstElement(topBufferEl, bottomBufferEl));
+    this.distanceToTop = getElementDistanceToTopOfDocument(templateStrategy.getFirstElement(topBufferEl, bottomBufferEl));
 
-    if (DomHelper.hasOverflowScroll(scrollContainer)) {
+    if (hasOverflowScroll(scrollContainer)) {
       this._fixedHeightContainer = true;
       scrollContainer.addEventListener('scroll', scrollListener);
     } else {
@@ -333,7 +335,7 @@ export class VirtualRepeat extends AbstractRepeater {
 
   /**@override */
   detached(): void {
-    if (DomHelper.hasOverflowScroll(this.scrollContainer)) {
+    if (hasOverflowScroll(this.scrollContainer)) {
       this.scrollContainer.removeEventListener('scroll', this.scrollListener);
     } else {
       DOM.removeEventListener('scroll', this.scrollListener, false);
@@ -403,7 +405,7 @@ export class VirtualRepeat extends AbstractRepeater {
         this._skipNextScrollHandle = true;
         reducingItems = true;
       }
-      if (DomHelper.hasOverflowScroll(this.scrollContainer)) {
+      if (hasOverflowScroll(this.scrollContainer)) {
         this._fixedHeightContainer = true;
       }
       this._calcInitialHeights(currentItemCount);
