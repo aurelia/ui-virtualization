@@ -1,4 +1,4 @@
-import { $round } from './utilities';
+import { Math$round } from './utilities';
 
 /**
  * Walk up the DOM tree and determine what element will be scroller for an element
@@ -25,7 +25,7 @@ export const getElementDistanceToTopOfDocument = (element: Element): number => {
   let scrollTop = window.pageYOffset;
   let clientTop = documentElement.clientTop;
   let top  = box.top + scrollTop - clientTop;
-  return $round(top);
+  return Math$round(top);
 }
 
 /**

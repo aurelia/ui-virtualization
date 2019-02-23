@@ -28,7 +28,8 @@ import { Container } from 'aurelia-dependency-injection';
 import {
   calcOuterHeight,
   rebindAndMoveView,
-  getStyleValues
+  getStyleValues,
+  Math$ceil
 } from './utilities';
 import {
   getElementDistanceToTopOfDocument,
@@ -97,12 +98,11 @@ export class VirtualRepeat extends AbstractRepeater {
    */
   _topBufferHeight = 0;
 
-  /**@internal*/ _bottomBufferHeight = 0;
   /**
-   * @internal The amount of views before/after (scrolling direction dependent) visible parts
-   * to avoid blank screen while scrolling
+   * @internal
+   * Height of bottom buffer to properly push the visible rendered list items into right position
    */
-  _bufferSize = 0;
+  _bottomBufferHeight = 0;
 
   /**@internal*/ _scrollingDown = false;
   /**@internal*/ _scrollingUp = false;
@@ -485,10 +485,20 @@ export class VirtualRepeat extends AbstractRepeater {
     }
   }
 
-  getScrollerInfo(): IScrollerInfo {
-    const scroller = this._fixedHeightContainer
+  /**
+   * Get the real scroller element of the DOM tree this repeat resides in
+   */
+  getScroller(): HTMLElement {
+    return this._fixedHeightContainer
       ? this.scrollContainer
       : document.documentElement;
+  }
+
+  /**
+   * Get scrolling information of the real scroller element of the DOM tree this repeat resides in
+   */
+  getScrollerInfo(): IScrollerInfo {
+    const scroller = this.getScroller();
     return {
       scrollHeight: scroller.scrollHeight,
       scrollTop: scroller.scrollTop,
@@ -498,20 +508,20 @@ export class VirtualRepeat extends AbstractRepeater {
 
   /**@internal */
   _resetCalculation(): void {
-    this._first = 0;
-    this._previousFirst = 0;
-    this._viewsLength = 0;
-    this._lastRebind = 0;
-    this._topBufferHeight = 0;
-    this._bottomBufferHeight = 0;
-    this._scrollingDown = false;
-    this._scrollingUp = false;
-    this._switchedDirection = false;
-    this._ticking = false;
-    this._hasCalculatedSizes = false;
+    this._first
+      = this._previousFirst
+      = this._viewsLength
+      = this._lastRebind
+      = this._topBufferHeight
+      = this._bottomBufferHeight
+      = this.elementsInView = 0;
+    this._scrollingDown
+      = this._scrollingUp 
+      = this._switchedDirection
+      = this._ticking
+      = this._hasCalculatedSizes
+      = this.isLastIndex = false;
     this._isAtTop = true;
-    this.isLastIndex = false;
-    this.elementsInView = 0;
     this._updateBufferElements();
   }
 
@@ -547,6 +557,7 @@ export class VirtualRepeat extends AbstractRepeater {
     const scrollTop = this._fixedHeightContainer
       ? this.scrollContainer.scrollTop
       : (pageYOffset - this.distanceToTop);
+    const scrollerInfo = this.getScrollerInfo();
 
     // Calculate the index of first view
     // Using Math floor to ensure it has correct space for both small and large calculation
@@ -569,7 +580,7 @@ export class VirtualRepeat extends AbstractRepeater {
     if (this._scrollingDown) {
       let viewsToMoveCount = this._first - this._lastRebind;
       if (this._switchedDirection) {
-        viewsToMoveCount = this._isAtTop ? this._first : this._bufferSize - (this._lastRebind - this._first);
+        viewsToMoveCount = this._isAtTop ? this._first : (this._first - this._lastRebind);
       }
       this._isAtTop = false;
       this._lastRebind = this._first;
@@ -592,7 +603,7 @@ export class VirtualRepeat extends AbstractRepeater {
         if (this.isLastIndex) {
           viewsToMoveCount = this.items.length - this._first - this.elementsInView;
         } else {
-          viewsToMoveCount = this._bufferSize - (this._first - this._lastRebind);
+          viewsToMoveCount = this._lastRebind - this._first;
         }
       }
       this.isLastIndex = false;
@@ -822,8 +833,8 @@ export class VirtualRepeat extends AbstractRepeater {
     this.scrollContainerHeight = this._fixedHeightContainer
       ? this._calcScrollHeight(this.scrollContainer)
       : document.documentElement.clientHeight;
-    this.elementsInView = Math.ceil(this.scrollContainerHeight / this.itemHeight) + 1;
-    let viewsCount = this._viewsLength = (this.elementsInView * 2) + this._bufferSize;
+    this.elementsInView = Math$ceil(this.scrollContainerHeight / this.itemHeight) + 1;
+    const viewsCount = this._viewsLength = this.elementsInView * 2;
 
     // Look at top buffer height (how far we've scrolled down)
     // If top buffer height is greater than the new bottom buffer height (how far we *can* scroll down)

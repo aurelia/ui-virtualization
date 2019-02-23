@@ -1,5 +1,5 @@
 import { ArrayRepeatStrategy, createFullOverrideContext } from 'aurelia-templating-resources';
-import { updateVirtualOverrideContexts, rebindAndMoveView, getElementDistanceToBottomViewPort, $max } from './utilities';
+import { updateVirtualOverrideContexts, rebindAndMoveView, getElementDistanceToBottomViewPort } from './utilities';
 import { IVirtualRepeatStrategy, IView } from './interfaces';
 import { ViewSlot } from 'aurelia-templating';
 import { mergeSplice, ICollectionObserverSplice, ObserverLocator, InternalCollectionObserver } from 'aurelia-binding';
