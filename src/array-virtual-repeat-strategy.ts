@@ -294,7 +294,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
       let addIndex = splice.index;
       let end = splice.index + splice.addedCount;
       for (; addIndex < end; ++addIndex) {
-        let hasDistanceToBottomViewPort = getElementDistanceToBottomViewPort(repeat.templateStrategy.getLastElement(repeat.bottomBufferEl)) > 0;
+        let hasDistanceToBottomViewPort = getElementDistanceToBottomViewPort(repeat.templateStrategy.getLastElement(repeat.topBufferEl, repeat.bottomBufferEl)) > 0;
         if (repeat.viewCount() === 0
           || (!this._isIndexBeforeViewSlot(repeat, viewSlot, addIndex)
             && !this._isIndexAfterViewSlot(repeat, viewSlot, addIndex)

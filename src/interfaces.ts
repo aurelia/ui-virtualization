@@ -80,18 +80,37 @@ export interface IVirtualRepeatStrategy extends RepeatStrategy {
  */
 export interface ITemplateStrategy {
   /**
-   * Determine the scroll container of a [repeat] based on its anchor (`element` is a comment node)
+   * Determine the scroll container of a [virtual-repeat] based on its anchor (`element` is a comment node)
    */
   getScrollContainer(element: Element): HTMLElement;
+  /**
+   * Move root element of a view to first position in the list, after top buffer
+   * Note: [virtual-repeat] only supports single root node repeat
+   */
   moveViewFirst(view: View, topBuffer: Element): void;
+  /**
+   * Move root element of a view to last position in the list, before bottomBuffer
+   * Note: [virtual-repeat] only supports single root node repeat
+   */
   moveViewLast(view: View, bottomBuffer: Element): void;
   /**
    * Create top and bottom buffer elements for an anchor (`element` is a comment node)
    */
   createBuffers(element: Element): [HTMLElement, HTMLElement];
+  /**
+   * Clean up buffers of a [virtual-repeat]
+   */
   removeBuffers(element: Element, topBuffer: Element, bottomBuffer: Element): void;
-  getFirstElement(topBuffer: Element): Element;
-  getLastElement(bottomBuffer: Element): Element;
+  /**
+   * Get the first element(or view) between top buffer and bottom buffer
+   * Note: [virtual-repeat] only supports single root node repeat
+   */
+  getFirstElement(topBufer: Element, topBuffer: Element): Element;
+  /**
+   * Get the last element(or view) between top buffer and bottom buffer
+   * Note: [virtual-repeat] only supports single root node repeat
+   */
+  getLastElement(topBuffer: Element, bottomBuffer: Element): Element;
   /**
    * Distance of top buffer to the top of its offseting parent
    */

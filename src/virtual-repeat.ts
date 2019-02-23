@@ -313,7 +313,7 @@ export class VirtualRepeat extends AbstractRepeater {
     // When dealing with tables, there can be gaps between elements, causing distances to be messed up. Might need to handle this case here.
     this.topBufferDistance = templateStrategy.getTopBufferDistance(topBufferEl);
     this.distanceToTop = DomHelper
-      .getElementDistanceToTopOfDocument(templateStrategy.getFirstElement(topBufferEl));
+      .getElementDistanceToTopOfDocument(templateStrategy.getFirstElement(topBufferEl, bottomBufferEl));
 
     if (DomHelper.hasOverflowScroll(scrollContainer)) {
       this._fixedHeightContainer = true;
