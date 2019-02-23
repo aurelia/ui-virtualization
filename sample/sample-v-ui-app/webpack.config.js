@@ -37,15 +37,6 @@ module.exports = {
           mNameMap[mName] = path.resolve(__dirname, `./node_modules/${mName}`);
           return mNameMap;
         }, {}),
-      // 'aurelia-binding': path.resolve(__dirname, './node_modules/aurelia-binding'),
-      // 'aurelia-templating': path.resolve(__dirname, './node_modules/aurelia-templating'),
-      // 'aurelia-framework': path.resolve(__dirname, './node_modules/aurelia-framework'),
-      // 'aurelia-templating-resources': path.resolve(__dirname, './node_modules/aurelia-templating-resources'),
-      // 'aurelia-dependency-injection': path.resolve(__dirname, './node_modules/aurelia-dependency-injection'),
-      // 'aurelia-metadata': path.resolve(__dirname, './node_modules/aurelia-metadata'),
-      // 'aurelia-pal': path.resolve(__dirname, './node_modules/aurelia-pal'),
-      // 'aurelia-pal-browser': 'aurelia-pal-browser',
-      // 'aurelia-task-queue': path.resolve(__dirname, 'node_modules/aurelia-task-queue'),
       'aurelia-ui-virtualization': path.resolve(__dirname, '../../src/aurelia-ui-virtualization.ts')
     }
   },

@@ -1,7 +1,7 @@
 import { VirtualRepeat } from './virtual-repeat';
 import { InfiniteScrollNext } from './infinite-scroll-next';
 
-export function configure(config: any) {
+export function configure(config: { globalResources(...args: any[]): any; }) {
   config.globalResources(
     VirtualRepeat,
     InfiniteScrollNext

@@ -1,7 +1,8 @@
-import { Repeat, RepeatStrategy } from 'aurelia-templating-resources';
-import { ViewSlot, View, ViewFactory, BoundViewFactory, Controller } from 'aurelia-templating';
-import { Scope, Binding, OverrideContext } from 'aurelia-binding';
+import { Binding, Scope, ICollectionObserverSplice, ObserverLocator, InternalCollectionObserver } from 'aurelia-binding';
 import { TaskQueue } from 'aurelia-task-queue';
+import { View, ViewSlot } from 'aurelia-templating';
+import { RepeatStrategy } from 'aurelia-templating-resources';
+import { VirtualRepeat } from './virtual-repeat';
 
 export interface IScrollNextScrollContext {
   topIndex: number;
@@ -43,97 +44,34 @@ declare module 'aurelia-templating' {
 }
 
 export interface IVirtualRepeatStrategy extends RepeatStrategy {
+
   /**
    * create first item to calculate the heights
    */
-  createFirstItem(repeat: IVirtualRepeat): void;
-    /**
-  * Handle the repeat's collection instance changing.
-  * @param repeat The repeater instance.
-  * @param items The new array instance.
-  */
-  instanceChanged(repeat: IVirtualRepeat, items: Array<any>, ...rest: any[]): void;
-}
-
-export interface IVirtualRepeat extends Repeat {
+  createFirstItem(repeat: VirtualRepeat): void;
 
   /**
-   * @internal
-   * First view index, for proper follow up calculations
+   * Get the observer based on collection type of `items`
    */
-  _first: number;
+  getCollectionObserver(observerLocator: ObserverLocator, items: any[] | Map<any, any> | Set<any>): InternalCollectionObserver;
 
   /**
-   * @internal
-   * Preview first view index, for proper determination of delta
+   * @override
+   * Handle the repeat's collection instance changing.
+   * @param repeat The repeater instance.
+   * @param items The new array instance.
+   * @param firstIndex The index of first active view
    */
-  _previousFirst: number;
-
-  /**@internal */ _viewsLength: number;
+  instanceChanged(repeat: VirtualRepeat, items: any[] | Map<any, any> | Set<any>, firstIndex?: number): void;
 
   /**
-   * @internal
-   * Last rebound view index, for determining rendered range
+   * @override
+   * Handle the repeat's collection instance mutating.
+   * @param repeat The virtual repeat instance.
+   * @param array The modified array.
+   * @param splices Records of array changes.
    */
-  _lastRebind: number;
-
-  /**@internal */ _topBufferHeight: number;
-
-  /**@internal */ _bottomBufferHeight: number;
-
-  /**@internal */ _bufferSize: number;
-
-  /**@internal */ _scrollingDown: boolean;
-
-  /**@internal */ _scrollingUp: boolean;
-
-  /**@internal */ _switchedDirection: boolean;
-
-  /**@internal */ _isAttached: boolean;
-
-  /**@internal */ _ticking: boolean;
-
-  /**@internal */ _fixedHeightContainer: boolean;
-
-  /**@internal */ _hasCalculatedSizes: boolean;
-
-  /**@internal */ _isAtTop: boolean;
-
-  /**@internal */ _calledGetMore: boolean;
-
-  /**@internal */ viewSlot: ViewSlot & { children: IView[] };
-
-  items: any[];
-  itemHeight: number;
-
-  strategy: IVirtualRepeatStrategy;
-
-  templateStrategy: ITemplateStrategy;
-
-  topBuffer: HTMLElement;
-  bottomBuffer: HTMLElement;
-
-  isLastIndex: boolean;
-
-  readonly viewFactory: BoundViewFactory;
-
-  /**@internal*/ _adjustBufferHeights(): void;
-
-  /**@internal*/ _calcInitialHeights(itemsLength: number): void;
-
-  /**@internal*/ _getIndexOfFirstView(): number;
-
-  /**@internal*/ _getLastViewItem(): any;
-
-  /**
-   * @internal
-   * Set all calculation to default state
-   */
-  _resetCalculation(): void;
-
-  // Array repeat specific properties
-  /**@internal*/ __queuedSplices: any[];
-  /**@internal*/ __array: any[];
+  instanceMutated(repeat: VirtualRepeat, array: any[], splices: ICollectionObserverSplice[]): void;
 }
 
 /**
@@ -141,14 +79,22 @@ export interface IVirtualRepeat extends Repeat {
  * Typically related to moving views, creating buffer and locating view range range in the DOM
  */
 export interface ITemplateStrategy {
+  /**
+   * Determine the scroll container of a [repeat] based on its anchor (`element` is a comment node)
+   */
   getScrollContainer(element: Element): HTMLElement;
   moveViewFirst(view: View, topBuffer: Element): void;
   moveViewLast(view: View, bottomBuffer: Element): void;
-  createTopBufferElement(element: Element): HTMLElement;
-  createBottomBufferElement(element: Element): HTMLElement;
-  removeBufferElements(element: Element, topBuffer: Element, bottomBuffer: Element): void;
+  /**
+   * Create top and bottom buffer elements for an anchor (`element` is a comment node)
+   */
+  createBuffers(element: Element): [HTMLElement, HTMLElement];
+  removeBuffers(element: Element, topBuffer: Element, bottomBuffer: Element): void;
   getFirstElement(topBuffer: Element): Element;
   getLastElement(bottomBuffer: Element): Element;
+  /**
+   * Distance of top buffer to the top of its offseting parent
+   */
   getTopBufferDistance(topBuffer: Element): number;
 }
 
@@ -156,6 +102,24 @@ export interface ITemplateStrategy {
  * Override `bindingContext` and `overrideContext` on `View` interface
  */
 export type IView = View & Scope;
+
+/**
+ * Expose property `children` to help manipulation/calculation
+ */
+export type IViewSlot = ViewSlot & { children: IView[] };
+
+/**
+ * Object with information about current state of a scrollable element
+ * Capturing:
+ * - current scroll height
+ * - current scroll top
+ * - real height
+ */
+export interface IScrollerInfo {
+  scrollHeight: number;
+  scrollTop: number;
+  height: number;
+}
 
 // export const enum IVirtualRepeatState {
 //   isAtTop = 0b0_000000_000,

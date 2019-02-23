@@ -1,10 +1,7 @@
 import './setup';
-// import {Container} from 'aurelia-dependency-injection';
-// import {TaskQueue} from 'aurelia-task-queue'
-import { StageComponent, ComponentTester } from './component-tester';
+import { StageComponent } from './component-tester';
 import { PLATFORM } from 'aurelia-pal';
-// import {TableStrategy} from '../src/template-strategy';
-import { createAssertionQueue, validateState, validateScrolledState, Queue as AsyncQueue } from './utilities';
+import { createAssertionQueue, validateState, validateScrolledState, AsyncQueue, waitForTimeout } from './utilities';
 import { VirtualRepeat } from '../src/virtual-repeat';
 
 PLATFORM.moduleName('src/virtual-repeat');
@@ -126,7 +123,7 @@ describe('VirtualRepeat Integration', () => {
 
   describe('iterating div', () => {
     let component;
-    let virtualRepeat;
+    let virtualRepeat: VirtualRepeat;
     let viewModel;
     let create;
     let items;
@@ -195,10 +192,11 @@ describe('VirtualRepeat Integration', () => {
     });
 
     describe('handles delete', () => {
-      it('can delete one at start', async () => {
+      it('can delete one at start', async done => {
         await create;
         viewModel.items.splice(0, 1);
         nq(() => validateState(virtualRepeat, viewModel, itemHeight));
+        nq(() => done());
       });
 
       it('can delete one at end', done => {
@@ -310,19 +308,17 @@ describe('VirtualRepeat Integration', () => {
       create.then(() => validateArrayChange(virtualRepeat, viewModel, done));
     });
 
-    it('handles array changes with null / undefined', done => {
-      create.then(() => {
-        viewModel.items = null;
+    it('handles array changes with null / undefined', async (done) => {
+      await create;
+      viewModel.items = null;
+      await waitForTimeout(50);
 
-        setTimeout(() => {
-          let topBufferHeight = virtualRepeat.topBuffer.getBoundingClientRect().height;
-          let bottomBufferHeight = virtualRepeat.bottomBuffer.getBoundingClientRect().height;
+      let topBufferHeight = virtualRepeat.topBufferEl.getBoundingClientRect().height;
+      let bottomBufferHeight = virtualRepeat.bottomBufferEl.getBoundingClientRect().height;
 
-          expect(topBufferHeight + bottomBufferHeight).toBe(0);
+      expect(topBufferHeight + bottomBufferHeight).toBe(0);
 
-          validateArrayChange(virtualRepeat, viewModel, done);
-        }, 1000);
-      });
+      validateArrayChange(virtualRepeat, viewModel, done);
     });
   });
 

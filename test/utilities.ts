@@ -1,8 +1,8 @@
 import { VirtualRepeat } from '../src/virtual-repeat';
 
-export type Queue = (func: (...args: any[]) => any) => void;
+export type AsyncQueue = (func: (...args: any[]) => any) => void;
 
-export function createAssertionQueue(): Queue {
+export function createAssertionQueue(): AsyncQueue {
   let queue: Array<() => any> = [];
   let next = () => {
     if (queue.length) {
@@ -31,8 +31,8 @@ export function createAssertionQueue(): Queue {
 export function validateState(virtualRepeat: VirtualRepeat, viewModel: any, itemHeight: number, extraHeight?: number) {
   let views = virtualRepeat.viewSlot.children;
   let expectedHeight = viewModel.items.length * itemHeight;
-  let topBufferHeight = virtualRepeat.topBuffer.getBoundingClientRect().height;
-  let bottomBufferHeight = virtualRepeat.bottomBuffer.getBoundingClientRect().height;
+  let topBufferHeight = virtualRepeat.topBufferEl.getBoundingClientRect().height;
+  let bottomBufferHeight = virtualRepeat.bottomBufferEl.getBoundingClientRect().height;
   let renderedItemsHeight = views.length * itemHeight;
   expect(topBufferHeight + renderedItemsHeight + bottomBufferHeight).toBe(
     expectedHeight,
@@ -64,8 +64,8 @@ export function validateState(virtualRepeat: VirtualRepeat, viewModel: any, item
 export function validateScrolledState(virtualRepeat: VirtualRepeat, viewModel: any, itemHeight: number) {
   let views = virtualRepeat.viewSlot.children;
   let expectedHeight = viewModel.items.length * itemHeight;
-  let topBufferHeight = virtualRepeat.topBuffer.getBoundingClientRect().height;
-  let bottomBufferHeight = virtualRepeat.bottomBuffer.getBoundingClientRect().height;
+  let topBufferHeight = virtualRepeat.topBufferEl.getBoundingClientRect().height;
+  let bottomBufferHeight = virtualRepeat.bottomBufferEl.getBoundingClientRect().height;
   let renderedItemsHeight = views.length * itemHeight;
   expect(topBufferHeight + renderedItemsHeight + bottomBufferHeight).toBe(
     expectedHeight,
@@ -113,10 +113,39 @@ export function validateScroll(virtualRepeat: VirtualRepeat, viewModel: any, ite
   });
 }
 
+export async function scrollToEnd(virtualRepeat: VirtualRepeat, insuranceTime = 5): Promise<void> {
+  let element = virtualRepeat._fixedHeightContainer ? virtualRepeat.scrollContainer : (document.scrollingElement || document.documentElement);
+  element.scrollTop = element.scrollHeight;
+  createScrollEvent(element);
+  await ensureScrolled(insuranceTime);
+}
+
+export async function scrollToIndex(virtualRepeat: VirtualRepeat, itemIndex: number): Promise<void> {
+  let element = virtualRepeat._fixedHeightContainer ? virtualRepeat.scrollContainer : (document.scrollingElement || document.documentElement);
+  element.scrollTop = virtualRepeat.itemHeight * (itemIndex + 1);
+  createScrollEvent(element);
+  await ensureScrolled();
+}
+
+/**
+ * Wait for a small time for repeat to finish processing.
+ * 
+ * Default to 10
+ */
+export async function ensureScrolled(time: number = 10): Promise<void> {
+  await waitForTimeout(time);
+  await waitForNextFrame();
+}
+
+
 export function waitForTimeout(time = 1): Promise<void> {
   return new Promise(r => setTimeout(r, time));
 }
 
 export function waitForNextFrame(): Promise<void> {
   return new Promise(r => requestAnimationFrame(() => r()));
+}
+
+export function createScrollEvent(target: EventTarget): void {
+  target.dispatchEvent(new Event('scroll'));
 }

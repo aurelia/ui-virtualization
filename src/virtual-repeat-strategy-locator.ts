@@ -1,17 +1,19 @@
-import { RepeatStrategyLocator, RepeatStrategy } from 'aurelia-templating-resources';
 import { ArrayVirtualRepeatStrategy } from './array-virtual-repeat-strategy';
-import { NullVirtualRepeatStrategy } from './null-virtual-repeat-strategy';
 import { IVirtualRepeatStrategy } from './interfaces';
+import { NullVirtualRepeatStrategy } from './null-virtual-repeat-strategy';
 
-export class VirtualRepeatStrategyLocator extends RepeatStrategyLocator {
+/**
+ * Locates the best strategy to best repeating a template over different types of collections.
+ * Custom strategies can be plugged in as well.
+ */
+export class VirtualRepeatStrategyLocator {
 
   /**@internal */
   private matchers: Array<(items: any) => boolean>;
   /**@internal */
-  private strategies: RepeatStrategy[];
+  private strategies: IVirtualRepeatStrategy[];
 
   constructor() {
-    super();
     this.matchers = [];
     this.strategies = [];
 
@@ -19,7 +21,27 @@ export class VirtualRepeatStrategyLocator extends RepeatStrategyLocator {
     this.addStrategy(items => items instanceof Array, new ArrayVirtualRepeatStrategy());
   }
 
+  /**
+   * Adds a repeat strategy to be located when repeating a template over different collection types.
+   * @param strategy A repeat strategy that can iterate a specific collection type.
+   */
+  addStrategy(matcher: (items: any) => boolean, strategy: IVirtualRepeatStrategy): void {
+    this.matchers.push(matcher);
+    this.strategies.push(strategy);
+  }
+
+  /**
+   * Gets the best strategy to handle iteration.
+   */
   getStrategy(items: any): IVirtualRepeatStrategy {
-    return super.getStrategy(items) as IVirtualRepeatStrategy;
+    let matchers = this.matchers;
+
+    for (let i = 0, ii = matchers.length; i < ii; ++i) {
+      if (matchers[i](items)) {
+        return this.strategies[i];
+      }
+    }
+
+    return null;
   }
 }

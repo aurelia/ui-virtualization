@@ -2,7 +2,7 @@ import './setup';
 import { StageComponent, ComponentTester } from 'aurelia-testing';
 import { PLATFORM } from 'aurelia-pal';
 import { bootstrap } from 'aurelia-bootstrapper';
-import { createAssertionQueue, validateState, Queue, validateScroll } from './utilities';
+import { createAssertionQueue, validateState, AsyncQueue, validateScroll } from './utilities';
 import { VirtualRepeat } from '../src/virtual-repeat';
 import { IScrollNextScrollContext } from '../src/interfaces';
 
@@ -12,7 +12,7 @@ PLATFORM.moduleName('src/infinite-scroll-next');
 
 describe('VirtualRepeat Integration', () => {
   const itemHeight = 100;
-  const queue: Queue = createAssertionQueue();
+  const queue: AsyncQueue = createAssertionQueue();
   let component: ComponentTester<VirtualRepeat>;
   let virtualRepeat: VirtualRepeat;
   let viewModel: any;
@@ -69,7 +69,7 @@ describe('VirtualRepeat Integration', () => {
 
     it('creates right structure', async () => {
       await bootstrapComponent();
-      const { topBuffer, bottomBuffer } = virtualRepeat;
+      const { topBufferEl: topBuffer, bottomBufferEl: bottomBuffer } = virtualRepeat;
       expect(topBuffer.nextElementSibling.tagName).toBe('TR');
       expect(topBuffer.tagName).toBe('TR');
       expect(topBuffer.childNodes.length).toBe(0);
@@ -105,7 +105,7 @@ describe('VirtualRepeat Integration', () => {
       await bootstrapComponent();
       const element = virtualRepeat['element'];
       const table = element.parentNode;
-      expect(table.firstElementChild).toBe(virtualRepeat.topBuffer.previousElementSibling);
+      expect(table.firstElementChild).toBe(virtualRepeat.topBufferEl.previousElementSibling);
       expect(table.firstElementChild.innerHTML.trim()).toBe('<tr><td>Name</td></tr>');
       queue(() => validateState(virtualRepeat, viewModel, itemHeight));
       queue(() => validatePush(virtualRepeat, viewModel, done));
