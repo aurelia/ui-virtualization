@@ -58,7 +58,7 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
     //    validates everything is renderred correctly: number of rows, first index, bot buffer height
     // 3. shallow clones existing array, reverses then assign to current view model
     //    validates everything is renderred correctly: number of rows, first index, bot buffer height
-    it('renders with correct amount of rows', async () => {
+    it('renders with 100 items', async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
 
       const table = (component['host'] as HTMLElement).querySelector('table');
@@ -107,7 +107,8 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
     // 3. shallow clones existing array, reverses and slice from 0 to 30 then assign to current view model
     //    validates everything is renderred correctly: number of rows, first index, bot buffer height
     it([
-      'renders with reducing size collection',
+      'renders with 100 items',
+      '  -- reduces to 30',
       '  -- greater than (repeat._viewsLength)',
     ].join('\n\t'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
@@ -164,7 +165,8 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
     // 3. shallow clones existing array, reverses and slice from 0 to 30 then assign to current view model
     //    validates everything is renderred correctly: number of rows, first index, bot buffer height
     it([
-      'renders with reducing size collection',
+      'renders with 100 items',
+      '  -- reduces to 16',
       '  -- lesser than (repeat._viewsLength)',
       '  -- greater than (repeat.elementsInView)'
     ].join('\n\t'), async () => {
@@ -222,7 +224,8 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
     // 3. shallow clones existing array, reverses and slice from 0 to 30 then assign to current view model
     //    validates everything is renderred correctly: number of rows, first index, bot buffer height
     it([
-      'renders with reducing size collection',
+      'renders with 100 items',
+      '  -- reduces to 8',
       '  -- lesser than (repeat.elementsInView)',
     ].join('\n\t'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
@@ -276,7 +279,7 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
     });
   });
 
-  fdescribe('<tbody virtual-repeat.for>', () => {
+  describe('<tbody virtual-repeat.for>', () => {
     beforeEach(() => {
       view =
       `<div style="height: 500px; overflow-y: auto">
@@ -290,12 +293,6 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
       </div>`;
     });
 
-    // In this test, it bootstraps a stage with 100 items
-    // 1. validates everythng is renderred correctly: number of rows, first index, bot buffer height
-    // 2. scrolls to bottom
-    //    validates everything is renderred correctly: number of rows, first index, bot buffer height
-    // 3. shallow clones existing array, reverses then assign to current view model
-    //    validates everything is renderred correctly: number of rows, first index, bot buffer height
     it('renders with 100 items', async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
 
@@ -340,12 +337,6 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
       expect(virtualRepeat._bottomBufferHeight).toBe(0);
     });
 
-    // In this test, it bootstraps a stage with 100 items
-    // 1. validates everythng is renderred correctly: number of rows, first index, bot buffer height
-    // 2. scrolls to bottom
-    //    validates everything is renderred correctly: number of rows, first index, bot buffer height
-    // 3. shallow clones existing array, reverses and slice from 0 to 30 then assign to current view model
-    //    validates everything is renderred correctly: number of rows, first index, bot buffer height
     it([
       'renders with 100 items',
       '  -- reduces to 30',
