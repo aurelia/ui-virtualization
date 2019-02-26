@@ -1,6 +1,6 @@
 import { ArrayRepeatStrategy, createFullOverrideContext } from 'aurelia-templating-resources';
-import { updateVirtualOverrideContexts, rebindAndMoveView, getElementDistanceToBottomViewPort } from './utilities';
-import { IVirtualRepeatStrategy, IView } from './interfaces';
+import { updateVirtualOverrideContexts, rebindAndMoveView, getElementDistanceToBottomViewPort, Math$max, Math$min } from './utilities';
+import { IVirtualRepeatStrategy, IView, IScrollerInfo } from './interfaces';
 import { ViewSlot } from 'aurelia-templating';
 import { mergeSplice, ICollectionObserverSplice, ObserverLocator, InternalCollectionObserver } from 'aurelia-binding';
 import { VirtualRepeat } from './virtual-repeat';
@@ -9,7 +9,7 @@ import { VirtualRepeat } from './virtual-repeat';
 * A strategy for repeating a template over an array.
 */
 export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements IVirtualRepeatStrategy {
-  // create first item to calculate the heights
+
   createFirstItem(repeat: VirtualRepeat): void {
     let overrideContext = createFullOverrideContext(repeat, repeat.items[0], 0, 1);
     repeat.addView(overrideContext.bindingContext, overrideContext);
@@ -20,7 +20,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
    * Handle the repeat's collection instance changing.
    * @param repeat The repeater instance.
    * @param items The new array instance.
-   * @param firstIndex The index of first active view
+   * @param firstIndex The index of first active view. First is a required argument, only ? for valid poly
    */
   instanceChanged(repeat: VirtualRepeat, items: any[], first?: number): void {
     this._inPlaceProcessItems(repeat, items, first);
@@ -45,7 +45,10 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     }
   }
 
-  /**@internal */
+  /**
+   * Process items thay are currently mapped to a view in bound DOM tree
+   * @internal
+   */
   _inPlaceProcessItems(repeat: VirtualRepeat, items: any[], firstIndex: number): void {
     const currItemCount = items.length;
     if (currItemCount === 0) {
@@ -66,7 +69,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     let realViewsCount = repeat.viewCount();
     while (realViewsCount > currItemCount) {
       realViewsCount--;
-      repeat.removeView(realViewsCount, /**return to cache?*/true, /**skip animation?*/false);
+      repeat.removeView(realViewsCount, /*return to cache?*/true, /*skip animation?*/false);
     }
     const local = repeat.local;
     const lastIndex = currItemCount - 1;
@@ -74,7 +77,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
       // first = currItemCount - realViewsCount instead of: first = currItemCount - 1 - realViewsCount;
       //    this is because during view update
       //    view(i) starts at 0 and ends at less than last
-      firstIndex = Math.max(0, currItemCount - realViewsCount);
+      firstIndex = Math$max(0, currItemCount - realViewsCount);
     }
 
     repeat._first = firstIndex;
@@ -102,7 +105,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
       repeat.updateBindings(view);
     }
     // add new views
-    const minLength = Math.min(repeat._viewsLength, currItemCount);
+    const minLength = Math$min(repeat._viewsLength, currItemCount);
     for (let i = realViewsCount; i < minLength; i++) {
       const overrideContext = createFullOverrideContext(repeat, items[i], i, currItemCount);
       repeat.addView(overrideContext.bindingContext, overrideContext);
@@ -213,7 +216,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     // index in view slot?
     if (!this._isIndexBeforeViewSlot(repeat, viewSlot, collectionIndex) && !this._isIndexAfterViewSlot(repeat, viewSlot, collectionIndex)) {
       let viewIndex = this._getViewIndex(repeat, viewSlot, collectionIndex);
-      viewOrPromise = repeat.removeView(viewIndex, returnToCache, /** No skip animation */ false);
+      viewOrPromise = repeat.removeView(viewIndex, returnToCache, /*skip animation?*/false);
       if (repeat.items.length > viewCount) {
         // TODO: do not trigger view lifecycle here
         let collectionAddIndex: number;
@@ -324,5 +327,9 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
       }
     }
     repeat._updateBufferElements();
+  }
+
+  onScroll(newInfo: IScrollerInfo, oldInfo: IScrollerInfo): void {
+    
   }
 }

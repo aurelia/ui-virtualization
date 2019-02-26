@@ -29,7 +29,9 @@ import {
   calcOuterHeight,
   rebindAndMoveView,
   getStyleValues,
-  Math$ceil
+  Math$ceil,
+  Math$floor,
+  Math$max
 } from './utilities';
 import {
   getElementDistanceToTopOfDocument,
@@ -558,15 +560,16 @@ export class VirtualRepeat extends AbstractRepeater {
       ? this.scrollContainer.scrollTop
       : (pageYOffset - this.distanceToTop);
     const scrollerInfo = this.getScrollerInfo();
+    const elementsInView = this.elementsInView;
 
     // Calculate the index of first view
     // Using Math floor to ensure it has correct space for both small and large calculation
-    let firstIndex = itemHeight > 0 ? Math.floor(scrollTop / itemHeight) : 0;
-    this._first = firstIndex < 0 ? 0 : firstIndex;
+    const firstIndex = Math$max(0, itemHeight > 0 ? Math$floor(scrollTop / itemHeight) : 0);
+    this._first = firstIndex;
     // if first index starts somewhere after the last view
     // then readjust based on the delta
-    if (firstIndex > items.length - this.elementsInView) {
-      this._first = Math.max(0, items.length - this.elementsInView);
+    if (firstIndex > items.length - elementsInView) {
+      this._first = Math$max(0, items.length - elementsInView);
     }
 
     // Check scrolling states and adjust flags
@@ -591,7 +594,7 @@ export class VirtualRepeat extends AbstractRepeater {
       }
       this._switchedDirection = false;
       this._topBufferHeight = currentTopBufferHeight + adjustHeight;
-      this._bottomBufferHeight = $max(currentBottomBufferHeight - adjustHeight, 0);
+      this._bottomBufferHeight = Math$max(currentBottomBufferHeight - adjustHeight, 0);
       if (this._bottomBufferHeight >= 0) {
         this._updateBufferElements();
       }
@@ -601,7 +604,7 @@ export class VirtualRepeat extends AbstractRepeater {
       let initialScrollState = this.isLastIndex === undefined;
       if (this._switchedDirection) {
         if (this.isLastIndex) {
-          viewsToMoveCount = this.items.length - this._first - this.elementsInView;
+          viewsToMoveCount = this.items.length - this._first - elementsInView;
         } else {
           viewsToMoveCount = this._lastRebind - this._first;
         }
@@ -618,7 +621,7 @@ export class VirtualRepeat extends AbstractRepeater {
         this._getMore(force);
       }
       this._switchedDirection = false;
-      this._topBufferHeight = $max(currentTopBufferHeight - adjustHeight, 0);
+      this._topBufferHeight = Math$max(currentTopBufferHeight - adjustHeight, 0);
       this._bottomBufferHeight = currentBottomBufferHeight + adjustHeight;
       if (this._topBufferHeight >= 0) {
         this._updateBufferElements();
@@ -980,5 +983,3 @@ export class VirtualRepeat extends AbstractRepeater {
 
 const $minus = (index: number, i: number) => index - i;
 const $plus = (index: number, i: number) => index + i;
-const $max = Math.max;
-const $min = Math.min;
