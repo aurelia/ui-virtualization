@@ -167,7 +167,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
           ) {
             let viewIndex = this._getViewIndex(repeat, repeat.viewSlot, collectionIndex);
             let overrideContext = createFullOverrideContext(repeat, array[collectionIndex], collectionIndex, array.length);
-            repeat.removeView(viewIndex, true, true);
+            repeat.removeView(viewIndex, /*return to cache?*/true, /*skip animation?*/true);
             repeat.insertView(viewIndex, overrideContext.bindingContext, overrideContext);
           }
         }
@@ -310,11 +310,11 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
             repeat._calcInitialHeights(1);
           } else if (repeat.viewCount() > repeat._viewsLength) {
             if (hasDistanceToBottomViewPort) {
-              repeat.removeView(0, true, true);
+              repeat.removeView(0, /*return to cache?*/true, /*skip animation?*/true);
               repeat._topBufferHeight = repeat._topBufferHeight + repeat.itemHeight;
               repeat._updateBufferElements();
             } else {
-              repeat.removeView(repeat.viewCount() - 1, true, true);
+              repeat.removeView(repeat.viewCount() - 1, /*return to cache?*/true, /*skip animation?*/true);
               repeat._bottomBufferHeight = repeat._bottomBufferHeight + repeat.itemHeight;
             }
           }
@@ -327,9 +327,5 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
       }
     }
     repeat._updateBufferElements();
-  }
-
-  onScroll(newInfo: IScrollerInfo, oldInfo: IScrollerInfo): void {
-    
   }
 }

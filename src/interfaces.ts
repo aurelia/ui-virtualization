@@ -72,11 +72,6 @@ export interface IVirtualRepeatStrategy extends RepeatStrategy {
    * @param splices Records of array changes.
    */
   instanceMutated(repeat: VirtualRepeat, array: any[], splices: ICollectionObserverSplice[]): void;
-
-  /**
-   * Handle repeat scroller scroll
-   */
-  onScroll(newInfo: IScrollerInfo, newTop: IScrollerInfo): void;
 }
 
 /**

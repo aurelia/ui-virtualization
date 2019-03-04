@@ -337,10 +337,12 @@ export class VirtualRepeat extends AbstractRepeater {
 
   /**@override */
   detached(): void {
-    if (hasOverflowScroll(this.scrollContainer)) {
-      this.scrollContainer.removeEventListener('scroll', this.scrollListener);
+    const scrollCt = this.scrollContainer;
+    const scrollListener = this.scrollListener;
+    if (hasOverflowScroll(scrollCt)) {
+      scrollCt.removeEventListener('scroll', scrollListener);
     } else {
-      DOM.removeEventListener('scroll', this.scrollListener, false);
+      DOM.removeEventListener('scroll', scrollListener, false);
     }
     this.isLastIndex = undefined;
     this._fixedHeightContainer = false;
@@ -351,12 +353,12 @@ export class VirtualRepeat extends AbstractRepeater {
     this.topBufferEl = this.bottomBufferEl = this.scrollContainer = this.scrollListener = null;
     this.scrollContainerHeight = 0;
     this.distanceToTop = 0;
-    this.removeAllViews(true, false);
+    this.removeAllViews(/*return to cache?*/true, /*skip animation?*/false);
     this._unsubscribeCollection();
-    PLATFORM.global.clearInterval(this._calcDistanceToTopInterval);
-    if (this._sizeInterval) {
-      PLATFORM.global.clearInterval(this._sizeInterval);
-    }
+    const $clearInterval = PLATFORM.global.clearInterval;
+    $clearInterval(this._calcDistanceToTopInterval);
+    $clearInterval(this._sizeInterval);
+    this._sizeInterval = this._calcDistanceToTopInterval = 0;
   }
 
   /**@override */
@@ -393,7 +395,11 @@ export class VirtualRepeat extends AbstractRepeater {
     const items = this.items;
     const shouldCalculateSize = !!items;
     const strategy = this.strategy = this.strategyLocator.getStrategy(items);
-    
+
+    if (strategy === null) {
+      throw new Error('Value is not iterateable for virtual repeat.');
+    }
+
     if (shouldCalculateSize) {
       const currentItemCount = items.length;
       if (currentItemCount > 0 && this.viewCount() === 0) {
@@ -556,8 +562,17 @@ export class VirtualRepeat extends AbstractRepeater {
       return;
     }
     const itemHeight = this.itemHeight;
+    const topBufferDistance = this.templateStrategy.getTopBufferDistance(this.topBufferEl);
+    /**
+     * Real scroll top calculated based on current scroll top of scroller and top buffer {height + distance to top}
+     * as there could be elements before top buffer and it affects real scroll top of the selected repeat
+     * 
+     * Calculation are done differently based on the scroller:
+     * - not document: the scroll top of this repeat is calculated based on current scroller.scrollTop and the distance to top of `top buffer`
+     * - document: the scroll top is the substraction of `pageYOffset` and distance to top of current buffer element (logic needs revised)
+     */
     const scrollTop = this._fixedHeightContainer
-      ? this.scrollContainer.scrollTop
+      ? (this.scrollContainer.scrollTop - topBufferDistance)
       : (pageYOffset - this.distanceToTop);
     const scrollerInfo = this.getScrollerInfo();
     const elementsInView = this.elementsInView;

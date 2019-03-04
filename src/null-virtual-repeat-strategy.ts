@@ -13,6 +13,4 @@ export class NullVirtualRepeatStrategy extends NullRepeatStrategy implements IVi
     repeat.removeAllViews(/**return to cache?*/true, /**skip animation?*/false);
     repeat._resetCalculation();
   }
-
-  onScroll() {}
 }
