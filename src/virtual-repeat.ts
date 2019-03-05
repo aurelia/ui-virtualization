@@ -31,7 +31,8 @@ import {
   getStyleValues,
   Math$ceil,
   Math$floor,
-  Math$max
+  Math$max,
+  Math$abs
 } from './utilities';
 import {
   getElementDistanceToTopOfDocument,
@@ -561,8 +562,11 @@ export class VirtualRepeat extends AbstractRepeater {
     if (!items) {
       return;
     }
+    const topBuffer = this.topBufferEl;
+    const scroller = this.scrollContainer;
     const itemHeight = this.itemHeight;
-    const topBufferDistance = this.templateStrategy.getTopBufferDistance(this.topBufferEl);
+    const topBufferDistance = topBuffer.offsetTop - scroller.offsetTop;
+    const isFixedHeightContainer = this._fixedHeightContainer;
     /**
      * Real scroll top calculated based on current scroll top of scroller and top buffer {height + distance to top}
      * as there could be elements before top buffer and it affects real scroll top of the selected repeat
@@ -571,15 +575,15 @@ export class VirtualRepeat extends AbstractRepeater {
      * - not document: the scroll top of this repeat is calculated based on current scroller.scrollTop and the distance to top of `top buffer`
      * - document: the scroll top is the substraction of `pageYOffset` and distance to top of current buffer element (logic needs revised)
      */
-    const scrollTop = this._fixedHeightContainer
-      ? (this.scrollContainer.scrollTop - topBufferDistance)
+    const scrollTop = isFixedHeightContainer
+      ? scroller.scrollTop
       : (pageYOffset - this.distanceToTop);
-    const scrollerInfo = this.getScrollerInfo();
+    const realScrollTop = Math$max(0, isFixedHeightContainer ? scrollTop - Math$abs(topBufferDistance): scrollTop)
     const elementsInView = this.elementsInView;
 
     // Calculate the index of first view
     // Using Math floor to ensure it has correct space for both small and large calculation
-    const firstIndex = Math$max(0, itemHeight > 0 ? Math$floor(scrollTop / itemHeight) : 0);
+    const firstIndex = Math$max(0, itemHeight > 0 ? Math$floor(realScrollTop / itemHeight) : 0);
     this._first = firstIndex;
     // if first index starts somewhere after the last view
     // then readjust based on the delta

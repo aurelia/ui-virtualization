@@ -43,6 +43,6 @@ export class DefaultTemplateStrategy implements ITemplateStrategy {
   }
 
   getTopBufferDistance(topBuffer: HTMLElement): number {
-    return topBuffer.offsetTop;
+    return 0;
   }
 }
