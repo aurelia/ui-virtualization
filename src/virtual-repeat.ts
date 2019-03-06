@@ -36,7 +36,8 @@ import {
 } from './utilities';
 import {
   getElementDistanceToTopOfDocument,
-  hasOverflowScroll
+  hasOverflowScroll,
+  getDistanceToParent
 } from './utilities-dom';
 import { VirtualRepeatStrategyLocator } from './virtual-repeat-strategy-locator';
 import { TemplateStrategyLocator } from './template-strategy-locator';
@@ -565,7 +566,10 @@ export class VirtualRepeat extends AbstractRepeater {
     const topBuffer = this.topBufferEl;
     const scroller = this.scrollContainer;
     const itemHeight = this.itemHeight;
-    const topBufferDistance = topBuffer.offsetTop - scroller.offsetTop;
+    // If offset parent of top buffer is the scroll container
+    //    its actual offsetTop is just the offset top itself
+    // If not, then the offset top is calculated based on the parent offsetTop as well
+    const topBufferDistance = getDistanceToParent(topBuffer, scroller);
     const isFixedHeightContainer = this._fixedHeightContainer;
     /**
      * Real scroll top calculated based on current scroll top of scroller and top buffer {height + distance to top}

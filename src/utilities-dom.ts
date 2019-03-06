@@ -35,3 +35,27 @@ export const hasOverflowScroll = (element: HTMLElement): boolean => {
   let style = element.style;
   return style.overflowY === 'scroll' || style.overflow === 'scroll' || style.overflowY === 'auto' || style.overflow === 'auto';
 }
+
+export const getDistanceToParent = (child: HTMLElement, parent: HTMLElement) => {
+  const offsetParent = child.offsetParent as HTMLElement;
+  const childOffsetTop = child.offsetTop;
+  // [el] <-- offset parent === parent
+  //   [el] <-- child
+  if (offsetParent === null || offsetParent === parent) {
+    return childOffsetTop;
+  }
+  else {
+    // [el] <-- offset parent
+    //   [el] <-- parent
+    //     [el] <-- child
+    if (offsetParent.contains(parent)) {
+      return childOffsetTop - parent.offsetTop;
+    }
+    // [el] <-- parent
+    //   [el] <-- offset parent
+    //     [el] <-- child
+    else {
+      return childOffsetTop + getDistanceToParent(offsetParent, parent);
+    }
+  }
+}
