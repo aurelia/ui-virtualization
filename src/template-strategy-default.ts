@@ -32,20 +32,17 @@ export class DefaultTemplateStrategy implements ITemplateStrategy {
     parent.removeChild(bottomBuffer);
   }
 
-  removeBufferElements(element: Element, topBuffer: Element, bottomBuffer: Element): void {
-    element.parentNode.removeChild(topBuffer);
-    element.parentNode.removeChild(bottomBuffer);
+  getFirstElement(topBuffer: Element, bottomBuffer: Element): Element {
+    const firstEl = topBuffer.nextElementSibling;
+    return firstEl === bottomBuffer ? null : firstEl;
   }
 
-  getFirstElement(topBuffer: Element): Element {
-    return topBuffer.nextElementSibling;
+  getLastElement(topBuffer: Element, bottomBuffer: Element): Element {
+    const lastEl = bottomBuffer.previousElementSibling;
+    return lastEl === topBuffer ? null : lastEl;
   }
 
-  getLastElement(bottomBuffer: Element): Element {
-    return bottomBuffer.previousElementSibling;
-  }
-
-  getTopBufferDistance(topBuffer: Element): number {
+  getTopBufferDistance(topBuffer: HTMLElement): number {
     return 0;
   }
 }

@@ -1,33 +1,40 @@
 <template>
-  <nav class="navbar navbar-expand-lg" role="navigation">
-    <div class="navbar-brand">
-      <!-- <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-        <span class="sr-only">Toggle Navigation</span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button> -->
-      <img src='static/aurelia-icon.png' width=22>
-      <a class="navbar-brand" href="#">${router.title}</a>
+  <style>
+    .sb.sb-x {
+      overflow-x: auto;
+      overflow-y: hidden;
+      scrollbar-width: thin;
+      scrollbar-color: royalblue;
+    }
+    .sb::-webkit-scrollbar{
+      width: 6px;
+      background-color: rgba(224, 224, 224, 0.5);
+    }
+    .sb::-webkit-scrollbar:horizontal {
+      height: 6px;
+      scrollbar-width: 6px;
+    }
+
+    .sb::-webkit-scrollbar-thumb {
+      background-color: royalblue;
+    }
+  
+  </style>
+  <nav class="d-flex flex-nowrap align-items-start" role="navigation"
+    style="height: 70px; padding-top: 10px; padding-bottom: 10px;">
+    <div class="navbar-brand d-inline-flex align-items-center m-0" style="height: 50px;">
+      <img class='mr-2' src='static/aurelia-icon.png' width=22>
+      <a class="navbar-brand py-0" href="#" style="color: #c4097c;">${router.title}</a>
     </div>
 
-    <div class="collapse navbar-collapse">
-      <ul class="navbar-nav">
-        <li repeat.for="nav of router.navigation"
-          class="nav-item"
-          css="border: 1px solid ${nav.isActive ? 'blue' : 'transparent'};">
-          <a
-            class='nav-link'
-            data-toggle="collapse"
-            href.bind="nav.href">${nav.config.title}</a>
-        </li>
-      </ul>
-
-      <ul class="navbar-nav navbar-right">
-        <li class="loader" if.bind="router.isNavigating">
-          <i class="fa fa-spinner fa-spin fa-2x"></i>
-        </li>
-      </ul>
+    <div class="sb sb-x w-100" style="height: 56px; white-space: nowrap">
+      <a
+        repeat.for="nav of router.navigation"
+        class='d-inline-flex align-items-center px-2'
+        data-toggle="collapse"
+        href.bind="nav.href"
+        style="height: 50px;"
+        css="border: 1px solid ${nav.isActive ? '#007bff' : 'transparent'};">${nav.config.title}</a>
     </div>
   </nav>
 </template>

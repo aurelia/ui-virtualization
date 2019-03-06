@@ -1,7 +1,7 @@
 import { DefaultTemplateStrategy } from './template-strategy-default';
 import { ITemplateStrategy } from './interfaces';
 import { DOM } from 'aurelia-pal';
-import { DomHelper } from './dom-helper';
+import { hasOverflowScroll } from './utilities-dom';
 
 /**
  * Handle virtual repeat on a list item <li/> element
@@ -36,7 +36,7 @@ export class ListTemplateStrategy extends DefaultTemplateStrategy implements ITe
   /**@override */
   getScrollContainer(element: Element): HTMLElement {
     let listElement = this.getList(element);
-    return DomHelper.hasOverflowScroll(listElement)
+    return hasOverflowScroll(listElement)
       ? listElement
       : listElement.parentNode as HTMLElement;
   }

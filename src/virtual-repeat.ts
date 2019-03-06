@@ -28,9 +28,17 @@ import { Container } from 'aurelia-dependency-injection';
 import {
   calcOuterHeight,
   rebindAndMoveView,
-  getStyleValues
+  getStyleValues,
+  Math$ceil,
+  Math$floor,
+  Math$max,
+  Math$abs
 } from './utilities';
-import { DomHelper } from './dom-helper';
+import {
+  getElementDistanceToTopOfDocument,
+  hasOverflowScroll,
+  getDistanceToParent
+} from './utilities-dom';
 import { VirtualRepeatStrategyLocator } from './virtual-repeat-strategy-locator';
 import { TemplateStrategyLocator } from './template-strategy-locator';
 import {
@@ -94,12 +102,11 @@ export class VirtualRepeat extends AbstractRepeater {
    */
   _topBufferHeight = 0;
 
-  /**@internal*/ _bottomBufferHeight = 0;
   /**
-   * @internal The amount of views before/after (scrolling direction dependent) visible parts
-   * to avoid blank screen while scrolling
+   * @internal
+   * Height of bottom buffer to properly push the visible rendered list items into right position
    */
-  _bufferSize = 0;
+  _bottomBufferHeight = 0;
 
   /**@internal*/ _scrollingDown = false;
   /**@internal*/ _scrollingUp = false;
@@ -303,7 +310,7 @@ export class VirtualRepeat extends AbstractRepeater {
 
     this._calcDistanceToTopInterval = PLATFORM.global.setInterval(() => {
       let prevDistanceToTop = this.distanceToTop;
-      let currDistanceToTop = DomHelper.getElementDistanceToTopOfDocument(topBufferEl) + this.topBufferDistance;
+      let currDistanceToTop = getElementDistanceToTopOfDocument(topBufferEl) + this.topBufferDistance;
       this.distanceToTop = currDistanceToTop;
       if (prevDistanceToTop !== currDistanceToTop) {
         this._handleScroll();
@@ -312,10 +319,9 @@ export class VirtualRepeat extends AbstractRepeater {
 
     // When dealing with tables, there can be gaps between elements, causing distances to be messed up. Might need to handle this case here.
     this.topBufferDistance = templateStrategy.getTopBufferDistance(topBufferEl);
-    this.distanceToTop = DomHelper
-      .getElementDistanceToTopOfDocument(templateStrategy.getFirstElement(topBufferEl));
+    this.distanceToTop = getElementDistanceToTopOfDocument(templateStrategy.getFirstElement(topBufferEl, bottomBufferEl));
 
-    if (DomHelper.hasOverflowScroll(scrollContainer)) {
+    if (hasOverflowScroll(scrollContainer)) {
       this._fixedHeightContainer = true;
       scrollContainer.addEventListener('scroll', scrollListener);
     } else {
@@ -333,10 +339,12 @@ export class VirtualRepeat extends AbstractRepeater {
 
   /**@override */
   detached(): void {
-    if (DomHelper.hasOverflowScroll(this.scrollContainer)) {
-      this.scrollContainer.removeEventListener('scroll', this.scrollListener);
+    const scrollCt = this.scrollContainer;
+    const scrollListener = this.scrollListener;
+    if (hasOverflowScroll(scrollCt)) {
+      scrollCt.removeEventListener('scroll', scrollListener);
     } else {
-      DOM.removeEventListener('scroll', this.scrollListener, false);
+      DOM.removeEventListener('scroll', scrollListener, false);
     }
     this.isLastIndex = undefined;
     this._fixedHeightContainer = false;
@@ -347,12 +355,12 @@ export class VirtualRepeat extends AbstractRepeater {
     this.topBufferEl = this.bottomBufferEl = this.scrollContainer = this.scrollListener = null;
     this.scrollContainerHeight = 0;
     this.distanceToTop = 0;
-    this.removeAllViews(true, false);
+    this.removeAllViews(/*return to cache?*/true, /*skip animation?*/false);
     this._unsubscribeCollection();
-    PLATFORM.global.clearInterval(this._calcDistanceToTopInterval);
-    if (this._sizeInterval) {
-      PLATFORM.global.clearInterval(this._sizeInterval);
-    }
+    const $clearInterval = PLATFORM.global.clearInterval;
+    $clearInterval(this._calcDistanceToTopInterval);
+    $clearInterval(this._sizeInterval);
+    this._sizeInterval = this._calcDistanceToTopInterval = 0;
   }
 
   /**@override */
@@ -389,7 +397,11 @@ export class VirtualRepeat extends AbstractRepeater {
     const items = this.items;
     const shouldCalculateSize = !!items;
     const strategy = this.strategy = this.strategyLocator.getStrategy(items);
-    
+
+    if (strategy === null) {
+      throw new Error('Value is not iterateable for virtual repeat.');
+    }
+
     if (shouldCalculateSize) {
       const currentItemCount = items.length;
       if (currentItemCount > 0 && this.viewCount() === 0) {
@@ -403,7 +415,7 @@ export class VirtualRepeat extends AbstractRepeater {
         this._skipNextScrollHandle = true;
         reducingItems = true;
       }
-      if (DomHelper.hasOverflowScroll(this.scrollContainer)) {
+      if (hasOverflowScroll(this.scrollContainer)) {
         this._fixedHeightContainer = true;
       }
       this._calcInitialHeights(currentItemCount);
@@ -483,10 +495,20 @@ export class VirtualRepeat extends AbstractRepeater {
     }
   }
 
-  getScrollerInfo(): IScrollerInfo {
-    const scroller = this._fixedHeightContainer
+  /**
+   * Get the real scroller element of the DOM tree this repeat resides in
+   */
+  getScroller(): HTMLElement {
+    return this._fixedHeightContainer
       ? this.scrollContainer
       : document.documentElement;
+  }
+
+  /**
+   * Get scrolling information of the real scroller element of the DOM tree this repeat resides in
+   */
+  getScrollerInfo(): IScrollerInfo {
+    const scroller = this.getScroller();
     return {
       scrollHeight: scroller.scrollHeight,
       scrollTop: scroller.scrollTop,
@@ -496,20 +518,20 @@ export class VirtualRepeat extends AbstractRepeater {
 
   /**@internal */
   _resetCalculation(): void {
-    this._first = 0;
-    this._previousFirst = 0;
-    this._viewsLength = 0;
-    this._lastRebind = 0;
-    this._topBufferHeight = 0;
-    this._bottomBufferHeight = 0;
-    this._scrollingDown = false;
-    this._scrollingUp = false;
-    this._switchedDirection = false;
-    this._ticking = false;
-    this._hasCalculatedSizes = false;
+    this._first
+      = this._previousFirst
+      = this._viewsLength
+      = this._lastRebind
+      = this._topBufferHeight
+      = this._bottomBufferHeight
+      = this.elementsInView = 0;
+    this._scrollingDown
+      = this._scrollingUp 
+      = this._switchedDirection
+      = this._ticking
+      = this._hasCalculatedSizes
+      = this.isLastIndex = false;
     this._isAtTop = true;
-    this.isLastIndex = false;
-    this.elementsInView = 0;
     this._updateBufferElements();
   }
 
@@ -541,19 +563,36 @@ export class VirtualRepeat extends AbstractRepeater {
     if (!items) {
       return;
     }
+    const topBuffer = this.topBufferEl;
+    const scroller = this.scrollContainer;
     const itemHeight = this.itemHeight;
-    const scrollTop = this._fixedHeightContainer
-      ? this.scrollContainer.scrollTop
+    // If offset parent of top buffer is the scroll container
+    //    its actual offsetTop is just the offset top itself
+    // If not, then the offset top is calculated based on the parent offsetTop as well
+    const topBufferDistance = getDistanceToParent(topBuffer, scroller);
+    const isFixedHeightContainer = this._fixedHeightContainer;
+    /**
+     * Real scroll top calculated based on current scroll top of scroller and top buffer {height + distance to top}
+     * as there could be elements before top buffer and it affects real scroll top of the selected repeat
+     * 
+     * Calculation are done differently based on the scroller:
+     * - not document: the scroll top of this repeat is calculated based on current scroller.scrollTop and the distance to top of `top buffer`
+     * - document: the scroll top is the substraction of `pageYOffset` and distance to top of current buffer element (logic needs revised)
+     */
+    const scrollTop = isFixedHeightContainer
+      ? scroller.scrollTop
       : (pageYOffset - this.distanceToTop);
+    const realScrollTop = Math$max(0, isFixedHeightContainer ? scrollTop - Math$abs(topBufferDistance): scrollTop)
+    const elementsInView = this.elementsInView;
 
     // Calculate the index of first view
     // Using Math floor to ensure it has correct space for both small and large calculation
-    let firstIndex = itemHeight > 0 ? Math.floor(scrollTop / itemHeight) : 0;
-    this._first = firstIndex < 0 ? 0 : firstIndex;
+    const firstIndex = Math$max(0, itemHeight > 0 ? Math$floor(realScrollTop / itemHeight) : 0);
+    this._first = firstIndex;
     // if first index starts somewhere after the last view
     // then readjust based on the delta
-    if (firstIndex > items.length - this.elementsInView) {
-      this._first = Math.max(0, items.length - this.elementsInView);
+    if (firstIndex > items.length - elementsInView) {
+      this._first = Math$max(0, items.length - elementsInView);
     }
 
     // Check scrolling states and adjust flags
@@ -567,7 +606,7 @@ export class VirtualRepeat extends AbstractRepeater {
     if (this._scrollingDown) {
       let viewsToMoveCount = this._first - this._lastRebind;
       if (this._switchedDirection) {
-        viewsToMoveCount = this._isAtTop ? this._first : this._bufferSize - (this._lastRebind - this._first);
+        viewsToMoveCount = this._isAtTop ? this._first : (this._first - this._lastRebind);
       }
       this._isAtTop = false;
       this._lastRebind = this._first;
@@ -578,7 +617,7 @@ export class VirtualRepeat extends AbstractRepeater {
       }
       this._switchedDirection = false;
       this._topBufferHeight = currentTopBufferHeight + adjustHeight;
-      this._bottomBufferHeight = $max(currentBottomBufferHeight - adjustHeight, 0);
+      this._bottomBufferHeight = Math$max(currentBottomBufferHeight - adjustHeight, 0);
       if (this._bottomBufferHeight >= 0) {
         this._updateBufferElements();
       }
@@ -588,9 +627,9 @@ export class VirtualRepeat extends AbstractRepeater {
       let initialScrollState = this.isLastIndex === undefined;
       if (this._switchedDirection) {
         if (this.isLastIndex) {
-          viewsToMoveCount = this.items.length - this._first - this.elementsInView;
+          viewsToMoveCount = this.items.length - this._first - elementsInView;
         } else {
-          viewsToMoveCount = this._bufferSize - (this._first - this._lastRebind);
+          viewsToMoveCount = this._lastRebind - this._first;
         }
       }
       this.isLastIndex = false;
@@ -605,7 +644,7 @@ export class VirtualRepeat extends AbstractRepeater {
         this._getMore(force);
       }
       this._switchedDirection = false;
-      this._topBufferHeight = $max(currentTopBufferHeight - adjustHeight, 0);
+      this._topBufferHeight = Math$max(currentTopBufferHeight - adjustHeight, 0);
       this._bottomBufferHeight = currentBottomBufferHeight + adjustHeight;
       if (this._topBufferHeight >= 0) {
         this._updateBufferElements();
@@ -820,8 +859,8 @@ export class VirtualRepeat extends AbstractRepeater {
     this.scrollContainerHeight = this._fixedHeightContainer
       ? this._calcScrollHeight(this.scrollContainer)
       : document.documentElement.clientHeight;
-    this.elementsInView = Math.ceil(this.scrollContainerHeight / this.itemHeight) + 1;
-    let viewsCount = this._viewsLength = (this.elementsInView * 2) + this._bufferSize;
+    this.elementsInView = Math$ceil(this.scrollContainerHeight / this.itemHeight) + 1;
+    const viewsCount = this._viewsLength = this.elementsInView * 2;
 
     // Look at top buffer height (how far we've scrolled down)
     // If top buffer height is greater than the new bottom buffer height (how far we *can* scroll down)
@@ -967,5 +1006,3 @@ export class VirtualRepeat extends AbstractRepeater {
 
 const $minus = (index: number, i: number) => index - i;
 const $plus = (index: number, i: number) => index + i;
-const $max = Math.max;
-const $min = Math.min;

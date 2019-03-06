@@ -2,6 +2,20 @@ import { updateOverrideContext } from 'aurelia-templating-resources';
 import { View } from 'aurelia-templating';
 import { VirtualRepeat } from './virtual-repeat';
 
+/**
+ * Get total value of a list of css style property on an element
+ */
+export function getStyleValues(element: Element, ...styles: string[]): number {
+  let currentStyle = window.getComputedStyle(element);
+  let value: number = 0;
+  let styleValue: number = 0;
+  for (let i = 0, ii = styles.length; ii > i; ++i) {
+    styleValue = parseInt(currentStyle[styles[i]], 10);
+    value += $isNaN(styleValue) ? 0 : styleValue;
+  }
+  return value;
+}
+
 export function calcOuterHeight(element: Element): number {
   let height = element.getBoundingClientRect().height;
   height += getStyleValues(element, 'marginTop', 'marginBottom');
@@ -34,8 +48,9 @@ export function updateVirtualOverrideContexts(repeat: VirtualRepeat, startIndex:
 }
 
 export function rebindAndMoveView(repeat: VirtualRepeat, view: View, index: number, moveToBottom: boolean): void {
-  let items = repeat.items;
-  let viewSlot = repeat.viewSlot;
+  const items = repeat.items;
+  const viewSlot = repeat.viewSlot;
+
   updateOverrideContext(view.overrideContext, index, items.length);
   view.bindingContext[repeat.local] = items[index];
   if (moveToBottom) {
@@ -47,16 +62,6 @@ export function rebindAndMoveView(repeat: VirtualRepeat, view: View, index: numb
   }
 }
 
-export function getStyleValues(element: Element, ...styles: string[]): number {
-  let currentStyle = window.getComputedStyle(element);
-  let value: number = 0;
-  let styleValue: number = 0;
-  for (let i = 0, ii = styles.length; ii > i; ++i) {
-    styleValue = parseInt(currentStyle[styles[i]], 10);
-    value += Number.isNaN(styleValue) ? 0 : styleValue;
-  }
-  return value;
-}
 
 export function getElementDistanceToBottomViewPort(element: Element): number {
   return document.documentElement.clientHeight - element.getBoundingClientRect().bottom;
@@ -66,7 +71,10 @@ export function getElementDistanceToTopViewPort(element: Element): number {
   return element.getBoundingClientRect().top;
 }
 
-export const $max = Math.max;
-export const $min = Math.min;
-export const $round = Math.round;
+export const Math$abs = Math.abs;
+export const Math$max = Math.max;
+export const Math$min = Math.min;
+export const Math$round = Math.round;
+export const Math$ceil = Math.ceil;
+export const Math$floor = Math.floor;
 export const $isNaN = isNaN;

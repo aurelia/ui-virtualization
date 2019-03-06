@@ -42,6 +42,12 @@ export class App {
         moduleId: PLATFORM.moduleName('./issue-146/sub-app'),
         nav: 6,
         title: 'Issue 146'
+      },
+      {
+        route: 'non-issues',
+        moduleId: PLATFORM.moduleName('./non-issues/sub-app'),
+        nav: 7,
+        title: 'Non-Issues'
       }
     ]);
 
