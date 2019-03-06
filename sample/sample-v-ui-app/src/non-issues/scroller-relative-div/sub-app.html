@@ -1,0 +1,22 @@
+<template>
+  <div style="position: relative; height: 500px; overflow-y: auto">
+    <div class="d-flex">
+      <div class="p-2" style="width: 50px;">#</div>
+      <div class="p-2" style="width: 200px;">First Name</div>
+      <div class="p-2" style="width: 200px;">Last Name</div>
+      <div class="p-2 flex-fill">Action</div>
+    </div>
+    <div
+      virtual-repeat.for="person of people"
+      infinite-scroll-next.call="push30($scrollContext)"
+      class="d-flex">
+      <div class="p-2" style="width: 50px;">${$index}</div>
+      <div class="p-2" style="width: 200px;">${person.fname}</div>
+      <div class="p-2" style="width: 200px;">${person.lname}</div>
+      <div class="flex-fill">
+        <button type="button" class="btn btn-link"><i class="far fa-edit"></i></button>
+        <button type="button" class="btn btn-link"><i class="far fa-trash-alt"></i></button>
+      </div>
+    </div>
+  </div>
+</template>

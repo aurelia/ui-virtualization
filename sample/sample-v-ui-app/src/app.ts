@@ -44,10 +44,10 @@ export class App {
         title: 'Issue 146'
       },
       {
-        route: 'promise-get-more',
-        moduleId: PLATFORM.moduleName('./promise-get-more/sub-app'),
+        route: 'non-issues',
+        moduleId: PLATFORM.moduleName('./non-issues/sub-app'),
         nav: 7,
-        title: 'Infinite Scroll + Promise'
+        title: 'Non-Issues'
       }
     ]);
 
