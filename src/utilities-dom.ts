@@ -40,6 +40,7 @@ export const getDistanceToParent = (child: HTMLElement, parent: HTMLElement) => 
   const offsetParent = child.offsetParent as HTMLElement;
   const childOffsetTop = child.offsetTop;
   // [el] <-- offset parent === parent
+  //  ...
   //   [el] <-- child
   if (offsetParent === null || offsetParent === parent) {
     return childOffsetTop;

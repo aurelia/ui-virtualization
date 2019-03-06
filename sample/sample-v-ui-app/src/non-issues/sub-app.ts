@@ -25,11 +25,25 @@ export class PromiseGetMoreApp {
         moduleId: PLATFORM.moduleName('./scroller-relative-div/sub-app'),
         nav: true,
         title: 'Scroller + Div + Position Relative'
+      },
+      {
+        route: 'scroller-table-multiple-repeats',
+        moduleId: PLATFORM.moduleName('./scroller-table-multiple-repeats/sub-app'),
+        nav: true,
+        title: 'Scroller + Table + Position Relative + Multiple Repeats'
       }
     ]).mapUnknownRoutes({
       redirect: '',
       name: 'non-issues.main'
     } as any);
     this.router = router;
+  }
+
+  onWheel(e: WheelEvent) {
+    if (!e.shiftKey && e.deltaY) {
+      (e.currentTarget as HTMLElement).scrollLeft += e.deltaY;
+      return false;
+    }
+    return true;
   }
 }
