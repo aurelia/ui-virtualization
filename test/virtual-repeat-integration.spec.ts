@@ -422,7 +422,7 @@ describe('VirtualRepeat Integration', () => {
       promisedVm = {
         items: items,
         test: '2',
-        getNextPage: function () {
+        getNextPage: jasmine.createSpy('promisedVm.getNextPage', function() {
           return new Promise((resolve, reject) => {
             let itemLength = this.items.length;
             for (let i = 0; i < 100; ++i) {
@@ -431,7 +431,7 @@ describe('VirtualRepeat Integration', () => {
             }
             resolve(true);
           });
-        }
+        }).and.callThrough()
       };
       for (let i = 0; i < 1000; ++i) {
         items.push('item' + i);
@@ -524,14 +524,21 @@ describe('VirtualRepeat Integration', () => {
         });
       });
     });
-    it('handles getting next data set with promises', done => {
-      promisedCreate.then(() => {
-        validateScroll(promisedVirtualRepeat, promisedViewModel, () => {
+    it('handles getting next data set with promises', async done => {
+      await create;
+      await promisedCreate;
+      validateScroll(
+        promisedVirtualRepeat,
+        promisedViewModel,
+        async () => {
+          await waitForTimeout(500);
+          expect(promisedVm.getNextPage).toHaveBeenCalled();
           // Jasmine spies seem to not be working with returned promises and getting the instance of them, causing regular checks on getNextPage to fail
           expect(promisedVm.items.length).toBe(1100);
           done();
-        }, 'scrollContainerPromise');
-      });
+        },
+        'scrollContainerPromise'
+      );
     });
     it('handles getting next data set with small page size', done => {
       vm.items = [];
