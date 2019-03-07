@@ -2,7 +2,7 @@ import './setup';
 import { eachCartesianJoin } from "./lib";
 import { getDistanceToParent } from "../src/utilities-dom";
 
-fdescribe('utiltites - DOM', () => {
+describe('utiltites - DOM', () => {
   
   const testCases: ITestCase[] = [
     {

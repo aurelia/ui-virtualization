@@ -224,6 +224,13 @@ export class VirtualRepeat extends AbstractRepeater {
   /**@internal */
   private taskQueue: TaskQueue;
 
+  /**
+   * Used to revert all checks related to scroll handling guard
+   * Employed for manually blocking scroll handling
+   * @internal
+   */
+  private revertScrollCheckGuard: () => void;
+
   /**@internal */
   container: Container;
 
@@ -285,6 +292,9 @@ export class VirtualRepeat extends AbstractRepeater {
     this.itemHeight = 0;
     this.topBufferDistance = 0;
     this._prevItemsCount = 0;
+    this.revertScrollCheckGuard = () => {
+      this._skipNextScrollHandle = false;
+    }
   }
 
   /**@override */
@@ -619,7 +629,7 @@ export class VirtualRepeat extends AbstractRepeater {
       this._topBufferHeight = currentTopBufferHeight + adjustHeight;
       this._bottomBufferHeight = Math$max(currentBottomBufferHeight - adjustHeight, 0);
       if (this._bottomBufferHeight >= 0) {
-        this._updateBufferElements();
+        this._updateBufferElements(true);
       }
     } else if (this._scrollingUp) {
       let viewsToMoveCount = this._lastRebind - this._first;
@@ -647,7 +657,7 @@ export class VirtualRepeat extends AbstractRepeater {
       this._topBufferHeight = Math$max(currentTopBufferHeight - adjustHeight, 0);
       this._bottomBufferHeight = currentBottomBufferHeight + adjustHeight;
       if (this._topBufferHeight >= 0) {
-        this._updateBufferElements();
+        this._updateBufferElements(true);
       }
     }
     this._previousFirst = this._first;
@@ -750,9 +760,13 @@ export class VirtualRepeat extends AbstractRepeater {
   }
 
   /**@internal */
-  _updateBufferElements(): void {
+  _updateBufferElements(skipUpdate?: boolean): void {
     this.topBufferEl.style.height = `${this._topBufferHeight}px`;
     this.bottomBufferEl.style.height = `${this._bottomBufferHeight}px`;
+    if (skipUpdate) {
+      this._skipNextScrollHandle = true;
+      requestAnimationFrame(this.revertScrollCheckGuard);
+    }
   }
 
   /**@internal*/
@@ -894,7 +908,7 @@ export class VirtualRepeat extends AbstractRepeater {
         this._bottomBufferHeight = 0;
       }
     }
-    this._updateBufferElements();
+    this._updateBufferElements(true);
   }
 
   /**@internal*/
