@@ -36,6 +36,12 @@ export const hasOverflowScroll = (element: HTMLElement): boolean => {
   return style.overflowY === 'scroll' || style.overflow === 'scroll' || style.overflowY === 'auto' || style.overflow === 'auto';
 }
 
+/**
+ * A naive utility to calculate distance of a child element to one of its ancestor, typically used for scroller/buffer combo
+ * Calculation is done based on offsetTop, with formula:
+ * child.offsetTop - parent.offsetTop
+ * There are steps in the middle to account for offsetParent but it's basically that
+ */
 export const getDistanceToParent = (child: HTMLElement, parent: HTMLElement) => {
   const offsetParent = child.offsetParent as HTMLElement;
   const childOffsetTop = child.offsetTop;
