@@ -93,6 +93,6 @@ export class PhoneList {
       }
     }
 
-    this.objectArray3.splice.apply(this.objectArray3, [0, this.objectArray3.length].concat(results));
+    this.objectArray3.splice(0, this.objectArray3.length, ...results);
   }
 }
