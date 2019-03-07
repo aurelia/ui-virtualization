@@ -31,14 +31,28 @@ export class PromiseGetMoreApp {
 
   public async push30(scrollContext?: IScrollContext, count = 30) {
     console.log('Issue-102 getting more...');
-    // if (scrollContext) {
-    //   console.log('Issue-129 getting more:', JSON.stringify(scrollContext, undefined, 2));
-    // }
     return new Promise(resolve => {
       setTimeout(() => {
-        if (!scrollContext || scrollContext.isAtBottom) {
+        if (!scrollContext) {
           for (let i = 0; i < count; i++) {
             this.people.push({
+              fname: fNames[Math.floor(Math.random() * fNames.length)],
+              lname: lNames[Math.floor(Math.random() * lNames.length)]
+            });
+          }
+          console.log('Population size:', this.people.length);
+          return resolve();
+        }
+        if (scrollContext.isAtBottom) {
+          for (let i = 0; i < count; i++) {
+            this.people.push({
+              fname: fNames[Math.floor(Math.random() * fNames.length)],
+              lname: lNames[Math.floor(Math.random() * lNames.length)]
+            });
+          }
+        } else if (scrollContext.isAtTop) {
+          for (let i = 0; i < count; i++) {
+            this.people.unshift({
               fname: fNames[Math.floor(Math.random() * fNames.length)],
               lname: lNames[Math.floor(Math.random() * lNames.length)]
             });
