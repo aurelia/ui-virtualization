@@ -1,14 +1,16 @@
 <template>
   <div class="mb-1">
-    <button class="btn btn-success btn-sm" click.trigger="addItems(1000)">Add 1000</button>
-    <button class="btn btn-success btn-sm" click.trigger="addItems(10000)">Add 10 000</button>
-    <button class="btn btn-success btn-sm" click.trigger="addItems(100000)">Add 100 000</button>
-    <button class="btn btn-success btn-sm" click.trigger="addItemFirst()">Add 1 at top</button>
-    <button class="btn btn-success btn-sm" click.trigger="addItemLast()">Add 1 at bottom</button>
-    <button class="btn btn-success btn-sm" click.trigger="removeItems(1)">Remove 1 at top</button>
-    <button class="btn btn-success btn-sm" click.trigger="removeLast()">Remove 1 at bottom</button>
-    <button class="btn btn-success btn-sm" click.trigger="toggle()">Toggle visibility</button>
-    <button class="btn btn-success btn-sm" click.trigger="swap()">Swap</button>
+    <div class="px-2" scrollbar="x" style="height: 45px;">
+      <button class="btn btn-success btn-sm" click.trigger="addItems(1000)">Add 1000</button>
+      <button class="btn btn-success btn-sm" click.trigger="addItems(10000)">Add 10 000</button>
+      <button class="btn btn-success btn-sm" click.trigger="addItems(100000)">Add 100 000</button>
+      <button class="btn btn-success btn-sm" click.trigger="addItemFirst()">Add 1 at top</button>
+      <button class="btn btn-success btn-sm" click.trigger="addItemLast()">Add 1 at bottom</button>
+      <button class="btn btn-success btn-sm" click.trigger="removeItems(1)">Remove 1 at top</button>
+      <button class="btn btn-success btn-sm" click.trigger="removeLast()">Remove 1 at bottom</button>
+      <button class="btn btn-success btn-sm" click.trigger="toggle()">Toggle visibility</button>
+      <button class="btn btn-success btn-sm" click.trigger="swap()">Swap</button>
+    </div>
 
     <label class="d-block" style="width: 300px;">
       Example:

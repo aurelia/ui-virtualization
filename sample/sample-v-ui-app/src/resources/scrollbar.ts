@@ -17,21 +17,21 @@ export class Scrollbar {
     const classList = element.classList;
     if (direction === 'horizontal' || direction === 'x') {
       classList.add('sb-x', 'text-nowrap');
-      element.addEventListener('wheel', this.onWheel);
+      element.addEventListener('wheel', this.onWheel, true);
     } else {
       classList.add('sb-y');
     }
   }
 
   unbind() {
-    this.element.removeEventListener('wheel', this.onWheel);
+    this.element.removeEventListener('wheel', this.onWheel, true);
   }
 
   onWheel(e: WheelEvent) {
-    if (!e.shiftKey && e.deltaY) {
+    if (!e.shiftKey && e.deltaY !== 0) {
       (e.currentTarget as HTMLElement).scrollLeft += e.deltaY;
-      return false;
+      e.stopImmediatePropagation();
+      e.preventDefault();
     }
-    return true;
   }
 }
