@@ -2,8 +2,9 @@ import './setup';
 import { eachCartesianJoin } from "./lib";
 import { getDistanceToParent } from "../src/utilities-dom";
 import { PLATFORM } from 'aurelia-pal';
+import { h } from './utilities';
 
-describe('utiltites - DOM', () => {
+fdescribe('utiltites - DOM', () => {
   
   const testCases: ITestCase[] = [
     {
@@ -108,6 +109,31 @@ describe('utiltites - DOM', () => {
       }
     },
     {
+      title: 'scroller > #shadow-root > div',
+      template: <div id="parent" style={{ height: 200, overflowY: 'auto' }}>
+        <shadow-root>
+          <div id="topBuffer" style={{ height: 500 }}></div>
+          <div id="child"></div>
+        </shadow-root>
+      </div>,
+      assert: ct => {
+        const parent = ct.querySelector<HTMLElement>('#parent');
+        expect(parent.shadowRoot).not.toEqual(null, '#parent > #shadow-root');
+        const topBuffer = parent.shadowRoot.querySelector<HTMLElement>('#topBuffer');
+        const child = parent.shadowRoot.querySelector<HTMLElement>('#child');
+        assertDistance(ct, child, parent, 500);
+        assertDistance(ct, topBuffer, parent, 0);
+        expect(parent.scrollHeight).toEqual(500, '#parent.scrollHeight 1');
+        topBuffer.style.height = '400px';
+        assertDistance(ct, child, parent, 400);
+        assertDistance(ct, topBuffer, parent, 0);
+        expect(parent.scrollHeight).toEqual(400, '#parent.scrollHeight 2');
+        parent.scrollTop = 200;
+        assertDistance(ct, child, parent, 400);
+        assertDistance(ct, topBuffer, parent, 0);
+      }
+    },
+    {
       title: [
         'container',
         '\t-- table [border-spacing:0]',
@@ -129,19 +155,19 @@ describe('utiltites - DOM', () => {
         assertDistance(ct, child, table, 500);
         assertDistance(ct, topBuffer, table, 0);
         assertDistance(ct, cell, table, 500);
-        
-        expect(getDistanceToParent(child, parent)).toEqual(500);
-        expect(getDistanceToParent(topBuffer, parent)).toEqual(0);
-        expect(getDistanceToParent(cell, parent)).toEqual(500);
+
+        assertDistance(ct, child, parent, 500);
+        assertDistance(ct, topBuffer, parent, 0);
+        assertDistance(ct, cell, parent, 500);
 
         parent.insertAdjacentHTML('afterbegin', '<div style="height: 400px"></div>');
-        expect(getDistanceToParent(child, table)).toEqual(500);
-        expect(getDistanceToParent(topBuffer, table)).toEqual(0);
-        expect(getDistanceToParent(cell, table)).toEqual(500);
-        
-        expect(getDistanceToParent(child, parent)).toEqual(500 + 400);
-        expect(getDistanceToParent(topBuffer, parent)).toEqual(0 + 400);
-        expect(getDistanceToParent(cell, parent)).toEqual(500 + 400);
+        assertDistance(ct, child, table, 500);
+        assertDistance(ct, topBuffer, table, 0);
+        assertDistance(ct, cell, table, 500);
+
+        assertDistance(ct, child, parent, 500 + 400);
+        assertDistance(ct, topBuffer, parent, 0 + 400);
+        assertDistance(ct, cell, parent, 500 + 400);
       }
     }
   ];
@@ -163,7 +189,7 @@ describe('utiltites - DOM', () => {
         } else if (Array.isArray(template)) {
           template.forEach(t => container.appendChild(t));
         } else {
-          container.appendChild(template.cloneNode(true));
+          container.appendChild(template);
         }
         document.body.appendChild(container);
         try {
@@ -171,8 +197,6 @@ describe('utiltites - DOM', () => {
             assertDistance(container, childSelector, parentSelector, distance);
           }
           assert(container);
-        } catch ($ex) {
-          throw $ex;
         } finally {
           document.body.removeChild(container);
         }
