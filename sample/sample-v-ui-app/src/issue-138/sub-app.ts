@@ -26,6 +26,9 @@ export class App {
       // console.log('getting more:', JSON.stringify(scrollContext, undefined, 2));
     }
     if (!scrollContext || scrollContext.isAtBottom) {
+      if (this.people.length > 60) {
+        return;
+      }
       for (let i = 0; i < 30; i++) {
         this.people.push({
           fname: fNames[Math.floor(Math.random() * fNames.length)],

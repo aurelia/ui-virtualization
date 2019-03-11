@@ -41,8 +41,4 @@ export class DefaultTemplateStrategy implements ITemplateStrategy {
     const lastEl = bottomBuffer.previousElementSibling;
     return lastEl === topBuffer ? null : lastEl;
   }
-
-  getTopBufferDistance(topBuffer: HTMLElement): number {
-    return 0;
-  }
 }

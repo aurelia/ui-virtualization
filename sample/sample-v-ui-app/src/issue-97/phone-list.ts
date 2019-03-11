@@ -74,8 +74,10 @@ export class PhoneList {
     this.objectArray3.unshift(this.createItem(), this.createItem(), this.createItem(), this.createItem(), this.createItem());
   }
 
-  addItemLast() {
-    this.objectArray3.push(this.createItem());
+  addItemLast(count = 10) {
+    while (count-- > 0) {
+      this.objectArray3.push(this.createItem());
+    }
   }
 
   removeLast() {

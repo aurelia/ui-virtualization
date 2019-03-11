@@ -1,5 +1,6 @@
 <template>
   <require from="./people-list"></require>
+  <p class="bg-warning px-1">Dynamically changing scroller element isn't well supported. But can still work.</p>
   <div class="btn-group btn-group-sm">
     <button class="btn btn-info ${mode === 1 ? 'active' : ''}" click.trigger="mode = 1">Full page</button>
     <button class="btn btn-info ${mode === 2 ? 'active' : ''}" click.trigger="mode = 2">With fixed height container</button>
