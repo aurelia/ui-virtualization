@@ -38,5 +38,6 @@ export async function configure(aurelia: Aurelia) {
     await aurelia.setRoot(PLATFORM.moduleName('app'));
   } catch (ex) {
     document.body.textContent = ex;
+    console.error(ex);
   }
 }

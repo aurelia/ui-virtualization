@@ -35,11 +35,11 @@ export class PhoneList {
   }
 
   activate() {
-    for (let i = 0; i < this.numberOfItems; ++i) {
-      // this.objectArray.push(this.createItem(i));
-      this.objectArray2.push(this.createItem());
-    }
-    this.objectArray3 = this.objectArray2.slice(0);
+    // for (let i = 0; i < this.numberOfItems; ++i) {
+    //   // this.objectArray.push(this.createItem(i));
+    //   this.objectArray2.push(this.createItem());
+    // }
+    // this.objectArray3 = this.objectArray2.slice(0);
   }
 
   swap() {
@@ -74,8 +74,10 @@ export class PhoneList {
     this.objectArray3.unshift(this.createItem(), this.createItem(), this.createItem(), this.createItem(), this.createItem());
   }
 
-  addItemLast() {
-    this.objectArray3.push(this.createItem());
+  addItemLast(count = 10) {
+    while (count-- > 0) {
+      this.objectArray3.push(this.createItem());
+    }
   }
 
   removeLast() {

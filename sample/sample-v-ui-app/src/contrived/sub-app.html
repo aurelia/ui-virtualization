@@ -1,0 +1,9 @@
+<template>
+  <div class='p-1' scrollbar='x' style='height: 45px;'>
+    <a
+      repeat.for="nav of router.navigation"
+      href.bind='nav.href'
+      class='btn btn-sm btn-primary text-white mr-2'>${nav.title}</a>
+  </div>
+  <router-view></router-view>
+</template>

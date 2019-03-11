@@ -9,7 +9,8 @@
     class="btn btn-sm btn-info"
     show.bind="minimizedMonitor"
     click.trigger="minimizedMonitor = false"
-    style="position: fixed; bottom: 20px; right: 20px;">Maximize monitor</button>
+    style="position: fixed; bottom: 20px; right: 20px;">
+    Maximize monitor ${window.virtualRepeat ? `(${window.virtualRepeat.items.length})` : ''}</button>
   <div
     if.bind="window.virtualRepeat"
     show.bind="!minimizedMonitor"
@@ -17,13 +18,24 @@
     style="position: fixed; bottom: 0; right: 0; max-height: 80vh;">
     <let virtual-repeat.bind='window.virtualRepeat'></let>
     <button
-      class="btn btn-sm btn-block btn-info"
+      class="btn btn-sm btn-block btn-info flex-shrink-0"
       click.trigger="minimizedMonitor = true">Minimize monitor</button>
     <div class="flex-fill" style="overflow-y: auto;">
       <table class="table table-sm table-striped table-bordered">
         <tr>
           <th>Name</th>
           <th>--- Value ---</th>
+        </tr>
+        <tr>
+          <td>Size</td><td>${virtualRepeat.items.length}</td>
+        </tr>
+        <tr>
+          <td>Item height</td>
+          <td>${virtualRepeat.itemHeight}</td>
+        </tr>
+        <tr>
+          <td>Total size</td>
+          <td>${virtualRepeat.items.length * virtualRepeat.itemHeight}</td>
         </tr>
         <tr>
           <td>First</td><td>${virtualRepeat._first}</td>
@@ -37,17 +49,11 @@
           <td>Elements In view</td>
           <td>${virtualRepeat.elementsInView}</td>
         <tr>
-          <td>Item height</td>
-          <td>${virtualRepeat.itemHeight}</td>
-        <tr>
           <td>Top Buffer height</td>
           <td>${virtualRepeat._topBufferHeight}</td>
         <tr>
           <td>Bottom Buffer height</td>
           <td>${virtualRepeat._bottomBufferHeight}</td>
-        <tr>
-          <td>Buffer Size</td>
-          <td>${virtualRepeat._bufferSize}</td>
         <tr>
           <td>Distance to top</td>
           <td>${virtualRepeat.distanceToTop}</td>

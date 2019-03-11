@@ -1,22 +1,18 @@
 <template>
   <style>
-    .table-container {
-      height: 500px;
-      overflow-y: auto;
-    }
     .is-even {
       background-color: hsl(0, 0%, 98%);
     }
   </style>
 
   <div class="container">
-    <div class="sort-buttons-container mb-2">
+    <div class="p-1 mb-2" scrollbar='x'>
       <button class="btn btn-sm" click.delegate="sortById()">ID</button>
       <button class="btn btn-sm" click.delegate="sortByLastName()">Last Name</button>
       <button class="btn btn-sm" click.delegate="reduceTo(30)">Reduce to 30 items</button>
       <button class="btn btn-sm" click.delegate="reduceTo(10)">Reduce to 10 items</button>
     </div>
-    <div class="table-container" style="height: 500px; overflow-y: scroll;">
+    <div style="height: 500px; overflow-y: scroll;">
       <table class="table table-bordered table-stripped w-100">
         <thead>
           <tr>
@@ -28,7 +24,9 @@
           </tr>
         </thead>
         <tbody>
-          <tr virtual-repeat.for="user of users" class="table-row ${$even ? 'is-even' : 'is-odd'} c-${user.id}">
+          <tr
+            virtual-repeat.for="user of users"
+            class="table-row ${$even ? 'is-even' : 'is-odd'} c-${user.id}">
             <td>${user.id}</td>
             <td>${user.firstName}</td>
             <td>${user.lastName}</td>

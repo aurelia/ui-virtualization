@@ -48,6 +48,12 @@ export class App {
         moduleId: PLATFORM.moduleName('./non-issues/sub-app'),
         nav: 7,
         title: 'Non-Issues'
+      },
+      {
+        route: 'contrived-examples',
+        moduleId: PLATFORM.moduleName('./contrived/sub-app'),
+        nav: true,
+        title: 'Contrived Examples'
       }
     ]);
 

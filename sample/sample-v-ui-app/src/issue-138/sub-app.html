@@ -1,8 +1,8 @@
 <template>
   <require from="./people-list"></require>
   <div class="btn-group btn-group-sm">
-    <button class="btn btn-info" click.trigger="mode = 1">Full page</button>
-    <button class="btn btn-info" click.trigger="mode = 2">With fixed height container</button>
+    <button class="btn btn-info ${mode === 1 ? 'active' : ''}" click.trigger="mode = 1">Full page</button>
+    <button class="btn btn-info ${mode === 2 ? 'active' : ''}" click.trigger="mode = 2">With fixed height container</button>
   </div>
   <div class=""
     css="height: ${mode === 2 ? '500px' : ''}; overflow-y: ${mode === 2 ? 'auto' : ''}">
@@ -12,7 +12,6 @@
         <list-column header="First Name"> ${person.fname} </list-column>
         <list-column header="Last Name"> ${person.lname} </list-column>
       </people-list>
-
     </div>
   </div>
 </template>
