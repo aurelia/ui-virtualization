@@ -26,7 +26,7 @@ export const getElementDistanceToTopOfDocument = (element: Element): number => {
   let clientTop = documentElement.clientTop;
   let top  = box.top + scrollTop - clientTop;
   return Math$round(top);
-}
+};
 
 /**
  * Check if an element has inline style scroll/auto for overflow/overflowY

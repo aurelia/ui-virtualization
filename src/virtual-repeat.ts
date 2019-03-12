@@ -578,14 +578,10 @@ export class VirtualRepeat extends AbstractRepeater {
 
   /**@internal*/
   _onScroll(): void {
-    // console.log('+begin: %conScroll()', 'color: darkgreen', this._ticking, this._handlingMutations);
     if (!this._ticking && !this._handlingMutations) {
-      // console.log('+ raf(scrollHandle)');
       requestAnimationFrame(() => {
-        // console.log('+ _handleScroll()');
         this._handleScroll();
         this._ticking = false;
-        // console.log('- _handleScroll()');
       });
       this._ticking = true;
     }
@@ -593,23 +589,19 @@ export class VirtualRepeat extends AbstractRepeater {
     if (this._handlingMutations) {
       this._handlingMutations = false;
     }
-    // console.log('-end: %conScroll()', 'color: darkgreen');
   }
 
   /**@internal*/
   _handleScroll(): void {
-    // console.log('+ %c_handleScroll()', 'color:red; font-weight: bold;');
     if (!this._isAttached) {
       return;
     }
     if (this._skipNextScrollHandle) {
       this._skipNextScrollHandle = false;
-      // console.log('- %c_handleScroll() 2', 'color:red; font-weight: bold;');
       return;
     }
     const items = this.items;
     if (!items) {
-      // console.log('- %c_handleScroll() 3', 'color:red; font-weight: bold;');
       return;
     }
     const topBuffer = this.topBufferEl;
@@ -637,7 +629,6 @@ export class VirtualRepeat extends AbstractRepeater {
         ? scrollTop - Math$abs(topBufferDistance)
         : scrollTop
     );
-    // console.log({realScrollTop});
     const elementsInView = this.elementsInView;
 
     // Calculate the index of first view
@@ -658,7 +649,6 @@ export class VirtualRepeat extends AbstractRepeater {
     const currentTopBufferHeight = this._topBufferHeight;
     const currentBottomBufferHeight = this._bottomBufferHeight;
 
-    // console.log('down?', this._scrollingDown, 'up?', this._scrollingUp);
     // TODO if and else paths do almost same thing, refactor?
     if (this._scrollingDown) {
       let viewsToMoveCount = firstIndex - currLastReboundIndex;
@@ -717,12 +707,10 @@ export class VirtualRepeat extends AbstractRepeater {
     this._isScrolling
       = this._scrollingUp
       = this._scrollingDown = false;
-    // console.log('- %c_handleScroll() 4', 'color: red; font-weight: bold');
   }
 
   /**@internal*/
   _getMore(force?: boolean): void {
-    // console.log('+_getMore:', { lastIndex: this.isLastIndex, isFirst: this._first === 0, force: !!force, _called: this._calledGetMore });
     if (this.isLastIndex || this._first === 0 || force === true) {
       if (!this._calledGetMore) {
         const executeGetMore = () => {
@@ -755,11 +743,12 @@ export class VirtualRepeat extends AbstractRepeater {
             this._calledGetMore = false;
             return null;
           } else if (typeof func === 'string') {
-            let getMoreFuncName = (firstView.firstChild as Element).getAttribute(scrollNextAttrName);
-            let funcCall = overrideContext.bindingContext[getMoreFuncName];
+            const bindingContext = overrideContext.bindingContext;
+            const getMoreFuncName = (firstView.firstChild as Element).getAttribute(scrollNextAttrName);
+            const funcCall = bindingContext[getMoreFuncName];
 
             if (typeof funcCall === 'function') {
-              let result = funcCall.call(overrideContext.bindingContext, topIndex, isAtBottom, isAtTop);
+              let result = funcCall.call(bindingContext, topIndex, isAtBottom, isAtTop);
               if (!(result instanceof Promise)) {
                 // Reset for the next time
                 this._calledGetMore = false;
@@ -834,28 +823,6 @@ export class VirtualRepeat extends AbstractRepeater {
     this._scrollingDown = isScrollingDown;
     this._scrollingUp = isScrollingUp;
     this._switchedDirection = isSwitchedDirection;
-    // else {
-    //   console.log('%cChecking scrolling', 'color: green; padding: 2px; background: yellow; font-weight: bold;');
-    //   const currScrollerInfo = this.getScrollerInfo();
-    //   const prevScrollerInfo = this._prevScrollerInfo;
-    //   const scrollTopDelta = currScrollerInfo.scrollTop - prevScrollerInfo.scrollTop;
-    //   const scrollHeightDelta = currScrollerInfo.scrollHeight - prevScrollerInfo.scrollHeight;
-    //   const isScrolling = this._isScrolling = scrollTopDelta !== 0 || scrollHeightDelta !== 0;
-    //   console.log({ isScrolling });
-    //   if (isScrolling) {
-    //     const switchedDirection = _scrollingUp
-    //       ? scrollTopDelta > 0
-    //       : _scrollingDown
-    //         ? scrollTopDelta < 0
-    //         : false;
-    //     this._switchedDirection = switchedDirection;
-    //     this._scrollingDown = scrollTopDelta > 0;
-    //     this._scrollingUp = scrollTopDelta < 0;
-    //   }
-    //   console.log({ switched: this._switchedDirection, down: this._scrollingDown, up: this._scrollingUp });
-    //   this._prevScrollerInfo = currScrollerInfo;
-    //   return;
-    // }
   }
 
   /**@internal */
@@ -864,7 +831,6 @@ export class VirtualRepeat extends AbstractRepeater {
     this.bottomBufferEl.style.height = `${this._bottomBufferHeight}px`;
     if (skipUpdate) {
       this._ticking = true;
-      // this._skipNextScrollHandle = true;
       requestAnimationFrame(this.revertScrollCheckGuard);
     }
   }
