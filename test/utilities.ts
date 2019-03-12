@@ -45,7 +45,7 @@ export function validateState(virtualRepeat: VirtualRepeat, viewModel: any, item
 
   // validate contextual data
   for (let i = 0; i < views.length; i++) {
-    expect(views[i].bindingContext.item).toBe(viewModel.items[i]);
+    expect(views[i].bindingContext.item).toBe(viewModel.items[i], `view[${i}].bindingContext.item === items[${i}]`);
     let overrideContext = views[i].overrideContext;
     expect(overrideContext.parentOverrideContext.bindingContext).toBe(viewModel);
     expect(overrideContext.bindingContext).toBe(views[i].bindingContext);
@@ -79,10 +79,10 @@ export function validateScrolledState(virtualRepeat: VirtualRepeat, viewModel: a
   // validate contextual data
   let startingLoc = viewModel.items.indexOf(views[0].bindingContext.item);
   for (let i = startingLoc; i < views.length; i++) {
-    expect(views[i].bindingContext.item).toBe(viewModel.items[i]);
+    expect(views[i].bindingContext.item).toBe(viewModel.items[i], `view(${i}).bindingContext.item`);
     let overrideContext = views[i].overrideContext;
-    expect(overrideContext.parentOverrideContext.bindingContext).toBe(viewModel);
-    expect(overrideContext.bindingContext).toBe(views[i].bindingContext);
+    expect(overrideContext.parentOverrideContext.bindingContext).toBe(viewModel, 'parentOverrideContext.bindingContext === viewModel');
+    expect(overrideContext.bindingContext).toBe(views[i].bindingContext, `overrideContext sync`);
     let first = i === 0;
     let last = i === viewModel.items.length - 1;
     let even = i % 2 === 0;
@@ -129,12 +129,12 @@ export async function scrollToIndex(virtualRepeat: VirtualRepeat, itemIndex: num
 
 /**
  * Wait for a small time for repeat to finish processing.
- * 
+ *
  * Default to 10
  */
 export async function ensureScrolled(time: number = 10): Promise<void> {
-  await waitForTimeout(time);
   await waitForNextFrame();
+  await waitForTimeout(time);
 }
 
 
@@ -154,7 +154,9 @@ const kebabCaseLookup: Record<string, string> = {};
 const kebabCase =  (input: string): string => {
   // benchmark: http://jsben.ch/v7K9T
   let value = kebabCaseLookup[input];
-  if (value !== undefined) return value;
+  if (value !== undefined) {
+    return value;
+  }
   value = '';
   let first = true;
   let char: string, lower: string;
@@ -165,7 +167,7 @@ const kebabCase =  (input: string): string => {
     first = false;
   }
   return kebabCaseLookup[input] = value;
-}
+};
 
 const eventCmds = { delegate: 1, capture: 1, call: 1 };
 
@@ -256,7 +258,7 @@ export const h = (name: string, attrs: Record<string, string> | null, ...childre
             }
             appender.shadowRoot.appendChild(child_child);
           } else {
-            appender.appendChild(child_child)
+            appender.appendChild(child_child);
           }
         } else {
           appender.appendChild(document.createTextNode('' + child_child));
@@ -272,12 +274,12 @@ export const h = (name: string, attrs: Record<string, string> | null, ...childre
         } else {
           appender.appendChild(child);
         }
-      }else {
+      } else {
         appender.appendChild(document.createTextNode('' + child));
       }
     }
   }
   return el;
-}
+};
 
 const isFragment = (node: Node): node is DocumentFragment => node.nodeType === Node.DOCUMENT_FRAGMENT_NODE;

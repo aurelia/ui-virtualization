@@ -2,7 +2,15 @@ import { ICollectionObserverSplice, mergeSplice } from 'aurelia-binding';
 import { ViewSlot } from 'aurelia-templating';
 import { ArrayRepeatStrategy, createFullOverrideContext } from 'aurelia-templating-resources';
 import { IView, IVirtualRepeatStrategy } from './interfaces';
-import { getElementDistanceToBottomViewPort, Math$abs, Math$floor, Math$max, Math$min, rebindAndMoveView, updateVirtualOverrideContexts, updateVirtualRepeatContexts } from './utilities';
+import {
+  getElementDistanceToBottomViewPort,
+  Math$abs,
+  Math$floor,
+  Math$max,
+  Math$min,
+  rebindAndMoveView,
+  updateAllViews
+} from './utilities';
 import { VirtualRepeat } from './virtual-repeat';
 import { getDistanceToParent } from './utilities-dom';
 
@@ -74,6 +82,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     }
     const local = repeat.local;
     const lastIndex = currItemCount - 1;
+    // console.log({firstIndex, lastIndex, currItemCount, realViewsCount});
     if (firstIndex + realViewsCount > lastIndex) {
       // first = currItemCount - realViewsCount instead of: first = currItemCount - 1 - realViewsCount;
       //    this is because during view update
@@ -110,7 +119,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     for (let i = realViewsCount; i < minLength; i++) {
       const overrideContext = createFullOverrideContext(repeat, items[i], i, currItemCount);
       repeat.addView(overrideContext.bindingContext, overrideContext);
-    }    
+    }
   }
 
   /**@internal */
@@ -253,7 +262,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
           firstIndexAfterMutation = Math$max(0, firstIndexAfterMutation - removeDelta);
         }
       }
-      console.log({firstIndexAfterMutation});
+      // console.log({firstIndexAfterMutation});
       newViewCount = 0;
       // if array size is less than or equal to number of elements in View
       // the nadjust first index to 0
@@ -299,7 +308,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
         }
       }
       const newBotBufferItemCount = Math$max(0, newArraySize - newTopBufferItemCount - newViewCount);
-      console.log({ currViewCount, newViewCount, viewsRequiredCount, viewCountDelta, newBotBufferItemCount})
+      // console.log({ currViewCount, newViewCount, viewsRequiredCount, viewCountDelta, newBotBufferItemCount})
 
       // first update will be to mimic the behavior of a normal repeat mutation
       // where real views are inserted, removed
@@ -308,20 +317,20 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
       repeat._isScrolling = false;
       repeat._scrollingDown = repeat._scrollingUp = false;
       repeat._first = firstIndexAfterMutation;
-      repeat._previousFirst = firstIndex
+      repeat._previousFirst = firstIndex;
       repeat._lastRebind = firstIndexAfterMutation + newViewCount;
       repeat._topBufferHeight = newTopBufferItemCount * itemHeight;
       repeat._bottomBufferHeight = newBotBufferItemCount * itemHeight;
       repeat._updateBufferElements(/*skip update?*/true);
     }
     // console.log({ firstIndexAfterMutation, newTopBufferItemCount, newBotBufferItemCount});
-    console.log({
-      first: repeat._first,
-      prevFirst: repeat._previousFirst,
-      last: repeat._lastRebind,
-      top: repeat._topBufferHeight,
-      bot: repeat._bottomBufferHeight
-    });
+    // console.log({
+    //   first: repeat._first,
+    //   prevFirst: repeat._previousFirst,
+    //   last: repeat._lastRebind,
+    //   top: repeat._topBufferHeight,
+    //   bot: repeat._bottomBufferHeight
+    // });
 
     const scrollerInfo = repeat.getScrollerInfo();
     const topBufferDistance = getDistanceToParent(repeat.topBufferEl, scrollerInfo.scroller);
@@ -331,12 +340,14 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
       ? 0
       : (scrollerInfo.scrollTop - topBufferDistance)
     );
-    console.log({
-      top: scrollerInfo.scrollTop,
-      height: scrollerInfo.scrollHeight
-    }, repeat.topBufferEl.style.height, repeat.bottomBufferEl.style.height, repeat._bottomBufferHeight);
-      
-    let first_index_after_scroll_adjustment = realScrolltop === 0 ? 0 : Math$floor(realScrolltop / itemHeight);
+    // console.log({
+    //   top: scrollerInfo.scrollTop,
+    //   height: scrollerInfo.scrollHeight
+    // }, repeat.topBufferEl.style.height, repeat.bottomBufferEl.style.height, repeat._bottomBufferHeight);
+
+    let first_index_after_scroll_adjustment = realScrolltop === 0
+      ? 0
+      : Math$floor(realScrolltop / itemHeight);
     // if first index after scroll adjustment doesn't fit with number of possible view
     // it means the scroller has been too far down to the bottom and nolonger suitable to start from this index
     // rollback until all views fit into new collection, or until has enough collection item to render
@@ -371,24 +382,23 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     //   botBufferHeight: bot_buffer_item_count_after_scroll_adjustment * itemHeight,
     //   isAtBottom: bot_buffer_item_count_after_scroll_adjustment * itemHeight === 0
     // });
-    console.log({
-      first: repeat._first,
-      prevFirst: repeat._previousFirst,
-      last: repeat._lastRebind,
-      top: repeat._topBufferHeight,
-      bot: repeat._bottomBufferHeight
-    });
+    // console.log({
+    //   first: repeat._first,
+    //   prevFirst: repeat._previousFirst,
+    //   last: repeat._lastRebind,
+    //   top: repeat._topBufferHeight,
+    //   bot: repeat._bottomBufferHeight
+    // });
     repeat._handlingMutations = false;
-    // prevent scroller update 
+    // prevent scroller update
     repeat.revertScrollCheckGuard();
     repeat._updateBufferElements();
-    updateVirtualRepeatContexts(repeat, 0);
+    updateAllViews(repeat, 0);
     // requestAnimationFrame(() => repeat._handleScroll());
     // repeat._handleScroll();
     // console.log('-end: %crunSplices', 'color: orangered');
     // repeat._onScroll();
 
-    
     // for (i = 0; spliceCount > i; ++i) {
     //   const splice = splices[i];
     //   const removedSize = splice.removed.length;
@@ -511,6 +521,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
       let addIndex = splice.index;
       let end = splice.index + splice.addedCount;
       for (; end > addIndex; ++addIndex) {
+        // tslint:disable-next-line
         const hasDistanceToBottomViewPort = getElementDistanceToBottomViewPort(repeat.templateStrategy.getLastElement(repeat.topBufferEl, repeat.bottomBufferEl)) > 0;
         if (repeat.viewCount() === 0
           || (!this._isIndexBeforeViewSlot(repeat, viewSlot, addIndex)
