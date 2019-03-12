@@ -1,4 +1,4 @@
-import { customAttribute, inject, bindable } from "aurelia-framework";
+import { customAttribute, inject, bindable } from 'aurelia-framework';
 
 @inject(Element)
 @customAttribute('scrollbar')
@@ -16,7 +16,8 @@ export class Scrollbar {
     const direction = this.value;
     const classList = element.classList;
     if (direction === 'horizontal' || direction === 'x') {
-      classList.add('sb-x', 'text-nowrap');
+      classList.add('sb-x');
+      classList.add('text-nowrap');
       element.addEventListener('wheel', this.onWheel, true);
     } else {
       classList.add('sb-y');

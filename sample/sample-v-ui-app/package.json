@@ -7,7 +7,8 @@
     "build:watch": "webpack --watch",
     "prebuild:prod": "npm run rimraf",
     "build:prod": "cross-env NODE_ENV=production webpack -p",
-    "rimraf": "rimraf dist"
+    "rimraf": "rimraf dist",
+    "build:demo": "npm run build:prod && cd dist && now --public"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^1.2.12",
