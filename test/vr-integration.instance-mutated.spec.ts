@@ -174,16 +174,14 @@ describe('VirtualRepeat Integration -- Mutation Handling', () => {
 
     await waitForNextFrame();
     expect(scrollCount).toBe(3, '@scroll 3');
-    validateState(virtualRepeat, viewModel, itemHeight);
+    validateScrolledState(virtualRepeat, viewModel, itemHeight);
     virtualRepeat.element.parentElement.onscroll = null;
   });
 
-  // the number of views is 12
-  // the number of items is 13
-  // validating scroll state is a bit annoying
-  // but it's working fine
-  // todo: correctly assert this situation
-  xit('handles splice removing many + add', async () => {
+  // this case is a bit differnet to above case,
+  // where final result after mutation is 1 item over the max views count required
+  // the previous test above has same number of items and views required
+  it('handles splice removing many + add', async () => {
     let scrollCount = 0;
     const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
     virtualRepeat.element.parentElement.onscroll = () => {
@@ -200,7 +198,7 @@ describe('VirtualRepeat Integration -- Mutation Handling', () => {
 
     await waitForNextFrame();
     expect(scrollCount).toBe(3, '@scroll 3');
-    validateState(virtualRepeat, viewModel, itemHeight);
+    validateScrolledState(virtualRepeat, viewModel, itemHeight);
     virtualRepeat.element.parentElement.onscroll = null;
   });
 
