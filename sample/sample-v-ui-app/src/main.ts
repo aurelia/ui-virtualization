@@ -31,6 +31,16 @@ export async function configure(aurelia: Aurelia) {
             return val;
           }
         },
+        class {
+          static $resource = {
+            type: 'valueConverter',
+            name: 'number'
+          };
+
+          fromView(val: string) {
+            return Number(val) || 0;
+          }
+        },
         Scrollbar
       ] as any[]);
 

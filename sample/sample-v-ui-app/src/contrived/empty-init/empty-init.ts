@@ -10,6 +10,11 @@ export class PhoneList {
   isVisible = true;
   selectedMarkup = 'div';
   value: string = '';
+  $removeUntilCount = 0;
+  $addCount = 0;
+  $removeFromIndex = 0;
+  $removeFromCount = 0;
+  $addFromCount = 0;
 
   toggle() {
     this.isVisible = !this.isVisible;
@@ -87,8 +92,8 @@ export class PhoneList {
   search () {
     let results = [];
 
-    for (let i = 0; i < this.objectArray2.length; i++) {
-      let item = this.objectArray2[i];
+    for (let i = 0; i < this.objectArray3.length; i++) {
+      let item = this.objectArray3[i];
 
       if (item.name.toLowerCase().startsWith(this.value.toLowerCase())) {
         results.push(item);
@@ -96,5 +101,22 @@ export class PhoneList {
     }
 
     this.objectArray3.splice(0, this.objectArray3.length, ...results);
+  }
+
+  removeAndAdd(afterRemoveCount: number, addCount: number, startIndex = 0) {
+    this.objectArray3.splice(
+      startIndex,
+      Math.max(0, this.objectArray3.length - afterRemoveCount),
+      ...Array.from({ length: addCount }, () => this.createItem())
+    );
+  }
+
+  removeFromIndexAndAdd(startIndex: number, addCount: number, removeCount = this.objectArray3.length) {
+    const addedItems = Array.from({ length: addCount }, () => this.createItem());
+    this.objectArray3.splice(
+      startIndex,
+      removeCount,
+      ...addedItems
+    );
   }
 }

@@ -1,4 +1,10 @@
 <template>
+  <style>
+    .no-appearance::-webkit-inner-spin-button, 
+    .no-appearance::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+    }
+  </style>
   <div class="mb-1">
     <div class="p-1" scrollbar='x' style="height: 45px;">
       <button class="btn btn-success btn-sm" click.trigger="addItems(1000)">Add 1000</button>
@@ -12,6 +18,38 @@
       <button class="btn btn-success btn-sm" click.trigger="removeLast(1)">Remove 1 at bottom</button>
       <button class="btn btn-success btn-sm" click.trigger="toggle()">Toggle visibility</button>
       <button class="btn btn-success btn-sm" click.trigger="swap()">Swap</button>
+    </div>
+    <div class="p-1" scrollbar='x' style="height: 45px;">
+      <button class="btn btn-success btn-sm" click.trigger="removeAndAdd(5, 5)">Remove until last 5 left and add 5</button>
+      <button class="btn btn-success btn-sm" click.trigger="removeAndAdd($removeUntilCount, $addCount) & self">
+        Remove until last
+        <input type="number" value.bind="$removeUntilCount | number" 
+          class="border-0 no-appearance"
+          style="width: 30px"
+          focus.trigger="$event.target.select()" />
+        left and add
+        <input type="number" value.bind="$addCount | number"
+          class="border-0 no-appearance"
+          style="width: 30px"
+          focus.trigger="$event.target.select()" />
+      </button>
+      <button class="btn btn-success btn-sm" click.trigger="removeFromIndexAndAdd($removeFromIndex, $addFromCount, $removeFromCount) & self">
+        Remove from index
+        <input type="number" value.bind="$removeFromIndex | number" 
+          class="border-0 no-appearance"
+          style="width: 30px"
+          focus.trigger="$event.target.select()" />
+        for
+        <input type="number" value.bind="$removeFromCount | number" 
+          class="border-0 no-appearance"
+          style="width: 30px"
+          focus.trigger="$event.target.select()" />
+        items and add
+        <input type="number" value.bind="$addFromCount | number"
+          class="border-0 no-appearance"
+          style="width: 30px"
+          focus.trigger="$event.target.select()" />
+      </button>
     </div>
     <div class="row">
       <label class="col-2">
