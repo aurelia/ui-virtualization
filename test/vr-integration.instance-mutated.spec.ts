@@ -200,7 +200,10 @@ describe('VirtualRepeat Integration -- Mutation Handling', () => {
 
     it([
       title,
-      '\thandles splice non-consecutive when scrolled to end'
+      '\thandles splice non-consecutive when scrolled to end',
+      '\t1000 items',
+      '\t-- 12 max views',
+      '\t-- splice to 840 (every 10 increment, remove 3 add i, 80 times)'
     ].join('\n'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
       await scrollToEnd(virtualRepeat);
@@ -208,8 +211,12 @@ describe('VirtualRepeat Integration -- Mutation Handling', () => {
       for (let i = 0, ii = 80; i < ii; i++) {
         viewModel.items.splice(10 * i, 3, i as any);
       }
+      expect(virtualRepeat.element.parentElement.scrollTop).toEqual(100 * 995, 'scrollTop 1');
 
       await waitForNextFrame();
+
+      expect(virtualRepeat.element.parentElement.scrollHeight).toEqual(100 * 840, 'scrollHeight 2');
+      expect(virtualRepeat.element.parentElement.scrollTop).toEqual(100 * (840 - 5), 'scrollTop 2');
       validateScrolledState(virtualRepeat, viewModel, itemHeight);
 
       await scrollToEnd(virtualRepeat);
@@ -219,15 +226,22 @@ describe('VirtualRepeat Integration -- Mutation Handling', () => {
 
     it([
       title,
-      '\thandles splice removing many'
+      '\thandles splice removing many',
+      '\t1000 items',
+      '\t-- 12 max views',
+      '\t-- splice to 24'
     ].join('\n'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
       await scrollToEnd(virtualRepeat);
       expect(virtualRepeat._viewsLength).toBe(12, 'virtualRepeat.viewsLength');
+      expect(virtualRepeat.element.parentElement.scrollTop).toEqual(100 * 995, 'scrollTop 1');
       // more items remaining than viewslot capacity
       viewModel.items.splice(5, 1000 - virtualRepeat._viewsLength - 12);
 
       await waitForNextFrame();
+      expect(virtualRepeat.items.length).toEqual(24, 'virtualRepeat.items.length');
+      expect(virtualRepeat.element.parentElement.scrollHeight).toEqual(100 * 24, 'scrollHeight 2');
+      expect(virtualRepeat.element.parentElement.scrollTop).toEqual(100 * (24 - 5), 'scrollTop 2');
       expect(virtualRepeat._first).toBe(1000 - (1000 - virtualRepeat._viewsLength), 'virtualRepeat._first 1');
       validateScrolledState(virtualRepeat, viewModel, itemHeight);
     });
