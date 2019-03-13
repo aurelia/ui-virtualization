@@ -34,6 +34,16 @@ export async function configure(aurelia: Aurelia) {
         class {
           static $resource = {
             type: 'valueConverter',
+            name: 'cloneArray'
+          };
+
+          toView(val: any) {
+            return Array.isArray(val) ? val.slice() : val;
+          }
+        },
+        class {
+          static $resource = {
+            type: 'valueConverter',
             name: 'number'
           };
 

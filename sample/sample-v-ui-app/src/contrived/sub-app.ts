@@ -1,5 +1,5 @@
-import { RouterConfiguration, Router } from "aurelia-router";
-import { PLATFORM } from "aurelia-pal";
+import { RouterConfiguration, Router } from 'aurelia-router';
+import { PLATFORM } from 'aurelia-pal';
 
 export class ContrivedExamplesApp {
 
@@ -14,6 +14,13 @@ export class ContrivedExamplesApp {
         nav: true,
         title: 'Empty init collection + Infinite get-more'
       },
+      {
+        name: 'contrived.main2',
+        route: 'empty-init-clone-value-converter',
+        moduleId: PLATFORM.moduleName('./empty-init-clone-array/empty-init'),
+        nav: true,
+        title: 'Empty init collection + clone array value converter'
+      }
     ]).mapUnknownRoutes({
       redirect: '',
       name: 'contrived.main'
