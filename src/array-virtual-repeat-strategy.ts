@@ -101,6 +101,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
       const overrideContext = view.overrideContext;
       // any changes to the binding context?
       if (bindingContext[local] === items[currIndex]
+        && overrideContext.$index === currIndex
         && overrideContext.$middle === middle
         && overrideContext.$last === last
       ) {
@@ -109,9 +110,13 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
       }
       // update the binding context and refresh the bindings.
       bindingContext[local] = items[currIndex];
+      overrideContext.$first = currIndex === 0;
       overrideContext.$middle = middle;
       overrideContext.$last = last;
       overrideContext.$index = currIndex;
+      const odd = currIndex % 2 === 1;
+      overrideContext.$odd = odd;
+      overrideContext.$even = !odd;
       repeat.updateBindings(view);
     }
     // add new views
