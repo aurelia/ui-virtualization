@@ -440,6 +440,7 @@ export class VirtualRepeat extends AbstractRepeater {
       throw new Error('Value is not iterateable for virtual repeat.');
     }
 
+    const scroller = this.scrollContainer;
     if (shouldCalculateSize) {
       const currentItemCount = items.length;
       if (currentItemCount > 0 && this.viewCount() === 0) {
@@ -453,9 +454,7 @@ export class VirtualRepeat extends AbstractRepeater {
         this._skipNextScrollHandle = true;
         reducingItems = true;
       }
-      if (hasOverflowScroll(this.scrollContainer)) {
-        this._fixedHeightContainer = true;
-      }
+      this._fixedHeightContainer = hasOverflowScroll(scroller);
       this._calcInitialHeights(currentItemCount);
     }
     if (!this.isOneTime && !this._observeInnerCollection()) {
@@ -472,16 +471,7 @@ export class VirtualRepeat extends AbstractRepeater {
         // Do we need to set scrolltop so that we appear at the bottom of the list to match scrolling as far as we could?
         // We only want to execute this line if we're reducing such that it brings us to the bottom of the new list
         // Make sure we handle the special case of tables
-        // -------
-        // Note: if branch is never the case anymore,
-        // keeping this code to keep the history of logic for future work
-        if (this.scrollContainer.tagName === 'TBODY') {
-          // tbody > table > container
-          let realScrollContainer = this.scrollContainer.parentNode.parentNode as Element;
-          realScrollContainer.scrollTop = realScrollContainer.scrollTop + (this.viewCount() * this.itemHeight);
-        } else {
-          this.scrollContainer.scrollTop = this.scrollContainer.scrollTop + (this.viewCount() * this.itemHeight);
-        }
+        scroller.scrollTop = scroller.scrollTop + (this.viewCount() * this.itemHeight);
       }
       if (!reducingItems) {
         // If we're expanding our items, then we need to reset our previous first for the next go around of scroll handling
@@ -715,7 +705,7 @@ export class VirtualRepeat extends AbstractRepeater {
       if (!this._calledGetMore) {
         const executeGetMore = () => {
           this._calledGetMore = true;
-          const firstView = this._getFirstView();
+          const firstView = this._firstView();
           const scrollNextAttrName = 'infinite-scroll-next';
           const func: string | (BindingExpression & { sourceExpression: Expression }) = (firstView
             && firstView.firstChild
@@ -837,7 +827,7 @@ export class VirtualRepeat extends AbstractRepeater {
 
   /**@internal*/
   _unsubscribeCollection(): void {
-    let collectionObserver = this.collectionObserver;
+    const collectionObserver = this.collectionObserver;
     if (collectionObserver) {
       collectionObserver.unsubscribe(this.callContext, this);
       this.collectionObserver = this.callContext = null;
@@ -845,12 +835,12 @@ export class VirtualRepeat extends AbstractRepeater {
   }
 
   /**@internal */
-  _getFirstView(): IView | null {
+  _firstView(): IView | null {
     return this.view(0);
   }
 
   /**@internal */
-  _getLastView(): IView | null {
+  _lastView(): IView | null {
     return this.view(this.viewCount() - 1);
   }
 
@@ -860,21 +850,26 @@ export class VirtualRepeat extends AbstractRepeater {
    * @internal
    */
   _moveViews(viewsCount: number): number {
-    let getNextIndex = this._scrollingDown ? $plus : $minus;
-    let childrenCount = this.viewCount();
-    let viewIndex = this._scrollingDown ? 0 : childrenCount - 1;
-    let items = this.items;
-    let currentIndex = this._scrollingDown ? this._getIndexOfLastView() + 1 : this._getIndexOfFirstView() - 1;
+    const isScrollingDown = this._scrollingDown;
+    const getNextIndex = isScrollingDown ? $plus : $minus;
+    const childrenCount = this.viewCount();
+    const viewIndex = isScrollingDown ? 0 : childrenCount - 1;
+    const items = this.items;
+    const currentIndex = isScrollingDown
+      ? this._getIndexOfLastView() + 1
+      : this._getIndexOfFirstView() - 1;
     let i = 0;
-    let viewToMoveLimit = viewsCount - (childrenCount * 2);
+    let nextIndex = 0;
+    let view: IView;
+    const viewToMoveLimit = viewsCount - (childrenCount * 2);
     while (i < viewsCount && !this._isAtFirstOrLastIndex) {
-      let view = this.view(viewIndex);
-      let nextIndex = getNextIndex(currentIndex, i);
+      view = this.view(viewIndex);
+      nextIndex = getNextIndex(currentIndex, i);
       this.isLastIndex = nextIndex > items.length - 2;
       this._isAtTop = nextIndex < 1;
       if (!(this._isAtFirstOrLastIndex && childrenCount >= items.length)) {
         if (i > viewToMoveLimit) {
-          rebindAndMoveView(this, view, nextIndex, this._scrollingDown);
+          rebindAndMoveView(this, view, nextIndex, isScrollingDown);
         }
         i++;
       }
@@ -889,19 +884,19 @@ export class VirtualRepeat extends AbstractRepeater {
 
   /**@internal*/
   _getIndexOfLastView(): number {
-    const lastView = this._getLastView();
+    const lastView = this._lastView();
     return lastView === null ? -1 : lastView.overrideContext.$index;
   }
 
   /**@internal*/
   _getLastViewItem(): IView {
-    let lastView = this._getLastView();
+    let lastView = this._lastView();
     return lastView === null ? undefined : lastView.bindingContext[this.local];
   }
 
   /**@internal*/
   _getIndexOfFirstView(): number {
-    let firstView = this._getFirstView();
+    let firstView = this._firstView();
     return firstView === null ? -1 : firstView.overrideContext.$index;
   }
 
@@ -990,16 +985,16 @@ export class VirtualRepeat extends AbstractRepeater {
    * @internal
    */
   _observeInnerCollection(): boolean {
-    let items = this._getInnerCollection();
-    let strategy = this.strategyLocator.getStrategy(items);
+    const items = this._getInnerCollection();
+    const strategy = this.strategyLocator.getStrategy(items);
     if (!strategy) {
       return false;
     }
-    let collectionObserver = strategy.getCollectionObserver(this.observerLocator, items);
+    const collectionObserver = strategy.getCollectionObserver(this.observerLocator, items);
     if (!collectionObserver) {
       return false;
     }
-    let context = VirtualRepeatCallContext.handleInnerCollectionMutated;
+    const context = VirtualRepeatCallContext.handleInnerCollectionMutated;
     this.collectionObserver = collectionObserver;
     this.callContext = context;
     collectionObserver.subscribe(context, this);
@@ -1008,7 +1003,7 @@ export class VirtualRepeat extends AbstractRepeater {
 
   /**@internal*/
   _getInnerCollection(): any {
-    let expression = unwrapExpression(this.sourceExpression);
+    const expression = unwrapExpression(this.sourceExpression);
     if (!expression) {
       return null;
     }
@@ -1017,7 +1012,7 @@ export class VirtualRepeat extends AbstractRepeater {
 
   /**@internal*/
   _observeCollection(): void {
-    let collectionObserver = this.strategy.getCollectionObserver(this.observerLocator, this.items);
+    const collectionObserver = this.strategy.getCollectionObserver(this.observerLocator, this.items);
     if (collectionObserver) {
       this.callContext = VirtualRepeatCallContext.handleCollectionMutated;
       this.collectionObserver = collectionObserver;
@@ -1068,15 +1063,18 @@ export class VirtualRepeat extends AbstractRepeater {
   }
 
   updateBindings(view: IView) {
-    let j = view.bindings.length;
+    const bindings = view.bindings;
+    let j = bindings.length;
     while (j--) {
-      updateOneTimeBinding(view.bindings[j]);
+      updateOneTimeBinding(bindings[j]);
     }
-    j = view.controllers.length;
+    const controllers = view.controllers;
+    j = controllers.length;
     while (j--) {
-      let k = view.controllers[j].boundProperties.length;
+      const boundProperties = controllers[j].boundProperties;
+      let k = boundProperties.length;
       while (k--) {
-        let binding = view.controllers[j].boundProperties[k].binding;
+        let binding = boundProperties[k].binding;
         updateOneTimeBinding(binding);
       }
     }
