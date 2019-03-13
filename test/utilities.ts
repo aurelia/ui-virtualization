@@ -45,6 +45,8 @@ export function validateState(virtualRepeat: VirtualRepeat, viewModel: any, item
 
   // validate contextual data
   for (let i = 0; i < views.length; i++) {
+    const view = views[i];
+    const itemIndex = viewModel.items.indexOf(view.bindingContext.item);
     expect(views[i].bindingContext.item).toBe(viewModel.items[i], `view[${i}].bindingContext.item === items[${i}]`);
     let overrideContext = views[i].overrideContext;
     expect(overrideContext.parentOverrideContext.bindingContext).toBe(viewModel);
@@ -52,12 +54,12 @@ export function validateState(virtualRepeat: VirtualRepeat, viewModel: any, item
     let first = i === 0;
     let last = i === viewModel.items.length - 1;
     let even = i % 2 === 0;
-    expect(overrideContext.$index).toBe(i);
-    expect(overrideContext.$first).toBe(first);
-    expect(overrideContext.$last).toBe(last);
-    expect(overrideContext.$middle).toBe(!first && !last);
-    expect(overrideContext.$odd).toBe(!even);
-    expect(overrideContext.$even).toBe(even);
+    expect(overrideContext.$index).toBe(i, `[item:${itemIndex} -- view:${i}]overrideContext.$index`);
+    expect(overrideContext.$first).toBe(first, `[item:${itemIndex} -- view:${i}]overrideContext.$first`);
+    expect(overrideContext.$last).toBe(last, `[item:${itemIndex} -- view:${i}]overrideContext.$last`);
+    expect(overrideContext.$middle).toBe(!first && !last, `[item:${itemIndex} -- view:${i}]overrideContext.$middle`);
+    expect(overrideContext.$odd).toBe(!even, `[item:${itemIndex} -- view:${i}]overrideContext.$odd`);
+    expect(overrideContext.$even).toBe(even, `[item:${itemIndex} -- view:${i}]overrideContext.$even`);
   }
 }
 
@@ -96,12 +98,12 @@ export function validateScrolledState(virtualRepeat: VirtualRepeat, viewModel: a
     let first = itemIndex === 0;
     let last = itemIndex === viewModel.items.length - 1;
     let even = itemIndex % 2 === 0;
-    expect(overrideContext.$index).toBe(itemIndex);
-    expect(overrideContext.$first).toBe(first);
-    expect(overrideContext.$last).toBe(last);
-    expect(overrideContext.$middle).toBe(!first && !last);
-    expect(overrideContext.$odd).toBe(!even);
-    expect(overrideContext.$even).toBe(even);
+    expect(overrideContext.$index).toBe(itemIndex, `[item:${itemIndex} -- view:${i}]overrideContext.$index`);
+    expect(overrideContext.$first).toBe(first, `[item:${itemIndex} -- view:${i}]overrideContext.$first`);
+    expect(overrideContext.$last).toBe(last, `[item:${itemIndex} -- view:${i}]overrideContext.$last`);
+    expect(overrideContext.$middle).toBe(!first && !last, `[item:${itemIndex} -- view:${i}]overrideContext.$middle`);
+    expect(overrideContext.$odd).toBe(!even, `[item:${itemIndex} -- view:${i}]overrideContext.$odd`);
+    expect(overrideContext.$even).toBe(even, `[item:${itemIndex} -- view:${i}]overrideContext.$even`);
   }
 }
 

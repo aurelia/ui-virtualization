@@ -39,7 +39,7 @@ describe('VirtualRepeat Integration - Scrolling', () => {
       console.error(ex);
     }
   });
-  
+
   // Note that any test related to table, ignore border spacing as it's not easy to calculate in test environment
   // todo: have tests for margin / border spacing
 
@@ -134,7 +134,7 @@ describe('VirtualRepeat Integration - Scrolling', () => {
   });
 
   describe('multiple repeats', () => {
-    
+
     beforeEach(() => {
       view =
       `<div id="scrollCtEl" style="height: 500px; overflow-y: auto">
