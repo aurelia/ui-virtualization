@@ -377,13 +377,13 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
 
   /**@internal */
   _isIndexBeforeViewSlot(repeat: VirtualRepeat, viewSlot: ViewSlot, index: number): boolean {
-    let viewIndex = this._getViewIndex(repeat, viewSlot, index);
+    const viewIndex = this._getViewIndex(repeat, viewSlot, index);
     return viewIndex < 0;
   }
 
   /**@internal */
   _isIndexAfterViewSlot(repeat: VirtualRepeat, viewSlot: ViewSlot, index: number): boolean {
-    let viewIndex = this._getViewIndex(repeat, viewSlot, index);
+    const viewIndex = this._getViewIndex(repeat, viewSlot, index);
     return viewIndex > repeat._viewsLength - 1;
   }
 
@@ -396,7 +396,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
       return -1;
     }
 
-    let topBufferItems = repeat._topBufferHeight / repeat.itemHeight;
+    const topBufferItems = repeat._topBufferHeight / repeat.itemHeight;
     return Math$floor(index - topBufferItems);
   }
 }

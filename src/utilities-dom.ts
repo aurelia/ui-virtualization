@@ -61,7 +61,7 @@ export const calcScrollHeight = (element: Element): number => {
   let height = element.getBoundingClientRect().height;
   height -= getStyleValues(element, 'borderTopWidth', 'borderBottomWidth');
   return height;
-}
+};
 
 export const insertBeforeNode = (view: IView, bottomBuffer: Element): void => {
   // todo: account for anchor comment
