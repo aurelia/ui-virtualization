@@ -43,11 +43,23 @@ export class App {
         nav: 6,
         title: 'Issue 146'
       },
+      // {
+      //   route: 'issue-117',
+      //   moduleId: PLATFORM.moduleName('./issue-117/sub-app'),
+      //   nav: 7,
+      //   title: 'Issue 117'
+      // },
       {
         route: 'non-issues',
         moduleId: PLATFORM.moduleName('./non-issues/sub-app'),
-        nav: 7,
+        nav: 8,
         title: 'Non-Issues'
+      },
+      {
+        route: 'contrived-examples',
+        moduleId: PLATFORM.moduleName('./contrived/sub-app'),
+        nav: 9,
+        title: 'Contrived Examples'
       }
     ]);
 

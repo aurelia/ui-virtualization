@@ -5,6 +5,7 @@
     "module": "esnext",
     "moduleResolution": "node",
     "experimentalDecorators": true,
+    "importHelpers": true,
     "lib": [
       "dom",
       "es2017"

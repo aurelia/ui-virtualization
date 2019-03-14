@@ -5,6 +5,7 @@ interface IScrollContext {
 }
 
 export interface Person {
+  id: number;
   fname: string;
   lname: string;
 }
@@ -17,14 +18,16 @@ const lNames = [
   // tslint:disable-next-line:max-line-length
   'Prefect', 'Dent', 'Astra', 'Adams', 'Baker', 'Clark', 'Davis', 'Evans', 'Frank', 'Ghosh', 'Hills', 'Irwin', 'Jones', 'Klein', 'Lopez', 'Mason', 'Nalty', 'Ochoa', 'Patel', 'Quinn', 'Reily', 'Smith', 'Trott', 'Usman', 'Valdo', 'White', 'Xiang', 'Yakub', 'Zafar'
 ];
+let id = 1;
+const getId = () => id++;
 export class App {
   private people: Person[];
 
   constructor() {
     this.people = [
-      { fname: fNames[0], lname: lNames[0] },
-      { fname: fNames[1], lname: lNames[1] },
-      { fname: fNames[2], lname: lNames[2] }
+      { id: getId(), fname: fNames[0], lname: lNames[0] },
+      { id: getId(), fname: fNames[1], lname: lNames[1] },
+      { id: getId(), fname: fNames[2], lname: lNames[2] }
     ];
     this.push30(undefined, 0);
   }
@@ -37,6 +40,7 @@ export class App {
     if (!scrollContext || scrollContext.isAtBottom) {
       for (let i = 0; i < count; i++) {
         this.people.push({
+          id: getId(),
           fname: fNames[Math.floor(Math.random() * fNames.length)],
           lname: lNames[Math.floor(Math.random() * lNames.length)]
         });

@@ -14,7 +14,7 @@ export const getScrollContainer = (element: Node): HTMLElement => {
     current = current.parentNode as HTMLElement;
   }
   return document.documentElement;
-}
+};
 
 /**
  * Determine real distance of an element to top of current document
@@ -26,7 +26,7 @@ export const getElementDistanceToTopOfDocument = (element: Element): number => {
   let clientTop = documentElement.clientTop;
   let top  = box.top + scrollTop - clientTop;
   return Math$round(top);
-}
+};
 
 /**
  * Check if an element has inline style scroll/auto for overflow/overflowY
@@ -34,8 +34,14 @@ export const getElementDistanceToTopOfDocument = (element: Element): number => {
 export const hasOverflowScroll = (element: HTMLElement): boolean => {
   let style = element.style;
   return style.overflowY === 'scroll' || style.overflow === 'scroll' || style.overflowY === 'auto' || style.overflow === 'auto';
-}
+};
 
+/**
+ * A naive utility to calculate distance of a child element to one of its ancestor, typically used for scroller/buffer combo
+ * Calculation is done based on offsetTop, with formula:
+ * child.offsetTop - parent.offsetTop
+ * There are steps in the middle to account for offsetParent but it's basically that
+ */
 export const getDistanceToParent = (child: HTMLElement, parent: HTMLElement) => {
   const offsetParent = child.offsetParent as HTMLElement;
   const childOffsetTop = child.offsetTop;
@@ -59,4 +65,4 @@ export const getDistanceToParent = (child: HTMLElement, parent: HTMLElement) => 
       return childOffsetTop + getDistanceToParent(offsetParent, parent);
     }
   }
-}
+};

@@ -1,11 +1,12 @@
 import { updateOverrideContext } from 'aurelia-templating-resources';
 import { View } from 'aurelia-templating';
 import { VirtualRepeat } from './virtual-repeat';
+import { IView } from './interfaces';
 
 /**
  * Get total value of a list of css style property on an element
  */
-export function getStyleValues(element: Element, ...styles: string[]): number {
+export const getStyleValues = (element: Element, ...styles: string[]): number => {
   let currentStyle = window.getComputedStyle(element);
   let value: number = 0;
   let styleValue: number = 0;
@@ -14,40 +15,62 @@ export function getStyleValues(element: Element, ...styles: string[]): number {
     value += $isNaN(styleValue) ? 0 : styleValue;
   }
   return value;
-}
+};
 
-export function calcOuterHeight(element: Element): number {
+export const calcOuterHeight = (element: Element): number => {
   let height = element.getBoundingClientRect().height;
   height += getStyleValues(element, 'marginTop', 'marginBottom');
   return height;
-}
+};
 
-export function insertBeforeNode(view: View, bottomBuffer: Element): void {
-  let parentElement = bottomBuffer.parentElement || bottomBuffer.parentNode;
-  parentElement.insertBefore(view.lastChild, bottomBuffer);
-}
+export const insertBeforeNode = (view: View, bottomBuffer: Element): void => {
+  // todo: account for anchor comment
+  bottomBuffer.parentNode.insertBefore(view.lastChild, bottomBuffer);
+};
 
 /**
 * Update the override context.
 * @param startIndex index in collection where to start updating.
 */
-export function updateVirtualOverrideContexts(repeat: VirtualRepeat, startIndex: number): void {
-  let views = repeat.viewSlot.children;
-  let viewLength = views.length;
-  let collectionLength = repeat.items.length;
+export const updateVirtualOverrideContexts = (repeat: VirtualRepeat, startIndex: number): void => {
+  const views = repeat.viewSlot.children;
+  const viewLength = views.length;
+  const collectionLength = repeat.items.length;
 
   if (startIndex > 0) {
     startIndex = startIndex - 1;
   }
 
-  let delta = repeat._topBufferHeight / repeat.itemHeight;
+  const delta = repeat._topBufferHeight / repeat.itemHeight;
 
-  for (; startIndex < viewLength; ++startIndex) {
+  for (; viewLength > startIndex; ++startIndex) {
     updateOverrideContext(views[startIndex].overrideContext, startIndex + delta, collectionLength);
   }
-}
+};
 
-export function rebindAndMoveView(repeat: VirtualRepeat, view: View, index: number, moveToBottom: boolean): void {
+export const updateAllViews = (repeat: VirtualRepeat, startIndex: number): void => {
+  const views = repeat.viewSlot.children;
+  const viewLength = views.length;
+  const collection = repeat.items;
+
+  const delta = Math$floor(repeat._topBufferHeight / repeat.itemHeight);
+  let collectionIndex = 0;
+  let view;
+
+  for (; viewLength > startIndex; ++startIndex) {
+    collectionIndex = startIndex + delta;
+    view = repeat.view(startIndex);
+    rebindView(repeat, view, collectionIndex, collection);
+    repeat.updateBindings(view);
+  }
+};
+
+export const rebindView = (repeat: VirtualRepeat, view: IView, collectionIndex: number, collection: any[]): void => {
+  view.bindingContext[repeat.local] = collection[collectionIndex];
+  updateOverrideContext(view.overrideContext, collectionIndex, collection.length);
+};
+
+export const rebindAndMoveView = (repeat: VirtualRepeat, view: View, index: number, moveToBottom: boolean): void => {
   const items = repeat.items;
   const viewSlot = repeat.viewSlot;
 
@@ -60,16 +83,12 @@ export function rebindAndMoveView(repeat: VirtualRepeat, view: View, index: numb
     viewSlot.children.unshift(viewSlot.children.splice(-1, 1)[0]);
     repeat.templateStrategy.moveViewFirst(view, repeat.topBufferEl);
   }
-}
+};
 
 
-export function getElementDistanceToBottomViewPort(element: Element): number {
+export const getElementDistanceToBottomViewPort = (element: Element): number => {
   return document.documentElement.clientHeight - element.getBoundingClientRect().bottom;
-}
-
-export function getElementDistanceToTopViewPort(element: Element): number {
-  return element.getBoundingClientRect().top;
-}
+};
 
 export const Math$abs = Math.abs;
 export const Math$max = Math.max;

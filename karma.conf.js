@@ -7,14 +7,15 @@ module.exports = function(config) {
 
     basePath: '',
     frameworks: ["jasmine"],
-    files: ["test/**/*.spec.ts"],
+    files: ["test/**/*.spec.ts", "test/**/*.spec.tsx"],
     preprocessors: {
-      "test/**/*.spec.ts": ["webpack", "sourcemap"]
+      "test/**/*.spec.ts": ["webpack", "sourcemap"],
+      "test/**/*.spec.tsx": ["webpack", "sourcemap"]
     },
     webpack: {
       mode: "development",
       resolve: {
-        extensions: [".ts", ".js"],
+        extensions: [".ts", ".tsx", ".js"],
         modules: ["src", 'test', "node_modules"],
         alias: {
           src: path.resolve(__dirname, "src"),
@@ -25,7 +26,7 @@ module.exports = function(config) {
       module: {
         rules: [
           {
-            test: /\.ts$/,
+            test: /\.tsx?$/,
             loader: "ts-loader",
             exclude: /node_modules/,
             options: {
@@ -77,11 +78,9 @@ module.exports = function(config) {
     mochaReporter: {
       ignoreSkipped: true
     },
-    // webpackMiddleware: {
-    //   // webpack-dev-middleware configuration
-    //   // i. e.
-    //   stats: 'errors-only'
-    // }
+    webpackMiddleware: {
+      logLevel: 'silent'
+    },
   });
 };
 

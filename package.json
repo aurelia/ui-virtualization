@@ -23,6 +23,7 @@
     "url": "http://github.com/aurelia/ui-virtualization"
   },
   "scripts": {
+    "dev": "cd sample/sample-v-ui-app && npm run dev",
     "prebuild": "npm run rimraf",
     "build": "rollup -c",
     "changelog": "node build/changelog.js",

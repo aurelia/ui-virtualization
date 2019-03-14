@@ -1,4 +1,4 @@
-import { Binding, Scope, ICollectionObserverSplice, ObserverLocator, InternalCollectionObserver } from 'aurelia-binding';
+import { Binding, Scope, ICollectionObserverSplice, ObserverLocator, InternalCollectionObserver, OverrideContext } from 'aurelia-binding';
 import { TaskQueue } from 'aurelia-task-queue';
 import { View, ViewSlot } from 'aurelia-templating';
 import { RepeatStrategy } from 'aurelia-templating-resources';
@@ -111,10 +111,6 @@ export interface ITemplateStrategy {
    * Note: [virtual-repeat] only supports single root node repeat
    */
   getLastElement(topBuffer: Element, bottomBuffer: Element): Element;
-  /**
-   * Distance of top buffer to the top of its offseting parent
-   */
-  getTopBufferDistance(topBuffer: Element): number;
 }
 
 /**
@@ -128,6 +124,13 @@ export type IView = View & Scope;
 export type IViewSlot = ViewSlot & { children: IView[] };
 
 /**
+ * Ability to have strong typings on bindingContext for OverrideContext
+ */
+export interface IOverrideContext<T> extends OverrideContext {
+  bindingContext: T;
+}
+
+/**
  * Object with information about current state of a scrollable element
  * Capturing:
  * - current scroll height
@@ -135,6 +138,7 @@ export type IViewSlot = ViewSlot & { children: IView[] };
  * - real height
  */
 export interface IScrollerInfo {
+  scroller: HTMLElement;
   scrollHeight: number;
   scrollTop: number;
   height: number;

@@ -7,7 +7,8 @@
     "build:watch": "webpack --watch",
     "prebuild:prod": "npm run rimraf",
     "build:prod": "cross-env NODE_ENV=production webpack -p",
-    "rimraf": "rimraf dist"
+    "rimraf": "rimraf dist",
+    "build:demo": "npm run build:prod && cd dist && now --public"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^1.2.12",
@@ -16,6 +17,7 @@
     "aurelia-bootstrapper": "^2.3.0",
     "aurelia-framework": "^1.3.0",
     "aurelia-router": "^1.6.2",
+    "aurelia-templating": "^1.10.1",
     "aurelia-templating-binding": "^1.4.3",
     "aurelia-templating-resources": "^1.7.1",
     "aurelia-templating-router": "^1.3.2",

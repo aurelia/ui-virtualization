@@ -7,7 +7,10 @@
       </tr>
     </thead>
     <tbody>
-      <tr virtual-repeat.for="person of people" infinite-scroll-next.call="nextChunkLoader($scrollContext)">
+      <tr
+        virtual-repeat.for="person of people"
+        infinite-scroll-next.call="nextChunkLoader($scrollContext)"
+        class="i-${$index}">
         <template replaceable part="row"> </template>
         <td>
           <button type="button" class="btn btn-link"><i class="far fa-edit"></i></button>

@@ -1,14 +1,24 @@
 <template>
   <style>
+    .sb {
+      scrollbar-width: thin;
+      scrollbar-color: royalblue;
+    }
     .sb.sb-x {
       overflow-x: auto;
       overflow-y: hidden;
-      scrollbar-width: thin;
-      scrollbar-color: royalblue;
+    }
+    .sb.sb-y {
+      overflow-x: hidden;
+      overflow-y: auto;
     }
     .sb::-webkit-scrollbar{
       width: 6px;
       background-color: rgba(224, 224, 224, 0.5);
+    }
+    .sb::-webkit-scrollbar:vertical {
+      width: 6px;
+      scrollbar-width: 6px;
     }
     .sb::-webkit-scrollbar:horizontal {
       height: 6px;

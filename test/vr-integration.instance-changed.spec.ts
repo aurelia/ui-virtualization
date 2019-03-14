@@ -4,7 +4,7 @@ import { ComponentTester, StageComponent } from 'aurelia-testing';
 import { VirtualRepeat } from '../src/virtual-repeat';
 import { ITestAppInterface } from './interfaces';
 import './setup';
-import { AsyncQueue, createAssertionQueue, ensureScrolled, validateState, createScrollEvent } from './utilities';
+import { AsyncQueue, createAssertionQueue, ensureScrolled } from './utilities';
 
 PLATFORM.moduleName('src/virtual-repeat');
 PLATFORM.moduleName('test/noop-value-converter');
@@ -65,15 +65,17 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
       expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
       expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
       expect(table.tBodies[0].rows.length).toBe(2 + virtualRepeat._viewsLength); // 2 buffers + 20 rows based on 50 height
-      
+
       expect(virtualRepeat._first).toBe(0);
       expect(virtualRepeat._bottomBufferHeight).toBe(50 * (virtualRepeat.items.length - virtualRepeat._viewsLength));
 
       // start more difficult cases
-
+      const scrollSpy = spyOn(virtualRepeat, '_handleScroll').and.callThrough();
       // 1. mutate scroll state
       table.parentElement.scrollTop = table.parentElement.scrollHeight;
-      await ensureScrolled(50);
+      await ensureScrolled(0);
+
+      expect(scrollSpy).toHaveBeenCalledTimes(1);
       expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
       // when scrolling, the first bound row is calculated differently compared to other scenarios
       // as it can be known exactly what the last process was
@@ -82,7 +84,7 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
       expect(virtualRepeat._bottomBufferHeight).toBe(0);
 
       viewModel.items = viewModel.items.slice(0).reverse();
-      await ensureScrolled();
+      await ensureScrolled(0);
 
       expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
       expect(table.tBodies[0].rows.length).toBe(2 + virtualRepeat._viewsLength, 'table > tr count'); // 2 buffers + 20 rows based on 50 height
@@ -94,7 +96,7 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
         const view = virtualRepeat.view(i);
         const currIndex = i + virtualRepeat._first;
         expect(view).not.toBeNull(`view-${i} !== null`);
-        expect(view.bindingContext.item).toBe(`item${viewModel.items.length - currIndex - 1}`);
+        expect(view.bindingContext.item).toBe(`item${viewModel.items.length - currIndex - 1}`, `view[${i}].bindingContext.item`);
         expect((view.firstChild as Element).firstElementChild.textContent).toBe(`item${viewModel.items.length - currIndex - 1}`);
       }
       expect(virtualRepeat._bottomBufferHeight).toBe(0);
@@ -109,7 +111,7 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
     it([
       'renders with 100 items',
       '  -- reduces to 30',
-      '  -- greater than (repeat._viewsLength)',
+      '  -- greater than (repeat._viewsLength)'
     ].join('\n\t'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
 
@@ -117,7 +119,7 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
       expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
       expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
       expect(table.tBodies[0].rows.length).toBe(2 + virtualRepeat._viewsLength); // 2 buffers + 20 rows based on 50 height
-      
+
       expect(virtualRepeat._first).toBe(0);
       expect(virtualRepeat._bottomBufferHeight).toBe(50 * (virtualRepeat.items.length - virtualRepeat._viewsLength));
 
@@ -176,7 +178,7 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
       expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
       expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
       expect(table.tBodies[0].rows.length).toBe(2 + virtualRepeat._viewsLength); // 2 buffers + 20 rows based on 50 height
-      
+
       expect(virtualRepeat._first).toBe(0);
       expect(virtualRepeat._bottomBufferHeight).toBe(50 * (virtualRepeat.items.length - virtualRepeat._viewsLength));
 
@@ -226,7 +228,7 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
     it([
       'renders with 100 items',
       '  -- reduces to 8',
-      '  -- lesser than (repeat.elementsInView)',
+      '  -- lesser than (repeat.elementsInView)'
     ].join('\n\t'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
 
@@ -234,7 +236,7 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
       expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
       expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
       expect(table.tBodies[0].rows.length).toBe(2 + virtualRepeat._viewsLength); // 2 buffers + 20 rows based on 50 height
-      
+
       expect(virtualRepeat._first).toBe(0);
       expect(virtualRepeat._bottomBufferHeight).toBe(50 * (virtualRepeat.items.length - virtualRepeat._viewsLength));
 
@@ -301,7 +303,7 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
       expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
       // buffers are TR element
       expect(table.tBodies.length).toBe(/*no buffer 2 +*/virtualRepeat._viewsLength, 'table.tBodies.length 1'); // 2 buffers + 20 rows based on 50 height
-      
+
       expect(virtualRepeat._first).toBe(0);
       expect(virtualRepeat._bottomBufferHeight).toBe(50 * (virtualRepeat.items.length - virtualRepeat._viewsLength));
 
@@ -340,7 +342,7 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
     it([
       'renders with 100 items',
       '  -- reduces to 30',
-      '  -- greater than (repeat._viewsLength)',
+      '  -- greater than (repeat._viewsLength)'
     ].join('\n\t'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
 
@@ -349,7 +351,7 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
       expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
       // buffers are TR elements
       expect(table.tBodies.length).toBe(/*no buffer 2 +*/virtualRepeat._viewsLength, 'table.tBodies.length 1'); // 2 buffers + 20 rows based on 50 height
-      
+
       expect(virtualRepeat._first).toBe(0);
       expect(virtualRepeat._bottomBufferHeight).toBe(50 * (virtualRepeat.items.length - virtualRepeat._viewsLength), 'repeat._bottomBufferHeight');
 
@@ -404,7 +406,7 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
       expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
       // buffers are TR elements
       expect(table.tBodies.length).toBe(/*no buffer 2 +*/virtualRepeat._viewsLength, 'table.tBodies.length'); // 2 buffers + 20 rows based on 50 height
-      
+
       expect(virtualRepeat._first).toBe(0);
       expect(virtualRepeat._bottomBufferHeight).toBe(50 * (virtualRepeat.items.length - virtualRepeat._viewsLength));
 
@@ -449,7 +451,7 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
     it([
       'renders with 100 items',
       '  -- reduces to 8',
-      '  -- lesser than (repeat.elementsInView)',
+      '  -- lesser than (repeat.elementsInView)'
     ].join('\n\t'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
 
@@ -458,7 +460,7 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
       expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
       // buffers are tr elements
       expect(table.tBodies.length).toBe(/*no buffer 2 +*/virtualRepeat._viewsLength, 'table.tBodies.length 1'); // 2 buffers + 20 rows based on 50 height
-      
+
       expect(virtualRepeat._first).toBe(0);
       expect(virtualRepeat._bottomBufferHeight).toBe(50 * (virtualRepeat.items.length - virtualRepeat._viewsLength));
 
@@ -519,7 +521,7 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
       expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
       expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
       expect(scrollerEl.children.length).toBe(2 + virtualRepeat._viewsLength, 'scrollerEl.children.length 1'); // 2 buffers + 20 rows based on 50 height
-      
+
       expect(virtualRepeat._first).toBe(0);
       expect(virtualRepeat._bottomBufferHeight).toBe(
         50 * (virtualRepeat.items.length - virtualRepeat._viewsLength),
@@ -560,7 +562,7 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
     it([
       'renders with 100 items',
       '  -- reduces to 30',
-      '  -- greater than (repeat._viewsLength)',
+      '  -- greater than (repeat._viewsLength)'
     ].join('\n\t'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
 
@@ -568,7 +570,7 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
       expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
       expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
       expect(scrollerEl.children.length).toBe(2 + virtualRepeat._viewsLength, 'scrollerEl.children.length 1'); // 2 buffers + 20 rows based on 50 height
-      
+
       expect(virtualRepeat._first).toBe(0);
       expect(virtualRepeat._bottomBufferHeight).toBe(50 * (virtualRepeat.items.length - virtualRepeat._viewsLength), 'repeat._bottomBufferHeight');
 
@@ -621,7 +623,7 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
       expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
       expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
       expect(scrollerEl.children.length).toBe(2 + virtualRepeat._viewsLength, 'scrollerEl.children.length'); // 2 buffers + 20 rows based on 50 height
-      
+
       expect(virtualRepeat._first).toBe(0);
       expect(virtualRepeat._bottomBufferHeight).toBe(50 * (virtualRepeat.items.length - virtualRepeat._viewsLength));
 
@@ -665,7 +667,7 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
     it([
       'renders with 100 items',
       '  -- reduces to 8',
-      '  -- lesser than (repeat.elementsInView)',
+      '  -- lesser than (repeat.elementsInView)'
     ].join('\n\t'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
 
@@ -673,7 +675,7 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
       expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
       expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
       expect(scrollerEl.children.length).toBe(2 + virtualRepeat._viewsLength, 'scrollerEl.children.length 1'); // 2 buffers + 20 rows based on 50 height
-      
+
       expect(virtualRepeat._first).toBe(0);
       expect(virtualRepeat._bottomBufferHeight).toBe(50 * (virtualRepeat.items.length - virtualRepeat._viewsLength));
 
@@ -746,8 +748,10 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
         const scrollerEl = (component['host'] as HTMLElement).querySelector('.scroller');
         expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
         expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
-        expect(scrollerEl.firstElementChild.children.length).toBe(2 + virtualRepeat._viewsLength, 'scrollerEl.children.length 1'); // 2 buffers + 20 rows based on 50 height
-        
+        expect(scrollerEl.firstElementChild.children.length).toBe(
+          2 + virtualRepeat._viewsLength,
+          'scrollerEl.children.length 1'); // 2 buffers + 20 rows based on 50 height
+
         expect(virtualRepeat._first).toBe(0);
         expect(virtualRepeat._bottomBufferHeight).toBe(
           50 * (virtualRepeat.items.length - virtualRepeat._viewsLength),
@@ -770,7 +774,9 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
         await ensureScrolled();
 
         expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
-        expect(scrollerEl.firstElementChild.children.length).toBe(2 + virtualRepeat._viewsLength, 'scrollerEl.children.length 2'); // 2 buffers + 20 rows based on 50 height
+        expect(scrollerEl.firstElementChild.children.length).toBe(
+          2 + virtualRepeat._viewsLength,
+          'scrollerEl.children.length 2'); // 2 buffers + 20 rows based on 50 height
         // This check is different from the above:
         // after instance changed, it restart the "_first" view based on safe number of views
         expect(virtualRepeat._first).toBe(/*items count*/100 - /*views count*/virtualRepeat._viewsLength, 'repeat._first 2');
@@ -788,15 +794,17 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
       it([
         'renders with 100 items',
         '  -- reduces to 30',
-        '  -- greater than (repeat._viewsLength)',
+        '  -- greater than (repeat._viewsLength)'
       ].join('\n\t'), async () => {
         const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items }, $view);
 
         const scrollerEl = (component['host'] as HTMLElement).querySelector('.scroller');
         expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
         expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
-        expect(scrollerEl.firstElementChild.children.length).toBe(2 + virtualRepeat._viewsLength, 'scrollerEl.children.length 1'); // 2 buffers + 20 rows based on 50 height
-        
+        expect(scrollerEl.firstElementChild.children.length).toBe(
+          2 + virtualRepeat._viewsLength,
+          'scrollerEl.children.length 1'); // 2 buffers + 20 rows based on 50 height
+
         expect(virtualRepeat._first).toBe(0);
         expect(virtualRepeat._bottomBufferHeight).toBe(50 * (virtualRepeat.items.length - virtualRepeat._viewsLength), 'repeat._bottomBufferHeight');
 
@@ -816,7 +824,9 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
         await ensureScrolled(50);
 
         expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
-        expect(scrollerEl.firstElementChild.children.length).toBe(2 + virtualRepeat._viewsLength, 'scrollerEl.children.length 2'); // 2 buffers + 20 rows based on 50 height
+        expect(scrollerEl.firstElementChild.children.length).toBe(
+          2 + virtualRepeat._viewsLength,
+          'scrollerEl.children.length 2'); // 2 buffers + 20 rows based on 50 height
 
         // This check is different from the above:
         // after instance changed, it restart the "_first" view based on safe number of views
@@ -848,8 +858,10 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
         const scrollerEl = (component['host'] as HTMLElement).querySelector('.scroller');
         expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
         expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
-        expect(scrollerEl.firstElementChild.children.length).toBe(2 + virtualRepeat._viewsLength, 'scrollerEl.children.length'); // 2 buffers + 20 rows based on 50 height
-        
+        expect(scrollerEl.firstElementChild.children.length).toBe(
+          2 + virtualRepeat._viewsLength,
+          'scrollerEl.children.length'); // 2 buffers + 20 rows based on 50 height
+
         expect(virtualRepeat._first).toBe(0);
         expect(virtualRepeat._bottomBufferHeight).toBe(50 * (virtualRepeat.items.length - virtualRepeat._viewsLength));
 
@@ -893,15 +905,18 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
       it([
         'renders with 100 items',
         '  -- reduces to 8',
-        '  -- lesser than (repeat.elementsInView)',
+        '  -- lesser than (repeat.elementsInView)'
       ].join('\n\t'), async () => {
         const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items }, $view);
 
         const scrollerEl = (component['host'] as HTMLElement).querySelector('.scroller');
         expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
         expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
-        expect(scrollerEl.firstElementChild.children.length).toBe(2 + virtualRepeat._viewsLength, 'scrollerEl.children.length 1'); // 2 buffers + 20 rows based on 50 height
-        
+        expect(scrollerEl.firstElementChild.children.length).toBe(
+          2 + virtualRepeat._viewsLength,
+          'scrollerEl.children.length 1'
+        ); // 2 buffers + 20 rows based on 50 height
+
         expect(virtualRepeat._first).toBe(0);
         expect(virtualRepeat._bottomBufferHeight).toBe(50 * (virtualRepeat.items.length - virtualRepeat._viewsLength));
 
@@ -972,7 +987,7 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
         expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
         expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
         expect(scrollerEl.children.length).toBe(2 + virtualRepeat._viewsLength, 'scrollerEl.children.length 1'); // 2 buffers + 20 rows based on 50 height
-        
+
         expect(virtualRepeat._first).toBe(0);
         expect(virtualRepeat._bottomBufferHeight).toBe(
           50 * (virtualRepeat.items.length - virtualRepeat._viewsLength),
@@ -1013,7 +1028,7 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
       it([
         'renders with 100 items',
         '  -- reduces to 30',
-        '  -- greater than (repeat._viewsLength)',
+        '  -- greater than (repeat._viewsLength)'
       ].join('\n\t'), async () => {
         const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items }, $view);
 
@@ -1021,7 +1036,7 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
         expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
         expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
         expect(scrollerEl.children.length).toBe(2 + virtualRepeat._viewsLength, 'scrollerEl.children.length 1'); // 2 buffers + 20 rows based on 50 height
-        
+
         expect(virtualRepeat._first).toBe(0);
         expect(virtualRepeat._bottomBufferHeight).toBe(50 * (virtualRepeat.items.length - virtualRepeat._viewsLength), 'repeat._bottomBufferHeight');
 
@@ -1074,7 +1089,7 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
         expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
         expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
         expect(scrollerEl.children.length).toBe(2 + virtualRepeat._viewsLength, 'scrollerEl.children.length'); // 2 buffers + 20 rows based on 50 height
-        
+
         expect(virtualRepeat._first).toBe(0);
         expect(virtualRepeat._bottomBufferHeight).toBe(50 * (virtualRepeat.items.length - virtualRepeat._viewsLength));
 
@@ -1118,7 +1133,7 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
       it([
         'renders with 100 items',
         '  -- reduces to 8',
-        '  -- lesser than (repeat.elementsInView)',
+        '  -- lesser than (repeat.elementsInView)'
       ].join('\n\t'), async () => {
         const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items }, $view);
 
@@ -1126,7 +1141,7 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
         expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
         expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
         expect(scrollerEl.children.length).toBe(2 + virtualRepeat._viewsLength, 'scrollerEl.children.length 1'); // 2 buffers + 20 rows based on 50 height
-        
+
         expect(virtualRepeat._first).toBe(0);
         expect(virtualRepeat._bottomBufferHeight).toBe(50 * (virtualRepeat.items.length - virtualRepeat._viewsLength));
 
@@ -1170,7 +1185,7 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
         expect(virtualRepeat.bottomBufferEl.getBoundingClientRect().height).toBe(0);
       });
     }
-  }); 
+  });
 
   async function bootstrapComponent<T>($viewModel?: ITestAppInterface<T>, $view?: string) {
     component = StageComponent

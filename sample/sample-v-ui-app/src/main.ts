@@ -1,6 +1,7 @@
 import { Aurelia, PLATFORM } from 'aurelia-framework';
 import { library, dom } from '@fortawesome/fontawesome-svg-core';
 import { faEdit, faTrashAlt } from '@fortawesome/free-regular-svg-icons';
+import { Scrollbar } from 'resources/scrollbar';
 
 library.add(faEdit, faTrashAlt);
 dom.watch();
@@ -29,12 +30,34 @@ export async function configure(aurelia: Aurelia) {
           toView(val: any) {
             return val;
           }
-        }
+        },
+        class {
+          static $resource = {
+            type: 'valueConverter',
+            name: 'cloneArray'
+          };
+
+          toView(val: any) {
+            return Array.isArray(val) ? val.slice() : val;
+          }
+        },
+        class {
+          static $resource = {
+            type: 'valueConverter',
+            name: 'number'
+          };
+
+          fromView(val: string) {
+            return Number(val) || 0;
+          }
+        },
+        Scrollbar
       ] as any[]);
 
     await aurelia.start();
     await aurelia.setRoot(PLATFORM.moduleName('app'));
   } catch (ex) {
     document.body.textContent = ex;
+    console.error(ex);
   }
 }

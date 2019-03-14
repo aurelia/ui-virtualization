@@ -1,18 +1,22 @@
 <template>
   <div class="mb-1">
-    <button class="btn btn-success btn-sm" click.trigger="addItems(1000)">Add 1000</button>
-    <button class="btn btn-success btn-sm" click.trigger="addItems(10000)">Add 10 000</button>
-    <button class="btn btn-success btn-sm" click.trigger="addItems(100000)">Add 100 000</button>
-    <button class="btn btn-success btn-sm" click.trigger="addItemFirst()">Add 1 at top</button>
-    <button class="btn btn-success btn-sm" click.trigger="addItemLast()">Add 1 at bottom</button>
-    <button class="btn btn-success btn-sm" click.trigger="removeItems(1)">Remove 1 at top</button>
-    <button class="btn btn-success btn-sm" click.trigger="removeLast()">Remove 1 at bottom</button>
-    <button class="btn btn-success btn-sm" click.trigger="toggle()">Toggle visibility</button>
-    <button class="btn btn-success btn-sm" click.trigger="swap()">Swap</button>
+    <div class="p-1" scrollbar="x" style="height: 45px;">
+      <button class="btn btn-success btn-sm" click.trigger="addItems(1000)">Add 1000</button>
+      <button class="btn btn-success btn-sm" click.trigger="addItems(10000)">Add 10 000</button>
+      <button class="btn btn-success btn-sm" click.trigger="addItems(100000)">Add 100 000</button>
+      <button class="btn btn-success btn-sm" click.trigger="addItemFirst(1)">Add 1 at top</button>
+      <button class="btn btn-success btn-sm" click.trigger="addItemFirst(10)">Add 10 at top</button>
+      <button class="btn btn-success btn-sm" click.trigger="addItemLast(1)">Add 1 at bottom</button>
+      <button class="btn btn-success btn-sm" click.trigger="addItemLast(10)">Add 1 at bottom</button>
+      <button class="btn btn-success btn-sm" click.trigger="removeItems(1)">Remove 1 at top</button>
+      <button class="btn btn-success btn-sm" click.trigger="removeLast()">Remove 1 at bottom</button>
+      <button class="btn btn-success btn-sm" click.trigger="toggle()">Toggle visibility</button>
+      <button class="btn btn-success btn-sm" click.trigger="swap()">Swap</button>
+    </div>
 
     <label class="d-block" style="width: 300px;">
       Example:
-      <select value.bind="selectedMarkup" class="form-control">
+      <select value.bind="selectedMarkup" class="form-control form-control-sm">
         <option value="div">div</option>
         <option value="table">table</option>
       </select>
