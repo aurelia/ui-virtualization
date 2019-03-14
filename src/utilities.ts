@@ -1,32 +1,7 @@
 import { updateOverrideContext } from 'aurelia-templating-resources';
-import { View } from 'aurelia-templating';
 import { VirtualRepeat } from './virtual-repeat';
 import { IView } from './interfaces';
 
-/**
- * Get total value of a list of css style property on an element
- */
-export const getStyleValues = (element: Element, ...styles: string[]): number => {
-  let currentStyle = window.getComputedStyle(element);
-  let value: number = 0;
-  let styleValue: number = 0;
-  for (let i = 0, ii = styles.length; ii > i; ++i) {
-    styleValue = parseInt(currentStyle[styles[i]], 10);
-    value += $isNaN(styleValue) ? 0 : styleValue;
-  }
-  return value;
-};
-
-export const calcOuterHeight = (element: Element): number => {
-  let height = element.getBoundingClientRect().height;
-  height += getStyleValues(element, 'marginTop', 'marginBottom');
-  return height;
-};
-
-export const insertBeforeNode = (view: View, bottomBuffer: Element): void => {
-  // todo: account for anchor comment
-  bottomBuffer.parentNode.insertBefore(view.lastChild, bottomBuffer);
-};
 
 /**
 * Update the override context.
@@ -70,7 +45,7 @@ export const rebindView = (repeat: VirtualRepeat, view: IView, collectionIndex: 
   updateOverrideContext(view.overrideContext, collectionIndex, collection.length);
 };
 
-export const rebindAndMoveView = (repeat: VirtualRepeat, view: View, index: number, moveToBottom: boolean): void => {
+export const rebindAndMoveView = (repeat: VirtualRepeat, view: IView, index: number, moveToBottom: boolean): void => {
   const items = repeat.items;
   const viewSlot = repeat.viewSlot;
 

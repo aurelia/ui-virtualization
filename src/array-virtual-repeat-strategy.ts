@@ -3,12 +3,10 @@ import { ViewSlot } from 'aurelia-templating';
 import { ArrayRepeatStrategy, createFullOverrideContext } from 'aurelia-templating-resources';
 import { IView, IVirtualRepeatStrategy } from './interfaces';
 import {
-  getElementDistanceToBottomViewPort,
   Math$abs,
   Math$floor,
   Math$max,
   Math$min,
-  rebindAndMoveView,
   updateAllViews
 } from './utilities';
 import { VirtualRepeat } from './virtual-repeat';
@@ -242,7 +240,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     // all splices happens after last index of the repeat, and the repeat has already filled up the viewport
     // in this case, no visible view is needed to be updated/moved/removed.
     // only need to update bottom buffer
-    const lastViewIndex = repeat._getIndexOfLastView();
+    const lastViewIndex = repeat._lastViewIndex();
     const all_splices_are_after_view_port = currViewCount > repeat.elementsInView && splices.every(s => s.index > lastViewIndex);
     if (all_splices_are_after_view_port) {
       repeat._bottomBufferHeight = Math$max(0, newArraySize - firstIndex - currViewCount) * itemHeight;

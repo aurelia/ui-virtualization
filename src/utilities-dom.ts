@@ -1,4 +1,5 @@
-import { Math$round } from './utilities';
+import { Math$round, $isNaN } from './utilities';
+import { IView } from './interfaces';
 
 /**
  * Walk up the DOM tree and determine what element will be scroller for an element
@@ -34,6 +35,37 @@ export const getElementDistanceToTopOfDocument = (element: Element): number => {
 export const hasOverflowScroll = (element: HTMLElement): boolean => {
   let style = element.style;
   return style.overflowY === 'scroll' || style.overflow === 'scroll' || style.overflowY === 'auto' || style.overflow === 'auto';
+};
+
+/**
+ * Get total value of a list of css style property on an element
+ */
+export const getStyleValues = (element: Element, ...styles: string[]): number => {
+  let currentStyle = window.getComputedStyle(element);
+  let value: number = 0;
+  let styleValue: number = 0;
+  for (let i = 0, ii = styles.length; ii > i; ++i) {
+    styleValue = parseInt(currentStyle[styles[i]], 10);
+    value += $isNaN(styleValue) ? 0 : styleValue;
+  }
+  return value;
+};
+
+export const calcOuterHeight = (element: Element): number => {
+  let height = element.getBoundingClientRect().height;
+  height += getStyleValues(element, 'marginTop', 'marginBottom');
+  return height;
+};
+
+export const calcScrollHeight = (element: Element): number => {
+  let height = element.getBoundingClientRect().height;
+  height -= getStyleValues(element, 'borderTopWidth', 'borderBottomWidth');
+  return height;
+}
+
+export const insertBeforeNode = (view: IView, bottomBuffer: Element): void => {
+  // todo: account for anchor comment
+  bottomBuffer.parentNode.insertBefore(view.lastChild, bottomBuffer);
 };
 
 /**
