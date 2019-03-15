@@ -126,14 +126,14 @@ export function validateScroll(virtualRepeat: VirtualRepeat, viewModel: any, ite
 }
 
 export async function scrollToEnd(virtualRepeat: VirtualRepeat, insuranceTime = 5): Promise<void> {
-  let element = virtualRepeat._fixedHeightContainer ? virtualRepeat.scrollContainer : (document.scrollingElement || document.documentElement);
+  let element = virtualRepeat._fixedHeightContainer ? virtualRepeat.containerEl : (document.scrollingElement || document.documentElement);
   element.scrollTop = element.scrollHeight;
   createScrollEvent(element);
   await ensureScrolled(insuranceTime);
 }
 
 export async function scrollToIndex(virtualRepeat: VirtualRepeat, itemIndex: number): Promise<void> {
-  let element = virtualRepeat._fixedHeightContainer ? virtualRepeat.scrollContainer : (document.scrollingElement || document.documentElement);
+  let element = virtualRepeat._fixedHeightContainer ? virtualRepeat.containerEl : (document.scrollingElement || document.documentElement);
   element.scrollTop = virtualRepeat.itemHeight * (itemIndex + 1);
   createScrollEvent(element);
   await ensureScrolled();

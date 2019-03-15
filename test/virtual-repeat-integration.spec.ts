@@ -130,12 +130,12 @@ describe('VirtualRepeat Integration', () => {
 
     let hiddenComponent;
     let hiddenCreate;
-    let hiddenVirtualRepeat;
+    let hiddenVirtualRepeat: VirtualRepeat;
     let hiddenViewModel;
 
     let containerComponent;
     let containerCreate;
-    let containerVirtualRepeat;
+    let containerVirtualRepeat: VirtualRepeat;
     let containerViewModel;
 
     beforeEach(() => {
@@ -283,15 +283,15 @@ describe('VirtualRepeat Integration', () => {
       create.then(() => validateSplice(virtualRepeat, viewModel, done));
     });
 
-    it('handles displaying when initially hidden', done => {
-      hiddenCreate.then(() => {
-        hiddenVirtualRepeat.scrollContainer.style.display = 'block';
-        window.requestAnimationFrame(() => {
-          window.setTimeout(() => {
-            validateState(hiddenVirtualRepeat, hiddenViewModel, itemHeight);
-            done();
-          }, 750);
-        });
+    it('handles displaying when initially hidden', async done => {
+      await hiddenCreate;
+
+      hiddenVirtualRepeat.containerEl.style.display = 'block';
+      window.requestAnimationFrame(() => {
+        window.setTimeout(() => {
+          validateState(hiddenVirtualRepeat, hiddenViewModel, itemHeight);
+          done();
+        }, 750);
       });
     });
 
