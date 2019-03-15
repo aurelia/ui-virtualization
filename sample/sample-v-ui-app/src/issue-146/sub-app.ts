@@ -1,4 +1,4 @@
-import { Users } from "./data";
+import { Users } from './data';
 
 export class App {
   public users: any[] = [...Users];
