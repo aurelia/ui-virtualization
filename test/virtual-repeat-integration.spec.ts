@@ -286,7 +286,7 @@ describe('VirtualRepeat Integration', () => {
     it('handles displaying when initially hidden', async done => {
       await hiddenCreate;
 
-      hiddenVirtualRepeat.containerEl.style.display = 'block';
+      hiddenVirtualRepeat.scrollerEl.style.display = 'block';
       window.requestAnimationFrame(() => {
         window.setTimeout(() => {
           validateState(hiddenVirtualRepeat, hiddenViewModel, itemHeight);

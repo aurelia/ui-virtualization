@@ -4,7 +4,7 @@ import { ComponentTester, StageComponent } from 'aurelia-testing';
 import { VirtualRepeat } from '../src/virtual-repeat';
 import { ITestAppInterface } from './interfaces';
 import './setup';
-import { AsyncQueue, createAssertionQueue, ensureScrolled } from './utilities';
+import { AsyncQueue, createAssertionQueue, ensureScrolled, validateScrolledState, waitForNextFrame, scrollToEnd } from './utilities';
 
 PLATFORM.moduleName('src/virtual-repeat');
 PLATFORM.moduleName('test/noop-value-converter');
@@ -44,7 +44,7 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
     beforeEach(() => {
       view =
       `<div style="height: 500px; overflow-y: auto">
-        <table>
+        <table style="border-spacing: 0">
           <tr virtual-repeat.for="item of items" style="height: 50px;">
             <td>\${item}</td>
           </tr>
@@ -279,6 +279,112 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
       expect(virtualRepeat.topBufferEl.getBoundingClientRect().height).toBe(0);
       expect(virtualRepeat.bottomBufferEl.getBoundingClientRect().height).toBe(0);
     });
+
+    // In this test, it bootstraps a stage with 100 items
+    // 1. validates everythng is renderred correctly: number of rows, first index, bot buffer height
+    // 2. scrolls to bottom
+    //    validates everything is renderred correctly: number of rows, first index, bot buffer height
+    // 3. shallow clones existing array, reverses and slice from 0 to 30 then assign to current view model
+    //    validates everything is renderred correctly: number of rows, first index, bot buffer height
+    it([
+      'renders with 100 items',
+      '  -- reduces to 8',
+      '  -- lesser than (repeat.elementsInView)',
+      '  -- increase to 30'
+    ].join('\n\t'), async () => {
+      const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
+
+
+      const table = (component['host'] as HTMLElement).querySelector('table');
+      expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
+      expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
+      expect(table.tBodies[0].rows.length).toBe(2 + virtualRepeat._viewsLength); // 2 buffers + 20 rows based on 50 height
+
+      expect(virtualRepeat._first).toBe(0);
+      expect(virtualRepeat._bottomBufferHeight).toBe(50 * (virtualRepeat.items.length - virtualRepeat._viewsLength));
+
+      // start more difficult cases
+
+      // 1. mutate scroll state
+      const scrollerEl = table.parentElement;
+      scrollerEl.scrollTop = scrollerEl.scrollHeight;
+      await waitForNextFrame();
+
+      expect(scrollerEl.scrollTop).toBe(50 * (100 - 500 / 50));
+      validateScrolledState(virtualRepeat, viewModel, 50);
+
+      viewModel.items = viewModel.items.slice(0).reverse().slice(0, 8);
+      await waitForNextFrame();
+      expect(scrollerEl.scrollTop).toBe(0);
+      validateScrolledState(virtualRepeat, viewModel, 50);
+
+      viewModel.items = createItems(30);
+      await waitForNextFrame();
+      await scrollToEnd(virtualRepeat);
+
+      expect(virtualRepeat._lastViewIndex()).toBe(29, 'repeat._lastViewIndex() 2');
+      expect(scrollerEl.scrollTop).toBe(50 * (30 - 500 / 50), 'scrollerEl.scrollTop 3');
+      validateScrolledState(virtualRepeat, viewModel, 50);
+      expect(virtualRepeat.bottomBufferEl.style.height).toBe(
+        `0px`,
+        'repeat.bottomBufferEl.height'
+      );
+    });
+
+
+    // In this test, it bootstraps a stage with 100 items
+    // 1. validates everythng is renderred correctly: number of rows, first index, bot buffer height
+    // 2. scrolls to bottom
+    //    validates everything is renderred correctly: number of rows, first index, bot buffer height
+    // 3. shallow clones existing array, reverses and slice from 0 to 30 then assign to current view model
+    //    validates everything is renderred correctly: number of rows, first index, bot buffer height
+    it([
+      'renders with 100 items',
+      '  -- reduces to 11',
+      '  -- equal to (repeat.elementsInView)',
+      '  -- increase to 30'
+    ].join('\n\t'), async () => {
+      const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
+
+
+      const table = (component['host'] as HTMLElement).querySelector('table');
+      expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
+      expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
+      expect(table.tBodies[0].rows.length).toBe(2 + virtualRepeat._viewsLength, 'elements count 1'); // 2 buffers + 20 rows based on 50 height
+
+      expect(virtualRepeat._first).toBe(0);
+      expect(virtualRepeat._bottomBufferHeight).toBe(50 * (virtualRepeat.items.length - virtualRepeat._viewsLength));
+
+      // start more difficult cases
+
+      // 1. mutate scroll state
+      const scrollerEl = table.parentElement;
+      scrollerEl.scrollTop = scrollerEl.scrollHeight;
+      await waitForNextFrame();
+
+      expect(scrollerEl.scrollTop).toBe(50 * (100 - 500 / 50), 'scrollerEl.scrollTop 1');
+      validateScrolledState(virtualRepeat, viewModel, 50);
+
+      viewModel.items = viewModel.items.slice(0).reverse().slice(0, 11);
+      await waitForNextFrame();
+
+      expect(virtualRepeat._lastViewIndex()).toBe(10);
+      expect(scrollerEl.scrollTop).toBe(50, 'scrollerEl.scrollTop 2');
+      expect(virtualRepeat._bottomBufferHeight).toBe(0, 'repeat._botB-Height 2');
+      validateScrolledState(virtualRepeat, viewModel, 50);
+
+      viewModel.items = createItems(30);
+      await waitForNextFrame();
+      await scrollToEnd(virtualRepeat);
+
+      expect(virtualRepeat._lastViewIndex()).toBe(29, 'repeat._lastViewIndex() 2');
+      expect(scrollerEl.scrollTop).toBe(50 * (30 - 500 / 50), 'scrollerEl.scrollTop 3');
+      validateScrolledState(virtualRepeat, viewModel, 50);
+      expect(virtualRepeat.bottomBufferEl.style.height).toBe(
+        `0px`,
+        'repeat.bottomBufferEl.height'
+      );
+    });
   });
 
   describe('<tbody virtual-repeat.for>', () => {
@@ -504,6 +610,59 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
       expect(virtualRepeat.topBufferEl.getBoundingClientRect().height).toBe(0);
       expect(virtualRepeat.bottomBufferEl.getBoundingClientRect().height).toBe(0);
     });
+
+    // In this test, it bootstraps a stage with 100 items
+    // 1. validates everythng is renderred correctly: number of rows, first index, bot buffer height
+    // 2. scrolls to bottom
+    //    validates everything is renderred correctly: number of rows, first index, bot buffer height
+    // 3. shallow clones existing array, reverses and slice from 0 to 30 then assign to current view model
+    //    validates everything is renderred correctly: number of rows, first index, bot buffer height
+    it([
+      'renders with 100 items',
+      '  -- reduces to 11',
+      '  -- equal to (repeat.elementsInView)',
+      '  -- increase to 30'
+    ].join('\n\t'), async () => {
+      const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
+
+      const table = (component['host'] as HTMLElement).querySelector('table');
+      expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
+      expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
+      expect(table.tBodies.length).toBe(virtualRepeat._viewsLength, 'elements count 1'); // 2 buffers + 20 rows based on 50 height
+
+      expect(virtualRepeat._first).toBe(0);
+      expect(virtualRepeat._bottomBufferHeight).toBe(50 * (virtualRepeat.items.length - virtualRepeat._viewsLength));
+
+      // start more difficult cases
+
+      // 1. mutate scroll state
+      const scrollerEl = table.parentElement;
+      scrollerEl.scrollTop = scrollerEl.scrollHeight;
+      await waitForNextFrame();
+
+      expect(scrollerEl.scrollTop).toBe(50 * (100 - 500 / 50), 'scrollerEl.scrollTop 1');
+      validateScrolledState(virtualRepeat, viewModel, 50);
+
+      viewModel.items = viewModel.items.slice(0).reverse().slice(0, 11);
+      await waitForNextFrame();
+
+      expect(virtualRepeat._lastViewIndex()).toBe(10);
+      expect(scrollerEl.scrollTop).toBe(50, 'scrollerEl.scrollTop 2');
+      expect(virtualRepeat._bottomBufferHeight).toBe(0, 'repeat._botB-Height 2');
+      validateScrolledState(virtualRepeat, viewModel, 50);
+
+      viewModel.items = createItems(30);
+      await waitForNextFrame();
+      await scrollToEnd(virtualRepeat);
+
+      expect(virtualRepeat._lastViewIndex()).toBe(29, 'repeat._lastViewIndex() 2');
+      expect(scrollerEl.scrollTop).toBe(50 * (30 - 500 / 50), 'scrollerEl.scrollTop 3');
+      validateScrolledState(virtualRepeat, viewModel, 50);
+      expect(virtualRepeat.bottomBufferEl.style.height).toBe(
+        `0px`,
+        'repeat.bottomBufferEl.height'
+      );
+    });
   });
 
   describe('<div virtual-repeat.for>', () => {
@@ -718,13 +877,66 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
       expect(virtualRepeat.topBufferEl.getBoundingClientRect().height).toBe(0);
       expect(virtualRepeat.bottomBufferEl.getBoundingClientRect().height).toBe(0);
     });
+
+    // In this test, it bootstraps a stage with 100 items
+    // 1. validates everythng is renderred correctly: number of rows, first index, bot buffer height
+    // 2. scrolls to bottom
+    //    validates everything is renderred correctly: number of rows, first index, bot buffer height
+    // 3. shallow clones existing array, reverses and slice from 0 to 30 then assign to current view model
+    //    validates everything is renderred correctly: number of rows, first index, bot buffer height
+    it([
+      'renders with 100 items',
+      '  -- reduces to 11',
+      '  -- equal to (repeat.elementsInView)',
+      '  -- increase to 30'
+    ].join('\n\t'), async () => {
+      const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
+
+
+      const scrollerEl = (component['host'] as HTMLElement).querySelector('.scroller');
+      expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
+      expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
+      expect(scrollerEl.children.length).toBe(2 + virtualRepeat._viewsLength, 'elements count 1'); // 2 buffers + 20 rows based on 50 height
+
+      expect(virtualRepeat._first).toBe(0);
+      expect(virtualRepeat._bottomBufferHeight).toBe(50 * (virtualRepeat.items.length - virtualRepeat._viewsLength));
+
+      // start more difficult cases
+
+      // 1. mutate scroll state
+      scrollerEl.scrollTop = scrollerEl.scrollHeight;
+      await waitForNextFrame();
+
+      expect(scrollerEl.scrollTop).toBe(50 * (100 - 500 / 50), 'scrollerEl.scrollTop 1');
+      validateScrolledState(virtualRepeat, viewModel, 50);
+
+      viewModel.items = viewModel.items.slice(0).reverse().slice(0, 11);
+      await waitForNextFrame();
+
+      expect(virtualRepeat._lastViewIndex()).toBe(10);
+      expect(scrollerEl.scrollTop).toBe(50, 'scrollerEl.scrollTop 2');
+      expect(virtualRepeat._bottomBufferHeight).toBe(0, 'repeat._botB-Height 2');
+      validateScrolledState(virtualRepeat, viewModel, 50);
+
+      viewModel.items = createItems(30);
+      await waitForNextFrame();
+      await scrollToEnd(virtualRepeat);
+
+      expect(virtualRepeat._lastViewIndex()).toBe(29, 'repeat._lastViewIndex() 2');
+      expect(scrollerEl.scrollTop).toBe(50 * (30 - 500 / 50), 'scrollerEl.scrollTop 3');
+      validateScrolledState(virtualRepeat, viewModel, 50);
+      expect(virtualRepeat.bottomBufferEl.style.height).toBe(
+        `0px`,
+        'repeat.bottomBufferEl.height'
+      );
+    });
   });
 
   describe('div > (ul|ol) > li [virtual-repeat]', () => {
     describe('ol > li', function() {
       runTestSuit(
         `<div class="scroller" style="height: 500px; overflow-y: auto">
-          <ul>
+          <ul style="padding: 0; margin: 0;">
             <li virtual-repeat.for="item of items" style="height: 50px">\${item}</li>
           </ul>
         </div>`
@@ -734,8 +946,8 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
     describe('ul > li', function() {
       runTestSuit(
         `<div class="scroller" style="height: 500px; overflow-y: auto">
-          <ol>
-            <li virtual-repeat.for="item of items" style="height: 50px">\${item}</li>
+          <ol style="padding: 0; margin: 0;">
+            <li virtual-repeat.for="item of items" style="height: 50px; padding: 0; margin: 0;">\${item}</li>
           </ol>
         </div>`
       );
@@ -958,6 +1170,65 @@ describe('VirtualRepeat Integration - Instance Changed', () => {
         expect(virtualRepeat._bottomBufferHeight).toBe(0);
         expect(virtualRepeat.topBufferEl.getBoundingClientRect().height).toBe(0);
         expect(virtualRepeat.bottomBufferEl.getBoundingClientRect().height).toBe(0);
+      });
+
+      // In this test, it bootstraps a stage with 100 items
+      // 1. validates everythng is renderred correctly: number of rows, first index, bot buffer height
+      // 2. scrolls to bottom
+      //    validates everything is renderred correctly: number of rows, first index, bot buffer height
+      // 3. shallow clones existing array, reverses and slice from 0 to 30 then assign to current view model
+      //    validates everything is renderred correctly: number of rows, first index, bot buffer height
+      it([
+        'renders with 100 items',
+        '  -- reduces to 11',
+        '  -- equal to (repeat.elementsInView)',
+        '  -- increase to 30'
+      ].join('\n\t'), async () => {
+        const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items }, $view);
+
+        const scrollerEl = (component['host'] as HTMLElement).querySelector('.scroller');
+        expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
+        expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
+        expect(scrollerEl.firstElementChild.children.length).toBe(
+          2 + virtualRepeat._viewsLength,
+          'elements count 1'); // 2 buffers + 20 rows based on 50 height
+
+        expect(virtualRepeat._first).toBe(0);
+        expect(virtualRepeat._bottomBufferHeight).toBe(50 * (virtualRepeat.items.length - virtualRepeat._viewsLength));
+
+        // start more difficult cases
+
+        // 1. mutate scroll state
+        scrollerEl.scrollTop = scrollerEl.scrollHeight;
+        await waitForNextFrame();
+
+        expect(scrollerEl.scrollTop).toBe(50 * (100 - 500 / 50), 'scrollerEl.scrollTop 1');
+        validateScrolledState(virtualRepeat, viewModel, 50);
+
+        viewModel.items = viewModel.items.slice(0).reverse().slice(0, 11);
+        await waitForNextFrame();
+
+        expect(virtualRepeat._firstViewIndex()).toBe(0);
+        expect(virtualRepeat._lastViewIndex()).toBe(10);
+        // expect(scrollerEl.scrollTop).toBe(50, 'scrollerEl.scrollTop 2');
+        expect(virtualRepeat._bottomBufferHeight).toBe(0, 'repeat._botB-Height 2');
+        validateScrolledState(virtualRepeat, viewModel, 50);
+
+        viewModel.items = createItems(30);
+        await waitForNextFrame();
+
+        // it's very difficult here to do the right assertion, since browser behaviors are different
+
+        await scrollToEnd(virtualRepeat);
+
+        expect(virtualRepeat._firstViewIndex()).toBe(30 - 22, 'repeat._first > 0');
+        expect(virtualRepeat._lastViewIndex()).toBe(29, 'repeat._lastViewIndex() 2');
+        expect(scrollerEl.scrollTop).toBe(50 * (30 - 500 / 50), 'scrollerEl.scrollTop 3');
+        validateScrolledState(virtualRepeat, viewModel, 50);
+        expect(virtualRepeat.bottomBufferEl.style.height).toBe(
+          `0px`,
+          'repeat.bottomBufferEl.height'
+        );
       });
     }
   });

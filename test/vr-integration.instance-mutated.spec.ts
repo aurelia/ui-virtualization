@@ -388,8 +388,8 @@ describe('VirtualRepeat Integration -- Mutation Handling', () => {
         await waitForNextFrame();
         expect(scrollCount).toBe(3, '@scroll 3');
         validateScrolledState(virtualRepeat, viewModel, itemHeight);
-        virtualRepeat.element.parentElement.onscroll = null;
       }
+      virtualRepeat.element.parentElement.onscroll = null;
     });
 
     it([
