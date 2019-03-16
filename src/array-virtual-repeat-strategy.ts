@@ -201,15 +201,18 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     // if all splices removal are followed by same amount of add,
     // optimise by just replacing affected visible views
     if (allSplicesAreInplace) {
+      const lastIndex = repeat._lastViewIndex();
       const repeatViewSlot = repeat.viewSlot;
       for (i = 0; spliceCount > i; i++) {
         splice = splices[i];
         for (let collectionIndex = splice.index; collectionIndex < splice.index + splice.addedCount; collectionIndex++) {
-          if (!this._isIndexBeforeViewSlot(repeat, repeatViewSlot, collectionIndex)
-            && !this._isIndexAfterViewSlot(repeat, repeatViewSlot, collectionIndex)
-          ) {
-            let viewIndex = this._getViewIndex(repeat, repeatViewSlot, collectionIndex);
-            let overrideContext = createFullOverrideContext(repeat, newArray[collectionIndex], collectionIndex, newArraySize);
+          // if (!this._isIndexBeforeViewSlot(repeat, repeatViewSlot, collectionIndex)
+          //   && !this._isIndexAfterViewSlot(repeat, repeatViewSlot, collectionIndex)
+          // ) {
+          //   const viewIndex = this._getViewIndex(repeat, repeatViewSlot, collectionIndex);
+          if (collectionIndex >= firstIndex && collectionIndex <= lastIndex) {
+            const viewIndex = collectionIndex - firstIndex;
+            const overrideContext = createFullOverrideContext(repeat, newArray[collectionIndex], collectionIndex, newArraySize);
             repeat.removeView(viewIndex, /*return to cache?*/true, /*skip animation?*/true);
             repeat.insertView(viewIndex, overrideContext.bindingContext, overrideContext);
           }

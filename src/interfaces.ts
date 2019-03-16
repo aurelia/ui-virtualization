@@ -105,7 +105,7 @@ export interface ITemplateStrategy {
    * Get the first element(or view) between top buffer and bottom buffer
    * Note: [virtual-repeat] only supports single root node repeat
    */
-  getFirstElement(topBufer: Element, topBuffer: Element): Element;
+  getFirstElement(topBufer: Element, botBuffer: Element): Element;
   /**
    * Get the last element(or view) between top buffer and bottom buffer
    * Note: [virtual-repeat] only supports single root node repeat
