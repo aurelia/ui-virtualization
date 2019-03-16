@@ -10,7 +10,7 @@ PLATFORM.moduleName('src/virtual-repeat');
 PLATFORM.moduleName('test/noop-value-converter');
 PLATFORM.moduleName('src/infinite-scroll-next');
 
-describe('VirtualRepeat Integration', () => {
+describe('vr-integration.table.spec.ts', () => {
   const itemHeight = 100;
   const queue: AsyncQueue = createAssertionQueue();
   let component: ComponentTester<VirtualRepeat>;
@@ -213,7 +213,7 @@ describe('VirtualRepeat Integration', () => {
     queue(() => done());
   }
 
-  function validateArrayChange(virtualRepeat, viewModel, done) {
+  function validateArrayChange(virtualRepeat: VirtualRepeat, viewModel, done) {
 
     viewModel.items = createItems(4, 'A');
     queue(() => validateState(virtualRepeat, viewModel, itemHeight));
