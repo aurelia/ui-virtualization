@@ -10,16 +10,47 @@ import {
   updateAllViews
 } from './utilities';
 import { VirtualRepeat } from './virtual-repeat';
-import { getDistanceToParent } from './utilities-dom';
+import { getDistanceToParent, hasOverflowScroll, calcScrollHeight, calcOuterHeight } from './utilities-dom';
 
 /**
 * A strategy for repeating a template over an array.
 */
 export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements IVirtualRepeatStrategy {
 
-  createFirstItem(repeat: VirtualRepeat): void {
-    let overrideContext = createFullOverrideContext(repeat, repeat.items[0], 0, 1);
-    repeat.addView(overrideContext.bindingContext, overrideContext);
+  createFirstItem(repeat: VirtualRepeat): IView {
+    const overrideContext = createFullOverrideContext(repeat, repeat.items[0], 0, 1);
+    return repeat.addView(overrideContext.bindingContext, overrideContext);
+  }
+
+  initCalculation(repeat: VirtualRepeat, items: any[]): boolean {
+    const itemCount = items.length;
+    // when there is no item, bails immediately
+    // and return false to notify calculation finished unsuccessfully
+    if (!(itemCount > 0)) {
+      return false;
+    }
+    // before invoking instance changed, there needs to be basic calculation on how
+    // the required vairables such as item height and elements required
+    const containerEl = repeat.getScroller();
+    const existingViewCount = repeat.viewCount();
+    if (itemCount > 0 && existingViewCount === 0) {
+      this.createFirstItem(repeat);
+    }
+    const isFixedHeightContainer = repeat._fixedHeightContainer = hasOverflowScroll(containerEl);
+    const firstView = repeat._firstView();
+    const itemHeight = repeat.itemHeight = calcOuterHeight(firstView.firstChild as Element);
+    // when item height is 0, bails immediately
+    // and return false to notify calculation has finished unsuccessfully
+    // it cannot be processed further when item is 0
+    if (itemHeight === 0) {
+      return false;
+    }
+    const scroll_el_height = isFixedHeightContainer
+      ? calcScrollHeight(containerEl)
+      : document.documentElement.clientHeight;
+    const elementsInView = repeat.elementsInView = Math$floor(scroll_el_height / itemHeight) + 1;
+    const viewsCount = repeat._viewsLength = elementsInView * 2;
+    return true;
   }
 
   /**
@@ -30,7 +61,9 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
    * @param firstIndex The index of first active view. First is a required argument, only ? for valid poly
    */
   instanceChanged(repeat: VirtualRepeat, items: any[], first?: number): void {
-    this._inPlaceProcessItems(repeat, items, first);
+    if (this._inPlaceProcessItems(repeat, items, first)) {
+      this._remeasure(repeat, repeat.itemHeight, repeat._viewsLength, items.length, repeat._first);
+    }
   }
 
   /**
@@ -44,26 +77,20 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     this._standardProcessInstanceMutated(repeat, array, splices);
   }
 
-  /**@internal */
-  _standardProcessInstanceChanged(repeat: VirtualRepeat, items: any[]): void {
-    for (let i = 1, ii = repeat._viewsLength; i < ii; ++i) {
-      let overrideContext = createFullOverrideContext(repeat, items[i], i, ii);
-      repeat.addView(overrideContext.bindingContext, overrideContext);
-    }
-  }
-
   /**
    * Process items thay are currently mapped to a view in bound DOM tree
+   *
+   * @returns `false` to signal there should be no remeasurement
    * @internal
    */
-  _inPlaceProcessItems(repeat: VirtualRepeat, items: any[], firstIndex: number): void {
+  _inPlaceProcessItems(repeat: VirtualRepeat, items: any[], firstIndex: number): boolean {
     const currItemCount = items.length;
     if (currItemCount === 0) {
       repeat.removeAllViews(/*return to cache?*/true, /*skip animation?*/false);
       repeat._resetCalculation();
       delete repeat.__queuedSplices;
       delete repeat.__array;
-      return;
+      return false;
     }
     /*
       Get index of first view is looking at the view which is from the ViewSlot
@@ -74,19 +101,24 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     */
     // remove unneeded views.
     let realViewsCount = repeat.viewCount();
+    // console.log('0. Start inplace process item', { realViewsCount, currItemCount, els: repeat.elementsInView, max: repeat._viewsLength })
     while (realViewsCount > currItemCount) {
       realViewsCount--;
       repeat.removeView(realViewsCount, /*return to cache?*/true, /*skip animation?*/false);
     }
+    // console.log(realViewsCount, repeat._viewsLength)
+    realViewsCount = Math$min(realViewsCount, repeat._viewsLength);
     const local = repeat.local;
     const lastIndex = currItemCount - 1;
 
+    // console.log('1. firstIndex, realCount, lastIndex', { firstIndex, realViewsCount, lastIndex })
     if (firstIndex + realViewsCount > lastIndex) {
       // first = currItemCount - realViewsCount instead of: first = currItemCount - 1 - realViewsCount;
       //    this is because during view update
       //    view(i) starts at 0 and ends at less than last
       firstIndex = Math$max(0, currItemCount - realViewsCount);
     }
+    // console.log('2. firstIndex, realCount, lastIndex', { firstIndex, realViewsCount, lastIndex })
 
     repeat._first = firstIndex;
     // re-evaluate bindings on existing views.
@@ -119,10 +151,14 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     }
     // add new views
     const minLength = Math$min(repeat._viewsLength, currItemCount);
+    // console.log('4. After updating existing views',
+    //   { firstIndex, minLength, maxView: repeat._viewsLength, currItemCount, realViewsCount }
+    // )
     for (let i = realViewsCount; i < minLength; i++) {
       const overrideContext = createFullOverrideContext(repeat, items[i], i, currItemCount);
       repeat.addView(overrideContext.bindingContext, overrideContext);
     }
+    return true;
   }
 
   /**@internal */
@@ -334,19 +370,31 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
       repeat._updateBufferElements(/*skip update?*/true);
     }
 
-    const scrollerInfo = repeat.getScrollerInfo();
-    const topBufferDistance = getDistanceToParent(repeat.topBufferEl, scrollerInfo.scroller);
-    const realScrolltop = Math$max(
-      0,
-      scrollerInfo.scrollTop === 0
-      ? 0
-      : (scrollerInfo.scrollTop - topBufferDistance)
-    );
-
     // step 1 of mutation handling could shift the scroller scroll position
     // around and stabilize somewhere that is not original scroll position based on splices
     // need to recalcuate first index based on scroll position, as this is the simplest form
     // of syncing with browser implementation
+    this._remeasure(repeat, itemHeight, newViewCount, newArraySize, firstIndexAfterMutation);
+  }
+
+  /**
+   * Unlike normal repeat, virtualization repeat employs "padding" elements. Those elements
+   * often are just blank block with proper height/width to adjust the height/width/scroll feeling
+   * of virtualized repeat.
+   *
+   * Because of this, either mutation or change of the collection of repeat will potentially require
+   * readjustment (or measurement) of those blank block, based on scroll position
+   *
+   * This is 2 phases scroll handle
+   *
+   * @internal
+   */
+  _remeasure(repeat: VirtualRepeat, itemHeight: number, newViewCount: number, newArraySize: number, firstIndexAfterMutation: number): void {
+    const scrollerInfo = repeat.getScrollerInfo();
+    const topBufferDistance = getDistanceToParent(repeat.topBufferEl, scrollerInfo.scroller);
+    const realScrolltop = Math$max(0, scrollerInfo.scrollTop === 0
+      ? 0
+      : (scrollerInfo.scrollTop - topBufferDistance));
     let first_index_after_scroll_adjustment = realScrolltop === 0
       ? 0
       : Math$floor(realScrolltop / itemHeight);
@@ -357,21 +405,15 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
       first_index_after_scroll_adjustment = Math$max(0, newArraySize - newViewCount);
     }
     const top_buffer_item_count_after_scroll_adjustment = first_index_after_scroll_adjustment;
-    const bot_buffer_item_count_after_scroll_adjustment = Math$max(
-      0,
-      newArraySize - top_buffer_item_count_after_scroll_adjustment - newViewCount
-    );
-
+    const bot_buffer_item_count_after_scroll_adjustment = Math$max(0, newArraySize - top_buffer_item_count_after_scroll_adjustment - newViewCount);
     repeat._first
       = repeat._lastRebind = first_index_after_scroll_adjustment;
-
     repeat._previousFirst = firstIndexAfterMutation;
-
-    repeat.isLastIndex = bot_buffer_item_count_after_scroll_adjustment === 0;
+    repeat._isAtTop = first_index_after_scroll_adjustment === 0;
+    repeat._isLastIndex = bot_buffer_item_count_after_scroll_adjustment === 0;
     repeat._topBufferHeight = top_buffer_item_count_after_scroll_adjustment * itemHeight;
     repeat._bottomBufferHeight = bot_buffer_item_count_after_scroll_adjustment * itemHeight;
     repeat._handlingMutations = false;
-
     // prevent scroller update
     repeat.revertScrollCheckGuard();
     repeat._updateBufferElements();
