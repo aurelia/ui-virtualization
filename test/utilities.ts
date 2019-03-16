@@ -1,4 +1,5 @@
 import { VirtualRepeat } from '../src/virtual-repeat';
+import { ITestAppInterface } from './interfaces';
 
 export type AsyncQueue = (func: (...args: any[]) => any) => void;
 
@@ -7,18 +8,17 @@ export function createAssertionQueue(): AsyncQueue {
   let next = () => {
     if (queue.length) {
       setTimeout(() => {
-        if (queue.length) {
+        if (queue.length > 0) {
           let func = queue.shift();
           func();
           next();
         }
-      }, 1);
+      }, 16);
     }
   };
 
   return (func: () => any) => {
-    queue.push(func);
-    if (queue.length === 1) {
+    if (queue.push(func) === 1) {
       next();
     }
   };
@@ -28,7 +28,7 @@ export function createAssertionQueue(): AsyncQueue {
  *
  * @param extraHeight height of static content that contributes to overall heigh. Happen in case of table
  */
-export function validateState(virtualRepeat: VirtualRepeat, viewModel: any, itemHeight: number, extraHeight?: number) {
+export function validateState(virtualRepeat: VirtualRepeat, viewModel: ITestAppInterface<any>, itemHeight: number, extraHeight?: number) {
   let views = virtualRepeat.viewSlot.children;
   let expectedHeight = viewModel.items.length * itemHeight;
   let topBufferHeight = virtualRepeat.topBufferEl.getBoundingClientRect().height;
@@ -63,7 +63,10 @@ export function validateState(virtualRepeat: VirtualRepeat, viewModel: any, item
   }
 }
 
-export function validateScrolledState(virtualRepeat: VirtualRepeat, viewModel: any, itemHeight: number) {
+/**
+ * Validate states of views of a virtual repeat, based on viewModel and number of items of it, together with height of each item
+ */
+export function validateScrolledState(virtualRepeat: VirtualRepeat, viewModel: ITestAppInterface<any>, itemHeight: number) {
   let views = virtualRepeat.viewSlot.children;
   let expectedHeight = viewModel.items.length * itemHeight;
   let topBufferHeight = virtualRepeat.topBufferEl.getBoundingClientRect().height;
@@ -86,7 +89,7 @@ export function validateScrolledState(virtualRepeat: VirtualRepeat, viewModel: a
     // thanks to @reinholdk for the following line
     // it correctly handles view index & itemIndex for assertion
     let itemIndex = startingLoc + i;
-    expect(views[i].bindingContext.item).toBe(viewModel.items[itemIndex]);
+    expect(views[i].bindingContext.item).toBe(viewModel.items[itemIndex], `view[${i}].bindingContext.item === items[${itemIndex}]`);
     // expect(views[i].bindingContext.item).toBe(viewModel.items[i], `view(${i}).bindingContext.item`);
     let overrideContext = views[i].overrideContext;
     expect(overrideContext.parentOverrideContext.bindingContext).toBe(viewModel, 'parentOverrideContext.bindingContext === viewModel');
@@ -125,15 +128,26 @@ export function validateScroll(virtualRepeat: VirtualRepeat, viewModel: any, ite
   });
 }
 
+/**
+ * Scroll a virtual repeat scroller element to top
+ */
+export async function scrollToStart(virtualRepeat: VirtualRepeat, insuranceTime = 5): Promise<void> {
+  virtualRepeat.getScroller().scrollTop = 0;
+  await ensureScrolled(insuranceTime);
+}
+
+/**
+ * Scroll a virtual repeat scroller element to bottom
+ */
 export async function scrollToEnd(virtualRepeat: VirtualRepeat, insuranceTime = 5): Promise<void> {
-  let element = virtualRepeat._fixedHeightContainer ? virtualRepeat.scrollContainer : (document.scrollingElement || document.documentElement);
+  let element = virtualRepeat._fixedHeightContainer ? virtualRepeat.scrollerEl : (document.scrollingElement || document.documentElement);
   element.scrollTop = element.scrollHeight;
   createScrollEvent(element);
   await ensureScrolled(insuranceTime);
 }
 
 export async function scrollToIndex(virtualRepeat: VirtualRepeat, itemIndex: number): Promise<void> {
-  let element = virtualRepeat._fixedHeightContainer ? virtualRepeat.scrollContainer : (document.scrollingElement || document.documentElement);
+  let element = virtualRepeat._fixedHeightContainer ? virtualRepeat.scrollerEl : (document.scrollingElement || document.documentElement);
   element.scrollTop = virtualRepeat.itemHeight * (itemIndex + 1);
   createScrollEvent(element);
   await ensureScrolled();
@@ -295,3 +309,20 @@ export const h = (name: string, attrs: Record<string, string> | null, ...childre
 };
 
 const isFragment = (node: Node): node is DocumentFragment => node.nodeType === Node.DOCUMENT_FRAGMENT_NODE;
+
+/**
+ * Based on repet comment anchor/top/bot buffer elements
+ * count the number of active elements (or views) a repeat has
+ */
+export const getRepeatActiveViewCount = (repeat: VirtualRepeat): number => {
+  let count = 0;
+  let curr = repeat.templateStrategy.getFirstElement(repeat.topBufferEl, repeat.bottomBufferEl);
+  while (curr !== null) {
+    count++;
+    curr = curr.nextElementSibling;
+    if (curr === repeat.bottomBufferEl) {
+      break;
+    }
+  }
+  return count;
+};

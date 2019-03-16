@@ -1,21 +1,32 @@
 import './setup';
-import {ObserverLocator} from 'aurelia-binding';
-import {BoundViewFactory, TemplatingEngine, ViewSlot, ViewFactory, ModuleAnalyzer, TargetInstruction, ViewResources} from 'aurelia-templating';
-import {Container} from 'aurelia-dependency-injection';
-import {DOM} from 'aurelia-pal';
-import {VirtualRepeat} from '../src/virtual-repeat';
-import {TemplateStrategyLocator} from '../src/template-strategy';
-import {DomHelper} from '../src/dom-helper';
+import {
+  BoundViewFactory,
+  TemplatingEngine,
+  ViewSlot,
+  TargetInstruction
+} from 'aurelia-templating';
+import {
+  Container
+} from 'aurelia-dependency-injection';
+import {
+  DOM
+} from 'aurelia-pal';
+import {
+  VirtualRepeat
+} from '../src/virtual-repeat';
+import {
+  TemplateStrategyLocator
+} from '../src/template-strategy-locator';
 import {
   ViewSlotMock,
   BoundViewFactoryMock,
-  RepeatStrategyMock,
   ViewMock,
   ArrayObserverMock,
   instructionMock,
   viewResourcesMock,
   TemplateStrategyMock
 } from './mocks';
+import { ITemplateStrategy } from '../src/interfaces';
 
 let element = DOM.createElement('div');
 let topBuffer = DOM.createElement('div');
@@ -23,14 +34,15 @@ let bottomBuffer = DOM.createElement('div');
 let scrollContainer = DOM.createElement('div');
 
 xdescribe('VirtualRepeat', () => {
-  let virtualRepeat, templateStrategyLocator, domHelper;
-  let templateStrategyMock;
+  let container: Container;
+  let virtualRepeat: VirtualRepeat;
+  let templateStrategyLocator: TemplateStrategyLocator;
+  let templateStrategyMock: ITemplateStrategy;
 
   beforeEach(() => {
     let container = new Container();
     templateStrategyMock = new TemplateStrategyMock();
     templateStrategyLocator = container.get(TemplateStrategyLocator);
-    domHelper = container.get(DomHelper);
     container.registerInstance(DOM.Element, element);
     container.registerInstance(BoundViewFactory, new BoundViewFactoryMock());
     container.registerInstance(TargetInstruction, instructionMock);
@@ -43,11 +55,9 @@ xdescribe('VirtualRepeat', () => {
 
     beforeEach(() => {
       virtualRepeat.items = [];
-      spyOn(templateStrategyMock, 'createTopBufferElement').and.callFake(() => topBuffer);
-      spyOn(templateStrategyMock, 'createBottomBufferElement').and.callFake(() => topBuffer);
+      spyOn(templateStrategyMock, 'createBuffers').and.callFake(() => []);
       spyOn(templateStrategyMock, 'getScrollContainer').and.callFake(() => scrollContainer);
       spyOn(templateStrategyMock, 'getFirstElement').and.callFake(() => {});
-      spyOn(domHelper, 'getElementDistanceToTopOfDocument').and.callFake(() => undefined);
       spyOn(templateStrategyLocator, 'getStrategy').and.callFake(() => templateStrategyMock);
     });
 
@@ -63,12 +73,10 @@ xdescribe('VirtualRepeat', () => {
 
     it('should create buffer elements', () => {
       virtualRepeat.attached();
-      expect(templateStrategyMock.createTopBufferElement).toHaveBeenCalledWith(element);
-      expect(templateStrategyMock.createBottomBufferElement).toHaveBeenCalledWith(element);
+      expect(templateStrategyMock.createBuffers).toHaveBeenCalledWith(element);
     });
 
     it('should handle container scroll when container with overflow scrolling', () => {
-      spyOn(domHelper, 'hasOverflowScroll').and.callFake(() => true);
       virtualRepeat.attached();
       expect(virtualRepeat._fixedHeightContainer).toBe(true);
     });

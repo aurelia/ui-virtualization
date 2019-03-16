@@ -1,5 +1,5 @@
 import { IView, ITemplateStrategy } from './interfaces';
-import { insertBeforeNode } from './utilities';
+import { insertBeforeNode } from './utilities-dom';
 import { DOM } from 'aurelia-pal';
 
 export class DefaultTemplateStrategy implements ITemplateStrategy {

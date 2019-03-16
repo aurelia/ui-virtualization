@@ -1,20 +1,18 @@
 import './setup';
 import { PLATFORM } from 'aurelia-pal';
-import { validateScrolledState, ensureScrolled, scrollToEnd, waitForNextFrame, validateState, waitForTimeout } from './utilities';
+import { validateScrolledState, scrollToEnd, waitForNextFrame } from './utilities';
 import { VirtualRepeat } from '../src/virtual-repeat';
 import { StageComponent, ComponentTester } from 'aurelia-testing';
 import { bootstrap } from 'aurelia-bootstrapper';
 import { ITestAppInterface } from './interfaces';
-import { eachCartesianJoin, eachCartesianJoinAsync } from './lib';
 
 PLATFORM.moduleName('src/virtual-repeat');
 PLATFORM.moduleName('test/noop-value-converter');
 PLATFORM.moduleName('src/infinite-scroll-next');
 
-describe('VirtualRepeat Integration -- Mutation Handling', () => {
+describe('vr-integration.instance-mutated.spec.ts', () => {
   let component: ComponentTester<VirtualRepeat>;
   let items: any[];
-  let view: string;
   let resources: any[];
   let itemHeight: number = 100;
 
@@ -25,10 +23,6 @@ describe('VirtualRepeat Integration -- Mutation Handling', () => {
       'src/virtual-repeat',
       'test/noop-value-converter'
     ];
-    view =
-      `<div id="scrollContainer" style="height: 500px; overflow-y: scroll;">
-        <div style="height: ${itemHeight}px;" virtual-repeat.for="item of items">\${item}</div>
-      </div>`;
   });
 
   afterEach(() => {
@@ -320,6 +314,8 @@ describe('VirtualRepeat Integration -- Mutation Handling', () => {
       virtualRepeat.element.parentElement.onscroll = () => {
         scrollCount++;
       };
+
+      expect(virtualRepeat._viewsLength).toBe(12, 'repeat._viewsLength');
       await scrollToEnd(virtualRepeat);
       expect(scrollCount).toBe(2, '@scroll 1');
       expect(virtualRepeat.element.parentElement.scrollTop).toBe(100 * 995);
@@ -331,7 +327,7 @@ describe('VirtualRepeat Integration -- Mutation Handling', () => {
         await waitForNextFrame();
         expect(virtualRepeat.element.parentElement.scrollHeight).toBe(100 * 12, '| vc >> scroller.scrollHeight 2');
         expect(virtualRepeat.element.parentElement.scrollTop).toBe(100 * (12 - 500 / 100), '| vc >> scroller.scrollTop 2');
-        expect(scrollCount).toBe(3, '@scroll 3');
+        expect(scrollCount).toBeGreaterThanOrEqual(2, '| vc >> @scroll 3');
         expect(virtualRepeat._first).toBe(0);
         validateScrolledState(virtualRepeat, viewModel, itemHeight);
       } else {
@@ -364,6 +360,8 @@ describe('VirtualRepeat Integration -- Mutation Handling', () => {
       virtualRepeat.element.parentElement.onscroll = () => {
         scrollCount++;
       };
+
+      expect(virtualRepeat._viewsLength).toBe(12, 'repeat._viewsLength');
       await scrollToEnd(virtualRepeat);
       expect(scrollCount).toBe(2, '@scroll 1');
       expect(virtualRepeat.element.parentElement.scrollTop).toBe(100 * 995);
@@ -373,7 +371,7 @@ describe('VirtualRepeat Integration -- Mutation Handling', () => {
       const hasValueConverter = extraResources.length > 0;
       if (hasValueConverter) {
         await waitForNextFrame();
-        expect(scrollCount).toBe(3, '@scroll 2');
+        expect(scrollCount).toBeGreaterThanOrEqual(2, '| vc >> @scroll 2');
         expect(virtualRepeat.items.length).toBe(13, 'items.length 1');
         expect(virtualRepeat.element.parentElement.scrollHeight).toBe(100 * 13, '| vc >> scroller.scrollHeight 1');
         expect(virtualRepeat.element.parentElement.scrollTop).toBe(100 * (13 - 500 / 100), '| vc >> scroller.scrollTop 2');
@@ -388,8 +386,8 @@ describe('VirtualRepeat Integration -- Mutation Handling', () => {
         await waitForNextFrame();
         expect(scrollCount).toBe(3, '@scroll 3');
         validateScrolledState(virtualRepeat, viewModel, itemHeight);
-        virtualRepeat.element.parentElement.onscroll = null;
       }
+      virtualRepeat.element.parentElement.onscroll = null;
     });
 
     it([

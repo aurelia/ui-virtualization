@@ -1,5 +1,6 @@
 // tslint:disable
 import { View } from 'aurelia-templating';
+import { ITemplateStrategy } from '../src/interfaces';
 
 export class ViewSlotMock {
   children: any[];
@@ -54,13 +55,26 @@ export class ArrayObserverMock {
   unsubscribe() {}
 }
 
-export class TemplateStrategyMock {
-  getScrollContainer(element: Element)  { }
-  moveViewFirst(view: View, topBuffer: Element) { }
+export class TemplateStrategyMock implements ITemplateStrategy {
+
+  constructor(
+    readonly scrollerEl: HTMLElement,
+    readonly topBufferEl: HTMLElement,
+    readonly botBufferEl: HTMLElement
+  ) {}
+
+  getScrollContainer(element: Element): HTMLElement {
+    return this.scrollerEl;
+  }
+  moveViewFirst(view: View, topBuffer: Element): void { }
   moveViewLast(view: View, bottomBuffer: Element) { }
-  createTopBufferElement(element: Element) { }
-  createBottomBufferElement(element: Element) { }
-  removeBufferElements(element: Element, topBuffer: Element, bottomBuffer: Element) { }
+  createBuffers(el: Element): [HTMLElement, HTMLElement] {
+    return [this.topBufferEl, this.botBufferEl];
+  }
+  removeBuffers(element: Element, topBuffer: Element, bottomBuffer: Element) {
+    topBuffer.remove();
+    bottomBuffer.remove();
+  }
   getFirstElement(topBuffer: Element): Element {
     throw new Error('Method "getFirstElement" not implemented');
   }

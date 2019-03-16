@@ -48,7 +48,14 @@ export interface IVirtualRepeatStrategy extends RepeatStrategy {
   /**
    * create first item to calculate the heights
    */
-  createFirstItem(repeat: VirtualRepeat): void;
+  createFirstItem(repeat: VirtualRepeat): IView;
+
+  /**
+   * Calculate required variables for a virtual repeat instance to operate properly
+   *
+   * @returns `false` to notify that calculation hasn't been finished
+   */
+  initCalculation(repeat: VirtualRepeat, items: number | any[] | Map<any, any> | Set<any>): boolean;
 
   /**
    * Get the observer based on collection type of `items`
@@ -105,7 +112,7 @@ export interface ITemplateStrategy {
    * Get the first element(or view) between top buffer and bottom buffer
    * Note: [virtual-repeat] only supports single root node repeat
    */
-  getFirstElement(topBufer: Element, topBuffer: Element): Element;
+  getFirstElement(topBufer: Element, botBuffer: Element): Element;
   /**
    * Get the last element(or view) between top buffer and bottom buffer
    * Note: [virtual-repeat] only supports single root node repeat

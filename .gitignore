@@ -4,4 +4,5 @@ bower_components
 .idea
 .DS_STORE
 .rollupcache
+.buildcache
 build/reports
