@@ -1,18 +1,18 @@
 import './setup';
-import { eachCartesianJoin } from "./lib";
-import { getDistanceToParent } from "../src/utilities-dom";
+import { eachCartesianJoin } from './lib';
+import { getDistanceToParent } from '../src/utilities-dom';
 import { PLATFORM } from 'aurelia-pal';
 import { h } from './utilities';
 
 describe('utiltites - DOM', () => {
-  
+
   const testCases: ITestCase[] = [
     {
       title: 'container without scrolling + buffer + child',
       template:
-        <div id="parent">
-          <div id="topBuffer" style={{ height: 500 }}></div>
-          <div id="child"></div>
+        <div id='parent'>
+          <div id='topBuffer' style={{ height: 500 }}></div>
+          <div id='child'></div>
         </div>,
       spaceAssertions: [
         ['#child', '#parent', 500],
@@ -31,12 +31,12 @@ describe('utiltites - DOM', () => {
     {
       title: 'container with scrolling + buffer + child',
       template:
-        <div id="parent" style="height: 400px; overflow: auto">
-          <div id="topBuffer" style="height: 500px;"></div>
-          <div id="child"></div>
+        <div id='parent' style='height: 400px; overflow: auto'>
+          <div id='topBuffer' style='height: 500px;'></div>
+          <div id='child'></div>
         </div>,
       spaceAssertions: [
-        ['#child', '#parent', 500],
+        ['#child', '#parent', 500]
       ],
       assert: ct => {
         const parent = ct.querySelector('#parent') as HTMLElement;
@@ -46,17 +46,17 @@ describe('utiltites - DOM', () => {
         expect(getDistanceToParent(child, parent)).toEqual(1);
         ct.style.marginTop = '-50px';
         expect(getDistanceToParent(child, parent)).toEqual(1);
-        topBuffer.insertAdjacentElement('afterend', <div style="height: 500px"></div>);
+        topBuffer.insertAdjacentElement('afterend', <div style='height: 500px'></div>);
         expect(getDistanceToParent(child, parent)).toEqual(501);
       }
     },
     {
       title: 'parent[relative + scrolling] + buffer + child',
       template:
-        <div id="parent" style="position: relative; height: 200px; overflow-y: auto">
-          <div style="height: 300px"></div>
-          <div id="topBuffer" style="height: 400px"></div>
-          <div id="child"></div>
+        <div id='parent' style='position: relative; height: 200px; overflow-y: auto'>
+          <div style='height: 300px'></div>
+          <div id='topBuffer' style='height: 400px'></div>
+          <div id='child'></div>
         </div>,
       spaceAssertions: [
         ['#child', '#parent', 700],
@@ -66,12 +66,12 @@ describe('utiltites - DOM', () => {
     {
       title: 'scroller > table > row',
       template:
-        <div id="parent" style="height: 300px; overflow-y: auto">
-          <div style="height: 400px"></div>
-          <table style="border-spacing: 0">
-            <tr id="topBuffer" style="height: 600px"></tr>
+        <div id='parent' style='height: 300px; overflow-y: auto'>
+          <div style='height: 400px'></div>
+          <table style='border-spacing: 0'>
+            <tr id='topBuffer' style='height: 600px'></tr>
             <tbody>
-              <tr id="child"></tr>
+              <tr id='child'></tr>
             </tbody>
           </table>
         </div>,
@@ -88,14 +88,14 @@ describe('utiltites - DOM', () => {
     {
       title: 'scroller > div[relative] > div > table > row',
       template:
-        <div id="parent" style="height: 300px; overflow-y: auto">
-          <div style="height: 400px"></div>
-          <div style="position: relative; height: 400px;">
+        <div id='parent' style='height: 300px; overflow-y: auto'>
+          <div style='height: 400px'></div>
+          <div style='position: relative; height: 400px;'>
             <div>
-              <table style="border-spacing: 0">
-                <tr id="topBuffer" style="height: 600px"></tr>
+              <table style='border-spacing: 0'>
+                <tr id='topBuffer' style='height: 600px'></tr>
                 <tbody>
-                  <tr id="child"></tr>
+                  <tr id='child'></tr>
                 </tbody>
               </table>
             </div>
@@ -114,10 +114,10 @@ describe('utiltites - DOM', () => {
     {
       title: 'scroller > #shadow-root > div',
       template:
-        <div id="parent" style={{ height: 200, overflowY: 'auto' }}>
+        <div id='parent' style={{ height: 200, overflowY: 'auto' }}>
           <shadow-root>
-            <div id="topBuffer" style={{ height: 500 }}></div>
-            <div id="child"></div>
+            <div id='topBuffer' style={{ height: 500 }}></div>
+            <div id='child'></div>
           </shadow-root>
         </div>,
       assert: ct => {
@@ -142,13 +142,13 @@ describe('utiltites - DOM', () => {
         'container',
         '\t-- table [border-spacing:0]',
         '\t-- --> buffer',
-        '\t-- --> row',
+        '\t-- --> row'
       ].join('\n'),
       template:
-        <div id="parent">
-          <table id="table" style="border-spacing: 0">
-            <tr id="topBuffer" style="height: 500px;"></tr>
-            <tr id="child"><td id="cell">First cell</td></tr>
+        <div id='parent'>
+          <table id='table' style='border-spacing: 0'>
+            <tr id='topBuffer' style='height: 500px;'></tr>
+            <tr id='child'><td id='cell'>First cell</td></tr>
           </table>
         </div>,
       assert: ct => {
@@ -165,7 +165,7 @@ describe('utiltites - DOM', () => {
         assertDistance(ct, topBuffer, parent, 0);
         assertDistance(ct, cell, parent, 500);
 
-        parent.insertAdjacentElement('afterbegin', <div style="height: 400px"></div>);
+        parent.insertAdjacentElement('afterbegin', <div style='height: 400px'></div>);
         assertDistance(ct, child, table, 500);
         assertDistance(ct, topBuffer, table, 0);
         assertDistance(ct, cell, table, 500);
@@ -180,7 +180,7 @@ describe('utiltites - DOM', () => {
   interface ITestCase {
     title: string;
     template: string | HTMLElement | HTMLElement[];
-    spaceAssertions?: Array<[/*child selector*/string, /*parent selector*/string, /*supposed distance*/number]>
+    spaceAssertions?: Array<[/*child selector*/string, /*parent selector*/string, /*supposed distance*/number]>;
     assert?: (ct: HTMLDivElement) => void;
   }
 
@@ -212,7 +212,7 @@ describe('utiltites - DOM', () => {
   const assertDistance = (ct: HTMLElement, child: string | HTMLElement, parent: string | HTMLElement, distance: number) => {
     expect(getDistanceToParent(
       typeof child === 'string' ? ct.querySelector(child) : child,
-      typeof parent === 'string' ? ct.querySelector(parent) : parent,
+      typeof parent === 'string' ? ct.querySelector(parent) : parent
     )).toEqual(distance, `${typeof child === 'string' ? child : child.tagName} <--${distance}px--> ${typeof parent === 'string' ? parent : parent.tagName}`);
-  }
+  };
 });

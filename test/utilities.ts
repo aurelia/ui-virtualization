@@ -8,18 +8,17 @@ export function createAssertionQueue(): AsyncQueue {
   let next = () => {
     if (queue.length) {
       setTimeout(() => {
-        if (queue.length) {
+        if (queue.length > 0) {
           let func = queue.shift();
           func();
           next();
         }
-      }, 1);
+      }, 16);
     }
   };
 
   return (func: () => any) => {
-    queue.push(func);
-    if (queue.length === 1) {
+    if (queue.push(func) === 1) {
       next();
     }
   };
@@ -127,6 +126,14 @@ export function validateScroll(virtualRepeat: VirtualRepeat, viewModel: any, ite
       done();
     });
   });
+}
+
+/**
+ * Scroll a virtual repeat scroller element to top
+ */
+export async function scrollToStart(virtualRepeat: VirtualRepeat, insuranceTime = 5): Promise<void> {
+  virtualRepeat.getScroller().scrollTop = 0;
+  await ensureScrolled(insuranceTime);
 }
 
 /**
