@@ -8,7 +8,9 @@ export class NullVirtualRepeatStrategy extends NullRepeatStrategy implements IVi
     repeat.elementsInView
       = repeat.itemHeight
       = repeat._viewsLength = 0;
-    return false;
+    // null/undefined virtual repeat strategy does not require any calculation
+    // returning true to signal that
+    return true;
   }
 
   // a violation of base contract, won't work in strict mode

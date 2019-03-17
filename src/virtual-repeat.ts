@@ -349,15 +349,6 @@ export class VirtualRepeat extends AbstractRepeater {
     this.bottomBufferEl = bottomBufferEl;
     this.itemsChanged();
 
-    this._calcDistanceToTopInterval = PLATFORM.global.setInterval(() => {
-      const prevDistanceToTop = this.distanceToTop;
-      const currDistanceToTop = getElementDistanceToTopOfDocument(topBufferEl);
-      this.distanceToTop = currDistanceToTop;
-      if (prevDistanceToTop !== currDistanceToTop) {
-        this._handleScroll();
-      }
-    }, 500);
-
     // When dealing with tables, there can be gaps between elements, causing distances to be messed up. Might need to handle this case here.
     const firstElement = templateStrategy.getFirstElement(topBufferEl, bottomBufferEl);
     this.distanceToTop = firstElement === null ? 0 : getElementDistanceToTopOfDocument(firstElement);
@@ -366,6 +357,19 @@ export class VirtualRepeat extends AbstractRepeater {
       containerEl.addEventListener('scroll', scrollListener);
     } else {
       DOM.addEventListener('scroll', scrollListener, false);
+      // when there is no fixed height container (container with overflow scroll/auto)
+      // it's assumed that the whole document will be scrollable
+      // in this situation, distance from top buffer to top of the document/application
+      // plays an important role and needs to be correct to correctly determine the real scrolltop of this virtual repeat
+      // unfortunately, there is no easy way to observe this value without using dirty checking
+      this._calcDistanceToTopInterval = PLATFORM.global.setInterval(() => {
+        const prevDistanceToTop = this.distanceToTop;
+        const currDistanceToTop = getElementDistanceToTopOfDocument(topBufferEl);
+        this.distanceToTop = currDistanceToTop;
+        if (prevDistanceToTop !== currDistanceToTop) {
+          this._handleScroll();
+        }
+      }, 500);
     }
     if (this.items.length < this.elementsInView) {
       this._getMore(/*force?*/true);
@@ -455,6 +459,8 @@ export class VirtualRepeat extends AbstractRepeater {
 
     // if initial size are non-caclulatable,
     // setup an interval as a naive strategy to observe size
+    // this can comes from element is initialy hidden, or 0 height for animation
+    // or any other reasons.
     // todo: proper API design for sizing observation
     if (!isSizingCalculatable) {
       const { setInterval: $setInterval, clearInterval: $clearInterval } = PLATFORM.global;
