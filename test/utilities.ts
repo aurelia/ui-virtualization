@@ -66,7 +66,7 @@ export function validateState(virtualRepeat: VirtualRepeat, viewModel: ITestAppI
 /**
  * Validate states of views of a virtual repeat, based on viewModel and number of items of it, together with height of each item
  */
-export function validateScrolledState(virtualRepeat: VirtualRepeat, viewModel: ITestAppInterface<any>, itemHeight: number) {
+export function validateScrolledState(virtualRepeat: VirtualRepeat, viewModel: ITestAppInterface<any>, itemHeight: number, extraTitle?: string) {
   let views = virtualRepeat.viewSlot.children;
   let expectedHeight = viewModel.items.length * itemHeight;
   let topBufferHeight = virtualRepeat.topBufferEl.getBoundingClientRect().height;
@@ -74,15 +74,26 @@ export function validateScrolledState(virtualRepeat: VirtualRepeat, viewModel: I
   let renderedItemsHeight = views.length * itemHeight;
   expect(topBufferHeight + renderedItemsHeight + bottomBufferHeight).toBe(
     expectedHeight,
-    `Top buffer (${topBufferHeight}) + items height (${renderedItemsHeight}) + bottom buffer (${bottomBufferHeight}) should have been correct`
+    `${extraTitle
+        ? `${extraTitle} + `
+        : ''
+    }Top buffer (${topBufferHeight}) + items height (${renderedItemsHeight}) + bottom buffer (${bottomBufferHeight}) should have been correct`
   );
 
   if (viewModel.items.length > views.length) {
     expect(topBufferHeight + bottomBufferHeight).toBeGreaterThan(0);
   }
 
+  if (!Array.isArray(viewModel.items) || viewModel.items.length < 0) {
+    expect(virtualRepeat._first).toBe(0, `${extraTitle}repeat._first === 0 <when 0 | null | undefined>`);
+    expect(virtualRepeat.viewCount()).toBe(0, `${extraTitle}items.length === 0 | null | undefined`);
+    return;
+  }
+
   // validate contextual data
-  let startingLoc = viewModel.items.indexOf(views[0].bindingContext.item);
+  let startingLoc = viewModel.items && viewModel.items.length > 0
+    ? viewModel.items.indexOf(views[0].bindingContext.item)
+    : 0;
   // let i = 0;
   // let ii = Math.min(viewModel.items.length - startingLoc, views.length);
   for (let i = startingLoc; i < views.length; i++) {
@@ -170,6 +181,12 @@ export function waitForTimeout(time = 1): Promise<void> {
 
 export function waitForNextFrame(): Promise<void> {
   return new Promise(r => requestAnimationFrame(() => r()));
+}
+
+export async function waitForFrames(count = 1): Promise<void> {
+  while (count --) {
+    await waitForNextFrame();
+  }
 }
 
 export function createScrollEvent(target: EventTarget): void {
