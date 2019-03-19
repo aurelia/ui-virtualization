@@ -75,6 +75,11 @@ export const insertBeforeNode = (view: IView, bottomBuffer: Element): void => {
  * There are steps in the middle to account for offsetParent but it's basically that
  */
 export const getDistanceToParent = (child: HTMLElement, parent: HTMLElement) => {
+  // optimizable case where child is the first child of parent
+  // and parent is the target parent to calculate
+  if (child.previousSibling === null && child.parentNode === parent) {
+    return 0;
+  }
   const offsetParent = child.offsetParent as HTMLElement;
   const childOffsetTop = child.offsetTop;
   // [el] <-- offset parent === parent

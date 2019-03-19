@@ -14,5 +14,6 @@ export {
 };
 
 export {
-  IScrollNextScrollContext
+  IScrollNextScrollContext,
+  VirtualizationEvents
 } from './interfaces';

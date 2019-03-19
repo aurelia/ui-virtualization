@@ -1,7 +1,7 @@
 import { ICollectionObserverSplice, mergeSplice } from 'aurelia-binding';
 import { ViewSlot } from 'aurelia-templating';
 import { ArrayRepeatStrategy, createFullOverrideContext } from 'aurelia-templating-resources';
-import { IView, IVirtualRepeatStrategy } from './interfaces';
+import { IView, IVirtualRepeatStrategy, VirtualizationCalculation } from './interfaces';
 import {
   Math$abs,
   Math$floor,
@@ -22,12 +22,12 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     return repeat.addView(overrideContext.bindingContext, overrideContext);
   }
 
-  initCalculation(repeat: VirtualRepeat, items: any[]): boolean {
+  initCalculation(repeat: VirtualRepeat, items: any[]): VirtualizationCalculation {
     const itemCount = items.length;
     // when there is no item, bails immediately
     // and return false to notify calculation finished unsuccessfully
     if (!(itemCount > 0)) {
-      return false;
+      return VirtualizationCalculation.reset;
     }
     // before invoking instance changed, there needs to be basic calculation on how
     // the required vairables such as item height and elements required
@@ -38,19 +38,21 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     }
     const isFixedHeightContainer = repeat._fixedHeightContainer = hasOverflowScroll(containerEl);
     const firstView = repeat._firstView();
-    const itemHeight = repeat.itemHeight = calcOuterHeight(firstView.firstChild as Element);
+    const itemHeight = calcOuterHeight(firstView.firstChild as Element);
     // when item height is 0, bails immediately
     // and return false to notify calculation has finished unsuccessfully
     // it cannot be processed further when item is 0
     if (itemHeight === 0) {
-      return false;
+      return VirtualizationCalculation.none;
     }
+    repeat.itemHeight = itemHeight;
     const scroll_el_height = isFixedHeightContainer
       ? calcScrollHeight(containerEl)
       : document.documentElement.clientHeight;
+    // console.log({ scroll_el_height })
     const elementsInView = repeat.elementsInView = Math$floor(scroll_el_height / itemHeight) + 1;
     const viewsCount = repeat._viewsLength = elementsInView * 2;
-    return true;
+    return VirtualizationCalculation.has_sizing | VirtualizationCalculation.observe_scroller;
   }
 
   /**
@@ -88,8 +90,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     if (currItemCount === 0) {
       repeat.removeAllViews(/*return to cache?*/true, /*skip animation?*/false);
       repeat._resetCalculation();
-      delete repeat.__queuedSplices;
-      delete repeat.__array;
+      repeat.__queuedSplices = repeat.__array = undefined;
       return false;
     }
     /*
@@ -99,26 +100,32 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
         To figure out that one, we're going to have to know where we are in our scrolling so we can know how far down we've gone to show the first view
         That "first" is calculated and passed into here
     */
-    // remove unneeded views.
+
+    // if the number of items shrinks to less than number of active views
+    // remove all unneeded views
     let realViewsCount = repeat.viewCount();
-    // console.log('0. Start inplace process item', { realViewsCount, currItemCount, els: repeat.elementsInView, max: repeat._viewsLength })
     while (realViewsCount > currItemCount) {
       realViewsCount--;
       repeat.removeView(realViewsCount, /*return to cache?*/true, /*skip animation?*/false);
     }
-    // console.log(realViewsCount, repeat._viewsLength)
+    // there is situation when container height shrinks
+    // the real views count will be greater than new maximum required view count
+    // remove all unnecessary view
+    while (realViewsCount > repeat._viewsLength) {
+      realViewsCount--;
+      repeat.removeView(realViewsCount, /*return to cache?*/true, /*skip animation?*/false);
+    }
     realViewsCount = Math$min(realViewsCount, repeat._viewsLength);
+
     const local = repeat.local;
     const lastIndex = currItemCount - 1;
 
-    // console.log('1. firstIndex, realCount, lastIndex', { firstIndex, realViewsCount, lastIndex })
     if (firstIndex + realViewsCount > lastIndex) {
       // first = currItemCount - realViewsCount instead of: first = currItemCount - 1 - realViewsCount;
       //    this is because during view update
       //    view(i) starts at 0 and ends at less than last
       firstIndex = Math$max(0, currItemCount - realViewsCount);
     }
-    // console.log('2. firstIndex, realCount, lastIndex', { firstIndex, realViewsCount, lastIndex })
 
     repeat._first = firstIndex;
     // re-evaluate bindings on existing views.
@@ -151,9 +158,6 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     }
     // add new views
     const minLength = Math$min(repeat._viewsLength, currItemCount);
-    // console.log('4. After updating existing views',
-    //   { firstIndex, minLength, maxView: repeat._viewsLength, currItemCount, realViewsCount }
-    // )
     for (let i = realViewsCount; i < minLength; i++) {
       const overrideContext = createFullOverrideContext(repeat, items[i], i, currItemCount);
       repeat.addView(overrideContext.bindingContext, overrideContext);
@@ -165,7 +169,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
   _standardProcessInstanceMutated(repeat: VirtualRepeat, array: Array<any>, splices: ICollectionObserverSplice[]): void {
     if (repeat.__queuedSplices) {
       for (let i = 0, ii = splices.length; i < ii; ++i) {
-        let {index, removed, addedCount} = splices[i];
+        const { index, removed, addedCount } = splices[i];
         mergeSplice(repeat.__queuedSplices, index, removed, addedCount);
       }
       repeat.__array = array.slice(0);
@@ -174,23 +178,21 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     if (array.length === 0) {
       repeat.removeAllViews(/*return to cache?*/true, /*skip animation?*/false);
       repeat._resetCalculation();
-      delete repeat.__queuedSplices;
-      delete repeat.__array;
+      repeat.__queuedSplices = repeat.__array = undefined;
       return;
     }
 
-    let maybePromise = this._runSplices(repeat, array.slice(0), splices);
+    const maybePromise = this._runSplices(repeat, array.slice(0), splices);
     if (maybePromise instanceof Promise) {
-      let queuedSplices = repeat.__queuedSplices = [];
+      const queuedSplices = repeat.__queuedSplices = [];
 
-      let runQueuedSplices = () => {
+      const runQueuedSplices = () => {
         if (! queuedSplices.length) {
-          delete repeat.__queuedSplices;
-          delete repeat.__array;
+          repeat.__queuedSplices = repeat.__array = undefined;
           return;
         }
 
-        let nextPromise = this._runSplices(repeat, repeat.__array, queuedSplices) || Promise.resolve();
+        const nextPromise = this._runSplices(repeat, repeat.__array, queuedSplices) || Promise.resolve();
         nextPromise.then(runQueuedSplices);
       };
 
