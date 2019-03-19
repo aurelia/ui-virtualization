@@ -1,8 +1,4 @@
-interface IScrollContext {
-  isAtTop: boolean;
-  isAtBottom: boolean;
-  topIndex: number;
-}
+import { processContent, BehaviorInstruction } from 'aurelia-framework';
 
 export interface Person {
   fname: string;
@@ -17,34 +13,49 @@ const lNames = [
   // tslint:disable-next-line:max-line-length
   'Prefect', 'Dent', 'Astra', 'Adams', 'Baker', 'Clark', 'Davis', 'Evans', 'Frank', 'Ghosh', 'Hills', 'Irwin', 'Jones', 'Klein', 'Lopez', 'Mason', 'Nalty', 'Ochoa', 'Patel', 'Quinn', 'Reily', 'Smith', 'Trott', 'Usman', 'Valdo', 'White', 'Xiang', 'Yakub', 'Zafar'
 ];
+
+@processContent((_: any, __: any, ___: any, instruction: BehaviorInstruction) => {
+  instruction.inheritBindingContext = false;
+  return true;
+})
 export class App {
   private people: Person[];
 
   ctHeight = 300;
   ctWidth = 600;
+  ctBorder = 0;
+  ctBorderCss = '15px solid royalblue';
+  ctWidthCss = '50%';
+  ctHeightCss = '50%';
 
   constructor() {
-    this.people = [
-      { fname: fNames[0], lname: lNames[0] },
-      { fname: fNames[1], lname: lNames[1] },
-      { fname: fNames[2], lname: lNames[2] }
-    ];
-    this.push30(undefined, 500);
+    this.people = [];
+    this.push(500);
   }
 
-  public push30(scrollContext?: IScrollContext, count = 30): void {
-    console.log('Issue-21-69 getting more...');
-    // if (scrollContext) {
-    //   console.log('Issue-129 getting more:', JSON.stringify(scrollContext, undefined, 2));
-    // }
-    if (!scrollContext) {
-      for (let i = 0; i < count; i++) {
-        this.people.push({
-          fname: fNames[Math.floor(Math.random() * fNames.length)],
-          lname: lNames[Math.floor(Math.random() * lNames.length)]
-        });
-      }
+  push(count = 30): void {
+    while (count-- > 0) {
+      this.people.push({
+        fname: fNames[Math.floor(Math.random() * fNames.length)],
+        lname: lNames[Math.floor(Math.random() * lNames.length)]
+      });
     }
-    console.log('Population size:', this.people.length);
+  }
+
+  resizeAndMutate(): void {
+    const hSeed = Math.random();
+    const wSeed = Math.random();
+    const borderSeed = Math.random();
+    this.ctHeight = hSeed > 0.1 ? (200 + Math.round(Math.random()  * 400)) : 0;
+    this.ctWidth = wSeed > 0.1 ? (200 + Math.round(Math.random() * 400)) : 0;
+    this.ctBorder = borderSeed > 0.1 ? Math.round(Math.random() * 50) : 0;
+
+    const collectionSeed = Math.random();
+    if (collectionSeed > 0.1) {
+      this.people.splice(0, Math.floor(Math.random() * this.people.length));
+      this.push(Math.round(Math.random() * 50));
+    } else {
+      this.people = collectionSeed > 0.8 ? undefined : collectionSeed > 0.7 ? null : [];
+    }
   }
 }

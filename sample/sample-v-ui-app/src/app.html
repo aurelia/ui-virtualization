@@ -16,12 +16,15 @@
     show.bind="!minimizedMonitor"
     class="bg-white border shadow-lg d-flex flex-column"
     style="position: fixed; bottom: 0; right: 0; max-height: 80vh;">
-    <let virtual-repeat.bind='window.virtualRepeat'></let>
+    <let
+      virtual-repeat.bind='window.virtualRepeat'
+      view-count-same-max-views-require.bind="virtualRepeat.viewSlot.children.length === virtualRepeat._viewsLength"></let>
     <button
       class="btn btn-sm btn-block btn-info flex-shrink-0"
       click.trigger="minimizedMonitor = true">Minimize monitor</button>
     <div class="flex-fill" style="overflow-y: auto;">
       <table class="table table-sm table-striped table-bordered">
+        <caption class="px-2" style="caption-side: top;">Virtual repeat monitor</caption>
         <tr>
           <th>Name</th>
           <th>--- Value ---</th>
@@ -38,34 +41,43 @@
           <td>${virtualRepeat.items.length * virtualRepeat.itemHeight}</td>
         </tr>
         <tr>
-          <td>First</td><td>${virtualRepeat._first}</td>
+          <td>Total views count</td>
+          <td class="table-${viewCountSameMaxViewsRequire ? 'success' : 'warning'}">${virtualRepeat.viewSlot.children.length}</td>
+        </tr>
         <tr>
-          <td>Previous First</td><td>${virtualRepeat._previousFirst}</td>
-        <tr>
-          <td>Views Length</td><td>${virtualRepeat._viewsLength}</td>
+          <td>Real views count</td>
+          <td class="table-${viewCountSameMaxViewsRequire ? 'success' : 'warning'}">${virtualRepeat._viewsLength}</td>
+        </tr>
         <tr>
           <td>Last Rebind</td><td>${virtualRepeat._lastRebind}</td>
         <tr>
           <td>Elements In view</td>
           <td>${virtualRepeat.elementsInView}</td>
+        </tr>
+        <tr>
+          <td>First</td><td>${virtualRepeat._first}</td>
+        <tr>
+          <td>Previous First</td><td>${virtualRepeat._previousFirst}</td>
         <tr>
           <td>Top Buffer height</td>
           <td>${virtualRepeat._topBufferHeight}</td>
+        </tr>
         <tr>
           <td>Bottom Buffer height</td>
           <td>${virtualRepeat._bottomBufferHeight}</td>
+        </tr>
         <tr>
           <td>Distance to top</td>
           <td>${virtualRepeat.distanceToTop}</td>
-        <tr>
-          <td>Top buffer distance</td>
-          <td>${virtualRepeat.topBufferDistance}</td>
+        </tr>
         <tr>
           <td>Scrolling Down</td>
           <td><checkbox checked.bind=virtualRepeat._scrollingDown></checkbox></td>
+        </tr>
         <tr>
           <td>Scrolling Up</td>
           <td><checkbox checked.bind=virtualRepeat._scrollingUp></checkbox></td>
+        </tr>
         <tr>
           <td>Is First or last</td>
           <td><checkbox checked.bind=virtualRepeat._isAtFirstOrLastIndex></checkbox></td>
