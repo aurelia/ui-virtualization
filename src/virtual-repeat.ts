@@ -11,8 +11,8 @@ import {
   ViewSlot,
   ViewResources,
   TargetInstruction,
-  View,
-  IStaticResourceConfig
+  IStaticResourceConfig,
+  ElementEvents
 } from 'aurelia-templating';
 import {
   AbstractRepeater,
@@ -24,17 +24,14 @@ import {
 } from 'aurelia-templating-resources';
 import { DOM, PLATFORM } from 'aurelia-pal';
 import { TaskQueue } from 'aurelia-task-queue';
-import { Container } from 'aurelia-dependency-injection';
 import {
   rebindAndMoveView,
-  Math$ceil,
   Math$floor,
   Math$max,
   Math$abs
 } from './utilities';
 import {
   calcOuterHeight,
-  getStyleValues,
   getElementDistanceToTopOfDocument,
   hasOverflowScroll,
   getDistanceToParent,
@@ -48,10 +45,15 @@ import {
   IView,
   IScrollNextScrollContext,
   IViewSlot,
-  IScrollerInfo
+  IScrollerInfo,
+  VirtualizationCalculation,
+  VirtualizationEvents
 } from './interfaces';
-import { getResizeObserverClass, ResizeObserver } from './resize-observer';
-import { ArrayVirtualRepeatStrategy } from './array-virtual-repeat-strategy';
+import {
+  getResizeObserverClass,
+  ResizeObserver,
+  DOMRectReadOnly
+} from './resize-observer';
 
 const enum VirtualRepeatCallContext {
   handleCollectionMutated = 'handleCollectionMutated',
@@ -62,8 +64,16 @@ export class VirtualRepeat extends AbstractRepeater {
 
   /**@internal */
   static inject() {
-    // tslint:disable-next-line:max-line-length
-    return [DOM.Element, BoundViewFactory, TargetInstruction, ViewSlot, ViewResources, ObserverLocator, VirtualRepeatStrategyLocator, TemplateStrategyLocator];
+    return [
+      DOM.Element,
+      BoundViewFactory,
+      TargetInstruction,
+      ViewSlot,
+      ViewResources,
+      ObserverLocator,
+      VirtualRepeatStrategyLocator,
+      TemplateStrategyLocator
+    ];
   }
 
   /**@internal */
@@ -115,11 +125,24 @@ export class VirtualRepeat extends AbstractRepeater {
    */
   _bottomBufferHeight = 0;
 
-  /**@internal*/ _scrollingDown = false;
-  /**@internal*/ _scrollingUp = false;
-  /**@internal*/ _switchedDirection = false;
-  /**@internal*/ _isAttached = false;
-  /**@internal*/ _ticking = false;
+  /**@internal*/
+  _isScrolling: boolean = false;
+
+  /**@internal*/
+  _scrollingDown = false;
+
+  /**@internal*/
+  _scrollingUp = false;
+
+  /**@internal*/
+  _switchedDirection = false;
+
+  /**@internal*/
+  _isAttached = false;
+
+  /**@internal*/
+  _ticking = false;
+
   /**
    * Indicates whether virtual repeat attribute is inside a fixed height container with overflow
    *
@@ -133,7 +156,9 @@ export class VirtualRepeat extends AbstractRepeater {
    * @internal
    */
   _isAtTop = true;
-  /**@internal*/ _calledGetMore = false;
+
+  /**@internal*/
+  _calledGetMore = false;
 
   /**
    * While handling consecutive scroll events, repeater and its strategies may need to do
@@ -158,14 +183,16 @@ export class VirtualRepeat extends AbstractRepeater {
    */
   _handlingMutations: boolean = false;
 
-  /**@internal*/ _isScrolling: boolean = false;
 
   // Inherited properties declaration
   key: any;
   value: any;
+
   // Array repeat specific properties
-  /**@internal*/ __queuedSplices: any[];
-  /**@internal*/ __array: any[];
+  /**@internal*/
+  __queuedSplices: any[];
+  /**@internal*/
+  __array: any[];
 
   /**
    * @bindable
@@ -198,6 +225,9 @@ export class VirtualRepeat extends AbstractRepeater {
   private observerLocator: ObserverLocator;
 
   /**@internal */
+  private taskQueue: TaskQueue;
+
+  /**@internal */
   private strategyLocator: VirtualRepeatStrategyLocator;
 
   /**@internal */
@@ -215,24 +245,28 @@ export class VirtualRepeat extends AbstractRepeater {
    */
   _prevItemsCount: number;
 
-  /**@internal */
+  /**
+   * Reference to scrolling container of this virtual repeat
+   * Usually determined by template strategy.
+   *
+   * The scrolling container may vary based on different position of `virtual-repeat` attribute
+   * @internal
+   */
   scrollerEl: HTMLElement;
 
   /**@internal */
   private scrollListener: () => any;
 
   /**@internal */
-  private _sizeInterval: any;
+  _sizeInterval: any;
 
   /**
    * When there are no scroller defined, fallback to use `documentElement` as scroller
    * This has implication that distance to top always needs to be recalculated as it can be changed at any time
    * @internal
    */
-  private _calcDistanceToTopInterval: any;
+  _calcDistanceToTopInterval: any;
 
-  /**@internal */
-  private taskQueue: TaskQueue;
 
   /**
    * Used to revert all checks related to scroll handling guard
@@ -246,11 +280,13 @@ export class VirtualRepeat extends AbstractRepeater {
    * @internal
    */
   templateStrategy: ITemplateStrategy;
+
   /**
    * Top buffer element, used to reflect the visualization of amount of items `before` the first visible item
    * @internal
    */
   topBufferEl: HTMLElement;
+
   /**
    * Bot buffer element, used to reflect the visualization of amount of items `after` the first visible item
    * @internal
@@ -262,6 +298,7 @@ export class VirtualRepeat extends AbstractRepeater {
    * @internal
    */
   itemHeight: number;
+
   /**
    * Calculate current scrolltop position
    */
@@ -272,20 +309,41 @@ export class VirtualRepeat extends AbstractRepeater {
    * @internal
    */
   _isLastIndex: boolean;
+
   /**
    * Number indicating minimum elements required to render to fill up the visible viewport
    * @internal
    */
   elementsInView: number;
+
   /**
    * collection repeating strategy
    */
   strategy: IVirtualRepeatStrategy;
+
   /**
    * Flags to indicate whether to ignore next mutation handling
    * @internal
    */
   _ignoreMutation: boolean;
+
+  /**
+   * Observer for detecting changes on scroller element for proper recalculation
+   * @internal
+   */
+  _scrollerResizeObserver: ResizeObserver;
+
+  /**
+   * Cache of last calculated content rect of scroller
+   * @internal
+   */
+  _currScrollerContentRect: DOMRectReadOnly;
+
+  /**
+   * Event manager for
+   * @internal
+   */
+  _scrollerEvents: ElementEvents;
 
   /**@internal */
   callContext: VirtualRepeatCallContext;
@@ -349,23 +407,25 @@ export class VirtualRepeat extends AbstractRepeater {
     this.bottomBufferEl = bottomBufferEl;
     this.itemsChanged();
 
-    this._calcDistanceToTopInterval = PLATFORM.global.setInterval(() => {
-      const prevDistanceToTop = this.distanceToTop;
-      const currDistanceToTop = getElementDistanceToTopOfDocument(topBufferEl);
-      this.distanceToTop = currDistanceToTop;
-      if (prevDistanceToTop !== currDistanceToTop) {
-        this._handleScroll();
-      }
-    }, 500);
-
-    // When dealing with tables, there can be gaps between elements, causing distances to be messed up. Might need to handle this case here.
-    const firstElement = templateStrategy.getFirstElement(topBufferEl, bottomBufferEl);
-    this.distanceToTop = firstElement === null ? 0 : getElementDistanceToTopOfDocument(firstElement);
-
     if (isFixedHeightContainer) {
       containerEl.addEventListener('scroll', scrollListener);
     } else {
+      const firstElement = templateStrategy.getFirstElement(topBufferEl, bottomBufferEl);
+      this.distanceToTop = firstElement === null ? 0 : getElementDistanceToTopOfDocument(topBufferEl);
       DOM.addEventListener('scroll', scrollListener, false);
+      // when there is no fixed height container (container with overflow scroll/auto)
+      // it's assumed that the whole document will be scrollable
+      // in this situation, distance from top buffer to top of the document/application
+      // plays an important role and needs to be correct to correctly determine the real scrolltop of this virtual repeat
+      // unfortunately, there is no easy way to observe this value without using dirty checking
+      this._calcDistanceToTopInterval = PLATFORM.global.setInterval(() => {
+        const prevDistanceToTop = this.distanceToTop;
+        const currDistanceToTop = getElementDistanceToTopOfDocument(topBufferEl);
+        this.distanceToTop = currDistanceToTop;
+        if (prevDistanceToTop !== currDistanceToTop) {
+          this._handleScroll();
+        }
+      }, 500);
     }
     if (this.items.length < this.elementsInView) {
       this._getMore(/*force?*/true);
@@ -386,12 +446,9 @@ export class VirtualRepeat extends AbstractRepeater {
     } else {
       DOM.removeEventListener('scroll', scrollListener, false);
     }
-    const observer = this._resizeObserver;
-    if (observer) {
-      observer.disconnect();
-    }
-    this._resizeObserver = undefined;
-    this._isLastIndex = undefined;
+    this._unobserveScrollerSize();
+    this._currScrollerContentRect
+      = this._isLastIndex = undefined;
     this._isAttached
       = this._fixedHeightContainer = false;
     this._unsubscribeCollection();
@@ -450,13 +507,19 @@ export class VirtualRepeat extends AbstractRepeater {
     }
 
     // sizing calculation result is used to setup a resize observer
-    const isSizingCalculatable = strategy.initCalculation(this, items);
+    const calculationSignals = strategy.initCalculation(this, items);
     strategy.instanceChanged(this, items, this._first);
+
+    if (calculationSignals & VirtualizationCalculation.reset) {
+      this._resetCalculation();
+    }
 
     // if initial size are non-caclulatable,
     // setup an interval as a naive strategy to observe size
+    // this can comes from element is initialy hidden, or 0 height for animation
+    // or any other reasons.
     // todo: proper API design for sizing observation
-    if (!isSizingCalculatable) {
+    if ((calculationSignals & VirtualizationCalculation.has_sizing) === 0) {
       const { setInterval: $setInterval, clearInterval: $clearInterval } = PLATFORM.global;
       $clearInterval(this._sizeInterval);
       this._sizeInterval = $setInterval(() => {
@@ -471,6 +534,10 @@ export class VirtualRepeat extends AbstractRepeater {
           $clearInterval(this._sizeInterval);
         }
       }, 500);
+    }
+
+    if (calculationSignals & VirtualizationCalculation.observe_scroller) {
+      this._observeScroller(this.getScroller());
     }
   }
 
@@ -493,7 +560,7 @@ export class VirtualRepeat extends AbstractRepeater {
       return;
     }
     this._ignoreMutation = true;
-    let newItems = this.sourceExpression.evaluate(this.scope, this.lookupFunctions);
+    const newItems = this.sourceExpression.evaluate(this.scope, this.lookupFunctions);
     this.taskQueue.queueMicroTask(() => this._ignoreMutation = false);
 
     // call itemsChanged...
@@ -538,6 +605,7 @@ export class VirtualRepeat extends AbstractRepeater {
       = this._topBufferHeight
       = this._bottomBufferHeight
       = this._prevItemsCount
+      = this.itemHeight
       = this.elementsInView = 0;
     this._isScrolling
       = this._scrollingDown
@@ -555,7 +623,7 @@ export class VirtualRepeat extends AbstractRepeater {
   _onScroll(): void {
     const isHandlingMutations = this._handlingMutations;
     if (!this._ticking && !isHandlingMutations) {
-      requestAnimationFrame(() => {
+      this.taskQueue.queueMicroTask(() => {
         this._handleScroll();
         this._ticking = false;
       });
@@ -718,7 +786,7 @@ export class VirtualRepeat extends AbstractRepeater {
             const funcCall = bindingContext[getMoreFuncName];
 
             if (typeof funcCall === 'function') {
-              let result = funcCall.call(bindingContext, topIndex, isAtBottom, isAtTop);
+              const result = funcCall.call(bindingContext, topIndex, isAtBottom, isAtTop);
               if (!(result instanceof Promise)) {
                 // Reset for the next time
                 this._calledGetMore = false;
@@ -874,121 +942,81 @@ export class VirtualRepeat extends AbstractRepeater {
     return lastView === null ? -1 : lastView.overrideContext.$index;
   }
 
-  /**
-   * Observer for detecting changes on scroller element for proper recalculation
-   * @internal
-   */
-  _resizeObserver: ResizeObserver;
-  /**
-   * Cache of last calculated height for signaling recalculation
-   * @internal
-   */
-  _lastScrollerHeight: number;
 
   /**
-   * @internal Calculate the necessary initial heights. Including:
-   *
-   * - item height
-   * - scroll container height
-   * - number of elements in view port
-   * - first item index
-   * - top/bottom buffers' height
+   * Observe scroller element to react upon sizing changes
+   * @internal
    */
-  _calcInitialHeights(itemsLength: number, force?: boolean): void {
-    // there is no point doing any calculation if it's not in the live document
-    // as nothing will have correct height
-    if (!this._isAttached || !document.body.contains(this.element)) {
-      return;
-    }
-    const isSameLength = this._viewsLength > 0 && this._prevItemsCount === itemsLength;
-    if (isSameLength && !force) {
-      return;
-    }
-    if (itemsLength < 1) {
-      this._resetCalculation();
-      return;
-    }
-    const firstViewElement = this.view(0).lastChild as Element;
-    const itemHeight = this.itemHeight = calcOuterHeight(firstViewElement);
-    if (itemHeight <= 0) {
-      const global = PLATFORM.global;
-      this._sizeInterval = global.setInterval(() => {
-        const newCalcSize = calcOuterHeight(firstViewElement);
-        if (newCalcSize > 0) {
-          global.clearInterval(this._sizeInterval);
+  _observeScroller(scrollerEl: HTMLElement): void {
+    const $raf = requestAnimationFrame;
+    // using `newRect` paramter to check if this size change handler is still the most recent update
+    // only invoke items changed if it is
+    // this is to ensure items changed calls are not invoked unncessarily
+    const sizeChangeHandler = (newRect: DOMRectReadOnly) => {
+      $raf(() => {
+        if (newRect === this._currScrollerContentRect) {
+          // console.log('3. resize observer handler invoked')
           this.itemsChanged();
         }
-      }, 500);
-      return;
+      });
+    };
+    const ResizeObserverConstructor = getResizeObserverClass();
+    if (typeof ResizeObserverConstructor === 'function') {
+      let observer = this._scrollerResizeObserver;
+      if (observer) {
+        observer.disconnect();
+      }
+      // rebuild observer and reobserve scroller el,
+      // for might-be-supported feature in future where scroller can be dynamically changed
+      observer = this._scrollerResizeObserver = new ResizeObserverConstructor((entries) => {
+        const oldRect = this._currScrollerContentRect;
+        const newRect = entries[0].contentRect;
+        this._currScrollerContentRect = newRect;
+        // console.log('1. resize observer hit');
+        if (oldRect === undefined || newRect.height !== oldRect.height || newRect.width !== oldRect.width) {
+          // console.log('2. resize observer handler queued');
+          // passing `newRect` paramter to later check if resize notification is the latest event
+          // only invoke items changed if it is
+          // this is to ensure items changed calls are not invoked unncessarily
+          sizeChangeHandler(newRect);
+        }
+      });
+      observer.observe(scrollerEl);
     }
 
-    this._prevItemsCount = itemsLength;
-    const isFixedHeightContainer = this._fixedHeightContainer;
-    const scrollerEl = isFixedHeightContainer ? this.scrollerEl : document.documentElement;
-    const scroll_el_height = isFixedHeightContainer
-      ? calcScrollHeight(scrollerEl)
-      : document.documentElement.clientHeight;
-    const elementsInView = this.elementsInView = Math$floor(scroll_el_height / itemHeight) + 1;
-    const viewsCount = this._viewsLength = elementsInView * 2;
-
-    // const ResizeObserverConstructor = getResizeObserverClass();
-    // if (typeof ResizeObserverConstructor === 'function') {
-    //   let observer = this._resizeObserver;
-    //   if (observer) {
-    //     observer.disconnect();
-    //   }
-    //   this._lastScrollerHeight = scroll_el_height;
-    //   observer = this._resizeObserver = new ResizeObserverConstructor(() => {
-    //     console.log('resize observer hit');
-    //     requestAnimationFrame(() => {
-    //       const newScrollHeight = calcScrollHeight(scrollerEl);
-    //       // console.log({ newScrollHeight, last: this._lastScrollerHeight });
-    //       if (newScrollHeight !== this._lastScrollerHeight) {
-    //         this._lastScrollerHeight = newScrollHeight;
-    //         const elementsInView = this.elementsInView = Math$floor(newScrollHeight / itemHeight) + 1;
-    //         const viewsCount = this._viewsLength = elementsInView * 2;
-    //         this._handleScroll();
-    //         // if (this.items) {
-    //         //   this._calcInitialHeights(this.items.length, true);
-    //         // }
-    //         // if (this.items) {
-    //         //   this._calcInitialHeights(this.items.length, true);
-    //         // }
-    //         // requestAnimationFrame(() => this.itemsChanged());
-    //         // this.itemsChanged();
-    //       }
-    //     });
-    //   });
-    //   observer.observe(scrollerEl);
-    // }
-
-    // Look at top buffer height (how far we've scrolled down)
-    // If top buffer height is greater than the new bottom buffer height (how far we *can* scroll down)
-    //    Then set top buffer height to max it can be (bottom buffer height - views in length?) and bottom buffer height to 0
-
-    // Calc how much buffer room to the bottom if you were at the top
-    // In case of small lists, ensure that we never set the buffer heights to impossible values
-    const newBottomBufferHeight = Math$max(0, itemHeight * (itemsLength - viewsCount));
-
-    // Use case when items are removed (we've scrolled past where we can)
-    if (this._topBufferHeight >= newBottomBufferHeight) {
-      this._topBufferHeight = newBottomBufferHeight;
-      this._bottomBufferHeight = 0;
-      // In case of small lists, ensure that we never set first to less than possible
-      this._first = Math$max(0, itemsLength - viewsCount);
+    // subscribe to selected custom events
+    // for manual notification, in case all native strategies fail (no support/buggy browser implementation)
+    let elEvents = this._scrollerEvents;
+    if (elEvents) {
+      elEvents.disposeAll();
     }
-    // Use case when items are added (we are adding scrollable space to the bottom)
-    else {
-      // We need to re-evaluate which is the true "first". If we've added items, then the previous "first" is actually too far down the list
-      const firstIndex = this._firstViewIndex();
-      this._first = firstIndex;
-      // appropriate buffer height for top, might be 1 too long...
-      const adjustedTopBufferHeight = firstIndex * itemHeight;
-      this._topBufferHeight = adjustedTopBufferHeight;
-      // But what about when we've only scrolled slightly down the list? We need to readjust the top buffer height then
-      this._bottomBufferHeight = Math$max(0, newBottomBufferHeight - adjustedTopBufferHeight);
+    const sizeChangeEventsHandler = () => {
+      $raf(() => {
+        this.itemsChanged();
+      });
+    };
+    // rebuild element events,
+    // for might-be-supported feature in future where scroller can be dynamically changed
+    elEvents = this._scrollerEvents = new ElementEvents(scrollerEl);
+    elEvents.subscribe(VirtualizationEvents.scrollerSizeChange, sizeChangeEventsHandler, false);
+    elEvents.subscribe(VirtualizationEvents.itemSizeChange, sizeChangeEventsHandler, false);
+  }
+
+  /**
+   * Dispose all event listeners related to sizing of scroller, if any
+   * @internal
+   */
+  _unobserveScrollerSize(): void {
+    const observer = this._scrollerResizeObserver;
+    if (observer) {
+      observer.disconnect();
     }
-    this._updateBufferElements();
+    const scrollerEvents = this._scrollerEvents;
+    if (scrollerEvents) {
+      scrollerEvents.disposeAll();
+    }
+    this._scrollerResizeObserver
+      = this._scrollerEvents = undefined;
   }
 
   /**

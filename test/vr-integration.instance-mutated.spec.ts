@@ -1,6 +1,6 @@
 import './setup';
 import { PLATFORM } from 'aurelia-pal';
-import { validateScrolledState, scrollToEnd, waitForNextFrame } from './utilities';
+import { validateScrolledState, scrollToEnd, waitForNextFrame, waitForFrames } from './utilities';
 import { VirtualRepeat } from '../src/virtual-repeat';
 import { StageComponent, ComponentTester } from 'aurelia-testing';
 import { bootstrap } from 'aurelia-bootstrapper';
@@ -316,30 +316,30 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
       };
 
       expect(virtualRepeat._viewsLength).toBe(12, 'repeat._viewsLength');
-      await scrollToEnd(virtualRepeat);
+      await scrollToEnd(virtualRepeat, 50);
       expect(scrollCount).toBe(2, '@scroll 1');
-      expect(virtualRepeat.element.parentElement.scrollTop).toBe(100 * 995);
-      expect(virtualRepeat._first).toBe(994);
+      expect(virtualRepeat.element.parentElement.scrollTop).toBe(100 * 995, 'anchor.parent.scrollTop 1');
+      expect(virtualRepeat._first).toBe(988, 'repeat._first 1');
 
       viewModel.items.splice(5, 990, {}, {});
       const hasValueConverter = extraResources.length > 0;
       if (hasValueConverter) {
-        await waitForNextFrame();
+        await waitForFrames(2);
         expect(virtualRepeat.element.parentElement.scrollHeight).toBe(100 * 12, '| vc >> scroller.scrollHeight 2');
         expect(virtualRepeat.element.parentElement.scrollTop).toBe(100 * (12 - 500 / 100), '| vc >> scroller.scrollTop 2');
         expect(scrollCount).toBeGreaterThanOrEqual(2, '| vc >> @scroll 3');
-        expect(virtualRepeat._first).toBe(0);
+        expect(virtualRepeat._first).toBe(6, '| vc >> repeat._first 2');
         validateScrolledState(virtualRepeat, viewModel, itemHeight);
       } else {
         expect(scrollCount).toBe(2, '@scroll 2');
-        expect(virtualRepeat._first).toBe(994);
+        expect(virtualRepeat._first).toBe(988, 'repeat._first 2');
         expect(virtualRepeat.items.length).toBe(12, 'items.length 1');
         expect(virtualRepeat.element.parentElement.scrollTop).toBe(100 * 995, 'scroller.scrollTop 1');
         await waitForNextFrame();
         expect(virtualRepeat.element.parentElement.scrollHeight).toBe(100 * 12, 'scroller.scrollHeight 2');
         expect(virtualRepeat.element.parentElement.scrollTop).toBe(100 * (12 - 500 / 100), 'scroller.scrollTop 2');
         expect(scrollCount).toBe(3, '@scroll 3');
-        expect(virtualRepeat._first).toBe(0);
+        expect(virtualRepeat._first).toBe(6, 'repeat._first 3');
         validateScrolledState(virtualRepeat, viewModel, itemHeight);
       }
       virtualRepeat.element.parentElement.onscroll = null;
@@ -370,13 +370,13 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
 
       const hasValueConverter = extraResources.length > 0;
       if (hasValueConverter) {
-        await waitForNextFrame();
+        await waitForFrames(2);
         expect(scrollCount).toBeGreaterThanOrEqual(2, '| vc >> @scroll 2');
         expect(virtualRepeat.items.length).toBe(13, 'items.length 1');
         expect(virtualRepeat.element.parentElement.scrollHeight).toBe(100 * 13, '| vc >> scroller.scrollHeight 1');
         expect(virtualRepeat.element.parentElement.scrollTop).toBe(100 * (13 - 500 / 100), '| vc >> scroller.scrollTop 2');
 
-        expect(virtualRepeat._first).toBe(1);
+        expect(virtualRepeat._first).toBe(7, '| vc >> repeat._first 1');
         validateScrolledState(virtualRepeat, viewModel, itemHeight);
       } else {
         expect(scrollCount).toBe(2, '@scroll 2');

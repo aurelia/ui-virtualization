@@ -1,14 +1,82 @@
 <template>
+  <style>
+    :root {
+      --custom-border: ${ctBorderCss};
+      --custom-width: ${ctWidthCss};
+      --custom-height: ${ctHeightCss};
+    }
+    .custom-border-css {
+      border: var(--custom-border)!important;
+    }
+    .custom-width-css {
+      width: var(--custom-width)!important;
+    }
+    .custom-height-css {
+      height: var(--custom-height)!important;
+    }
+    .has-transition {
+      transition: all 0.3s;
+    }
+  </style>
   <div>
     <div class="row">
-      <label class="col-6">Width
+      <label class="col-3">Width
         <input type="number | number" class="form-control" value.bind="ctWidth">
       </label>
-      <label class="col-6">Height
+      <label class="col-3">Height
         <input type="number | number" class="form-control" value.bind="ctHeight">
       </label>
+      <label class="col-3">Border
+        <input type="number | number" class="form-control" value.bind="ctBorder">
+      </label>
+      <label class="col-3">Transition?
+        <input type="checkbox" class="form-control" checked.bind="hasTransition">
+      </label>
     </div>
-    <div class="d-flex justify-content-around" css="width: ${ctWidth}px; height: ${ctHeight}px; overflow-y: auto">
+    <div class="row">
+      <button
+        class="btn btn-sm btn-primary"
+        click.trigger="resizeAndMutate()">Random resize and splice to some size</button>
+    </div>
+    <div class="row">
+      <label class="col-4">
+        <input type="checkbox" checked.bind="addBorderCssClass" />
+        Add ".custom-border-css" class
+      </label>
+      <label class="col-8">
+        <input class="form-control" value.bind="ctBorderCss" />
+      </label>
+    </div>
+    <div class="row">
+      <label class="col-4">
+        <input type="checkbox" checked.bind="addWidthCssClass" />
+        Add ".custom-width-css" class
+      </label>
+      <label class="col-8">
+        <input class="form-control" value.bind="ctWidthCss" />
+      </label>
+    </div>
+    <div class="row">
+      <label class="col-4">
+        <input type="checkbox" checked.bind="addHeightCssClass" />
+        Add ".custom-height-css" class
+      </label>
+      <label class="col-8">
+        <input class="form-control" value.bind="ctHeightCss" />
+      </label>
+    </div>
+    <div
+      class="d-flex justify-content-around
+        ${addBorderCssClass ? 'custom-border-css' : ''}
+        ${addWidthCssClass ? 'custom-width-css' : ''}
+        ${addHeightCssClass ? 'custom-height-css' : ''}
+        ${hasTransition ? 'has-transition' : ''}
+      "
+      css="
+        width: ${ctWidth}px;
+        height: ${ctHeight}px;
+        overflow-y: auto;
+        border: ${ctBorder}px solid royalblue">
       <table class="table table-striped table-sm">
         <thead>
           <tr>
@@ -19,13 +87,13 @@
           </tr>
         </thead>
         <tbody>
-          <tr virtual-repeat.for="person of people" infinite-scroll-next.call="push30($scrollContext)">
+          <tr virtual-repeat.for="person of people">
             <td>${$index}</td>
             <td>${person.fname}</td>
             <td>${person.lname}</td>
             <td>
-              <button type="button" class="btn btn-link"><i class="far fa-edit"></i></button>
-              <button type="button" class="btn btn-link"><i class="far fa-trash-alt"></i></button>
+              <button type="button" class="btn btn-link">📝</button>
+              <button type="button" class="btn btn-link">🚮</button>
             </td>
           </tr>
         </tbody>

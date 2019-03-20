@@ -4,10 +4,6 @@ export class App {
   public users: any[] = [...Users];
   private order: number = 1;
 
-  constructor() {
-    window['subApp'] = this;
-  }
-
   public sortById() {
     this.order = this.order === 1
       ? -1

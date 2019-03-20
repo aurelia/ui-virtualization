@@ -45,9 +45,15 @@ export class App {
       },
       {
         route: 'issue-146',
-        moduleId: PLATFORM.moduleName('./issue-146/sub-app'),
+        moduleId: PLATFORM.moduleName('./issue-146/sub-app', 'issue-146_bundle'),
         nav: true,
         title: 'Issue 146'
+      },
+      {
+        route: 'issue-114',
+        moduleId: PLATFORM.moduleName('./issue-114/contact-list'),
+        nav: true,
+        title: 'Issue 114'
       },
       // {
       //   route: 'issue-117',

@@ -4,7 +4,7 @@ import { ComponentTester, StageComponent } from 'aurelia-testing';
 import { VirtualRepeat } from '../src/virtual-repeat';
 import { ITestAppInterface } from './interfaces';
 import './setup';
-import { ensureScrolled, validateScrolledState, waitForNextFrame, scrollToEnd } from './utilities';
+import { ensureScrolled, validateScrolledState, waitForNextFrame, scrollToEnd, waitForFrames } from './utilities';
 
 PLATFORM.moduleName('src/virtual-repeat');
 PLATFORM.moduleName('test/noop-value-converter');
@@ -71,14 +71,17 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       const scrollSpy = spyOn(virtualRepeat, '_handleScroll').and.callThrough();
       // 1. mutate scroll state
       table.parentElement.scrollTop = table.parentElement.scrollHeight;
-      await ensureScrolled(0);
+      await ensureScrolled(50);
 
       expect(scrollSpy).toHaveBeenCalledTimes(1);
       expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
       // when scrolling, the first bound row is calculated differently compared to other scenarios
       // as it can be known exactly what the last process was
       // so it can create views with optimal number (scroll container height / itemHeight)
-      expect(virtualRepeat._first).toBe(/*items count*/100 - /*views count*/500 / 50 - /*0 based index*/1, 'repeat._first 1');
+      expect(virtualRepeat._first).toBe(
+        /*items count*/100 - calcMaxViewsRequired(500, 50),
+        'repeat._first 1'
+      );
       expect(virtualRepeat._bottomBufferHeight).toBe(0);
 
       viewModel.items = viewModel.items.slice(0).reverse();
@@ -130,7 +133,10 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       // when scrolling, the first bound row is calculated differently compared to other scenarios
       // as it can be known exactly what the last process was
       // so it can create views with optimal number (scroll container height / itemHeight)
-      expect(virtualRepeat._first).toBe(/*items count*/100 - /*views count*/500 / 50 - /*0 based index*/1, 'repeat._first 1');
+      expect(virtualRepeat._first).toBe(
+        /*items count*/100 - calcMaxViewsRequired(500, 50),
+        'repeat._first 1'
+      );
       expect(virtualRepeat._bottomBufferHeight).toBe(0);
 
       viewModel.items = viewModel.items.slice(0).reverse().slice(0, 30);
@@ -189,7 +195,10 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       // when scrolling, the first bound row is calculated differently compared to other scenarios
       // as it can be known exactly what the last process was
       // so it can create views with optimal number (scroll container height / itemHeight)
-      expect(virtualRepeat._first).toBe(/*items count*/100 - /*views count*/500 / 50 - /*0 based index*/1, 'repeat._first 1');
+      expect(virtualRepeat._first).toBe(
+        /*items count*/100 - calcMaxViewsRequired(500, 50),
+        'repeat._first 1'
+      );
       expect(virtualRepeat._bottomBufferHeight).toBe(0);
 
       viewModel.items = viewModel.items.slice(0).reverse().slice(0, 16);
@@ -247,7 +256,10 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       // when scrolling, the first bound row is calculated differently compared to other scenarios
       // as it can be known exactly what the last process was
       // so it can create views with optimal number (scroll container height / itemHeight)
-      expect(virtualRepeat._first).toBe(/*items count*/100 - /*views count*/500 / 50 - /*0 based index*/1, 'repeat._first 1');
+      expect(virtualRepeat._first).toBe(
+        /*items count*/100 - calcMaxViewsRequired(500, 50),
+        'repeat._first 1'
+      );
       expect(virtualRepeat._bottomBufferHeight).toBe(0);
 
       viewModel.items = viewModel.items.slice(0).reverse().slice(0, 8);
@@ -423,7 +435,10 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       // when scrolling, the first bound row is calculated differently compared to other scenarios
       // as it can be known exactly what the last process was
       // so it can create views with optimal number (scroll container height / itemHeight)
-      expect(virtualRepeat._first).toBe(/*items count*/100 - /*views count*/500 / 50 - /*0 based index*/1, 'repeat._first 1');
+      expect(virtualRepeat._first).toBe(
+        /*items count*/100 - calcMaxViewsRequired(500, 50),
+        'repeat._first 1'
+      );
       expect(virtualRepeat._bottomBufferHeight).toBe(0);
 
       viewModel.items = viewModel.items.slice(0).reverse();
@@ -472,7 +487,10 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       // when scrolling, the first bound row is calculated differently compared to other scenarios
       // as it can be known exactly what the last process was
       // so it can create views with optimal number (scroll container height / itemHeight)
-      expect(virtualRepeat._first).toBe(/*items count*/100 - /*views count*/500 / 50 - /*0 based index*/1, 'repeat._first 1');
+      expect(virtualRepeat._first).toBe(
+        /*items count*/100 - calcMaxViewsRequired(500, 50),
+        'repeat._first 1'
+      );
       expect(virtualRepeat._bottomBufferHeight).toBe(0);
 
       viewModel.items = viewModel.items.slice(0).reverse().slice(0, 30);
@@ -531,7 +549,10 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       // when scrolling, the first bound row is calculated differently compared to other scenarios
       // as it can be known exactly what the last process was
       // so it can create views with optimal number (scroll container height / itemHeight)
-      expect(virtualRepeat._first).toBe(/*items count*/100 - /*views count*/500 / 50 - /*0 based index*/1, 'repeat._first 1');
+      expect(virtualRepeat._first).toBe(
+        /*items count*/100 - calcMaxViewsRequired(500, 50),
+        'repeat._first 1'
+      );
       expect(virtualRepeat._bottomBufferHeight).toBe(0);
 
       viewModel.items = viewModel.items.slice(0).reverse().slice(0, 30);
@@ -607,11 +628,14 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       // when scrolling, the first bound row is calculated differently compared to other scenarios
       // as it can be known exactly what the last process was
       // so it can create views with optimal number (scroll container height / itemHeight)
-      expect(virtualRepeat._first).toBe(/*items count*/100 - /*views count*/500 / 50 - /*0 based index*/1, 'repeat._first 1');
+      expect(virtualRepeat._first).toBe(
+        /*items count*/100 - calcMaxViewsRequired(500, 50),
+        'repeat._first 1'
+      );
       expect(virtualRepeat._bottomBufferHeight).toBe(0, 'repeat._bottomBufferHeight');
 
       viewModel.items = viewModel.items.slice(0).reverse().slice(0, 16);
-      await ensureScrolled(50);
+      await waitForFrames(1);
 
       expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
       // buffers are TR elements
@@ -662,7 +686,10 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       // when scrolling, the first bound row is calculated differently compared to other scenarios
       // as it can be known exactly what the last process was
       // so it can create views with optimal number (scroll container height / itemHeight)
-      expect(virtualRepeat._first).toBe(/*items count*/100 - /*views count*/500 / 50 - /*0 based index*/1, 'repeat._first 1');
+      expect(virtualRepeat._first).toBe(
+        /*items count*/100 - calcMaxViewsRequired(500, 50),
+        'repeat._first 1'
+      );
       expect(virtualRepeat._bottomBufferHeight).toBe(0);
 
       viewModel.items = viewModel.items.slice(0).reverse().slice(0, 8);
@@ -780,7 +807,10 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       // when scrolling, the first bound row is calculated differently compared to other scenarios
       // as it can be known exactly what the last process was
       // so it can create views with optimal number (scroll container height / itemHeight)
-      expect(virtualRepeat._first).toBe(/*items count*/100 - /*views count*/500 / 50 - /*0 based index*/1, 'repeat._first 1');
+      expect(virtualRepeat._first).toBe(
+        /*items count*/100 - calcMaxViewsRequired(500, 50),
+        'repeat._first 1'
+      );
       expect(virtualRepeat._bottomBufferHeight).toBe(0);
 
       viewModel.items = viewModel.items.slice(0).reverse();
@@ -826,7 +856,10 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       // when scrolling, the first bound row is calculated differently compared to other scenarios
       // as it can be known exactly what the last process was
       // so it can create views with optimal number (scroll container height / itemHeight)
-      expect(virtualRepeat._first).toBe(/*items count*/100 - /*views count*/500 / 50 - /*0 based index*/1, 'repeat._first 1');
+      expect(virtualRepeat._first).toBe(
+        /*items count*/100 - calcMaxViewsRequired(500, 50),
+        'repeat._first 1'
+      );
       expect(virtualRepeat._bottomBufferHeight).toBe(0);
 
       viewModel.items = viewModel.items.slice(0).reverse().slice(0, 30);
@@ -879,7 +912,10 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       // when scrolling, the first bound row is calculated differently compared to other scenarios
       // as it can be known exactly what the last process was
       // so it can create views with optimal number (scroll container height / itemHeight)
-      expect(virtualRepeat._first).toBe(/*items count*/100 - /*views count*/500 / 50 - /*0 based index*/1, 'repeat._first 1');
+      expect(virtualRepeat._first).toBe(
+        /*items count*/100 - calcMaxViewsRequired(500, 50),
+        'repeat._first 1'
+      );
       expect(virtualRepeat._bottomBufferHeight).toBe(0, 'repeat._bottomBufferHeight');
 
       viewModel.items = viewModel.items.slice(0).reverse().slice(0, 16);
@@ -931,7 +967,10 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       // when scrolling, the first bound row is calculated differently compared to other scenarios
       // as it can be known exactly what the last process was
       // so it can create views with optimal number (scroll container height / itemHeight)
-      expect(virtualRepeat._first).toBe(/*items count*/100 - /*views count*/500 / 50 - /*0 based index*/1, 'repeat._first 1');
+      expect(virtualRepeat._first).toBe(
+        /*items count*/100 - calcMaxViewsRequired(500, 50),
+        'repeat._first 1'
+      );
       expect(virtualRepeat._bottomBufferHeight).toBe(0);
 
       viewModel.items = viewModel.items.slice(0).reverse().slice(0, 8);
@@ -1016,12 +1055,12 @@ describe('vr-integration.instance-changed.spec.ts', () => {
     });
   });
 
-  describe('div > (ul|ol) > li [virtual-repeat]', () => {
+  describe('div > (ul|ol) > li [repeat]', () => {
     describe('ol > li', function() {
       runTestSuit(
-        'div > ol > li [virtual-repeat]',
+        'div > ol > li [repeat]',
         `<div class="scroller" style="height: 500px; overflow-y: auto">
-          <ul style="padding: 0; margin: 0;">
+          <ul style="padding: 0; margin: 0; list-style: none;">
             <li virtual-repeat.for="item of items" style="height: 50px">\${item}</li>
           </ul>
         </div>`
@@ -1030,9 +1069,9 @@ describe('vr-integration.instance-changed.spec.ts', () => {
 
     describe('ul > li', function() {
       runTestSuit(
-        'div > ul > li [virtual-repeat]',
+        'div > ul > li [repeat]',
         `<div class="scroller" style="height: 500px; overflow-y: auto">
-          <ol style="padding: 0; margin: 0;">
+          <ol style="padding: 0; margin: 0; list-style: none;">
             <li virtual-repeat.for="item of items" style="height: 50px; padding: 0; margin: 0;">\${item}</li>
           </ol>
         </div>`
@@ -1068,7 +1107,10 @@ describe('vr-integration.instance-changed.spec.ts', () => {
         // when scrolling, the first bound row is calculated differently compared to other scenarios
         // as it can be known exactly what the last process was
         // so it can create views with optimal number (scroll container height / itemHeight)
-        expect(virtualRepeat._first).toBe(/*items count*/100 - /*views count*/500 / 50 - /*0 based index*/1, 'repeat._first 1');
+        expect(virtualRepeat._first).toBe(
+          /*items count*/100 - calcMaxViewsRequired(500, 50),
+          'repeat._first 1'
+        );
         expect(virtualRepeat._bottomBufferHeight).toBe(0);
 
         viewModel.items = viewModel.items.slice(0).reverse();
@@ -1119,7 +1161,10 @@ describe('vr-integration.instance-changed.spec.ts', () => {
         // when scrolling, the first bound row is calculated differently compared to other scenarios
         // as it can be known exactly what the last process was
         // so it can create views with optimal number (scroll container height / itemHeight)
-        expect(virtualRepeat._first).toBe(/*items count*/100 - /*views count*/500 / 50 - /*0 based index*/1, 'repeat._first 1');
+        expect(virtualRepeat._first).toBe(
+          /*items count*/100 - calcMaxViewsRequired(500, 50),
+          'repeat._first 1'
+        );
         expect(virtualRepeat._bottomBufferHeight).toBe(0);
 
         viewModel.items = viewModel.items.slice(0).reverse().slice(0, 30);
@@ -1179,7 +1224,10 @@ describe('vr-integration.instance-changed.spec.ts', () => {
         // when scrolling, the first bound row is calculated differently compared to other scenarios
         // as it can be known exactly what the last process was
         // so it can create views with optimal number (scroll container height / itemHeight)
-        expect(virtualRepeat._first).toBe(/*items count*/100 - /*views count*/500 / 50 - /*0 based index*/1, 'repeat._first 1');
+        expect(virtualRepeat._first).toBe(
+          /*items count*/100 - calcMaxViewsRequired(500, 50),
+          'repeat._first 1'
+        );
         expect(virtualRepeat._bottomBufferHeight).toBe(0);
 
         viewModel.items = viewModel.items.slice(0).reverse().slice(0, 30);
@@ -1256,7 +1304,10 @@ describe('vr-integration.instance-changed.spec.ts', () => {
         // when scrolling, the first bound row is calculated differently compared to other scenarios
         // as it can be known exactly what the last process was
         // so it can create views with optimal number (scroll container height / itemHeight)
-        expect(virtualRepeat._first).toBe(/*items count*/100 - /*views count*/500 / 50 - /*0 based index*/1, 'repeat._first 1');
+        expect(virtualRepeat._first).toBe(
+          /*items count*/100 - calcMaxViewsRequired(500, 50),
+          'repeat._first 1'
+        );
         expect(virtualRepeat._bottomBufferHeight).toBe(0, 'repeat._bottomBufferHeight');
 
         viewModel.items = viewModel.items.slice(0).reverse().slice(0, 16);
@@ -1312,7 +1363,10 @@ describe('vr-integration.instance-changed.spec.ts', () => {
         // when scrolling, the first bound row is calculated differently compared to other scenarios
         // as it can be known exactly what the last process was
         // so it can create views with optimal number (scroll container height / itemHeight)
-        expect(virtualRepeat._first).toBe(/*items count*/100 - /*views count*/500 / 50 - /*0 based index*/1, 'repeat._first 1');
+        expect(virtualRepeat._first).toBe(
+          /*items count*/100 - calcMaxViewsRequired(500, 50),
+          'repeat._first 1'
+        );
         expect(virtualRepeat._bottomBufferHeight).toBe(0);
 
         viewModel.items = viewModel.items.slice(0).reverse().slice(0, 8);
@@ -1451,7 +1505,10 @@ describe('vr-integration.instance-changed.spec.ts', () => {
         // when scrolling, the first bound row is calculated differently compared to other scenarios
         // as it can be known exactly what the last process was
         // so it can create views with optimal number (scroll container height / itemHeight)
-        expect(virtualRepeat._first).toBe(/*items count*/100 - /*views count*/500 / 50 - /*0 based index*/1, 'repeat._first 1');
+        expect(virtualRepeat._first).toBe(
+          /*items count*/100 - calcMaxViewsRequired(500, 50),
+          'repeat._first 1'
+        );
         expect(virtualRepeat._bottomBufferHeight).toBe(0);
 
         viewModel.items = viewModel.items.slice(0).reverse();
@@ -1501,7 +1558,10 @@ describe('vr-integration.instance-changed.spec.ts', () => {
         // when scrolling, the first bound row is calculated differently compared to other scenarios
         // as it can be known exactly what the last process was
         // so it can create views with optimal number (scroll container height / itemHeight)
-        expect(virtualRepeat._first).toBe(/*items count*/100 - /*views count*/500 / 50 - /*0 based index*/1, 'repeat._first 1');
+        expect(virtualRepeat._first).toBe(
+          /*items count*/100 - calcMaxViewsRequired(500, 50),
+          'repeat._first 1'
+        );
         expect(virtualRepeat._bottomBufferHeight).toBe(0);
 
         viewModel.items = viewModel.items.slice(0).reverse().slice(0, 30);
@@ -1573,7 +1633,10 @@ describe('vr-integration.instance-changed.spec.ts', () => {
         // when scrolling, the first bound row is calculated differently compared to other scenarios
         // as it can be known exactly what the last process was
         // so it can create views with optimal number (scroll container height / itemHeight)
-        expect(virtualRepeat._first).toBe(/*items count*/100 - /*views count*/500 / 50 - /*0 based index*/1, 'repeat._first 1');
+        expect(virtualRepeat._first).toBe(
+          /*items count*/100 - calcMaxViewsRequired(500, 50),
+          'repeat._first 1'
+        );
         expect(virtualRepeat._bottomBufferHeight).toBe(0);
 
         viewModel.items = viewModel.items.slice(0).reverse().slice(0, 30);
@@ -1627,7 +1690,10 @@ describe('vr-integration.instance-changed.spec.ts', () => {
         // when scrolling, the first bound row is calculated differently compared to other scenarios
         // as it can be known exactly what the last process was
         // so it can create views with optimal number (scroll container height / itemHeight)
-        expect(virtualRepeat._first).toBe(/*items count*/100 - /*views count*/500 / 50 - /*0 based index*/1, 'repeat._first 1');
+        expect(virtualRepeat._first).toBe(
+          /*items count*/100 - calcMaxViewsRequired(500, 50),
+          'repeat._first 1'
+        );
         expect(virtualRepeat._bottomBufferHeight).toBe(0, 'repeat._bottomBufferHeight');
 
         viewModel.items = viewModel.items.slice(0).reverse().slice(0, 16);
@@ -1680,7 +1746,10 @@ describe('vr-integration.instance-changed.spec.ts', () => {
         // when scrolling, the first bound row is calculated differently compared to other scenarios
         // as it can be known exactly what the last process was
         // so it can create views with optimal number (scroll container height / itemHeight)
-        expect(virtualRepeat._first).toBe(/*items count*/100 - /*views count*/500 / 50 - /*0 based index*/1, 'repeat._first 1');
+        expect(virtualRepeat._first).toBe(
+          /*items count*/100 - calcMaxViewsRequired(500, 50),
+          'repeat._first 1'
+        );
         expect(virtualRepeat._bottomBufferHeight).toBe(0);
 
         viewModel.items = viewModel.items.slice(0).reverse().slice(0, 8);
@@ -1724,5 +1793,13 @@ describe('vr-integration.instance-changed.spec.ts', () => {
 
   function createItems(amount: number, name: string = 'item') {
     return Array.from({ length: amount }, (_, index) => name + index);
+  }
+
+  function calcElementsInView(ct_h: number, item_h: number): number {
+    return item_h === 0 || ct_h === 0 ? 0 : (ct_h / item_h + 1);
+  }
+
+  function calcMaxViewsRequired(ct_h: number, item_h: number): number {
+    return calcElementsInView(ct_h, item_h) * 2;
   }
 });

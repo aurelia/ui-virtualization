@@ -55,7 +55,7 @@ export interface IVirtualRepeatStrategy extends RepeatStrategy {
    *
    * @returns `false` to notify that calculation hasn't been finished
    */
-  initCalculation(repeat: VirtualRepeat, items: number | any[] | Map<any, any> | Set<any>): boolean;
+  initCalculation(repeat: VirtualRepeat, items: number | any[] | Map<any, any> | Set<any>): VirtualizationCalculation;
 
   /**
    * Get the observer based on collection type of `items`
@@ -150,6 +150,24 @@ export interface IScrollerInfo {
   scrollTop: number;
   height: number;
 }
+
+export const enum VirtualizationCalculation {
+  none              = 0b0_00000,
+  reset             = 0b0_00001,
+  has_sizing        = 0b0_00010,
+  observe_scroller  = 0b0_00100
+}
+
+/**
+ * List of events that can be used to notify virtual repeat that size has changed
+ */
+export const VirtualizationEvents = Object.assign(Object.create(null), {
+  scrollerSizeChange: 'virtual-repeat-scroller-size-changed' as 'virtual-repeat-scroller-size-changed',
+  itemSizeChange: 'virtual-repeat-item-size-changed' as 'virtual-repeat-item-size-changed'
+}) as {
+  scrollerSizeChange: 'virtual-repeat-scroller-size-changed';
+  itemSizeChange: 'virtual-repeat-item-size-changed';
+};
 
 // export const enum IVirtualRepeatState {
 //   isAtTop = 0b0_000000_000,
