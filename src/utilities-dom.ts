@@ -9,7 +9,7 @@ import { IView } from './interfaces';
 export const getScrollContainer = (element: Node): HTMLElement => {
   let current = element.parentNode as HTMLElement;
   while (current !== null) {
-    if (this.hasOverflowScroll(current)) {
+    if (hasOverflowScroll(current)) {
       return current;
     }
     current = current.parentNode as HTMLElement;
