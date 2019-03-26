@@ -30,7 +30,6 @@ export class PromiseGetMoreApp {
   }
 
   public async push30(scrollContext?: IScrollContext, count = 30) {
-    console.log('scrollContext: ', scrollContext);
     if (this.people.length < 200 && (!scrollContext || scrollContext.isAtBottom)) {
       for (let i = 0; i < count; i++) {
         this.people.push({
