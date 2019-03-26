@@ -9,7 +9,7 @@ import { IView } from './interfaces';
 export const getScrollContainer = (element: Node): HTMLElement => {
   let current = element.parentNode as HTMLElement;
   while (current !== null) {
-    if (this.hasOverflowScroll(current)) {
+    if (hasOverflowScroll(current)) {
       return current;
     }
     current = current.parentNode as HTMLElement;
@@ -34,7 +34,7 @@ export const getElementDistanceToTopOfDocument = (element: Element): number => {
  */
 export const hasOverflowScroll = (element: HTMLElement): boolean => {
   let style = element.style;
-  return style.overflowY === 'scroll' || style.overflow === 'scroll' || style.overflowY === 'auto' || style.overflow === 'auto';
+  return style && (style.overflowY === 'scroll' || style.overflow === 'scroll' || style.overflowY === 'auto' || style.overflow === 'auto');
 };
 
 /**
