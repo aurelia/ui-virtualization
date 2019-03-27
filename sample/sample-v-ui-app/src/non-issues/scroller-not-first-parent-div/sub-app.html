@@ -1,5 +1,5 @@
 <template>
-  <div class="scroller" style="overflow-y: scroll">
+  <div class="scroller">
     <div class="grid-force-size">
       <div class="d-flex grid-header">
         <div class="p-2 grid-column-index" style="width: 50px;">#</div>
@@ -10,7 +10,7 @@
       <div
         virtual-repeat.for="person of people"
         infinite-scroll-next.call="push30($scrollContext)"
-        class="d-flex grid-row">
+        class="d-flex grid-row  ${$even ? 'grid-row-even' : 'grid-row-odd'}">
         <div class="p-2 grid-column-index" style="width: 50px;">${$index}</div>
         <div class="p-2" style="width: 200px;">${person.fname}</div>
         <div class="p-2" style="width: 200px;">${person.lname}</div>
@@ -21,11 +21,11 @@
       </div>
     </div>
   </div>
-  <style>
+   <style>
     .scroller {
       position: relative;
       height: 500px;
-      width: 400px;
+      width: 300px;
       overflow: scroll;
     }
     .grid-force-size {
@@ -40,10 +40,10 @@
       border-top: 3px solid #ff00ff;
       z-index: 2;
     }
-    .grid-row:nth-child(even) {
+    .grid-row-even {
       background-color: #fff;
     }
-    .grid-row:nth-child(odd) {
+    .grid-row-odd {
       background-color: #f1a3f1;
     }
     .grid-column-index {
