@@ -30,10 +30,10 @@ export const getElementDistanceToTopOfDocument = (element: Element): number => {
 };
 
 /**
- * Check if an element has inline style scroll/auto for overflow/overflowY
+ * Check if an element has style scroll/auto for overflow/overflowY
  */
-export const hasOverflowScroll = (element: HTMLElement): boolean => {
-  let style = element.style;
+export const hasOverflowScroll = (element): boolean => {
+  let style = element !== document ? window.getComputedStyle(element) : undefined;
   return style && (style.overflowY === 'scroll' || style.overflow === 'scroll' || style.overflowY === 'auto' || style.overflow === 'auto');
 };
 
