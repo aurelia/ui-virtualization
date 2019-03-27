@@ -1,6 +1,6 @@
 System.register(['aurelia-binding', 'aurelia-templating', 'aurelia-templating-resources', 'aurelia-pal', 'aurelia-dependency-injection'], function (exports, module) {
     'use strict';
-    var mergeSplice, ObserverLocator, BoundViewFactory, TargetInstruction, ViewSlot, ViewResources, updateOverrideContext, createFullOverrideContext, ArrayRepeatStrategy, NullRepeatStrategy, RepeatStrategyLocator, viewsRequireLifecycle, getItemsSourceExpression, isOneTime, unwrapExpression, updateOneTimeBinding, AbstractRepeater, DOM, PLATFORM, Container;
+    var mergeSplice, ObserverLocator, BoundViewFactory, TargetInstruction, ViewSlot, ViewResources, ElementEvents, updateOverrideContext, createFullOverrideContext, ArrayRepeatStrategy, NullRepeatStrategy, viewsRequireLifecycle, getItemsSourceExpression, isOneTime, unwrapExpression, updateOneTimeBinding, AbstractRepeater, DOM, PLATFORM, Container;
     return {
         setters: [function (module) {
             mergeSplice = module.mergeSplice;
@@ -10,12 +10,12 @@ System.register(['aurelia-binding', 'aurelia-templating', 'aurelia-templating-re
             TargetInstruction = module.TargetInstruction;
             ViewSlot = module.ViewSlot;
             ViewResources = module.ViewResources;
+            ElementEvents = module.ElementEvents;
         }, function (module) {
             updateOverrideContext = module.updateOverrideContext;
             createFullOverrideContext = module.createFullOverrideContext;
             ArrayRepeatStrategy = module.ArrayRepeatStrategy;
             NullRepeatStrategy = module.NullRepeatStrategy;
-            RepeatStrategyLocator = module.RepeatStrategyLocator;
             viewsRequireLifecycle = module.viewsRequireLifecycle;
             getItemsSourceExpression = module.getItemsSourceExpression;
             isOneTime = module.isOneTime;
@@ -61,42 +61,58 @@ System.register(['aurelia-binding', 'aurelia-templating', 'aurelia-templating-re
                 d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
             }
 
-            function calcOuterHeight(element) {
-                var height = element.getBoundingClientRect().height;
-                height += getStyleValues(element, 'marginTop', 'marginBottom');
-                return height;
-            }
-            function insertBeforeNode(view, bottomBuffer) {
-                var parentElement = bottomBuffer.parentElement || bottomBuffer.parentNode;
-                parentElement.insertBefore(view.lastChild, bottomBuffer);
-            }
-            function updateVirtualOverrideContexts(repeat, startIndex) {
+            var updateAllViews = function (repeat, startIndex) {
                 var views = repeat.viewSlot.children;
                 var viewLength = views.length;
-                var collectionLength = repeat.items.length;
-                if (startIndex > 0) {
-                    startIndex = startIndex - 1;
+                var collection = repeat.items;
+                var delta = Math$floor(repeat._topBufferHeight / repeat.itemHeight);
+                var collectionIndex = 0;
+                var view;
+                for (; viewLength > startIndex; ++startIndex) {
+                    collectionIndex = startIndex + delta;
+                    view = repeat.view(startIndex);
+                    rebindView(repeat, view, collectionIndex, collection);
+                    repeat.updateBindings(view);
                 }
-                var delta = repeat._topBufferHeight / repeat.itemHeight;
-                for (; startIndex < viewLength; ++startIndex) {
-                    updateOverrideContext(views[startIndex].overrideContext, startIndex + delta, collectionLength);
-                }
-            }
-            function rebindAndMoveView(repeat, view, index, moveToBottom) {
+            };
+            var rebindView = function (repeat, view, collectionIndex, collection) {
+                view.bindingContext[repeat.local] = collection[collectionIndex];
+                updateOverrideContext(view.overrideContext, collectionIndex, collection.length);
+            };
+            var rebindAndMoveView = function (repeat, view, index, moveToBottom) {
                 var items = repeat.items;
                 var viewSlot = repeat.viewSlot;
                 updateOverrideContext(view.overrideContext, index, items.length);
                 view.bindingContext[repeat.local] = items[index];
                 if (moveToBottom) {
                     viewSlot.children.push(viewSlot.children.shift());
-                    repeat.templateStrategy.moveViewLast(view, repeat.bottomBuffer);
+                    repeat.templateStrategy.moveViewLast(view, repeat.bottomBufferEl);
                 }
                 else {
                     viewSlot.children.unshift(viewSlot.children.splice(-1, 1)[0]);
-                    repeat.templateStrategy.moveViewFirst(view, repeat.topBuffer);
+                    repeat.templateStrategy.moveViewFirst(view, repeat.topBufferEl);
                 }
-            }
-            function getStyleValues(element) {
+            };
+            var Math$abs = Math.abs;
+            var Math$max = Math.max;
+            var Math$min = Math.min;
+            var Math$round = Math.round;
+            var Math$floor = Math.floor;
+            var $isNaN = isNaN;
+
+            var getElementDistanceToTopOfDocument = function (element) {
+                var box = element.getBoundingClientRect();
+                var documentElement = document.documentElement;
+                var scrollTop = window.pageYOffset;
+                var clientTop = documentElement.clientTop;
+                var top = box.top + scrollTop - clientTop;
+                return Math$round(top);
+            };
+            var hasOverflowScroll = function (element) {
+                var style = element.style;
+                return style.overflowY === 'scroll' || style.overflow === 'scroll' || style.overflowY === 'auto' || style.overflow === 'auto';
+            };
+            var getStyleValues = function (element) {
                 var styles = [];
                 for (var _i = 1; _i < arguments.length; _i++) {
                     styles[_i - 1] = arguments[_i];
@@ -106,31 +122,41 @@ System.register(['aurelia-binding', 'aurelia-templating', 'aurelia-templating-re
                 var styleValue = 0;
                 for (var i = 0, ii = styles.length; ii > i; ++i) {
                     styleValue = parseInt(currentStyle[styles[i]], 10);
-                    value += Number.isNaN(styleValue) ? 0 : styleValue;
+                    value += $isNaN(styleValue) ? 0 : styleValue;
                 }
                 return value;
-            }
-            function getElementDistanceToBottomViewPort(element) {
-                return document.documentElement.clientHeight - element.getBoundingClientRect().bottom;
-            }
-
-            var DomHelper = (function () {
-                function DomHelper() {
+            };
+            var calcOuterHeight = function (element) {
+                var height = element.getBoundingClientRect().height;
+                height += getStyleValues(element, 'marginTop', 'marginBottom');
+                return height;
+            };
+            var calcScrollHeight = function (element) {
+                var height = element.getBoundingClientRect().height;
+                height -= getStyleValues(element, 'borderTopWidth', 'borderBottomWidth');
+                return height;
+            };
+            var insertBeforeNode = function (view, bottomBuffer) {
+                bottomBuffer.parentNode.insertBefore(view.lastChild, bottomBuffer);
+            };
+            var getDistanceToParent = function (child, parent) {
+                if (child.previousSibling === null && child.parentNode === parent) {
+                    return 0;
                 }
-                DomHelper.prototype.getElementDistanceToTopOfDocument = function (element) {
-                    var box = element.getBoundingClientRect();
-                    var documentElement = document.documentElement;
-                    var scrollTop = window.pageYOffset;
-                    var clientTop = documentElement.clientTop;
-                    var top = box.top + scrollTop - clientTop;
-                    return Math.round(top);
-                };
-                DomHelper.prototype.hasOverflowScroll = function (element) {
-                    var style = element.style;
-                    return style.overflowY === 'scroll' || style.overflow === 'scroll' || style.overflowY === 'auto' || style.overflow === 'auto';
-                };
-                return DomHelper;
-            }());
+                var offsetParent = child.offsetParent;
+                var childOffsetTop = child.offsetTop;
+                if (offsetParent === null || offsetParent === parent) {
+                    return childOffsetTop;
+                }
+                else {
+                    if (offsetParent.contains(parent)) {
+                        return childOffsetTop - parent.offsetTop;
+                    }
+                    else {
+                        return childOffsetTop + getDistanceToParent(offsetParent, parent);
+                    }
+                }
+            };
 
             var ArrayVirtualRepeatStrategy = (function (_super) {
                 __extends(ArrayVirtualRepeatStrategy, _super);
@@ -139,50 +165,93 @@ System.register(['aurelia-binding', 'aurelia-templating', 'aurelia-templating-re
                 }
                 ArrayVirtualRepeatStrategy.prototype.createFirstItem = function (repeat) {
                     var overrideContext = createFullOverrideContext(repeat, repeat.items[0], 0, 1);
-                    repeat.addView(overrideContext.bindingContext, overrideContext);
+                    return repeat.addView(overrideContext.bindingContext, overrideContext);
                 };
-                ArrayVirtualRepeatStrategy.prototype.instanceChanged = function (repeat, items) {
-                    var rest = [];
-                    for (var _i = 2; _i < arguments.length; _i++) {
-                        rest[_i - 2] = arguments[_i];
+                ArrayVirtualRepeatStrategy.prototype.initCalculation = function (repeat, items) {
+                    var itemCount = items.length;
+                    if (!(itemCount > 0)) {
+                        return 1;
                     }
-                    this._inPlaceProcessItems(repeat, items, rest[0]);
+                    var containerEl = repeat.getScroller();
+                    var existingViewCount = repeat.viewCount();
+                    if (itemCount > 0 && existingViewCount === 0) {
+                        this.createFirstItem(repeat);
+                    }
+                    var isFixedHeightContainer = repeat._fixedHeightContainer = hasOverflowScroll(containerEl);
+                    var firstView = repeat._firstView();
+                    var itemHeight = calcOuterHeight(firstView.firstChild);
+                    if (itemHeight === 0) {
+                        return 0;
+                    }
+                    repeat.itemHeight = itemHeight;
+                    var scroll_el_height = isFixedHeightContainer
+                        ? calcScrollHeight(containerEl)
+                        : document.documentElement.clientHeight;
+                    var elementsInView = repeat.elementsInView = Math$floor(scroll_el_height / itemHeight) + 1;
+                    var viewsCount = repeat._viewsLength = elementsInView * 2;
+                    return 2 | 4;
+                };
+                ArrayVirtualRepeatStrategy.prototype.instanceChanged = function (repeat, items, first) {
+                    if (this._inPlaceProcessItems(repeat, items, first)) {
+                        this._remeasure(repeat, repeat.itemHeight, repeat._viewsLength, items.length, repeat._first);
+                    }
                 };
                 ArrayVirtualRepeatStrategy.prototype.instanceMutated = function (repeat, array, splices) {
                     this._standardProcessInstanceMutated(repeat, array, splices);
                 };
-                ArrayVirtualRepeatStrategy.prototype._standardProcessInstanceChanged = function (repeat, items) {
-                    for (var i = 1, ii = repeat._viewsLength; i < ii; ++i) {
-                        var overrideContext = createFullOverrideContext(repeat, items[i], i, ii);
-                        repeat.addView(overrideContext.bindingContext, overrideContext);
+                ArrayVirtualRepeatStrategy.prototype._inPlaceProcessItems = function (repeat, items, firstIndex) {
+                    var currItemCount = items.length;
+                    if (currItemCount === 0) {
+                        repeat.removeAllViews(true, false);
+                        repeat._resetCalculation();
+                        repeat.__queuedSplices = repeat.__array = undefined;
+                        return false;
                     }
-                };
-                ArrayVirtualRepeatStrategy.prototype._inPlaceProcessItems = function (repeat, items, first) {
-                    var itemsLength = items.length;
-                    var viewsLength = repeat.viewCount();
-                    while (viewsLength > itemsLength) {
-                        viewsLength--;
-                        repeat.removeView(viewsLength, true);
+                    var realViewsCount = repeat.viewCount();
+                    while (realViewsCount > currItemCount) {
+                        realViewsCount--;
+                        repeat.removeView(realViewsCount, true, false);
                     }
+                    while (realViewsCount > repeat._viewsLength) {
+                        realViewsCount--;
+                        repeat.removeView(realViewsCount, true, false);
+                    }
+                    realViewsCount = Math$min(realViewsCount, repeat._viewsLength);
                     var local = repeat.local;
-                    for (var i = 0; i < viewsLength; i++) {
+                    var lastIndex = currItemCount - 1;
+                    if (firstIndex + realViewsCount > lastIndex) {
+                        firstIndex = Math$max(0, currItemCount - realViewsCount);
+                    }
+                    repeat._first = firstIndex;
+                    for (var i = 0; i < realViewsCount; i++) {
+                        var currIndex = i + firstIndex;
                         var view = repeat.view(i);
-                        var last = i === itemsLength - 1;
-                        var middle = i !== 0 && !last;
-                        if (view.bindingContext[local] === items[i + first] && view.overrideContext.$middle === middle && view.overrideContext.$last === last) {
+                        var last = currIndex === currItemCount - 1;
+                        var middle = currIndex !== 0 && !last;
+                        var bindingContext = view.bindingContext;
+                        var overrideContext = view.overrideContext;
+                        if (bindingContext[local] === items[currIndex]
+                            && overrideContext.$index === currIndex
+                            && overrideContext.$middle === middle
+                            && overrideContext.$last === last) {
                             continue;
                         }
-                        view.bindingContext[local] = items[i + first];
-                        view.overrideContext.$middle = middle;
-                        view.overrideContext.$last = last;
-                        view.overrideContext.$index = i + first;
+                        bindingContext[local] = items[currIndex];
+                        overrideContext.$first = currIndex === 0;
+                        overrideContext.$middle = middle;
+                        overrideContext.$last = last;
+                        overrideContext.$index = currIndex;
+                        var odd = currIndex % 2 === 1;
+                        overrideContext.$odd = odd;
+                        overrideContext.$even = !odd;
                         repeat.updateBindings(view);
                     }
-                    var minLength = Math.min(repeat._viewsLength, itemsLength);
-                    for (var i = viewsLength; i < minLength; i++) {
-                        var overrideContext = createFullOverrideContext(repeat, items[i], i, itemsLength);
+                    var minLength = Math$min(repeat._viewsLength, currItemCount);
+                    for (var i = realViewsCount; i < minLength; i++) {
+                        var overrideContext = createFullOverrideContext(repeat, items[i], i, currItemCount);
                         repeat.addView(overrideContext.bindingContext, overrideContext);
                     }
+                    return true;
                 };
                 ArrayVirtualRepeatStrategy.prototype._standardProcessInstanceMutated = function (repeat, array, splices) {
                     var _this = this;
@@ -194,13 +263,18 @@ System.register(['aurelia-binding', 'aurelia-templating', 'aurelia-templating-re
                         repeat.__array = array.slice(0);
                         return;
                     }
+                    if (array.length === 0) {
+                        repeat.removeAllViews(true, false);
+                        repeat._resetCalculation();
+                        repeat.__queuedSplices = repeat.__array = undefined;
+                        return;
+                    }
                     var maybePromise = this._runSplices(repeat, array.slice(0), splices);
                     if (maybePromise instanceof Promise) {
                         var queuedSplices_1 = repeat.__queuedSplices = [];
                         var runQueuedSplices_1 = function () {
                             if (!queuedSplices_1.length) {
-                                delete repeat.__queuedSplices;
-                                delete repeat.__array;
+                                repeat.__queuedSplices = repeat.__array = undefined;
                                 return;
                             }
                             var nextPromise = _this._runSplices(repeat, repeat.__array, queuedSplices_1) || Promise.resolve();
@@ -209,119 +283,140 @@ System.register(['aurelia-binding', 'aurelia-templating', 'aurelia-templating-re
                         maybePromise.then(runQueuedSplices_1);
                     }
                 };
-                ArrayVirtualRepeatStrategy.prototype._runSplices = function (repeat, array, splices) {
-                    var _this = this;
-                    var removeDelta = 0;
-                    var rmPromises = [];
+                ArrayVirtualRepeatStrategy.prototype._runSplices = function (repeat, newArray, splices) {
+                    var firstIndex = repeat._first;
+                    var totalRemovedCount = 0;
+                    var totalAddedCount = 0;
+                    var splice;
+                    var i = 0;
+                    var spliceCount = splices.length;
+                    var newArraySize = newArray.length;
                     var allSplicesAreInplace = true;
-                    for (var i = 0; i < splices.length; i++) {
-                        var splice = splices[i];
-                        if (splice.removed.length !== splice.addedCount) {
+                    for (i = 0; spliceCount > i; i++) {
+                        splice = splices[i];
+                        var removedCount = splice.removed.length;
+                        var addedCount = splice.addedCount;
+                        totalRemovedCount += removedCount;
+                        totalAddedCount += addedCount;
+                        if (removedCount !== addedCount) {
                             allSplicesAreInplace = false;
-                            break;
                         }
                     }
                     if (allSplicesAreInplace) {
-                        for (var i = 0; i < splices.length; i++) {
-                            var splice = splices[i];
+                        var lastIndex = repeat._lastViewIndex();
+                        var repeatViewSlot = repeat.viewSlot;
+                        for (i = 0; spliceCount > i; i++) {
+                            splice = splices[i];
                             for (var collectionIndex = splice.index; collectionIndex < splice.index + splice.addedCount; collectionIndex++) {
-                                if (!this._isIndexBeforeViewSlot(repeat, repeat.viewSlot, collectionIndex)
-                                    && !this._isIndexAfterViewSlot(repeat, repeat.viewSlot, collectionIndex)) {
-                                    var viewIndex = this._getViewIndex(repeat, repeat.viewSlot, collectionIndex);
-                                    var overrideContext = createFullOverrideContext(repeat, array[collectionIndex], collectionIndex, array.length);
+                                if (collectionIndex >= firstIndex && collectionIndex <= lastIndex) {
+                                    var viewIndex = collectionIndex - firstIndex;
+                                    var overrideContext = createFullOverrideContext(repeat, newArray[collectionIndex], collectionIndex, newArraySize);
                                     repeat.removeView(viewIndex, true, true);
                                     repeat.insertView(viewIndex, overrideContext.bindingContext, overrideContext);
                                 }
                             }
                         }
-                    }
-                    else {
-                        for (var i = 0, ii = splices.length; i < ii; ++i) {
-                            var splice = splices[i];
-                            var removed = splice.removed;
-                            var removedLength = removed.length;
-                            for (var j = 0, jj = removedLength; j < jj; ++j) {
-                                var viewOrPromise = this._removeViewAt(repeat, splice.index + removeDelta + rmPromises.length, true, j, removedLength);
-                                if (viewOrPromise instanceof Promise) {
-                                    rmPromises.push(viewOrPromise);
-                                }
-                            }
-                            removeDelta -= splice.addedCount;
-                        }
-                        if (rmPromises.length > 0) {
-                            return Promise.all(rmPromises).then(function () {
-                                _this._handleAddedSplices(repeat, array, splices);
-                                updateVirtualOverrideContexts(repeat, 0);
-                            });
-                        }
-                        this._handleAddedSplices(repeat, array, splices);
-                        updateVirtualOverrideContexts(repeat, 0);
-                    }
-                    return undefined;
-                };
-                ArrayVirtualRepeatStrategy.prototype._removeViewAt = function (repeat, collectionIndex, returnToCache, removeIndex, removedLength) {
-                    var viewOrPromise;
-                    var view;
-                    var viewSlot = repeat.viewSlot;
-                    var viewCount = repeat.viewCount();
-                    var viewAddIndex;
-                    var removeMoreThanInDom = removedLength > viewCount;
-                    if (repeat._viewsLength <= removeIndex) {
-                        repeat._bottomBufferHeight = repeat._bottomBufferHeight - (repeat.itemHeight);
-                        repeat._adjustBufferHeights();
                         return;
                     }
-                    if (!this._isIndexBeforeViewSlot(repeat, viewSlot, collectionIndex) && !this._isIndexAfterViewSlot(repeat, viewSlot, collectionIndex)) {
-                        var viewIndex = this._getViewIndex(repeat, viewSlot, collectionIndex);
-                        viewOrPromise = repeat.removeView(viewIndex, returnToCache);
-                        if (repeat.items.length > viewCount) {
-                            var collectionAddIndex = void 0;
-                            if (repeat._bottomBufferHeight > repeat.itemHeight) {
-                                viewAddIndex = viewCount;
-                                if (!removeMoreThanInDom) {
-                                    var lastViewItem = repeat._getLastViewItem();
-                                    collectionAddIndex = repeat.items.indexOf(lastViewItem) + 1;
-                                }
-                                else {
-                                    collectionAddIndex = removeIndex;
-                                }
-                                repeat._bottomBufferHeight = repeat._bottomBufferHeight - (repeat.itemHeight);
-                            }
-                            else if (repeat._topBufferHeight > 0) {
-                                viewAddIndex = 0;
-                                collectionAddIndex = repeat._getIndexOfFirstView() - 1;
-                                repeat._topBufferHeight = repeat._topBufferHeight - (repeat.itemHeight);
-                            }
-                            var data = repeat.items[collectionAddIndex];
-                            if (data) {
-                                var overrideContext = createFullOverrideContext(repeat, data, collectionAddIndex, repeat.items.length);
-                                view = repeat.viewFactory.create();
-                                view.bind(overrideContext.bindingContext, overrideContext);
+                    var firstIndexAfterMutation = firstIndex;
+                    var itemHeight = repeat.itemHeight;
+                    var originalSize = newArraySize + totalRemovedCount - totalAddedCount;
+                    var currViewCount = repeat.viewCount();
+                    var newViewCount = currViewCount;
+                    if (originalSize === 0 && itemHeight === 0) {
+                        repeat._resetCalculation();
+                        repeat.itemsChanged();
+                        return;
+                    }
+                    var lastViewIndex = repeat._lastViewIndex();
+                    var all_splices_are_after_view_port = currViewCount > repeat.elementsInView && splices.every(function (s) { return s.index > lastViewIndex; });
+                    if (all_splices_are_after_view_port) {
+                        repeat._bottomBufferHeight = Math$max(0, newArraySize - firstIndex - currViewCount) * itemHeight;
+                        repeat._updateBufferElements(true);
+                    }
+                    else {
+                        var viewsRequiredCount = repeat._viewsLength;
+                        if (viewsRequiredCount === 0) {
+                            var scrollerInfo = repeat.getScrollerInfo();
+                            var minViewsRequired = Math$floor(scrollerInfo.height / itemHeight) + 1;
+                            repeat.elementsInView = minViewsRequired;
+                            viewsRequiredCount = repeat._viewsLength = minViewsRequired * 2;
+                        }
+                        for (i = 0; spliceCount > i; ++i) {
+                            var _a = splices[i], addedCount = _a.addedCount, removedCount = _a.removed.length, spliceIndex = _a.index;
+                            var removeDelta = removedCount - addedCount;
+                            if (firstIndexAfterMutation > spliceIndex) {
+                                firstIndexAfterMutation = Math$max(0, firstIndexAfterMutation - removeDelta);
                             }
                         }
-                    }
-                    else if (this._isIndexBeforeViewSlot(repeat, viewSlot, collectionIndex)) {
-                        if (repeat._bottomBufferHeight > 0) {
-                            repeat._bottomBufferHeight = repeat._bottomBufferHeight - (repeat.itemHeight);
-                            rebindAndMoveView(repeat, repeat.view(0), repeat.view(0).overrideContext.$index, true);
+                        newViewCount = 0;
+                        if (newArraySize <= repeat.elementsInView) {
+                            firstIndexAfterMutation = 0;
+                            newViewCount = newArraySize;
                         }
                         else {
-                            repeat._topBufferHeight = repeat._topBufferHeight - (repeat.itemHeight);
+                            if (newArraySize <= viewsRequiredCount) {
+                                newViewCount = newArraySize;
+                                firstIndexAfterMutation = 0;
+                            }
+                            else {
+                                newViewCount = viewsRequiredCount;
+                            }
                         }
+                        var newTopBufferItemCount = newArraySize >= firstIndexAfterMutation
+                            ? firstIndexAfterMutation
+                            : 0;
+                        var viewCountDelta = newViewCount - currViewCount;
+                        if (viewCountDelta > 0) {
+                            for (i = 0; viewCountDelta > i; ++i) {
+                                var collectionIndex = firstIndexAfterMutation + currViewCount + i;
+                                var overrideContext = createFullOverrideContext(repeat, newArray[collectionIndex], collectionIndex, newArray.length);
+                                repeat.addView(overrideContext.bindingContext, overrideContext);
+                            }
+                        }
+                        else {
+                            var ii = Math$abs(viewCountDelta);
+                            for (i = 0; ii > i; ++i) {
+                                repeat.removeView(newViewCount, true, false);
+                            }
+                        }
+                        var newBotBufferItemCount = Math$max(0, newArraySize - newTopBufferItemCount - newViewCount);
+                        repeat._isScrolling = false;
+                        repeat._scrollingDown = repeat._scrollingUp = false;
+                        repeat._first = firstIndexAfterMutation;
+                        repeat._previousFirst = firstIndex;
+                        repeat._lastRebind = firstIndexAfterMutation + newViewCount;
+                        repeat._topBufferHeight = newTopBufferItemCount * itemHeight;
+                        repeat._bottomBufferHeight = newBotBufferItemCount * itemHeight;
+                        repeat._updateBufferElements(true);
                     }
-                    else if (this._isIndexAfterViewSlot(repeat, viewSlot, collectionIndex)) {
-                        repeat._bottomBufferHeight = repeat._bottomBufferHeight - (repeat.itemHeight);
+                    this._remeasure(repeat, itemHeight, newViewCount, newArraySize, firstIndexAfterMutation);
+                };
+                ArrayVirtualRepeatStrategy.prototype._remeasure = function (repeat, itemHeight, newViewCount, newArraySize, firstIndexAfterMutation) {
+                    var scrollerInfo = repeat.getScrollerInfo();
+                    var topBufferDistance = getDistanceToParent(repeat.topBufferEl, scrollerInfo.scroller);
+                    var realScrolltop = Math$max(0, scrollerInfo.scrollTop === 0
+                        ? 0
+                        : (scrollerInfo.scrollTop - topBufferDistance));
+                    var first_index_after_scroll_adjustment = realScrolltop === 0
+                        ? 0
+                        : Math$floor(realScrolltop / itemHeight);
+                    if (first_index_after_scroll_adjustment + newViewCount >= newArraySize) {
+                        first_index_after_scroll_adjustment = Math$max(0, newArraySize - newViewCount);
                     }
-                    if (viewOrPromise instanceof Promise) {
-                        viewOrPromise.then(function () {
-                            repeat.viewSlot.insert(viewAddIndex, view);
-                            repeat._adjustBufferHeights();
-                        });
-                    }
-                    else if (view) {
-                        repeat.viewSlot.insert(viewAddIndex, view);
-                    }
-                    repeat._adjustBufferHeights();
+                    var top_buffer_item_count_after_scroll_adjustment = first_index_after_scroll_adjustment;
+                    var bot_buffer_item_count_after_scroll_adjustment = Math$max(0, newArraySize - top_buffer_item_count_after_scroll_adjustment - newViewCount);
+                    repeat._first
+                        = repeat._lastRebind = first_index_after_scroll_adjustment;
+                    repeat._previousFirst = firstIndexAfterMutation;
+                    repeat._isAtTop = first_index_after_scroll_adjustment === 0;
+                    repeat._isLastIndex = bot_buffer_item_count_after_scroll_adjustment === 0;
+                    repeat._topBufferHeight = top_buffer_item_count_after_scroll_adjustment * itemHeight;
+                    repeat._bottomBufferHeight = bot_buffer_item_count_after_scroll_adjustment * itemHeight;
+                    repeat._handlingMutations = false;
+                    repeat.revertScrollCheckGuard();
+                    repeat._updateBufferElements();
+                    updateAllViews(repeat, 0);
                 };
                 ArrayVirtualRepeatStrategy.prototype._isIndexBeforeViewSlot = function (repeat, viewSlot, index) {
                     var viewIndex = this._getViewIndex(repeat, viewSlot, index);
@@ -336,48 +431,7 @@ System.register(['aurelia-binding', 'aurelia-templating', 'aurelia-templating-re
                         return -1;
                     }
                     var topBufferItems = repeat._topBufferHeight / repeat.itemHeight;
-                    return index - topBufferItems;
-                };
-                ArrayVirtualRepeatStrategy.prototype._handleAddedSplices = function (repeat, array, splices) {
-                    var arrayLength = array.length;
-                    var viewSlot = repeat.viewSlot;
-                    for (var i = 0, ii = splices.length; i < ii; ++i) {
-                        var splice = splices[i];
-                        var addIndex = splice.index;
-                        var end = splice.index + splice.addedCount;
-                        for (; addIndex < end; ++addIndex) {
-                            var hasDistanceToBottomViewPort = getElementDistanceToBottomViewPort(repeat.templateStrategy.getLastElement(repeat.bottomBuffer)) > 0;
-                            if (repeat.viewCount() === 0
-                                || (!this._isIndexBeforeViewSlot(repeat, viewSlot, addIndex)
-                                    && !this._isIndexAfterViewSlot(repeat, viewSlot, addIndex))
-                                || hasDistanceToBottomViewPort) {
-                                var overrideContext = createFullOverrideContext(repeat, array[addIndex], addIndex, arrayLength);
-                                repeat.insertView(addIndex, overrideContext.bindingContext, overrideContext);
-                                if (!repeat._hasCalculatedSizes) {
-                                    repeat._calcInitialHeights(1);
-                                }
-                                else if (repeat.viewCount() > repeat._viewsLength) {
-                                    if (hasDistanceToBottomViewPort) {
-                                        repeat.removeView(0, true, true);
-                                        repeat._topBufferHeight = repeat._topBufferHeight + repeat.itemHeight;
-                                        repeat._adjustBufferHeights();
-                                    }
-                                    else {
-                                        repeat.removeView(repeat.viewCount() - 1, true, true);
-                                        repeat._bottomBufferHeight = repeat._bottomBufferHeight + repeat.itemHeight;
-                                    }
-                                }
-                            }
-                            else if (this._isIndexBeforeViewSlot(repeat, viewSlot, addIndex)) {
-                                repeat._topBufferHeight = repeat._topBufferHeight + repeat.itemHeight;
-                            }
-                            else if (this._isIndexAfterViewSlot(repeat, viewSlot, addIndex)) {
-                                repeat._bottomBufferHeight = repeat._bottomBufferHeight + repeat.itemHeight;
-                                repeat.isLastIndex = false;
-                            }
-                        }
-                    }
-                    repeat._adjustBufferHeights();
+                    return Math$floor(index - topBufferItems);
                 };
                 return ArrayVirtualRepeatStrategy;
             }(ArrayRepeatStrategy));
@@ -387,130 +441,46 @@ System.register(['aurelia-binding', 'aurelia-templating', 'aurelia-templating-re
                 function NullVirtualRepeatStrategy() {
                     return _super !== null && _super.apply(this, arguments) || this;
                 }
-                NullVirtualRepeatStrategy.prototype.instanceMutated = function () {
+                NullVirtualRepeatStrategy.prototype.initCalculation = function (repeat, items) {
+                    repeat.itemHeight
+                        = repeat.elementsInView
+                            = repeat._viewsLength = 0;
+                    return 2;
                 };
+                NullVirtualRepeatStrategy.prototype.createFirstItem = function () {
+                    return null;
+                };
+                NullVirtualRepeatStrategy.prototype.instanceMutated = function () { };
                 NullVirtualRepeatStrategy.prototype.instanceChanged = function (repeat) {
-                    _super.prototype.instanceChanged.call(this, repeat);
+                    repeat.removeAllViews(true, false);
                     repeat._resetCalculation();
                 };
                 return NullVirtualRepeatStrategy;
             }(NullRepeatStrategy));
 
-            var VirtualRepeatStrategyLocator = (function (_super) {
-                __extends(VirtualRepeatStrategyLocator, _super);
+            var VirtualRepeatStrategyLocator = (function () {
                 function VirtualRepeatStrategyLocator() {
-                    var _this = _super.call(this) || this;
-                    _this.matchers = [];
-                    _this.strategies = [];
-                    _this.addStrategy(function (items) { return items === null || items === undefined; }, new NullVirtualRepeatStrategy());
-                    _this.addStrategy(function (items) { return items instanceof Array; }, new ArrayVirtualRepeatStrategy());
-                    return _this;
+                    this.matchers = [];
+                    this.strategies = [];
+                    this.addStrategy(function (items) { return items === null || items === undefined; }, new NullVirtualRepeatStrategy());
+                    this.addStrategy(function (items) { return items instanceof Array; }, new ArrayVirtualRepeatStrategy());
                 }
+                VirtualRepeatStrategyLocator.prototype.addStrategy = function (matcher, strategy) {
+                    this.matchers.push(matcher);
+                    this.strategies.push(strategy);
+                };
                 VirtualRepeatStrategyLocator.prototype.getStrategy = function (items) {
-                    return _super.prototype.getStrategy.call(this, items);
+                    var matchers = this.matchers;
+                    for (var i = 0, ii = matchers.length; i < ii; ++i) {
+                        if (matchers[i](items)) {
+                            return this.strategies[i];
+                        }
+                    }
+                    return null;
                 };
                 return VirtualRepeatStrategyLocator;
-            }(RepeatStrategyLocator));
+            }());
 
-            var TemplateStrategyLocator = (function () {
-                function TemplateStrategyLocator(container) {
-                    this.container = container;
-                }
-                TemplateStrategyLocator.prototype.getStrategy = function (element) {
-                    var parent = element.parentNode;
-                    if (parent === null) {
-                        return this.container.get(DefaultTemplateStrategy);
-                    }
-                    var parentTagName = parent.tagName;
-                    if (parentTagName === 'TBODY' || parentTagName === 'THEAD' || parentTagName === 'TFOOT') {
-                        return this.container.get(TableRowStrategy);
-                    }
-                    if (parentTagName === 'TABLE') {
-                        return this.container.get(TableBodyStrategy);
-                    }
-                    return this.container.get(DefaultTemplateStrategy);
-                };
-                TemplateStrategyLocator.inject = [Container];
-                return TemplateStrategyLocator;
-            }());
-            var TableBodyStrategy = (function () {
-                function TableBodyStrategy() {
-                }
-                TableBodyStrategy.prototype.getScrollContainer = function (element) {
-                    return this.getTable(element).parentNode;
-                };
-                TableBodyStrategy.prototype.moveViewFirst = function (view, topBuffer) {
-                    insertBeforeNode(view, DOM.nextElementSibling(topBuffer));
-                };
-                TableBodyStrategy.prototype.moveViewLast = function (view, bottomBuffer) {
-                    var previousSibling = bottomBuffer.previousSibling;
-                    var referenceNode = previousSibling.nodeType === 8 && previousSibling.data === 'anchor' ? previousSibling : bottomBuffer;
-                    insertBeforeNode(view, referenceNode);
-                };
-                TableBodyStrategy.prototype.createTopBufferElement = function (element) {
-                    return element.parentNode.insertBefore(DOM.createElement('tr'), element);
-                };
-                TableBodyStrategy.prototype.createBottomBufferElement = function (element) {
-                    return element.parentNode.insertBefore(DOM.createElement('tr'), element.nextSibling);
-                };
-                TableBodyStrategy.prototype.removeBufferElements = function (element, topBuffer, bottomBuffer) {
-                    DOM.removeNode(topBuffer);
-                    DOM.removeNode(bottomBuffer);
-                };
-                TableBodyStrategy.prototype.getFirstElement = function (topBuffer) {
-                    return topBuffer.nextElementSibling;
-                };
-                TableBodyStrategy.prototype.getLastElement = function (bottomBuffer) {
-                    return bottomBuffer.previousElementSibling;
-                };
-                TableBodyStrategy.prototype.getTopBufferDistance = function (topBuffer) {
-                    return 0;
-                };
-                TableBodyStrategy.prototype.getTable = function (element) {
-                    return element.parentNode;
-                };
-                return TableBodyStrategy;
-            }());
-            var TableRowStrategy = (function () {
-                function TableRowStrategy(domHelper) {
-                    this.domHelper = domHelper;
-                }
-                TableRowStrategy.prototype.getScrollContainer = function (element) {
-                    return this.getTable(element).parentNode;
-                };
-                TableRowStrategy.prototype.moveViewFirst = function (view, topBuffer) {
-                    insertBeforeNode(view, topBuffer.nextElementSibling);
-                };
-                TableRowStrategy.prototype.moveViewLast = function (view, bottomBuffer) {
-                    var previousSibling = bottomBuffer.previousSibling;
-                    var referenceNode = previousSibling.nodeType === 8 && previousSibling.data === 'anchor' ? previousSibling : bottomBuffer;
-                    insertBeforeNode(view, referenceNode);
-                };
-                TableRowStrategy.prototype.createTopBufferElement = function (element) {
-                    return element.parentNode.insertBefore(DOM.createElement('tr'), element);
-                };
-                TableRowStrategy.prototype.createBottomBufferElement = function (element) {
-                    return element.parentNode.insertBefore(DOM.createElement('tr'), element.nextSibling);
-                };
-                TableRowStrategy.prototype.removeBufferElements = function (element, topBuffer, bottomBuffer) {
-                    DOM.removeNode(topBuffer);
-                    DOM.removeNode(bottomBuffer);
-                };
-                TableRowStrategy.prototype.getFirstElement = function (topBuffer) {
-                    return topBuffer.nextElementSibling;
-                };
-                TableRowStrategy.prototype.getLastElement = function (bottomBuffer) {
-                    return bottomBuffer.previousElementSibling;
-                };
-                TableRowStrategy.prototype.getTopBufferDistance = function (topBuffer) {
-                    return 0;
-                };
-                TableRowStrategy.prototype.getTable = function (element) {
-                    return element.parentNode.parentNode;
-                };
-                TableRowStrategy.inject = [DomHelper];
-                return TableRowStrategy;
-            }());
             var DefaultTemplateStrategy = (function () {
                 function DefaultTemplateStrategy() {
                 }
@@ -525,37 +495,127 @@ System.register(['aurelia-binding', 'aurelia-templating', 'aurelia-templating-re
                     var referenceNode = previousSibling.nodeType === 8 && previousSibling.data === 'anchor' ? previousSibling : bottomBuffer;
                     insertBeforeNode(view, referenceNode);
                 };
-                DefaultTemplateStrategy.prototype.createTopBufferElement = function (element) {
-                    var elementName = /^[UO]L$/.test(element.parentNode.tagName) ? 'li' : 'div';
-                    var buffer = DOM.createElement(elementName);
-                    element.parentNode.insertBefore(buffer, element);
-                    return buffer;
+                DefaultTemplateStrategy.prototype.createBuffers = function (element) {
+                    var parent = element.parentNode;
+                    return [
+                        parent.insertBefore(DOM.createElement('div'), element),
+                        parent.insertBefore(DOM.createElement('div'), element.nextSibling)
+                    ];
                 };
-                DefaultTemplateStrategy.prototype.createBottomBufferElement = function (element) {
-                    var elementName = /^[UO]L$/.test(element.parentNode.tagName) ? 'li' : 'div';
-                    var buffer = DOM.createElement(elementName);
-                    element.parentNode.insertBefore(buffer, element.nextSibling);
-                    return buffer;
+                DefaultTemplateStrategy.prototype.removeBuffers = function (el, topBuffer, bottomBuffer) {
+                    var parent = el.parentNode;
+                    parent.removeChild(topBuffer);
+                    parent.removeChild(bottomBuffer);
                 };
-                DefaultTemplateStrategy.prototype.removeBufferElements = function (element, topBuffer, bottomBuffer) {
-                    element.parentNode.removeChild(topBuffer);
-                    element.parentNode.removeChild(bottomBuffer);
+                DefaultTemplateStrategy.prototype.getFirstElement = function (topBuffer, bottomBuffer) {
+                    var firstEl = topBuffer.nextElementSibling;
+                    return firstEl === bottomBuffer ? null : firstEl;
                 };
-                DefaultTemplateStrategy.prototype.getFirstElement = function (topBuffer) {
-                    return DOM.nextElementSibling(topBuffer);
-                };
-                DefaultTemplateStrategy.prototype.getLastElement = function (bottomBuffer) {
-                    return bottomBuffer.previousElementSibling;
-                };
-                DefaultTemplateStrategy.prototype.getTopBufferDistance = function (topBuffer) {
-                    return 0;
+                DefaultTemplateStrategy.prototype.getLastElement = function (topBuffer, bottomBuffer) {
+                    var lastEl = bottomBuffer.previousElementSibling;
+                    return lastEl === topBuffer ? null : lastEl;
                 };
                 return DefaultTemplateStrategy;
             }());
 
+            var BaseTableTemplateStrategy = (function (_super) {
+                __extends(BaseTableTemplateStrategy, _super);
+                function BaseTableTemplateStrategy() {
+                    return _super !== null && _super.apply(this, arguments) || this;
+                }
+                BaseTableTemplateStrategy.prototype.getScrollContainer = function (element) {
+                    return this.getTable(element).parentNode;
+                };
+                BaseTableTemplateStrategy.prototype.createBuffers = function (element) {
+                    var parent = element.parentNode;
+                    return [
+                        parent.insertBefore(DOM.createElement('tr'), element),
+                        parent.insertBefore(DOM.createElement('tr'), element.nextSibling)
+                    ];
+                };
+                return BaseTableTemplateStrategy;
+            }(DefaultTemplateStrategy));
+            var TableBodyStrategy = (function (_super) {
+                __extends(TableBodyStrategy, _super);
+                function TableBodyStrategy() {
+                    return _super !== null && _super.apply(this, arguments) || this;
+                }
+                TableBodyStrategy.prototype.getTable = function (element) {
+                    return element.parentNode;
+                };
+                return TableBodyStrategy;
+            }(BaseTableTemplateStrategy));
+            var TableRowStrategy = (function (_super) {
+                __extends(TableRowStrategy, _super);
+                function TableRowStrategy() {
+                    return _super !== null && _super.apply(this, arguments) || this;
+                }
+                TableRowStrategy.prototype.getTable = function (element) {
+                    return element.parentNode.parentNode;
+                };
+                return TableRowStrategy;
+            }(BaseTableTemplateStrategy));
+
+            var ListTemplateStrategy = (function (_super) {
+                __extends(ListTemplateStrategy, _super);
+                function ListTemplateStrategy() {
+                    return _super !== null && _super.apply(this, arguments) || this;
+                }
+                ListTemplateStrategy.prototype.getScrollContainer = function (element) {
+                    var listElement = this.getList(element);
+                    return hasOverflowScroll(listElement)
+                        ? listElement
+                        : listElement.parentNode;
+                };
+                ListTemplateStrategy.prototype.createBuffers = function (element) {
+                    var parent = element.parentNode;
+                    return [
+                        parent.insertBefore(DOM.createElement('li'), element),
+                        parent.insertBefore(DOM.createElement('li'), element.nextSibling)
+                    ];
+                };
+                ListTemplateStrategy.prototype.getList = function (element) {
+                    return element.parentNode;
+                };
+                return ListTemplateStrategy;
+            }(DefaultTemplateStrategy));
+
+            var TemplateStrategyLocator = (function () {
+                function TemplateStrategyLocator(container) {
+                    this.container = container;
+                }
+                TemplateStrategyLocator.prototype.getStrategy = function (element) {
+                    var parent = element.parentNode;
+                    var container = this.container;
+                    if (parent === null) {
+                        return container.get(DefaultTemplateStrategy);
+                    }
+                    var parentTagName = parent.tagName;
+                    if (parentTagName === 'TBODY' || parentTagName === 'THEAD' || parentTagName === 'TFOOT') {
+                        return container.get(TableRowStrategy);
+                    }
+                    if (parentTagName === 'TABLE') {
+                        return container.get(TableBodyStrategy);
+                    }
+                    if (parentTagName === 'OL' || parentTagName === 'UL') {
+                        return container.get(ListTemplateStrategy);
+                    }
+                    return container.get(DefaultTemplateStrategy);
+                };
+                TemplateStrategyLocator.inject = [Container];
+                return TemplateStrategyLocator;
+            }());
+
+            var VirtualizationEvents = exports('VirtualizationEvents', Object.assign(Object.create(null), {
+                scrollerSizeChange: 'virtual-repeat-scroller-size-changed',
+                itemSizeChange: 'virtual-repeat-item-size-changed'
+            }));
+
+            var getResizeObserverClass = function () { return PLATFORM.global.ResizeObserver; };
+
             var VirtualRepeat = exports('VirtualRepeat', (function (_super) {
                 __extends(VirtualRepeat, _super);
-                function VirtualRepeat(element, viewFactory, instruction, viewSlot, viewResources, observerLocator, strategyLocator, templateStrategyLocator, domHelper) {
+                function VirtualRepeat(element, viewFactory, instruction, viewSlot, viewResources, observerLocator, collectionStrategyLocator, templateStrategyLocator) {
                     var _this = _super.call(this, {
                         local: 'item',
                         viewsRequireLifecycle: viewsRequireLifecycle(viewFactory)
@@ -566,19 +626,17 @@ System.register(['aurelia-binding', 'aurelia-templating', 'aurelia-templating-re
                     _this._lastRebind = 0;
                     _this._topBufferHeight = 0;
                     _this._bottomBufferHeight = 0;
-                    _this._bufferSize = 0;
+                    _this._isScrolling = false;
                     _this._scrollingDown = false;
                     _this._scrollingUp = false;
                     _this._switchedDirection = false;
                     _this._isAttached = false;
                     _this._ticking = false;
                     _this._fixedHeightContainer = false;
-                    _this._hasCalculatedSizes = false;
                     _this._isAtTop = true;
                     _this._calledGetMore = false;
                     _this._skipNextScrollHandle = false;
                     _this._handlingMutations = false;
-                    _this._isScrolling = false;
                     _this.element = element;
                     _this.viewFactory = viewFactory;
                     _this.instruction = instruction;
@@ -586,15 +644,30 @@ System.register(['aurelia-binding', 'aurelia-templating', 'aurelia-templating-re
                     _this.lookupFunctions = viewResources['lookupFunctions'];
                     _this.observerLocator = observerLocator;
                     _this.taskQueue = observerLocator.taskQueue;
-                    _this.strategyLocator = strategyLocator;
+                    _this.strategyLocator = collectionStrategyLocator;
                     _this.templateStrategyLocator = templateStrategyLocator;
                     _this.sourceExpression = getItemsSourceExpression(_this.instruction, 'virtual-repeat.for');
                     _this.isOneTime = isOneTime(_this.sourceExpression);
-                    _this.domHelper = domHelper;
+                    _this.itemHeight
+                        = _this._prevItemsCount
+                            = _this.distanceToTop
+                                = 0;
+                    _this.revertScrollCheckGuard = function () {
+                        _this._ticking = false;
+                    };
                     return _this;
                 }
                 VirtualRepeat.inject = function () {
-                    return [DOM.Element, BoundViewFactory, TargetInstruction, ViewSlot, ViewResources, ObserverLocator, VirtualRepeatStrategyLocator, TemplateStrategyLocator, DomHelper];
+                    return [
+                        DOM.Element,
+                        BoundViewFactory,
+                        TargetInstruction,
+                        ViewSlot,
+                        ViewResources,
+                        ObserverLocator,
+                        VirtualRepeatStrategyLocator,
+                        TemplateStrategyLocator
+                    ];
                 };
                 VirtualRepeat.$resource = function () {
                     return {
@@ -610,33 +683,35 @@ System.register(['aurelia-binding', 'aurelia-templating', 'aurelia-templating-re
                 VirtualRepeat.prototype.attached = function () {
                     var _this = this;
                     this._isAttached = true;
-                    this._itemsLength = this.items.length;
+                    this._prevItemsCount = this.items.length;
                     var element = this.element;
                     var templateStrategy = this.templateStrategy = this.templateStrategyLocator.getStrategy(element);
-                    var scrollListener = this.scrollListener = function () { return _this._onScroll(); };
-                    var scrollContainer = this.scrollContainer = templateStrategy.getScrollContainer(element);
-                    var topBuffer = this.topBuffer = templateStrategy.createTopBufferElement(element);
-                    this.bottomBuffer = templateStrategy.createBottomBufferElement(element);
+                    var scrollListener = this.scrollListener = function () {
+                        _this._onScroll();
+                    };
+                    var containerEl = this.scrollerEl = templateStrategy.getScrollContainer(element);
+                    var _a = templateStrategy.createBuffers(element), topBufferEl = _a[0], bottomBufferEl = _a[1];
+                    var isFixedHeightContainer = this._fixedHeightContainer = hasOverflowScroll(containerEl);
+                    this.topBufferEl = topBufferEl;
+                    this.bottomBufferEl = bottomBufferEl;
                     this.itemsChanged();
-                    this._calcDistanceToTopInterval = PLATFORM.global.setInterval(function () {
-                        var prevDistanceToTop = _this.distanceToTop;
-                        var currDistanceToTop = _this.domHelper.getElementDistanceToTopOfDocument(topBuffer) + _this.topBufferDistance;
-                        _this.distanceToTop = currDistanceToTop;
-                        if (prevDistanceToTop !== currDistanceToTop) {
-                            _this._handleScroll();
-                        }
-                    }, 500);
-                    this.topBufferDistance = templateStrategy.getTopBufferDistance(topBuffer);
-                    this.distanceToTop = this.domHelper
-                        .getElementDistanceToTopOfDocument(templateStrategy.getFirstElement(topBuffer));
-                    if (this.domHelper.hasOverflowScroll(scrollContainer)) {
-                        this._fixedHeightContainer = true;
-                        scrollContainer.addEventListener('scroll', scrollListener);
+                    if (isFixedHeightContainer) {
+                        containerEl.addEventListener('scroll', scrollListener);
                     }
                     else {
-                        document.addEventListener('scroll', scrollListener);
+                        var firstElement = templateStrategy.getFirstElement(topBufferEl, bottomBufferEl);
+                        this.distanceToTop = firstElement === null ? 0 : getElementDistanceToTopOfDocument(topBufferEl);
+                        DOM.addEventListener('scroll', scrollListener, false);
+                        this._calcDistanceToTopInterval = PLATFORM.global.setInterval(function () {
+                            var prevDistanceToTop = _this.distanceToTop;
+                            var currDistanceToTop = getElementDistanceToTopOfDocument(topBufferEl);
+                            _this.distanceToTop = currDistanceToTop;
+                            if (prevDistanceToTop !== currDistanceToTop) {
+                                _this._handleScroll();
+                            }
+                        }, 500);
                     }
-                    if (this.items.length < this.elementsInView && this.isLastIndex === undefined) {
+                    if (this.items.length < this.elementsInView) {
                         this._getMore(true);
                     }
                 };
@@ -644,94 +719,92 @@ System.register(['aurelia-binding', 'aurelia-templating', 'aurelia-templating-re
                     this[context](this.items, changes);
                 };
                 VirtualRepeat.prototype.detached = function () {
-                    if (this.domHelper.hasOverflowScroll(this.scrollContainer)) {
-                        this.scrollContainer.removeEventListener('scroll', this.scrollListener);
+                    var scrollCt = this.scrollerEl;
+                    var scrollListener = this.scrollListener;
+                    if (hasOverflowScroll(scrollCt)) {
+                        scrollCt.removeEventListener('scroll', scrollListener);
                     }
                     else {
-                        document.removeEventListener('scroll', this.scrollListener);
+                        DOM.removeEventListener('scroll', scrollListener, false);
                     }
-                    this.isLastIndex = undefined;
-                    this._fixedHeightContainer = false;
-                    this._resetCalculation();
-                    this._isAttached = false;
-                    this._itemsLength = 0;
-                    this.templateStrategy.removeBufferElements(this.element, this.topBuffer, this.bottomBuffer);
-                    this.topBuffer = this.bottomBuffer = this.scrollContainer = this.scrollListener = null;
-                    this.scrollContainerHeight = 0;
-                    this.distanceToTop = 0;
-                    this.removeAllViews(true, false);
+                    this._unobserveScrollerSize();
+                    this._currScrollerContentRect
+                        = this._isLastIndex = undefined;
+                    this._isAttached
+                        = this._fixedHeightContainer = false;
                     this._unsubscribeCollection();
-                    clearInterval(this._calcDistanceToTopInterval);
-                    if (this._sizeInterval) {
-                        clearInterval(this._sizeInterval);
-                    }
+                    this._resetCalculation();
+                    this.templateStrategy.removeBuffers(this.element, this.topBufferEl, this.bottomBufferEl);
+                    this.topBufferEl = this.bottomBufferEl = this.scrollerEl = this.scrollListener = null;
+                    this.removeAllViews(true, false);
+                    var $clearInterval = PLATFORM.global.clearInterval;
+                    $clearInterval(this._calcDistanceToTopInterval);
+                    $clearInterval(this._sizeInterval);
+                    this._prevItemsCount
+                        = this.distanceToTop
+                            = this._sizeInterval
+                                = this._calcDistanceToTopInterval = 0;
                 };
                 VirtualRepeat.prototype.unbind = function () {
                     this.scope = null;
                     this.items = null;
-                    this._itemsLength = 0;
                 };
                 VirtualRepeat.prototype.itemsChanged = function () {
+                    var _this = this;
                     this._unsubscribeCollection();
                     if (!this.scope || !this._isAttached) {
                         return;
                     }
-                    var reducingItems = false;
-                    var previousLastViewIndex = this._getIndexOfLastView();
                     var items = this.items;
-                    var shouldCalculateSize = !!items;
-                    this.strategy = this.strategyLocator.getStrategy(items);
-                    if (shouldCalculateSize) {
-                        if (items.length > 0 && this.viewCount() === 0) {
-                            this.strategy.createFirstItem(this);
-                        }
-                        if (this._itemsLength >= items.length) {
-                            this._skipNextScrollHandle = true;
-                            reducingItems = true;
-                        }
-                        this._checkFixedHeightContainer();
-                        this._calcInitialHeights(items.length);
+                    var strategy = this.strategy = this.strategyLocator.getStrategy(items);
+                    if (strategy === null) {
+                        throw new Error('Value is not iterateable for virtual repeat.');
                     }
                     if (!this.isOneTime && !this._observeInnerCollection()) {
                         this._observeCollection();
                     }
-                    this.strategy.instanceChanged(this, items, this._first);
-                    if (shouldCalculateSize) {
-                        this._lastRebind = this._first;
-                        if (reducingItems && previousLastViewIndex > this.items.length - 1) {
-                            if (this.scrollContainer.tagName === 'TBODY') {
-                                var realScrollContainer = this.scrollContainer.parentNode.parentNode;
-                                realScrollContainer.scrollTop = realScrollContainer.scrollTop + (this.viewCount() * this.itemHeight);
+                    var calculationSignals = strategy.initCalculation(this, items);
+                    strategy.instanceChanged(this, items, this._first);
+                    if (calculationSignals & 1) {
+                        this._resetCalculation();
+                    }
+                    if ((calculationSignals & 2) === 0) {
+                        var _a = PLATFORM.global, $setInterval = _a.setInterval, $clearInterval_1 = _a.clearInterval;
+                        $clearInterval_1(this._sizeInterval);
+                        this._sizeInterval = $setInterval(function () {
+                            if (_this.items) {
+                                var firstView = _this._firstView() || _this.strategy.createFirstItem(_this);
+                                var newCalcSize = calcOuterHeight(firstView.firstChild);
+                                if (newCalcSize > 0) {
+                                    $clearInterval_1(_this._sizeInterval);
+                                    _this.itemsChanged();
+                                }
                             }
                             else {
-                                this.scrollContainer.scrollTop = this.scrollContainer.scrollTop + (this.viewCount() * this.itemHeight);
+                                $clearInterval_1(_this._sizeInterval);
                             }
-                        }
-                        if (!reducingItems) {
-                            this._previousFirst = this._first;
-                            this._scrollingDown = true;
-                            this._scrollingUp = false;
-                            this.isLastIndex = this._getIndexOfLastView() >= this.items.length - 1;
-                        }
-                        this._handleScroll();
+                        }, 500);
+                    }
+                    if (calculationSignals & 4) {
+                        this._observeScroller(this.getScroller());
                     }
                 };
                 VirtualRepeat.prototype.handleCollectionMutated = function (collection, changes) {
-                    if (this.ignoreMutation) {
+                    if (this._ignoreMutation) {
                         return;
                     }
                     this._handlingMutations = true;
-                    this._itemsLength = collection.length;
+                    this._prevItemsCount = collection.length;
                     this.strategy.instanceMutated(this, collection, changes);
                 };
                 VirtualRepeat.prototype.handleInnerCollectionMutated = function (collection, changes) {
                     var _this = this;
-                    if (this.ignoreMutation) {
+                    if (this._ignoreMutation) {
                         return;
                     }
-                    this.ignoreMutation = true;
+                    this._ignoreMutation = true;
                     var newItems = this.sourceExpression.evaluate(this.scope, this.lookupFunctions);
-                    this.taskQueue.queueMicroTask(function () { return _this.ignoreMutation = false; });
+                    this.taskQueue.queueMicroTask(function () { return _this._ignoreMutation = false; });
                     if (newItems === this.items) {
                         this.itemsChanged();
                     }
@@ -739,33 +812,52 @@ System.register(['aurelia-binding', 'aurelia-templating', 'aurelia-templating-re
                         this.items = newItems;
                     }
                 };
+                VirtualRepeat.prototype.getScroller = function () {
+                    return this._fixedHeightContainer
+                        ? this.scrollerEl
+                        : document.documentElement;
+                };
+                VirtualRepeat.prototype.getScrollerInfo = function () {
+                    var scroller = this.getScroller();
+                    return {
+                        scroller: scroller,
+                        scrollHeight: scroller.scrollHeight,
+                        scrollTop: scroller.scrollTop,
+                        height: calcScrollHeight(scroller)
+                    };
+                };
                 VirtualRepeat.prototype._resetCalculation = function () {
-                    this._first = 0;
-                    this._previousFirst = 0;
-                    this._viewsLength = 0;
-                    this._lastRebind = 0;
-                    this._topBufferHeight = 0;
-                    this._bottomBufferHeight = 0;
-                    this._scrollingDown = false;
-                    this._scrollingUp = false;
-                    this._switchedDirection = false;
-                    this._ticking = false;
-                    this._hasCalculatedSizes = false;
+                    this._first
+                        = this._previousFirst
+                            = this._viewsLength
+                                = this._lastRebind
+                                    = this._topBufferHeight
+                                        = this._bottomBufferHeight
+                                            = this._prevItemsCount
+                                                = this.itemHeight
+                                                    = this.elementsInView = 0;
+                    this._isScrolling
+                        = this._scrollingDown
+                            = this._scrollingUp
+                                = this._switchedDirection
+                                    = this._ignoreMutation
+                                        = this._handlingMutations
+                                            = this._ticking
+                                                = this._isLastIndex = false;
                     this._isAtTop = true;
-                    this.isLastIndex = false;
-                    this.elementsInView = 0;
-                    this._adjustBufferHeights();
+                    this._updateBufferElements(true);
                 };
                 VirtualRepeat.prototype._onScroll = function () {
                     var _this = this;
-                    if (!this._ticking && !this._handlingMutations) {
-                        requestAnimationFrame(function () {
+                    var isHandlingMutations = this._handlingMutations;
+                    if (!this._ticking && !isHandlingMutations) {
+                        this.taskQueue.queueMicroTask(function () {
                             _this._handleScroll();
                             _this._ticking = false;
                         });
                         this._ticking = true;
                     }
-                    if (this._handlingMutations) {
+                    if (isHandlingMutations) {
                         this._handlingMutations = false;
                     }
                 };
@@ -777,80 +869,92 @@ System.register(['aurelia-binding', 'aurelia-templating', 'aurelia-templating-re
                         this._skipNextScrollHandle = false;
                         return;
                     }
-                    if (!this.items) {
+                    var items = this.items;
+                    if (!items) {
                         return;
                     }
+                    var topBufferEl = this.topBufferEl;
+                    var scrollerEl = this.scrollerEl;
                     var itemHeight = this.itemHeight;
-                    var scrollTop = this._fixedHeightContainer
-                        ? this.scrollContainer.scrollTop
-                        : (pageYOffset - this.distanceToTop);
-                    var firstViewIndex = itemHeight > 0 ? Math.floor(scrollTop / itemHeight) : 0;
-                    this._first = firstViewIndex < 0 ? 0 : firstViewIndex;
-                    if (this._first > this.items.length - this.elementsInView) {
-                        firstViewIndex = this.items.length - this.elementsInView;
-                        this._first = firstViewIndex < 0 ? 0 : firstViewIndex;
+                    var realScrollTop = 0;
+                    var isFixedHeightContainer = this._fixedHeightContainer;
+                    if (isFixedHeightContainer) {
+                        var topBufferDistance = getDistanceToParent(topBufferEl, scrollerEl);
+                        var scrollerScrollTop = scrollerEl.scrollTop;
+                        realScrollTop = Math$max(0, scrollerScrollTop - Math$abs(topBufferDistance));
                     }
+                    else {
+                        realScrollTop = pageYOffset - this.distanceToTop;
+                    }
+                    var elementsInView = this.elementsInView;
+                    var firstIndex = Math$max(0, itemHeight > 0 ? Math$floor(realScrollTop / itemHeight) : 0);
+                    var currLastReboundIndex = this._lastRebind;
+                    if (firstIndex > items.length - elementsInView) {
+                        firstIndex = Math$max(0, items.length - elementsInView);
+                    }
+                    this._first = firstIndex;
                     this._checkScrolling();
+                    var isSwitchedDirection = this._switchedDirection;
                     var currentTopBufferHeight = this._topBufferHeight;
                     var currentBottomBufferHeight = this._bottomBufferHeight;
                     if (this._scrollingDown) {
-                        var viewsToMoveCount = this._first - this._lastRebind;
-                        if (this._switchedDirection) {
-                            viewsToMoveCount = this._isAtTop ? this._first : this._bufferSize - (this._lastRebind - this._first);
+                        var viewsToMoveCount = firstIndex - currLastReboundIndex;
+                        if (isSwitchedDirection) {
+                            viewsToMoveCount = this._isAtTop
+                                ? firstIndex
+                                : (firstIndex - currLastReboundIndex);
                         }
                         this._isAtTop = false;
-                        this._lastRebind = this._first;
+                        this._lastRebind = firstIndex;
                         var movedViewsCount = this._moveViews(viewsToMoveCount);
-                        var adjustHeight = movedViewsCount < viewsToMoveCount ? currentBottomBufferHeight : itemHeight * movedViewsCount;
+                        var adjustHeight = movedViewsCount < viewsToMoveCount
+                            ? currentBottomBufferHeight
+                            : itemHeight * movedViewsCount;
                         if (viewsToMoveCount > 0) {
                             this._getMore();
                         }
                         this._switchedDirection = false;
                         this._topBufferHeight = currentTopBufferHeight + adjustHeight;
-                        this._bottomBufferHeight = $max(currentBottomBufferHeight - adjustHeight, 0);
-                        if (this._bottomBufferHeight >= 0) {
-                            this._adjustBufferHeights();
-                        }
+                        this._bottomBufferHeight = Math$max(currentBottomBufferHeight - adjustHeight, 0);
+                        this._updateBufferElements(true);
                     }
                     else if (this._scrollingUp) {
-                        var viewsToMoveCount = this._lastRebind - this._first;
-                        var initialScrollState = this.isLastIndex === undefined;
-                        if (this._switchedDirection) {
-                            if (this.isLastIndex) {
-                                viewsToMoveCount = this.items.length - this._first - this.elementsInView;
+                        var isLastIndex = this._isLastIndex;
+                        var viewsToMoveCount = currLastReboundIndex - firstIndex;
+                        var initialScrollState = isLastIndex === undefined;
+                        if (isSwitchedDirection) {
+                            if (isLastIndex) {
+                                viewsToMoveCount = items.length - firstIndex - elementsInView;
                             }
                             else {
-                                viewsToMoveCount = this._bufferSize - (this._first - this._lastRebind);
+                                viewsToMoveCount = currLastReboundIndex - firstIndex;
                             }
                         }
-                        this.isLastIndex = false;
-                        this._lastRebind = this._first;
+                        this._isLastIndex = false;
+                        this._lastRebind = firstIndex;
                         var movedViewsCount = this._moveViews(viewsToMoveCount);
-                        this.movedViewsCount = movedViewsCount;
                         var adjustHeight = movedViewsCount < viewsToMoveCount
                             ? currentTopBufferHeight
                             : itemHeight * movedViewsCount;
                         if (viewsToMoveCount > 0) {
-                            var force = this.movedViewsCount === 0 && initialScrollState && this._first <= 0 ? true : false;
+                            var force = movedViewsCount === 0 && initialScrollState && firstIndex <= 0 ? true : false;
                             this._getMore(force);
                         }
                         this._switchedDirection = false;
-                        this._topBufferHeight = $max(currentTopBufferHeight - adjustHeight, 0);
+                        this._topBufferHeight = Math$max(currentTopBufferHeight - adjustHeight, 0);
                         this._bottomBufferHeight = currentBottomBufferHeight + adjustHeight;
-                        if (this._topBufferHeight >= 0) {
-                            this._adjustBufferHeights();
-                        }
+                        this._updateBufferElements(true);
                     }
-                    this._previousFirst = this._first;
+                    this._previousFirst = firstIndex;
                     this._isScrolling = false;
                 };
                 VirtualRepeat.prototype._getMore = function (force) {
                     var _this = this;
-                    if (this.isLastIndex || this._first === 0 || force === true) {
+                    if (this._isLastIndex || this._first === 0 || force === true) {
                         if (!this._calledGetMore) {
                             var executeGetMore = function () {
                                 _this._calledGetMore = true;
-                                var firstView = _this._getFirstView();
+                                var firstView = _this._firstView();
                                 var scrollNextAttrName = 'infinite-scroll-next';
                                 var func = (firstView
                                     && firstView.firstChild
@@ -873,10 +977,11 @@ System.register(['aurelia-binding', 'aurelia-templating', 'aurelia-templating-re
                                     return null;
                                 }
                                 else if (typeof func === 'string') {
+                                    var bindingContext = overrideContext.bindingContext;
                                     var getMoreFuncName = firstView.firstChild.getAttribute(scrollNextAttrName);
-                                    var funcCall = overrideContext.bindingContext[getMoreFuncName];
+                                    var funcCall = bindingContext[getMoreFuncName];
                                     if (typeof funcCall === 'function') {
-                                        var result = funcCall.call(overrideContext.bindingContext, topIndex, isAtBottom, isAtTop);
+                                        var result = funcCall.call(bindingContext, topIndex, isAtBottom, isAtTop);
                                         if (!(result instanceof Promise)) {
                                             _this._calledGetMore = false;
                                         }
@@ -904,40 +1009,45 @@ System.register(['aurelia-binding', 'aurelia-templating', 'aurelia-templating-re
                     }
                 };
                 VirtualRepeat.prototype._checkScrolling = function () {
-                    if (this._first > this._previousFirst && (this._bottomBufferHeight > 0 || !this.isLastIndex)) {
-                        if (!this._scrollingDown) {
-                            this._scrollingDown = true;
-                            this._scrollingUp = false;
-                            this._switchedDirection = true;
+                    var _a = this, _first = _a._first, _scrollingUp = _a._scrollingUp, _scrollingDown = _a._scrollingDown, _previousFirst = _a._previousFirst;
+                    var isScrolling = false;
+                    var isScrollingDown = _scrollingDown;
+                    var isScrollingUp = _scrollingUp;
+                    var isSwitchedDirection = false;
+                    if (_first > _previousFirst) {
+                        if (!_scrollingDown) {
+                            isScrollingDown = true;
+                            isScrollingUp = false;
+                            isSwitchedDirection = true;
                         }
                         else {
-                            this._switchedDirection = false;
+                            isSwitchedDirection = false;
                         }
-                        this._isScrolling = true;
+                        isScrolling = true;
                     }
-                    else if (this._first < this._previousFirst && (this._topBufferHeight >= 0 || !this._isAtTop)) {
-                        if (!this._scrollingUp) {
-                            this._scrollingDown = false;
-                            this._scrollingUp = true;
-                            this._switchedDirection = true;
+                    else if (_first < _previousFirst) {
+                        if (!_scrollingUp) {
+                            isScrollingDown = false;
+                            isScrollingUp = true;
+                            isSwitchedDirection = true;
                         }
                         else {
-                            this._switchedDirection = false;
+                            isSwitchedDirection = false;
                         }
-                        this._isScrolling = true;
+                        isScrolling = true;
                     }
-                    else {
-                        this._isScrolling = false;
-                    }
+                    this._isScrolling = isScrolling;
+                    this._scrollingDown = isScrollingDown;
+                    this._scrollingUp = isScrollingUp;
+                    this._switchedDirection = isSwitchedDirection;
                 };
-                VirtualRepeat.prototype._checkFixedHeightContainer = function () {
-                    if (this.domHelper.hasOverflowScroll(this.scrollContainer)) {
-                        this._fixedHeightContainer = true;
+                VirtualRepeat.prototype._updateBufferElements = function (skipUpdate) {
+                    this.topBufferEl.style.height = this._topBufferHeight + "px";
+                    this.bottomBufferEl.style.height = this._bottomBufferHeight + "px";
+                    if (skipUpdate) {
+                        this._ticking = true;
+                        requestAnimationFrame(this.revertScrollCheckGuard);
                     }
-                };
-                VirtualRepeat.prototype._adjustBufferHeights = function () {
-                    this.topBuffer.style.height = this._topBufferHeight + "px";
-                    this.bottomBuffer.style.height = this._bottomBufferHeight + "px";
                 };
                 VirtualRepeat.prototype._unsubscribeCollection = function () {
                     var collectionObserver = this.collectionObserver;
@@ -946,28 +1056,33 @@ System.register(['aurelia-binding', 'aurelia-templating', 'aurelia-templating-re
                         this.collectionObserver = this.callContext = null;
                     }
                 };
-                VirtualRepeat.prototype._getFirstView = function () {
+                VirtualRepeat.prototype._firstView = function () {
                     return this.view(0);
                 };
-                VirtualRepeat.prototype._getLastView = function () {
+                VirtualRepeat.prototype._lastView = function () {
                     return this.view(this.viewCount() - 1);
                 };
                 VirtualRepeat.prototype._moveViews = function (viewsCount) {
-                    var getNextIndex = this._scrollingDown ? $plus : $minus;
+                    var isScrollingDown = this._scrollingDown;
+                    var getNextIndex = isScrollingDown ? $plus : $minus;
                     var childrenCount = this.viewCount();
-                    var viewIndex = this._scrollingDown ? 0 : childrenCount - 1;
+                    var viewIndex = isScrollingDown ? 0 : childrenCount - 1;
                     var items = this.items;
-                    var currentIndex = this._scrollingDown ? this._getIndexOfLastView() + 1 : this._getIndexOfFirstView() - 1;
+                    var currentIndex = isScrollingDown
+                        ? this._lastViewIndex() + 1
+                        : this._firstViewIndex() - 1;
                     var i = 0;
+                    var nextIndex = 0;
+                    var view;
                     var viewToMoveLimit = viewsCount - (childrenCount * 2);
                     while (i < viewsCount && !this._isAtFirstOrLastIndex) {
-                        var view = this.view(viewIndex);
-                        var nextIndex = getNextIndex(currentIndex, i);
-                        this.isLastIndex = nextIndex > items.length - 2;
+                        view = this.view(viewIndex);
+                        nextIndex = getNextIndex(currentIndex, i);
+                        this._isLastIndex = nextIndex > items.length - 2;
                         this._isAtTop = nextIndex < 1;
                         if (!(this._isAtFirstOrLastIndex && childrenCount >= items.length)) {
                             if (i > viewToMoveLimit) {
-                                rebindAndMoveView(this, view, nextIndex, this._scrollingDown);
+                                rebindAndMoveView(this, view, nextIndex, isScrollingDown);
                             }
                             i++;
                         }
@@ -976,79 +1091,69 @@ System.register(['aurelia-binding', 'aurelia-templating', 'aurelia-templating-re
                 };
                 Object.defineProperty(VirtualRepeat.prototype, "_isAtFirstOrLastIndex", {
                     get: function () {
-                        return this._scrollingDown ? this.isLastIndex : this._isAtTop;
+                        return !this._isScrolling || this._scrollingDown ? this._isLastIndex : this._isAtTop;
                     },
                     enumerable: true,
                     configurable: true
                 });
-                VirtualRepeat.prototype._getIndexOfLastView = function () {
-                    var lastView = this._getLastView();
-                    return lastView === null ? -1 : lastView.overrideContext.$index;
-                };
-                VirtualRepeat.prototype._getLastViewItem = function () {
-                    var lastView = this._getLastView();
-                    return lastView === null ? undefined : lastView.bindingContext[this.local];
-                };
-                VirtualRepeat.prototype._getIndexOfFirstView = function () {
-                    var firstView = this._getFirstView();
+                VirtualRepeat.prototype._firstViewIndex = function () {
+                    var firstView = this._firstView();
                     return firstView === null ? -1 : firstView.overrideContext.$index;
                 };
-                VirtualRepeat.prototype._calcInitialHeights = function (itemsLength) {
+                VirtualRepeat.prototype._lastViewIndex = function () {
+                    var lastView = this._lastView();
+                    return lastView === null ? -1 : lastView.overrideContext.$index;
+                };
+                VirtualRepeat.prototype._observeScroller = function (scrollerEl) {
                     var _this = this;
-                    var isSameLength = this._viewsLength > 0 && this._itemsLength === itemsLength;
-                    if (isSameLength) {
-                        return;
-                    }
-                    if (itemsLength < 1) {
-                        this._resetCalculation();
-                        return;
-                    }
-                    this._hasCalculatedSizes = true;
-                    var firstViewElement = this.view(0).lastChild;
-                    this.itemHeight = calcOuterHeight(firstViewElement);
-                    if (this.itemHeight <= 0) {
-                        this._sizeInterval = PLATFORM.global.setInterval(function () {
-                            var newCalcSize = calcOuterHeight(firstViewElement);
-                            if (newCalcSize > 0) {
-                                PLATFORM.global.clearInterval(_this._sizeInterval);
+                    var $raf = requestAnimationFrame;
+                    var sizeChangeHandler = function (newRect) {
+                        $raf(function () {
+                            if (newRect === _this._currScrollerContentRect) {
                                 _this.itemsChanged();
                             }
-                        }, 500);
-                        return;
-                    }
-                    this._itemsLength = itemsLength;
-                    this.scrollContainerHeight = this._fixedHeightContainer
-                        ? this._calcScrollHeight(this.scrollContainer)
-                        : document.documentElement.clientHeight;
-                    this.elementsInView = Math.ceil(this.scrollContainerHeight / this.itemHeight) + 1;
-                    var viewsCount = this._viewsLength = (this.elementsInView * 2) + this._bufferSize;
-                    var newBottomBufferHeight = this.itemHeight * (itemsLength - viewsCount);
-                    if (newBottomBufferHeight < 0) {
-                        newBottomBufferHeight = 0;
-                    }
-                    if (this._topBufferHeight >= newBottomBufferHeight) {
-                        this._topBufferHeight = newBottomBufferHeight;
-                        this._bottomBufferHeight = 0;
-                        this._first = this._itemsLength - viewsCount;
-                        if (this._first < 0) {
-                            this._first = 0;
+                        });
+                    };
+                    var ResizeObserverConstructor = getResizeObserverClass();
+                    if (typeof ResizeObserverConstructor === 'function') {
+                        var observer = this._scrollerResizeObserver;
+                        if (observer) {
+                            observer.disconnect();
                         }
+                        observer = this._scrollerResizeObserver = new ResizeObserverConstructor(function (entries) {
+                            var oldRect = _this._currScrollerContentRect;
+                            var newRect = entries[0].contentRect;
+                            _this._currScrollerContentRect = newRect;
+                            if (oldRect === undefined || newRect.height !== oldRect.height || newRect.width !== oldRect.width) {
+                                sizeChangeHandler(newRect);
+                            }
+                        });
+                        observer.observe(scrollerEl);
                     }
-                    else {
-                        this._first = this._getIndexOfFirstView();
-                        var adjustedTopBufferHeight = this._first * this.itemHeight;
-                        this._topBufferHeight = adjustedTopBufferHeight;
-                        this._bottomBufferHeight = newBottomBufferHeight - adjustedTopBufferHeight;
-                        if (this._bottomBufferHeight < 0) {
-                            this._bottomBufferHeight = 0;
-                        }
+                    var elEvents = this._scrollerEvents;
+                    if (elEvents) {
+                        elEvents.disposeAll();
                     }
-                    this._adjustBufferHeights();
+                    var sizeChangeEventsHandler = function () {
+                        $raf(function () {
+                            _this.itemsChanged();
+                        });
+                    };
+                    elEvents = this._scrollerEvents = new ElementEvents(scrollerEl);
+                    elEvents.subscribe(VirtualizationEvents.scrollerSizeChange, sizeChangeEventsHandler, false);
+                    elEvents.subscribe(VirtualizationEvents.itemSizeChange, sizeChangeEventsHandler, false);
                 };
-                VirtualRepeat.prototype._calcScrollHeight = function (element) {
-                    var height = element.getBoundingClientRect().height;
-                    height -= getStyleValues(element, 'borderTopWidth', 'borderBottomWidth');
-                    return height;
+                VirtualRepeat.prototype._unobserveScrollerSize = function () {
+                    var observer = this._scrollerResizeObserver;
+                    if (observer) {
+                        observer.disconnect();
+                    }
+                    var scrollerEvents = this._scrollerEvents;
+                    if (scrollerEvents) {
+                        scrollerEvents.disposeAll();
+                    }
+                    this._scrollerResizeObserver
+                        = this._scrollerEvents = undefined;
                 };
                 VirtualRepeat.prototype._observeInnerCollection = function () {
                     var items = this._getInnerCollection();
@@ -1095,6 +1200,7 @@ System.register(['aurelia-binding', 'aurelia-templating', 'aurelia-templating-re
                     var view = this.viewFactory.create();
                     view.bind(bindingContext, overrideContext);
                     this.viewSlot.add(view);
+                    return view;
                 };
                 VirtualRepeat.prototype.insertView = function (index, bindingContext, overrideContext) {
                     var view = this.viewFactory.create();
@@ -1108,15 +1214,18 @@ System.register(['aurelia-binding', 'aurelia-templating', 'aurelia-templating-re
                     return this.viewSlot.removeAt(index, returnToCache, skipAnimation);
                 };
                 VirtualRepeat.prototype.updateBindings = function (view) {
-                    var j = view.bindings.length;
+                    var bindings = view.bindings;
+                    var j = bindings.length;
                     while (j--) {
-                        updateOneTimeBinding(view.bindings[j]);
+                        updateOneTimeBinding(bindings[j]);
                     }
-                    j = view.controllers.length;
+                    var controllers = view.controllers;
+                    j = controllers.length;
                     while (j--) {
-                        var k = view.controllers[j].boundProperties.length;
+                        var boundProperties = controllers[j].boundProperties;
+                        var k = boundProperties.length;
                         while (k--) {
-                            var binding = view.controllers[j].boundProperties[k].binding;
+                            var binding = boundProperties[k].binding;
                             updateOneTimeBinding(binding);
                         }
                     }
@@ -1125,7 +1234,6 @@ System.register(['aurelia-binding', 'aurelia-templating', 'aurelia-templating-re
             }(AbstractRepeater)));
             var $minus = function (index, i) { return index - i; };
             var $plus = function (index, i) { return index + i; };
-            var $max = Math.max;
 
             var InfiniteScrollNext = exports('InfiniteScrollNext', (function () {
                 function InfiniteScrollNext() {

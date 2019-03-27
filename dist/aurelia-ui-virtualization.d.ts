@@ -1,12 +1,8 @@
-import { ICollectionObserverSplice, ObserverLocator, OverrideContext, Scope } from 'aurelia-binding';
+import { ICollectionObserverSplice, InternalCollectionObserver, ObserverLocator, OverrideContext, Scope } from 'aurelia-binding';
 import { Container } from 'aurelia-dependency-injection';
 import { BoundViewFactory, TargetInstruction, View, ViewResources, ViewSlot } from 'aurelia-templating';
-import { AbstractRepeater, Repeat, RepeatStrategy, RepeatStrategyLocator } from 'aurelia-templating-resources';
+import { AbstractRepeater, RepeatStrategy } from 'aurelia-templating-resources';
 
-declare class DomHelper {
-	getElementDistanceToTopOfDocument(element: Element): number;
-	hasOverflowScroll(element: HTMLElement): boolean;
-}
 export interface IScrollNextScrollContext {
 	topIndex: number;
 	isAtBottom: boolean;
@@ -16,57 +12,122 @@ export interface IVirtualRepeatStrategy extends RepeatStrategy {
 	/**
 	 * create first item to calculate the heights
 	 */
-	createFirstItem(repeat: IVirtualRepeat): void;
+	createFirstItem(repeat: VirtualRepeat): IView;
 	/**
-  * Handle the repeat's collection instance changing.
-  * @param repeat The repeater instance.
-  * @param items The new array instance.
-  */
-	instanceChanged(repeat: IVirtualRepeat, items: Array<any>, ...rest: any[]): void;
-}
-export interface IVirtualRepeat extends Repeat {
-	items: any[];
-	itemHeight: number;
-	strategy: IVirtualRepeatStrategy;
-	templateStrategy: ITemplateStrategy;
-	topBuffer: HTMLElement;
-	bottomBuffer: HTMLElement;
-	isLastIndex: boolean;
-	readonly viewFactory: BoundViewFactory;
+	 * Calculate required variables for a virtual repeat instance to operate properly
+	 *
+	 * @returns `false` to notify that calculation hasn't been finished
+	 */
+	initCalculation(repeat: VirtualRepeat, items: number | any[] | Map<any, any> | Set<any>): VirtualizationCalculation;
+	/**
+	 * Get the observer based on collection type of `items`
+	 */
+	getCollectionObserver(observerLocator: ObserverLocator, items: any[] | Map<any, any> | Set<any>): InternalCollectionObserver;
+	/**
+	 * @override
+	 * Handle the repeat's collection instance changing.
+	 * @param repeat The repeater instance.
+	 * @param items The new array instance.
+	 * @param firstIndex The index of first active view
+	 */
+	instanceChanged(repeat: VirtualRepeat, items: any[] | Map<any, any> | Set<any>, firstIndex?: number): void;
+	/**
+	 * @override
+	 * Handle the repeat's collection instance mutating.
+	 * @param repeat The virtual repeat instance.
+	 * @param array The modified array.
+	 * @param splices Records of array changes.
+	 */
+	instanceMutated(repeat: VirtualRepeat, array: any[], splices: ICollectionObserverSplice[]): void;
 }
 /**
  * Templating strategy to handle virtual repeat views
  * Typically related to moving views, creating buffer and locating view range range in the DOM
  */
 export interface ITemplateStrategy {
+	/**
+	 * Determine the scroll container of a [virtual-repeat] based on its anchor (`element` is a comment node)
+	 */
 	getScrollContainer(element: Element): HTMLElement;
+	/**
+	 * Move root element of a view to first position in the list, after top buffer
+	 * Note: [virtual-repeat] only supports single root node repeat
+	 */
 	moveViewFirst(view: View, topBuffer: Element): void;
+	/**
+	 * Move root element of a view to last position in the list, before bottomBuffer
+	 * Note: [virtual-repeat] only supports single root node repeat
+	 */
 	moveViewLast(view: View, bottomBuffer: Element): void;
-	createTopBufferElement(element: Element): HTMLElement;
-	createBottomBufferElement(element: Element): HTMLElement;
-	removeBufferElements(element: Element, topBuffer: Element, bottomBuffer: Element): void;
-	getFirstElement(topBuffer: Element): Element;
-	getLastElement(bottomBuffer: Element): Element;
-	getTopBufferDistance(topBuffer: Element): number;
+	/**
+	 * Create top and bottom buffer elements for an anchor (`element` is a comment node)
+	 */
+	createBuffers(element: Element): [HTMLElement, HTMLElement];
+	/**
+	 * Clean up buffers of a [virtual-repeat]
+	 */
+	removeBuffers(element: Element, topBuffer: Element, bottomBuffer: Element): void;
+	/**
+	 * Get the first element(or view) between top buffer and bottom buffer
+	 * Note: [virtual-repeat] only supports single root node repeat
+	 */
+	getFirstElement(topBufer: Element, botBuffer: Element): Element;
+	/**
+	 * Get the last element(or view) between top buffer and bottom buffer
+	 * Note: [virtual-repeat] only supports single root node repeat
+	 */
+	getLastElement(topBuffer: Element, bottomBuffer: Element): Element;
 }
 /**
  * Override `bindingContext` and `overrideContext` on `View` interface
  */
 export declare type IView = View & Scope;
-declare class VirtualRepeatStrategyLocator extends RepeatStrategyLocator {
+/**
+ * Object with information about current state of a scrollable element
+ * Capturing:
+ * - current scroll height
+ * - current scroll top
+ * - real height
+ */
+export interface IScrollerInfo {
+	scroller: HTMLElement;
+	scrollHeight: number;
+	scrollTop: number;
+	height: number;
+}
+export declare const enum VirtualizationCalculation {
+	none = 0,
+	reset = 1,
+	has_sizing = 2,
+	observe_scroller = 4
+}
+/**
+ * List of events that can be used to notify virtual repeat that size has changed
+ */
+export declare const VirtualizationEvents: {
+	scrollerSizeChange: "virtual-repeat-scroller-size-changed";
+	itemSizeChange: "virtual-repeat-item-size-changed";
+};
+declare class VirtualRepeatStrategyLocator {
 	constructor();
+	/**
+	 * Adds a repeat strategy to be located when repeating a template over different collection types.
+	 * @param strategy A repeat strategy that can iterate a specific collection type.
+	 */
+	addStrategy(matcher: (items: any) => boolean, strategy: IVirtualRepeatStrategy): void;
+	/**
+	 * Gets the best strategy to handle iteration.
+	 */
 	getStrategy(items: any): IVirtualRepeatStrategy;
 }
 declare class TemplateStrategyLocator {
-	static inject: (typeof Container)[];
-	container: Container;
 	constructor(container: Container);
 	/**
 	 * Selects the template strategy based on element hosting `virtual-repeat` custom attribute
 	 */
 	getStrategy(element: Element): ITemplateStrategy;
 }
-export declare class VirtualRepeat extends AbstractRepeater implements IVirtualRepeat {
+export declare class VirtualRepeat extends AbstractRepeater {
 	key: any;
 	value: any;
 	/**
@@ -78,23 +139,16 @@ export declare class VirtualRepeat extends AbstractRepeater implements IVirtualR
 	 */
 	local: string;
 	readonly viewFactory: BoundViewFactory;
-	templateStrategy: ITemplateStrategy;
-	topBuffer: HTMLElement;
-	bottomBuffer: HTMLElement;
-	itemHeight: number;
-	movedViewsCount: number;
+	/**
+	 * Calculate current scrolltop position
+	 */
 	distanceToTop: number;
 	/**
-	 * When dealing with tables, there can be gaps between elements, causing distances to be messed up. Might need to handle this case here.
+	 * collection repeating strategy
 	 */
-	topBufferDistance: number;
-	scrollContainerHeight: number;
-	isLastIndex: boolean;
-	elementsInView: number;
 	strategy: IVirtualRepeatStrategy;
-	ignoreMutation: boolean;
 	collectionObserver: any;
-	constructor(element: HTMLElement, viewFactory: BoundViewFactory, instruction: TargetInstruction, viewSlot: ViewSlot, viewResources: ViewResources, observerLocator: ObserverLocator, strategyLocator: VirtualRepeatStrategyLocator, templateStrategyLocator: TemplateStrategyLocator, domHelper: DomHelper);
+	constructor(element: HTMLElement, viewFactory: BoundViewFactory, instruction: TargetInstruction, viewSlot: ViewSlot, viewResources: ViewResources, observerLocator: ObserverLocator, collectionStrategyLocator: VirtualRepeatStrategyLocator, templateStrategyLocator: TemplateStrategyLocator);
 	/**@override */
 	bind(bindingContext: any, overrideContext: OverrideContext): void;
 	/**@override */
@@ -123,22 +177,32 @@ export declare class VirtualRepeat extends AbstractRepeater implements IVirtualR
 	handleCollectionMutated(collection: any[], changes: ICollectionObserverSplice[]): void;
 	/**@override */
 	handleInnerCollectionMutated(collection: any[], changes: ICollectionObserverSplice[]): void;
+	/**
+	 * Get the real scroller element of the DOM tree this repeat resides in
+	 */
+	getScroller(): HTMLElement;
+	/**
+	 * Get scrolling information of the real scroller element of the DOM tree this repeat resides in
+	 */
+	getScrollerInfo(): IScrollerInfo;
 	/**@override */
 	viewCount(): number;
 	/**@override */
 	views(): IView[];
 	/**@override */
-	view(index: number): IView;
+	view(index: number): IView | null;
 	/**@override */
-	addView(bindingContext: any, overrideContext: OverrideContext): void;
+	addView(bindingContext: any, overrideContext: OverrideContext): IView;
 	/**@override */
 	insertView(index: number, bindingContext: any, overrideContext: OverrideContext): void;
 	/**@override */
-	removeAllViews(returnToCache: boolean, skipAnimation: boolean): void | Promise<any>;
+	removeAllViews(returnToCache: boolean, skipAnimation: boolean): void | Promise<void>;
 	/**@override */
-	removeView(index: number, returnToCache: boolean, skipAnimation: boolean): View | Promise<View>;
-	updateBindings(view: View): void;
+	removeView(index: number, returnToCache: boolean, skipAnimation: boolean): IView | Promise<IView>;
+	updateBindings(view: IView): void;
 }
 export declare class InfiniteScrollNext {
 }
-export declare function configure(config: any): void;
+export declare function configure(config: {
+	globalResources(...args: any[]): any;
+}): void;
