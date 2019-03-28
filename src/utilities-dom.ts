@@ -7,10 +7,10 @@ import { IView } from './interfaces';
  * If none is found, return `document.documentElement`
  */
 export const getScrollContainer = (element: Node): HTMLElement => {
-  let current = element.parentNode as HTMLElement;
-  while (current !== null) {
+  let current = element.parentNode;
+  while (current !== null && current !== document) {
     if (hasOverflowScroll(current)) {
-      return current;
+      return current as HTMLElement;
     }
     current = current.parentNode as HTMLElement;
   }
@@ -33,7 +33,7 @@ export const getElementDistanceToTopOfDocument = (element: Element): number => {
  * Check if an element has style scroll/auto for overflow/overflowY
  */
 export const hasOverflowScroll = (element): boolean => {
-  let style = element !== document ? window.getComputedStyle(element) : undefined;
+  const style = window.getComputedStyle(element);
   return style && (style.overflowY === 'scroll' || style.overflow === 'scroll' || style.overflowY === 'auto' || style.overflow === 'auto');
 };
 
