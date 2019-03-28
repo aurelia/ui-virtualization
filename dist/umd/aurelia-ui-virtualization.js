@@ -72,6 +72,16 @@
     var Math$floor = Math.floor;
     var $isNaN = isNaN;
 
+    var getScrollContainer = function (element) {
+        var current = element.parentNode;
+        while (current !== null && current !== document) {
+            if (hasOverflowScroll(current)) {
+                return current;
+            }
+            current = current.parentNode;
+        }
+        return document.documentElement;
+    };
     var getElementDistanceToTopOfDocument = function (element) {
         var box = element.getBoundingClientRect();
         var documentElement = document.documentElement;
@@ -81,8 +91,8 @@
         return Math$round(top);
     };
     var hasOverflowScroll = function (element) {
-        var style = element.style;
-        return style.overflowY === 'scroll' || style.overflow === 'scroll' || style.overflowY === 'auto' || style.overflow === 'auto';
+        var style = window.getComputedStyle(element);
+        return style && (style.overflowY === 'scroll' || style.overflow === 'scroll' || style.overflowY === 'auto' || style.overflow === 'auto');
     };
     var getStyleValues = function (element) {
         var styles = [];
@@ -457,7 +467,7 @@
         function DefaultTemplateStrategy() {
         }
         DefaultTemplateStrategy.prototype.getScrollContainer = function (element) {
-            return element.parentNode;
+            return getScrollContainer(element);
         };
         DefaultTemplateStrategy.prototype.moveViewFirst = function (view, topBuffer) {
             insertBeforeNode(view, aureliaPal.DOM.nextElementSibling(topBuffer));

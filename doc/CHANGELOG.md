@@ -1,3 +1,17 @@
+# [1.0.0-beta.6](https://github.com/aurelia/ui-virtualization/compare/1.0.0-beta.5...1.0.0-beta.6) (2019-03-28)
+
+
+### Bug Fixes
+
+* **utilities-dom:** use window.getComputedStyle for hasOverflowScroll ([4b015d2](https://github.com/aurelia/ui-virtualization/commit/4b015d2))
+
+
+### Features
+
+* **template-strategy-default:** walk up the DOM tree and determine what element will be scroller for virtual repeat ([6ebf907](https://github.com/aurelia/ui-virtualization/commit/6ebf907))
+
+
+
 # [1.0.0-beta.5](https://github.com/aurelia/ui-virtualization/compare/1.0.0-beta.4...1.0.0-beta.5) (2019-03-27)
 
 

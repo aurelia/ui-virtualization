@@ -43,6 +43,16 @@
   const Math$floor = Math.floor;
   const $isNaN = isNaN;
 
+  const getScrollContainer = (element) => {
+      let current = element.parentNode;
+      while (current !== null && current !== document) {
+          if (hasOverflowScroll(current)) {
+              return current;
+          }
+          current = current.parentNode;
+      }
+      return document.documentElement;
+  };
   const getElementDistanceToTopOfDocument = (element) => {
       let box = element.getBoundingClientRect();
       let documentElement = document.documentElement;
@@ -52,8 +62,8 @@
       return Math$round(top);
   };
   const hasOverflowScroll = (element) => {
-      let style = element.style;
-      return style.overflowY === 'scroll' || style.overflow === 'scroll' || style.overflowY === 'auto' || style.overflow === 'auto';
+      const style = window.getComputedStyle(element);
+      return style && (style.overflowY === 'scroll' || style.overflow === 'scroll' || style.overflowY === 'auto' || style.overflow === 'auto');
   };
   const getStyleValues = (element, ...styles) => {
       let currentStyle = window.getComputedStyle(element);
@@ -410,7 +420,7 @@
 
   class DefaultTemplateStrategy {
       getScrollContainer(element) {
-          return element.parentNode;
+          return getScrollContainer(element);
       }
       moveViewFirst(view, topBuffer) {
           insertBeforeNode(view, aureliaPal.DOM.nextElementSibling(topBuffer));
