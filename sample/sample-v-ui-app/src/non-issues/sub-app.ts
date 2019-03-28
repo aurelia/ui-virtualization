@@ -31,6 +31,12 @@ export class PromiseGetMoreApp {
         moduleId: PLATFORM.moduleName('./scroller-table-multiple-repeats/sub-app'),
         nav: true,
         title: 'Scroller + Table + Position Relative + Multiple Repeats'
+      },
+      {
+        route: 'scroller-not-first-parent-div',
+        moduleId: PLATFORM.moduleName('./scroller-not-first-parent-div/sub-app'),
+        nav: true,
+        title: 'Scroller (not first parent) + Div'
       }
     ]).mapUnknownRoutes({
       redirect: '',

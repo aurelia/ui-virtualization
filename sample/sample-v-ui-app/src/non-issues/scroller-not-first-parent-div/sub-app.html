@@ -1,0 +1,61 @@
+<template>
+  <div class="scroller">
+    <div class="grid-force-size">
+      <div class="d-flex grid-header">
+        <div class="p-2 grid-column-index" style="width: 50px;">#</div>
+        <div class="p-2" style="width: 200px;">First Name</div>
+        <div class="p-2" style="width: 200px;">Last Name</div>
+        <div class="p-2 flex-fill">Action</div>
+      </div>
+      <div
+        virtual-repeat.for="person of people"
+        infinite-scroll-next.call="push30($scrollContext)"
+        class="d-flex grid-row  ${$even ? 'grid-row-even' : 'grid-row-odd'}">
+        <div class="p-2 grid-column-index" style="width: 50px;">${$index}</div>
+        <div class="p-2" style="width: 200px;">${person.fname}</div>
+        <div class="p-2" style="width: 200px;">${person.lname}</div>
+        <div class="flex-fill">
+          <button type="button" class="btn btn-link"><i class="far fa-edit"></i></button>
+          <button type="button" class="btn btn-link"><i class="far fa-trash-alt"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+   <style>
+    .scroller {
+      position: relative;
+      height: 500px;
+      width: 300px;
+      overflow: scroll;
+    }
+    .grid-force-size {
+      border-right: 3px solid #ff00ff;
+      border-bottom: 3px solid #ff00ff;
+      width: 600px;
+    }
+    .grid-header {
+      position: sticky;
+      top: 0px;
+      background-color: #f0f0f0;
+      border-top: 3px solid #ff00ff;
+      z-index: 2;
+    }
+    .grid-row-even {
+      background-color: #fff;
+    }
+    .grid-row-odd {
+      background-color: #f1a3f1;
+    }
+    .grid-column-index {
+      position: sticky;
+      left: 0px;
+      border-left: 3px solid #ff00ff;
+      z-index: 1;
+      background-color: aqua;
+      text-align: center;
+    }
+    .grid-header .grid-column-index {
+      background-color: #f0f0f0;
+    }
+  </style>
+</template>
