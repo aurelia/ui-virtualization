@@ -3,10 +3,24 @@ import typescript from 'rollup-plugin-typescript2';
 export default [
   {
     input: 'src/aurelia-ui-virtualization.ts',
-    output: {
-      file: 'dist/es2015/aurelia-ui-virtualization.js',
-      format: 'esm'
-    },
+    output: [
+      {
+        file: 'dist/es2015/aurelia-ui-virtualization.js',
+        format: 'esm'
+      },
+      {
+        file: 'dist/umd-es2015/aurelia-ui-virtualization.js',
+        format: 'umd',
+        name: 'au.uiVirtualization',
+        globals: {
+          'aurelia-binding': 'au',
+          'aurelia-dependency-injection': 'au',
+          'aurelia-pal': 'au',
+          'aurelia-templating': 'au',
+          'aurelia-templating-resources': 'au',
+        }
+      }
+    ],
     plugins: [
       typescript({
         cacheRoot: '.rollupcache',
@@ -75,6 +89,7 @@ export default [
         cacheRoot: '.rollupcache',
         tsconfigOverride: {
           compilerOptions: {
+            target: 'es5',
             removeComments: true,
           }
         }

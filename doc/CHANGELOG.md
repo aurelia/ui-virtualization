@@ -1,3 +1,31 @@
+# [1.0.0-beta.5](https://github.com/aurelia/ui-virtualization/compare/1.0.0-beta.4...1.0.0-beta.5) (2019-03-27)
+
+
+### Bug Fixes
+
+* **array-repeat:** properly check when to ignore update views ([9b9d5b7](https://github.com/aurelia/ui-virtualization/commit/9b9d5b7))
+* **array-repeat:** properly handle end of array instanceChanged() ([f44eb98](https://github.com/aurelia/ui-virtualization/commit/f44eb98))
+* **commands:** separate test / test watch, fix ci ([f2f6fbc](https://github.com/aurelia/ui-virtualization/commit/f2f6fbc))
+* **interfaces:** properly handle first/last element gets ([eb6e4a3](https://github.com/aurelia/ui-virtualization/commit/eb6e4a3))
+* **repeat:** add sizing handler ([7f41efa](https://github.com/aurelia/ui-virtualization/commit/7f41efa))
+* **repeat:** correct calculate distance to scroller for top buffer ([75b6ad5](https://github.com/aurelia/ui-virtualization/commit/75b6ad5))
+* **repeat:** correctly handle mutation ([2a9eaf5](https://github.com/aurelia/ui-virtualization/commit/2a9eaf5))
+* **repeat:** handle mutation properly ([eafbfe1](https://github.com/aurelia/ui-virtualization/commit/eafbfe1))
+* **repeat:** keep scroll up/down states when handling scroll ([a6d6bfa](https://github.com/aurelia/ui-virtualization/commit/a6d6bfa))
+* **repeat-scrolling:** correctly determine scrolltop when scrollr el is not documentElement ([e8e14a1](https://github.com/aurelia/ui-virtualization/commit/e8e14a1))
+* **tests:** adjust tbodies/tr tests, better description ([6610116](https://github.com/aurelia/ui-virtualization/commit/6610116))
+* **tests:** adjust tbodies/tr tests, better description ([6d77586](https://github.com/aurelia/ui-virtualization/commit/6d77586))
+* **tests:** update/add tests, add comments, rename variables for better readability ([fe9f433](https://github.com/aurelia/ui-virtualization/commit/fe9f433))
+* **virtual repeat:** prepare new tests, add examples ([fd45928](https://github.com/aurelia/ui-virtualization/commit/fd45928))
+* **virtual-repeat:** properly calc for fixheight ct ([5171740](https://github.com/aurelia/ui-virtualization/commit/5171740))
+
+
+### Features
+
+* **repeat:** add ability to update buffer without handling scroll ([f3b7195](https://github.com/aurelia/ui-virtualization/commit/f3b7195))
+
+
+
 # [1.0.0-beta.4](https://github.com/aurelia/ui-virtualization/compare/1.0.0-beta.3.3.2...1.0.0-beta.4) (2019-01-19)
 
 
