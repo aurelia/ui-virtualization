@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "dev": "webpack-dev-server",
+    "dev": "webpack-dev-server --open",
     "prebuild": "npm run rimraf",
     "build": "webpack",
     "prebuild:watch": "npm run rimraf",

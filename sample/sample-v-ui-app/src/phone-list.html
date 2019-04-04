@@ -24,7 +24,7 @@
   </div>
 
   <div if.bind="isVisible && selectedMarkup === 'div'">
-    <div virtual-repeat.for="item of objectArray" class="contact-list-item ${item.name}">
+    <div virtual-repeat.for="item of objectArray" class="contact-list-item ${item.name} i-${$index}">
       <div class="contact-item">
         <div class="avatar" click.trigger="click()" css="background-color: ${item.color}">${item.firstLetter}</div>
         <div class="name text-primary">

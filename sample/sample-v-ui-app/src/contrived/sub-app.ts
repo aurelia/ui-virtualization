@@ -12,7 +12,7 @@ export class ContrivedExamplesApp {
         route: ['', 'empty-init'],
         moduleId: PLATFORM.moduleName('./empty-init/empty-init'),
         nav: true,
-        title: 'Empty init collection + Infinite get-more'
+        title: 'Empty init collection'
       },
       {
         name: 'contrived.main2',
@@ -20,6 +20,12 @@ export class ContrivedExamplesApp {
         moduleId: PLATFORM.moduleName('./empty-init-clone-array/empty-init'),
         nav: true,
         title: 'Empty init collection + clone array value converter'
+      },
+      {
+        route: 'multiple-lists-document',
+        moduleId: PLATFORM.moduleName('./multiple-repeat-document/sub-app'),
+        nav: true,
+        title: 'Multiple lists on document'
       }
     ]).mapUnknownRoutes({
       redirect: '',
