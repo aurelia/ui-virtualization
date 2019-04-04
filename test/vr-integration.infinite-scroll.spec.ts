@@ -2,7 +2,7 @@ import './setup';
 import { StageComponent, ComponentTester } from 'aurelia-testing';
 import { PLATFORM } from 'aurelia-pal';
 import { bootstrap } from 'aurelia-bootstrapper';
-import { validateScrolledState, scrollToEnd, scrollToStart, waitForNextFrame, waitForFrames } from './utilities';
+import { validateScrolledState, scrollToEnd, scrollToStart, waitForNextFrame, waitForFrames, waitForTimeout, scrollRepeat } from './utilities';
 import { VirtualRepeat } from '../src/virtual-repeat';
 import { ITestAppInterface } from './interfaces';
 import { eachCartesianJoin } from './lib';
@@ -192,8 +192,11 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
         $view
       );
 
+      await waitForNextFrame();
       expect(virtualRepeat._viewsLength).toBe(12, 'repeat._viewsLength');
-      expect(spy.calls.count()).toBe(1, '1 getNextPage() calls');
+      expect(spy.calls.count()).toBe(1, '3 items getNextPage() calls');
+      // await waitForNextFrame();
+      // expect(spy.calls.count()).toBe(1, '3 items - next frame -- getNextPage() calls');
       let [firstIndex, isAtBottom, isAtTop] = scrollNextArgs;
       expect(firstIndex).toBe(0, 'scrollNextArgs[0] 1');
       expect(isAtBottom).toBe(true, 'scrollNextArgs[1] -- isAtBottom 1');
@@ -213,8 +216,9 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
         extraResources,
         $view
       ));
+      await waitForNextFrame();
       expect(virtualRepeat._viewsLength).toBe(12, 'repeat._viewsLength');
-      expect(spy.calls.count()).toBe(1, '1 getNextPage() calls');
+      expect(spy.calls.count()).toBe(1, '4 items getNextPage() calls');
       [firstIndex, isAtBottom, isAtTop] = scrollNextArgs;
       expect(firstIndex).toBe(0, 'scrollNextArgs[0] 2');
       expect(isAtBottom).toBe(true, 'scrollNextArgs[1] -- isAtBottom 2');
@@ -234,8 +238,9 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
         extraResources,
         $view
       ));
+      await waitForNextFrame();
       expect(virtualRepeat._viewsLength).toBe(12, 'repeat._viewsLength');
-      expect(spy.calls.count()).toBe(1, '1 getNextPage() calls');
+      expect(spy.calls.count()).toBe(1, '5 items getNextPage() calls');
       [firstIndex, isAtBottom, isAtTop] = scrollNextArgs;
       expect(firstIndex).toBe(0, 'scrollNextArgs[0] 3');
       expect(isAtBottom).toBe(true, 'scrollNextArgs[1] -- isAtBottom 3');
@@ -255,8 +260,9 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
         extraResources,
         $view
       ));
+      await waitForNextFrame();
       expect(virtualRepeat._viewsLength).toBe(12, 'repeat._viewsLength');
-      expect(spy.calls.count()).toBe(0, 'no getNextPage() calls');
+      expect(spy.calls.count()).toBe(0, '6 items = 0 getNextPage() calls');
       [firstIndex, isAtBottom, isAtTop] = scrollNextArgs;
       expect(firstIndex).toBe(0, 'scrollNextArgs[0] 4');
       expect(isAtBottom).toBe(true, 'scrollNextArgs[1] -- isAtBottom 4');
@@ -295,9 +301,12 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
       expect(viewModel.items.length).toBe(100, 'items.length 1');
       validateScrolledState(virtualRepeat, viewModel, itemHeight);
 
-      await scrollToEnd(virtualRepeat);
+      scrollRepeat(virtualRepeat, 'end');
+      expect(spy.calls.count()).toBe(0, '@scroll 1 start -> end');
+      await waitForFrames(1);
+      expect(spy.calls.count()).toBe(0, '@scroll 1 start -> end');
       await waitForFrames(2);
-      expect(spy.calls.count()).toBe(1, '@scroll 1 top -> end');
+      expect(spy.calls.count()).toBe(1, '@scroll 1 start -> end');
       expect(viewModel.items.length).toBe(200, 'items.length 2');
       let firstViewIndex = virtualRepeat._firstViewIndex();
       let lastViewIndex = virtualRepeat._lastViewIndex();
@@ -306,9 +315,12 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
       expect(lastViewIndex).toBeGreaterThanOrEqual(100 - 1 - 5 + 12, 'repeat._lastViewIndex() 1');
       validateScrolledState(virtualRepeat, viewModel, itemHeight);
 
-      await scrollToStart(virtualRepeat);
+      scrollRepeat(virtualRepeat, 'start');
+      expect(spy.calls.count()).toBe(1, '@scroll 2 end -> start');
+      await waitForFrames(1);
+      expect(spy.calls.count()).toBe(1, '@scroll 2 end -> start');
       await waitForFrames(2);
-      expect(spy.calls.count()).toBe(2, '@scroll 2 end -> top');
+      expect(spy.calls.count()).toBe(2, '@scroll 2 end -> start');
       expect(viewModel.items.length).toBe(300, 'items.length 3');
       firstViewIndex = virtualRepeat._firstViewIndex();
       lastViewIndex = virtualRepeat._lastViewIndex();
@@ -320,7 +332,11 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
     it([
       title,
       'passes the current index and location state',
-      ''
+      ' -- start 100',
+      ' -- scroll to end',
+      ' -- wait and assert',
+      ' -- scroll to start',
+      ' -- wait and assert'
     ].join('\n\t'), async () => {
       let scrollNextArgs: [number, boolean, boolean];
       const spy = jasmine.createSpy('viewModel.getNextPage(): void', function(this: ITestAppInterface<string>, ...args: any[]) {
@@ -342,8 +358,12 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
       expect(viewModel.items.length).toBe(100, 'items.length 1');
       validateScrolledState(virtualRepeat, viewModel, itemHeight);
 
-      await scrollToEnd(virtualRepeat);
-      expect(spy.calls.count()).toBe(1, '@scroll 1 top -> end');
+      scrollRepeat(virtualRepeat, 'end');
+      expect(spy.calls.count()).toBe(0, '@scroll 1 start -> end');
+      await waitForFrames(1);
+      expect(spy.calls.count()).toBe(0, '@scroll 1 start -> end');
+      await waitForFrames(2);
+      expect(spy.calls.count()).toBe(1, '@scroll 1 start -> end');
       expect(viewModel.items.length).toBe(100, 'items.length 2');
       let virtualRepeatFirst = virtualRepeat._first;
       let firstViewIndex = virtualRepeat._firstViewIndex();
@@ -351,19 +371,22 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
       expect(firstViewIndex).toBe(88, 'repeat._firstViewIndex() 1');
       // it depends on some condition, start index will be calculated differently.
       // todo: fix this to have deterministic behavior
-      expect(virtualRepeatFirst === 88 || virtualRepeatFirst === 94).toBe(true, 'repeat._first 1 = 88 || 94');
+      expect(virtualRepeatFirst).toBe(88, 'repeat._first 1 = 88');
       // expect(virtualRepeatFirst).toBe(94, 'repeat._first 1 <= 94');
       expect(lastViewIndex).toBe(99, 'repeat._lastViewIndex() 1');
       validateScrolledState(virtualRepeat, viewModel, itemHeight);
       expect(Array.isArray(scrollNextArgs)).toBe(true, 'scrollNextArgs is defined');
       let [firstIndex, isAtBottom, isAtTop] = scrollNextArgs;
-      expect(firstIndex).toBe(94, 'scrollNextArgs[0] 1');
+      expect(firstIndex).toBe(88, 'scrollNextArgs[0] 1');
       expect(isAtBottom).toBe(true, 'scrollNextArgs[1] -- isAtBottom 1');
       expect(isAtTop).toBe(false, 'scrollNextArgs[2] -- isAtTop 1');
 
-      scrollToStart(virtualRepeat);
+      scrollRepeat(virtualRepeat, 'start');
+      expect(spy.calls.count()).toBe(1, '@scroll 2 end -> start');
       await waitForFrames(1);
-      expect(spy.calls.count()).toBe(2, '@scroll 2 end -> top');
+      expect(spy.calls.count()).toBe(1, '@scroll 2 end -> start');
+      await waitForFrames(2);
+      expect(spy.calls.count()).toBe(2, '@scroll 2 end -> start');
       expect(viewModel.items.length).toBe(100, 'items.length 3');
       virtualRepeatFirst = virtualRepeat._first;
       firstViewIndex = virtualRepeat._firstViewIndex();
@@ -415,9 +438,12 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
       expect(viewModel.items.length).toBe(100, 'items.length 1');
       validateScrolledState(virtualRepeat, viewModel, itemHeight);
 
-      scrollToEnd(virtualRepeat);
-      await Promise.resolve();
-      expect(scrollNextArgs).toEqual([94, true, false], 'scrollNextArgs 1');
+      scrollRepeat(virtualRepeat, 'end');
+      // assert that nothing changed after
+      // 1 frame for scroll handler to start working
+      // 1 frame for getMore to be invoked
+      await waitForFrames(2);
+      expect(scrollNextArgs).toEqual([88, true, false], 'scrollNextArgs 1');
       expect(spy.calls.count()).toBe(1, '1 getNextPage() calls 2');
 
       // not yet loaded

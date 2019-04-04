@@ -139,6 +139,15 @@ export function validateScroll(virtualRepeat: VirtualRepeat, viewModel: any, ite
   });
 }
 
+export function scrollRepeat(virtualRepeat: VirtualRepeat, dest: 'start' | 'end' | number): void {
+  const scroller = virtualRepeat.getScroller();
+  scroller.scrollTop = dest === 'start'
+    ? 0
+    : dest === 'end'
+      ? scroller.scrollHeight
+      : dest;
+}
+
 /**
  * Scroll a virtual repeat scroller element to top
  */

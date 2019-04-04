@@ -2,7 +2,7 @@ import './setup';
 import { StageComponent, ComponentTester } from 'aurelia-testing';
 import { PLATFORM } from 'aurelia-pal';
 import { bootstrap } from 'aurelia-bootstrapper';
-import { createAssertionQueue, validateState, AsyncQueue, validateScroll } from './utilities';
+import { createAssertionQueue, validateState, AsyncQueue, validateScroll, waitForNextFrame } from './utilities';
 import { VirtualRepeat } from '../src/virtual-repeat';
 import { IScrollNextScrollContext } from '../src/interfaces';
 
@@ -135,17 +135,18 @@ describe('vr-integration.table.spec.ts', () => {
           viewModel.items = createItems(5);
           viewModel.getNextPage = jasmine.createSpy('getNextPage()').and.callFake(
             (topIndex: number, isAtTop: boolean, isAtBottom: boolean) => {
-              expect(topIndex).toBe(0);
-              expect(isAtTop).toBe(true);
-              expect(isAtBottom).toBe(true);
+              expect(topIndex).toBe(0, 'topIndex === 0');
+              expect(isAtTop).toBe(true, 'isAtTop === true');
+              expect(isAtBottom).toBe(true, 'isAtBottom === true');
               called = true;
             }
           );
 
           await bootstrapComponent();
+          await waitForNextFrame();
 
           expect(virtualRepeat['_fixedHeightContainer']).toBe(true);
-          expect(called).toBe(true);
+          expect(called).toBe(true, 'infinite-scroll-next called()');
           expect(viewModel.getNextPage).toHaveBeenCalledTimes(1);
         });
 
@@ -168,6 +169,7 @@ describe('vr-integration.table.spec.ts', () => {
           });
 
           await bootstrapComponent();
+          await waitForNextFrame();
 
           expect(virtualRepeat['_fixedHeightContainer']).toBe(true);
           expect(scrollContext).toBeDefined();

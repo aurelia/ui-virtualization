@@ -296,13 +296,12 @@ describe('vr-integration.spec.ts', () => {
       });
     });
 
-    it('handles scrolling to bottom', done => {
-      containerCreate.then(() => {
-        validateScroll(containerVirtualRepeat, containerViewModel, () => {
-          expect(containerVirtualRepeat._onScroll).toHaveBeenCalled();
-          done();
-        }, 'scrollContainer2');
-      });
+    it('does not invoke _onScroll after attached()', async done => {
+      await containerCreate;
+      validateScroll(containerVirtualRepeat, containerViewModel, () => {
+        expect(containerVirtualRepeat._onScroll).not.toHaveBeenCalled();
+        done();
+      }, 'scrollContainer2');
     });
 
     it('handles array changes', done => {

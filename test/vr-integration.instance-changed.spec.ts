@@ -60,7 +60,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
 
       const table = (component['host'] as HTMLElement).querySelector('table');
-      expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
+      expect(virtualRepeat.elementsInView).toBe(Math.floor(500 / 50) + 1, 'repeat.elementsInView');
       expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
       expect(table.tBodies[0].rows.length).toBe(2 + virtualRepeat._viewsLength); // 2 buffers + 20 rows based on 50 height
 
@@ -68,12 +68,10 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       expect(virtualRepeat._bottomBufferHeight).toBe(50 * (virtualRepeat.items.length - virtualRepeat._viewsLength));
 
       // start more difficult cases
-      const scrollSpy = spyOn(virtualRepeat, '_handleScroll').and.callThrough();
       // 1. mutate scroll state
       table.parentElement.scrollTop = table.parentElement.scrollHeight;
       await ensureScrolled(50);
 
-      expect(scrollSpy).toHaveBeenCalledTimes(1);
       expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
       // when scrolling, the first bound row is calculated differently compared to other scenarios
       // as it can be known exactly what the last process was
@@ -117,7 +115,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
 
       const table = (component['host'] as HTMLElement).querySelector('table');
-      expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
+      expect(virtualRepeat.elementsInView).toBe(Math.floor(500 / 50) + 1, 'repeat.elementsInView');
       expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
       expect(table.tBodies[0].rows.length).toBe(2 + virtualRepeat._viewsLength); // 2 buffers + 20 rows based on 50 height
 
@@ -149,7 +147,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       // after instance changed, it restart the "_first" view based on safe number of views
       // this safe number of views is different with the case of no collection size changes
       // this case triggers a scroll event
-      expect(virtualRepeat._first).toBe(/*items count*/30 - /*element in views*/11, 'repeat._first 2');
+      expect(virtualRepeat._first).toBe(/*items count*/30 - /*element in views*/11 * 2, 'repeat._first 2');
 
       // the following check is based on subtraction of total items count and total views count
       // as total number of views hasn't been changed, and their binding contexts created by [repeat]
@@ -179,7 +177,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
 
       const table = (component['host'] as HTMLElement).querySelector('table');
-      expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
+      expect(virtualRepeat.elementsInView).toBe(Math.floor(500 / 50) + 1, 'repeat.elementsInView');
       expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
       expect(table.tBodies[0].rows.length).toBe(2 + virtualRepeat._viewsLength); // 2 buffers + 20 rows based on 50 height
 
@@ -211,7 +209,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       // after instance changed, it restart the "_first" view based on safe number of views
       // this safe number of views is different with the case of no collection size changes
       // this case triggers a scroll event
-      expect(virtualRepeat._first).toBe(/*items count*/16 - /*element in views*/11, 'repeat._first 2');
+      expect(virtualRepeat._first).toBe(Math.max(0, /*items count*/16 - /*element in views*/11 * 2), 'repeat._first 2');
 
       // the following check is based on subtraction of total items count and total views count
       // as total number of views hasn't been changed, and their binding contexts created by [repeat]
@@ -240,7 +238,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
 
       const table = (component['host'] as HTMLElement).querySelector('table');
-      expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
+      expect(virtualRepeat.elementsInView).toBe(Math.floor(500 / 50) + 1, 'repeat.elementsInView');
       expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
       expect(table.tBodies[0].rows.length).toBe(2 + virtualRepeat._viewsLength); // 2 buffers + 20 rows based on 50 height
 
@@ -306,7 +304,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
 
 
       const table = (component['host'] as HTMLElement).querySelector('table');
-      expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
+      expect(virtualRepeat.elementsInView).toBe(Math.floor(500 / 50) + 1, 'repeat.elementsInView');
       expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
       expect(table.tBodies[0].rows.length).toBe(2 + virtualRepeat._viewsLength); // 2 buffers + 20 rows based on 50 height
 
@@ -358,7 +356,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
 
 
       const table = (component['host'] as HTMLElement).querySelector('table');
-      expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
+      expect(virtualRepeat.elementsInView).toBe(Math.floor(500 / 50) + 1, 'repeat.elementsInView');
       expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
       expect(table.tBodies[0].rows.length).toBe(2 + virtualRepeat._viewsLength, 'elements count 1'); // 2 buffers + 20 rows based on 50 height
 
@@ -418,7 +416,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
 
       const table = (component['host'] as HTMLElement).querySelector('table');
-      expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
+      expect(virtualRepeat.elementsInView).toBe(Math.floor(500 / 50) + 1, 'repeat.elementsInView');
       expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
       // buffers are TR element
       expect(table.tBodies.length).toBe(/*no buffer 2 +*/virtualRepeat._viewsLength, 'table.tBodies.length 1'); // 2 buffers + 20 rows based on 50 height
@@ -470,7 +468,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
 
       const table = (component['host'] as HTMLElement).querySelector('table');
-      expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
+      expect(virtualRepeat.elementsInView).toBe(Math.floor(500 / 50) + 1, 'repeat.elementsInView');
       expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
       // buffers are TR elements
       expect(table.tBodies.length).toBe(/*no buffer 2 +*/virtualRepeat._viewsLength, 'table.tBodies.length 1'); // 2 buffers + 20 rows based on 50 height
@@ -504,7 +502,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       // after instance changed, it restart the "_first" view based on safe number of views
       // this safe number of views is different with the case of no collection size changes
       // this case triggers a scroll event
-      expect(virtualRepeat._first).toBe(/*items count*/30 - /*element in views*/11, 'repeat._first 2');
+      expect(virtualRepeat._first).toBe(/*items count*/30 - /*element in views*/11 * 2, 'repeat._first 2');
 
       // the following check is based on subtraction of total items count and total views count
       // as total number of views hasn't been changed, and their binding contexts created by [repeat]
@@ -531,7 +529,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
 
       const table = (component['host'] as HTMLElement).querySelector('table');
-      expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
+      expect(virtualRepeat.elementsInView).toBe(Math.floor(500 / 50) + 1, 'repeat.elementsInView');
       expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
       // buffers are TR elements
       expect(table.tBodies.length).toBe(/*no buffer 2 +*/virtualRepeat._viewsLength, 'table.tBodies.length 1'); // 2 buffers + 20 rows based on 50 height
@@ -566,7 +564,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       // after instance changed, it restart the "_first" view based on safe number of views
       // this safe number of views is different with the case of no collection size changes
       // this case triggers a scroll event
-      expect(virtualRepeat._first).toBe(/*items count*/30 - /*element in views*/11, 'repeat._first 2');
+      expect(virtualRepeat._first).toBe(/*items count*/30 - /*element in views*/11 * 2, 'repeat._first 2');
 
       // the following check is based on subtraction of total items count and total views count
       // as total number of views hasn't been changed, and their binding contexts created by [repeat]
@@ -611,7 +609,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
 
       const table = (component['host'] as HTMLElement).querySelector('table');
-      expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
+      expect(virtualRepeat.elementsInView).toBe(Math.floor(500 / 50) + 1, 'repeat.elementsInView');
       expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
       // buffers are TR elements
       expect(table.tBodies.length).toBe(/*no buffer 2 +*/virtualRepeat._viewsLength, 'table.tBodies.length'); // 2 buffers + 20 rows based on 50 height
@@ -635,7 +633,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       expect(virtualRepeat._bottomBufferHeight).toBe(0, 'repeat._bottomBufferHeight');
 
       viewModel.items = viewModel.items.slice(0).reverse().slice(0, 16);
-      await waitForFrames(1);
+      await waitForFrames(2);
 
       expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
       // buffers are TR elements
@@ -645,7 +643,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       // after instance changed, it restart the "_first" view based on safe number of views
       // this safe number of views is different with the case of no collection size changes
       // this case triggers a scroll event
-      expect(virtualRepeat._first).toBe(/*items count*/16 - /*element in views*/11, 'repeat._first 2');
+      expect(virtualRepeat._first).toBe(Math.max(0, /*items count*/16 - /*element in views*/11 * 2), 'repeat._first 2');
 
       // the following check is based on subtraction of total items count and total views count
       // as total number of views hasn't been changed, and their binding contexts created by [repeat]
@@ -669,7 +667,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
 
       const table = (component['host'] as HTMLElement).querySelector('table');
-      expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
+      expect(virtualRepeat.elementsInView).toBe(Math.floor(500 / 50) + 1, 'repeat.elementsInView');
       expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
       // buffers are tr elements
       expect(table.tBodies.length).toBe(/*no buffer 2 +*/virtualRepeat._viewsLength, 'table.tBodies.length 1'); // 2 buffers + 20 rows based on 50 height
@@ -737,7 +735,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
 
       const table = (component['host'] as HTMLElement).querySelector('table');
-      expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
+      expect(virtualRepeat.elementsInView).toBe(Math.floor(500 / 50) + 1, 'repeat.elementsInView');
       expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
       expect(table.tBodies.length).toBe(virtualRepeat._viewsLength, 'elements count 1'); // 2 buffers + 20 rows based on 50 height
 
@@ -788,7 +786,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
 
       const scrollerEl = (component['host'] as HTMLElement).querySelector('.scroller');
-      expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
+      expect(virtualRepeat.elementsInView).toBe(Math.floor(500 / 50) + 1, 'repeat.elementsInView');
       expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
       expect(scrollerEl.children.length).toBe(2 + virtualRepeat._viewsLength, 'scrollerEl.children.length 1'); // 2 buffers + 20 rows based on 50 height
 
@@ -840,7 +838,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
 
       const scrollerEl = (component['host'] as HTMLElement).querySelector('.scroller');
-      expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
+      expect(virtualRepeat.elementsInView).toBe(Math.floor(500 / 50) + 1, 'repeat.elementsInView');
       expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
       expect(scrollerEl.children.length).toBe(2 + virtualRepeat._viewsLength, 'scrollerEl.children.length 1'); // 2 buffers + 20 rows based on 50 height
 
@@ -872,7 +870,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       // after instance changed, it restart the "_first" view based on safe number of views
       // this safe number of views is different with the case of no collection size changes
       // this case triggers a scroll event
-      expect(virtualRepeat._first).toBe(/*items count*/30 - /*element in views*/11, 'repeat._first 2');
+      expect(virtualRepeat._first).toBe(/*items count*/30 - /*element in views*/11 * 2, 'repeat._first 2');
 
       // the following check is based on subtraction of total items count and total views count
       // as total number of views hasn't been changed, and their binding contexts created by [repeat]
@@ -896,7 +894,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
 
       const scrollerEl = (component['host'] as HTMLElement).querySelector('.scroller');
-      expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
+      expect(virtualRepeat.elementsInView).toBe(Math.floor(500 / 50) + 1, 'repeat.elementsInView');
       expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
       expect(scrollerEl.children.length).toBe(2 + virtualRepeat._viewsLength, 'scrollerEl.children.length'); // 2 buffers + 20 rows based on 50 height
 
@@ -928,7 +926,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       // after instance changed, it restart the "_first" view based on safe number of views
       // this safe number of views is different with the case of no collection size changes
       // this case triggers a scroll event
-      expect(virtualRepeat._first).toBe(/*items count*/16 - /*element in views*/11, 'repeat._first 2');
+      expect(virtualRepeat._first).toBe(Math.max(0, /*items count*/16 - /*element in views*/11 * 2), 'repeat._first 2');
 
       // the following check is based on subtraction of total items count and total views count
       // as total number of views hasn't been changed, and their binding contexts created by [repeat]
@@ -951,7 +949,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
 
       const scrollerEl = (component['host'] as HTMLElement).querySelector('.scroller');
-      expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
+      expect(virtualRepeat.elementsInView).toBe(Math.floor(500 / 50) + 1, 'repeat.elementsInView');
       expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
       expect(scrollerEl.children.length).toBe(2 + virtualRepeat._viewsLength, 'scrollerEl.children.length 1'); // 2 buffers + 20 rows based on 50 height
 
@@ -1017,7 +1015,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
 
 
       const scrollerEl = (component['host'] as HTMLElement).querySelector('.scroller');
-      expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
+      expect(virtualRepeat.elementsInView).toBe(Math.floor(500 / 50) + 1, 'repeat.elementsInView');
       expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
       expect(scrollerEl.children.length).toBe(2 + virtualRepeat._viewsLength, 'elements count 1'); // 2 buffers + 20 rows based on 50 height
 
@@ -1086,7 +1084,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
         const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items }, $view);
 
         const scrollerEl = (component['host'] as HTMLElement).querySelector('.scroller');
-        expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
+        expect(virtualRepeat.elementsInView).toBe(Math.floor(500 / 50) + 1, 'repeat.elementsInView');
         expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
         expect(scrollerEl.firstElementChild.children.length).toBe(
           2 + virtualRepeat._viewsLength,
@@ -1143,7 +1141,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
         const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items }, $view);
 
         const scrollerEl = (component['host'] as HTMLElement).querySelector('.scroller');
-        expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
+        expect(virtualRepeat.elementsInView).toBe(Math.floor(500 / 50) + 1, 'repeat.elementsInView');
         expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
         expect(scrollerEl.firstElementChild.children.length).toBe(
           2 + virtualRepeat._viewsLength,
@@ -1179,7 +1177,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
         // after instance changed, it restart the "_first" view based on safe number of views
         // this safe number of views is different with the case of no collection size changes
         // this case triggers a scroll event
-        expect(virtualRepeat._first).toBe(/*items count*/30 - /*element in views*/11, 'repeat._first 2');
+        expect(virtualRepeat._first).toBe(/*items count*/30 - /*element in views*/11 * 2, 'repeat._first 2');
 
         // the following check is based on subtraction of total items count and total views count
         // as total number of views hasn't been changed, and their binding contexts created by [repeat]
@@ -1206,7 +1204,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
         const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items }, $view);
 
         const scrollerEl = (component['host'] as HTMLElement).querySelector('.scroller');
-        expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
+        expect(virtualRepeat.elementsInView).toBe(Math.floor(500 / 50) + 1, 'repeat.elementsInView');
         expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
         expect(scrollerEl.firstElementChild.children.length).toBe(
           2 + virtualRepeat._viewsLength,
@@ -1242,7 +1240,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
         // after instance changed, it restart the "_first" view based on safe number of views
         // this safe number of views is different with the case of no collection size changes
         // this case triggers a scroll event
-        expect(virtualRepeat._first).toBe(/*items count*/30 - /*element in views*/11, 'repeat._first 2');
+        expect(virtualRepeat._first).toBe(/*items count*/30 - /*element in views*/11 * 2, 'repeat._first 2');
 
         // the following check is based on subtraction of total items count and total views count
         // as total number of views hasn't been changed, and their binding contexts created by [repeat]
@@ -1286,7 +1284,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
         const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items }, $view);
 
         const scrollerEl = (component['host'] as HTMLElement).querySelector('.scroller');
-        expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
+        expect(virtualRepeat.elementsInView).toBe(Math.floor(500 / 50) + 1, 'repeat.elementsInView');
         expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
         expect(scrollerEl.firstElementChild.children.length).toBe(
           2 + virtualRepeat._viewsLength,
@@ -1320,7 +1318,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
         // after instance changed, it restart the "_first" view based on safe number of views
         // this safe number of views is different with the case of no collection size changes
         // this case triggers a scroll event
-        expect(virtualRepeat._first).toBe(/*items count*/16 - /*element in views*/11, 'repeat._first 2');
+        expect(virtualRepeat._first).toBe(Math.max(0, /*items count*/16 - /*element in views*/11 * 2), 'repeat._first 2');
 
         // the following check is based on subtraction of total items count and total views count
         // as total number of views hasn't been changed, and their binding contexts created by [repeat]
@@ -1344,7 +1342,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
         const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items }, $view);
 
         const scrollerEl = (component['host'] as HTMLElement).querySelector('.scroller');
-        expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
+        expect(virtualRepeat.elementsInView).toBe(Math.floor(500 / 50) + 1, 'repeat.elementsInView');
         expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
         expect(scrollerEl.firstElementChild.children.length).toBe(
           2 + virtualRepeat._viewsLength,
@@ -1413,7 +1411,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
         const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items }, $view);
 
         const scrollerEl = (component['host'] as HTMLElement).querySelector('.scroller');
-        expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
+        expect(virtualRepeat.elementsInView).toBe(Math.floor(500 / 50) + 1, 'repeat.elementsInView');
         expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
         expect(scrollerEl.firstElementChild.children.length).toBe(
           2 + virtualRepeat._viewsLength,
@@ -1486,7 +1484,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
         const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items }, $view);
 
         const scrollerEl = (component['host'] as HTMLElement).querySelector('.scroller');
-        expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
+        expect(virtualRepeat.elementsInView).toBe(Math.floor(500 / 50) + 1, 'repeat.elementsInView');
         expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
         expect(scrollerEl.children.length).toBe(2 + virtualRepeat._viewsLength, 'scrollerEl.children.length 1'); // 2 buffers + 20 rows based on 50 height
 
@@ -1542,7 +1540,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
         const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items }, $view);
 
         const scrollerEl = (component['host'] as HTMLElement).querySelector('.scroller');
-        expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
+        expect(virtualRepeat.elementsInView).toBe(Math.floor(500 / 50) + 1, 'repeat.elementsInView');
         expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
         expect(scrollerEl.children.length).toBe(2 + virtualRepeat._viewsLength, 'scrollerEl.children.length 1'); // 2 buffers + 20 rows based on 50 height
 
@@ -1574,7 +1572,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
         // after instance changed, it restart the "_first" view based on safe number of views
         // this safe number of views is different with the case of no collection size changes
         // this case triggers a scroll event
-        expect(virtualRepeat._first).toBe(/*items count*/30 - /*element in views*/11, 'repeat._first 2');
+        expect(virtualRepeat._first).toBe(/*items count*/30 - /*element in views*/11 * 2, 'repeat._first 2');
 
         // the following check is based on subtraction of total items count and total views count
         // as total number of views hasn't been changed, and their binding contexts created by [repeat]
@@ -1617,7 +1615,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
         const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items }, $view);
 
         const scrollerEl = (component['host'] as HTMLElement).querySelector('.scroller');
-        expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
+        expect(virtualRepeat.elementsInView).toBe(Math.floor(500 / 50) + 1, 'repeat.elementsInView');
         expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
         expect(scrollerEl.children.length).toBe(2 + virtualRepeat._viewsLength, 'scrollerEl.children.length 1'); // 2 buffers + 20 rows based on 50 height
 
@@ -1649,7 +1647,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
         // after instance changed, it restart the "_first" view based on safe number of views
         // this safe number of views is different with the case of no collection size changes
         // this case triggers a scroll event
-        expect(virtualRepeat._first).toBe(/*items count*/30 - /*element in views*/11, 'repeat._first 2');
+        expect(virtualRepeat._first).toBe(/*items count*/30 - /*element in views*/11 * 2, 'repeat._first 2');
 
         // the following check is based on subtraction of total items count and total views count
         // as total number of views hasn't been changed, and their binding contexts created by [repeat]
@@ -1674,7 +1672,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
         const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items }, $view);
 
         const scrollerEl = (component['host'] as HTMLElement).querySelector('.scroller');
-        expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
+        expect(virtualRepeat.elementsInView).toBe(Math.floor(500 / 50) + 1, 'repeat.elementsInView');
         expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
         expect(scrollerEl.children.length).toBe(2 + virtualRepeat._viewsLength, 'scrollerEl.children.length'); // 2 buffers + 20 rows based on 50 height
 
@@ -1706,7 +1704,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
         // after instance changed, it restart the "_first" view based on safe number of views
         // this safe number of views is different with the case of no collection size changes
         // this case triggers a scroll event
-        expect(virtualRepeat._first).toBe(/*items count*/16 - /*element in views*/11, 'repeat._first 2');
+        expect(virtualRepeat._first).toBe(Math.max(0, /*items count*/16 - /*element in views*/11 * 2), 'repeat._first 2');
 
         // the following check is based on subtraction of total items count and total views count
         // as total number of views hasn't been changed, and their binding contexts created by [repeat]
@@ -1730,7 +1728,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
         const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items }, $view);
 
         const scrollerEl = (component['host'] as HTMLElement).querySelector('.scroller');
-        expect(virtualRepeat.elementsInView).toBe(Math.ceil(500 / 50) + 1, 'repeat.elementsInView');
+        expect(virtualRepeat.elementsInView).toBe(Math.floor(500 / 50) + 1, 'repeat.elementsInView');
         expect(virtualRepeat._viewsLength).toBe(22, 'repeat._viewsLength');
         expect(scrollerEl.children.length).toBe(2 + virtualRepeat._viewsLength, 'scrollerEl.children.length 1'); // 2 buffers + 20 rows based on 50 height
 
