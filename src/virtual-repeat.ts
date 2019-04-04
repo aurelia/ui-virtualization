@@ -97,23 +97,11 @@ export class VirtualRepeat extends AbstractRepeater {
   _first: number = 0;
 
   /**
-   * Preview first view index, for proper determination of delta
-   * @internal
-   */
-  _previousFirst = 0;
-
-  /**
    * Number of views required to fillup the viewport, and also enough to provide smooth scrolling
    * Without showing blank space
    * @internal
    */
   _viewsLength = 0;
-
-  /**
-   * @internal
-   * Last rebound view index, user to determine first index of next task when scrolling/ changing viewport scroll position
-   */
-  _lastRebind = 0;
 
   /**
    * Height of top buffer to properly push the visible rendered list items into right position
@@ -127,18 +115,6 @@ export class VirtualRepeat extends AbstractRepeater {
    * @internal
    */
   _bottomBufferHeight = 0;
-
-  /**@internal*/
-  _isScrolling: boolean = false;
-
-  /**@internal*/
-  _scrollingDown = false;
-
-  /**@internal*/
-  _scrollingUp = false;
-
-  /**@internal*/
-  _switchedDirection = false;
 
   /**@internal*/
   _isAttached = false;
@@ -243,12 +219,6 @@ export class VirtualRepeat extends AbstractRepeater {
   private isOneTime: boolean;
 
   /**
-   * Temporary snapshot of items list count. Updated regularly to determinate calculation need
-   * @internal
-   */
-  _prevItemsCount: number;
-
-  /**
    * Snapshot of previous scroller info. Used to determine action against curr scroller info
    * @internal
    */
@@ -322,12 +292,6 @@ export class VirtualRepeat extends AbstractRepeater {
   distanceToTop: number;
 
   /**
-   * Indicates whether scroller is at the bottom of view range managed by this repeat
-   * @internal
-   */
-  _isLastIndex: boolean;
-
-  /**
    * Number indicating minimum elements required to render to fill up the visible viewport
    * @internal
    */
@@ -394,7 +358,6 @@ export class VirtualRepeat extends AbstractRepeater {
     this.sourceExpression = getItemsSourceExpression(this.instruction, 'virtual-repeat.for');
     this.isOneTime = isOneTime(this.sourceExpression);
     this.itemHeight
-      = this._prevItemsCount
       = this.distanceToTop
       = 0;
     this.revertScrollCheckGuard = () => {
@@ -411,7 +374,6 @@ export class VirtualRepeat extends AbstractRepeater {
   /**@override */
   attached(): void {
     this._isAttached = true;
-    this._prevItemsCount = this.items.length;
 
     const element = this.element;
     const templateStrategy = this.templateStrategy = this.templateStrategyLocator.getStrategy(element);
@@ -443,7 +405,10 @@ export class VirtualRepeat extends AbstractRepeater {
         const currDistanceToTop = getElementDistanceToTopOfDocument(topBufferEl);
         this.distanceToTop = currDistanceToTop;
         if (prevDistanceToTop !== currDistanceToTop) {
-          this._handleScroll();
+          const currentScrollerInfo = this.getScrollerInfo();
+          const prevScrollerInfo = this._currScrollerInfo;
+          this._currScrollerInfo = currentScrollerInfo;
+          this._handleScroll(currentScrollerInfo, prevScrollerInfo);
         }
       }, 500);
     }
@@ -465,8 +430,7 @@ export class VirtualRepeat extends AbstractRepeater {
       DOM.removeEventListener('scroll', scrollListener, false);
     }
     this._unobserveScrollerSize();
-    this._currScrollerContentRect
-      = this._isLastIndex = undefined;
+    this._currScrollerContentRect = undefined;
     this._isAttached
       = this._fixedHeightContainer = false;
     this._unsubscribeCollection();
@@ -477,8 +441,7 @@ export class VirtualRepeat extends AbstractRepeater {
     const $clearInterval = PLATFORM.global.clearInterval;
     $clearInterval(this._calcDistanceToTopInterval);
     $clearInterval(this._sizeInterval);
-    this._prevItemsCount
-      = this.distanceToTop
+    this.distanceToTop
       = this._sizeInterval
       = this._calcDistanceToTopInterval = 0;
   }
@@ -566,7 +529,6 @@ export class VirtualRepeat extends AbstractRepeater {
       return;
     }
     this._handlingMutations = true;
-    this._prevItemsCount = collection.length;
     this.strategy.instanceMutated(this, collection, changes);
   }
 
@@ -620,22 +582,14 @@ export class VirtualRepeat extends AbstractRepeater {
   /**@internal */
   _resetCalculation(): void {
     this._first
-      = this._previousFirst
       = this._viewsLength
-      = this._lastRebind
       = this._topBufferHeight
       = this._bottomBufferHeight
-      = this._prevItemsCount
       = this.itemHeight
       = this.elementsInView = 0;
-    this._isScrolling
-      = this._scrollingDown
-      = this._scrollingUp
-      = this._switchedDirection
-      = this._ignoreMutation
+    this._ignoreMutation
       = this._handlingMutations
-      = this._ticking
-      = this._isLastIndex = false;
+      = this._ticking = false;
     this._isAtTop = true;
     this._updateBufferElements(/*skip update?*/true);
   }
@@ -649,7 +603,7 @@ export class VirtualRepeat extends AbstractRepeater {
       this._currScrollerInfo = currentScrollerInfo;
       this.taskQueue.queueMicroTask(() => {
         // this._handleScroll();
-        this._handleScroll2(currentScrollerInfo, prevScrollerInfo);
+        this._handleScroll(currentScrollerInfo, prevScrollerInfo);
         this._ticking = false;
       });
       this._ticking = true;
@@ -660,10 +614,8 @@ export class VirtualRepeat extends AbstractRepeater {
     }
   }
 
-  _scrollState: VirtualiationScrollState;
-
   /**@internal */
-  _handleScroll2(currentScrollerInfo: IScrollerInfo, prevScrollerInfo: IScrollerInfo): void {
+  _handleScroll(currentScrollerInfo: IScrollerInfo, prevScrollerInfo: IScrollerInfo): void {
     if (!this._isAttached) {
       return;
     }
@@ -677,6 +629,7 @@ export class VirtualRepeat extends AbstractRepeater {
     }
 
     const strategy = this.strategy;
+    // todo: use _firstViewIndex()
     const old_range_start_index = this._first;
     const old_range_end_index = this._lastViewIndex();
     const [new_range_start_index, new_range_end_index] = strategy.getViewRange(this, currentScrollerInfo);
@@ -743,7 +696,7 @@ export class VirtualRepeat extends AbstractRepeater {
       // needs to move bottom views from old range (range-2) to new range (range-1)
       if (new_range_start_index > old_range_start_index && old_range_end_index >= new_range_start_index && new_range_end_index >= old_range_end_index) {
         const views_to_move_count = new_range_start_index - old_range_start_index;
-        this._moveViews2(views_to_move_count, 1);
+        this._moveViews(views_to_move_count, 1);
         didMovedViews = 1;
         should_call_scroll_next = 1;
       }
@@ -751,7 +704,7 @@ export class VirtualRepeat extends AbstractRepeater {
       // this scenario requires move views from start of old range to end of new range
       else if (old_range_start_index > new_range_start_index && old_range_start_index <= new_range_end_index && old_range_end_index >= new_range_end_index) {
         const views_to_move_count = old_range_end_index - new_range_end_index;
-        this._moveViews2(views_to_move_count, -1);
+        this._moveViews(views_to_move_count, -1);
         didMovedViews = 1;
         should_call_scroll_next = -1;
       }
@@ -774,8 +727,8 @@ export class VirtualRepeat extends AbstractRepeater {
       // these are cases that were not handled properly.
       // If happens, need to fix the above logic related to range check
       else {
-        strategy.remeasure(this);
         console.warn('Scroll intersection not handled');
+        strategy.remeasure(this);
       }
     }
 
@@ -788,7 +741,7 @@ export class VirtualRepeat extends AbstractRepeater {
     // the following block cannot be nested inside didMoveViews condition
     // since there could be jumpy scrolling behavior causing infinite scrollnext
     if (should_call_scroll_next !== 0) {
-      this._getMore2(new_range_start_index, strategy.isNearTop(this, new_range_start_index), strategy.isNearBottom(this, new_range_end_index));
+      this._getMore(new_range_start_index, strategy.isNearTop(this, new_range_start_index), strategy.isNearBottom(this, new_range_end_index));
     }
   }
 
@@ -797,7 +750,7 @@ export class VirtualRepeat extends AbstractRepeater {
    * Must only be invoked only to move views while scrolling
    * @internal
    */
-  _moveViews2(viewsCount: number, direction: /*up*/-1 | /*down*/1): void {
+  _moveViews(viewsCount: number, direction: /*up*/-1 | /*down*/1): void {
     const repeat = this;
     // move to top
     if (direction === -1) {
@@ -828,7 +781,7 @@ export class VirtualRepeat extends AbstractRepeater {
   }
 
   /**@internal*/
-  _getMore2(topIndex: number, isNearTop: boolean, isNearBottom: boolean, force?: boolean): void {
+  _getMore(topIndex: number, isNearTop: boolean, isNearBottom: boolean, force?: boolean): void {
     if (isNearTop || isNearBottom || force) {
       // guard against too rapid fire when scrolling towards end/start
       if (!this._calledGetMore) {
@@ -891,240 +844,9 @@ export class VirtualRepeat extends AbstractRepeater {
           }
         };
 
-        // use task so it will be executed before next frame
-        // can help avoid doing double work for handling scroll
-        // in case of mutation
         requestAnimationFrame(executeGetMore);
       }
     }
-  }
-
-  /**@internal*/
-  _handleScroll(): void {
-    if (!this._isAttached) {
-      return;
-    }
-    if (this._skipNextScrollHandle) {
-      this._skipNextScrollHandle = false;
-      return;
-    }
-    const items = this.items;
-    if (!items) {
-      return;
-    }
-    const topBufferEl = this.topBufferEl;
-    const scrollerEl = this.scrollerEl;
-    const itemHeight = this.itemHeight;
-    /**
-     * Real scroll top calculated based on current scroll top of scroller and top buffer {height + distance to top}
-     * as there could be elements before top buffer and it affects real scroll top of the selected repeat
-     *
-     * Calculation are done differently based on the scroller:
-     * - not document: the scroll top of this repeat is calculated based on current scroller.scrollTop and the distance to top of `top buffer`
-     * - document: the scroll top is the substraction of `pageYOffset` and distance to top of current buffer element (logic needs revised)
-     */
-    let realScrollTop = 0;
-    const isFixedHeightContainer = this._fixedHeightContainer;
-    if (isFixedHeightContainer) {
-      // If offset parent of top buffer is the scroll container
-      //    its actual offsetTop is just the offset top itself
-      // If not, then the offset top is calculated based on the parent offsetTop as well
-      const topBufferDistance = getDistanceToParent(topBufferEl, scrollerEl);
-      const scrollerScrollTop = scrollerEl.scrollTop;
-      realScrollTop = Math$max(0, scrollerScrollTop - Math$abs(topBufferDistance));
-    } else {
-      realScrollTop = pageYOffset - this.distanceToTop;
-    }
-    const elementsInView = this.elementsInView;
-
-    // Calculate the index of first view
-    // Using Math floor to ensure it has correct space for both small and large calculation
-    let firstIndex = Math$max(0, itemHeight > 0 ? Math$floor(realScrollTop / itemHeight) : 0);
-    const currLastReboundIndex = this._lastRebind;
-    // if first index starts somewhere after the last view
-    // then readjust based on the delta
-    if (firstIndex > items.length - elementsInView) {
-      firstIndex = Math$max(0, items.length - elementsInView);
-    }
-    this._first = firstIndex;
-
-    // Check scrolling states and adjust flags
-    this._checkScrolling();
-
-    const isSwitchedDirection = this._switchedDirection;
-    // store buffers' heights into local variables
-    const currentTopBufferHeight = this._topBufferHeight;
-    const currentBottomBufferHeight = this._bottomBufferHeight;
-
-    // TODO if and else paths do almost same thing, refactor?
-    if (this._scrollingDown) {
-      let viewsToMoveCount = firstIndex - currLastReboundIndex;
-      if (isSwitchedDirection) {
-        viewsToMoveCount = this._isAtTop
-          ? firstIndex
-          : (firstIndex - currLastReboundIndex);
-      }
-      this._isAtTop = false;
-      this._lastRebind = firstIndex;
-      const movedViewsCount = this._moveViews(viewsToMoveCount);
-      const adjustHeight = movedViewsCount < viewsToMoveCount
-        ? currentBottomBufferHeight
-        : itemHeight * movedViewsCount;
-
-      // when there is/are view/views to move
-      // it could be because user has scrolled pass first index point that requires moving view
-      if (viewsToMoveCount > 0) {
-        this._getMore();
-      }
-      this._switchedDirection = false;
-      this._topBufferHeight = currentTopBufferHeight + adjustHeight;
-      this._bottomBufferHeight = Math$max(currentBottomBufferHeight - adjustHeight, 0);
-      this._updateBufferElements(/*skip update?*/true);
-    } else if (this._scrollingUp) {
-      const isLastIndex = this._isLastIndex;
-      let viewsToMoveCount = currLastReboundIndex - firstIndex;
-      // Use for catching initial scroll state where a small page size might cause _getMore not to fire.
-      const initialScrollState = isLastIndex === undefined;
-      if (isSwitchedDirection) {
-        if (isLastIndex) {
-          viewsToMoveCount = items.length - firstIndex - elementsInView;
-        } else {
-          viewsToMoveCount = currLastReboundIndex - firstIndex;
-        }
-      }
-      this._isLastIndex = false;
-      this._lastRebind = firstIndex;
-      const movedViewsCount = this._moveViews(viewsToMoveCount);
-      const adjustHeight = movedViewsCount < viewsToMoveCount
-        ? currentTopBufferHeight
-        : itemHeight * movedViewsCount;
-      if (viewsToMoveCount > 0) {
-        const force = movedViewsCount === 0 && initialScrollState && firstIndex <= 0 ? true : false;
-        this._getMore(force);
-      }
-      this._switchedDirection = false;
-      this._topBufferHeight = Math$max(currentTopBufferHeight - adjustHeight, 0);
-      this._bottomBufferHeight = currentBottomBufferHeight + adjustHeight;
-      this._updateBufferElements(/*skip update?*/true);
-    }
-    this._previousFirst = firstIndex;
-    this._isScrolling = false;
-  }
-
-  /**@internal*/
-  _getMore(force?: boolean): void {
-    if (this._isLastIndex || this._first === 0 || force === true) {
-      if (!this._calledGetMore) {
-        const executeGetMore = () => {
-          this._calledGetMore = true;
-          const firstView = this._firstView();
-          const scrollNextAttrName = 'infinite-scroll-next';
-          const func: string | (BindingExpression & { sourceExpression: Expression }) = (firstView
-            && firstView.firstChild
-            && firstView.firstChild.au
-            && firstView.firstChild.au[scrollNextAttrName])
-              ? firstView.firstChild.au[scrollNextAttrName].instruction.attributes[scrollNextAttrName]
-              : undefined;
-          const topIndex = this._first;
-          const isAtBottom = this._bottomBufferHeight === 0;
-          const isAtTop = this._isAtTop;
-          const scrollContext: IScrollNextScrollContext = {
-            topIndex: topIndex,
-            isAtBottom: isAtBottom,
-            isAtTop: isAtTop
-          };
-
-          const overrideContext = this.scope.overrideContext;
-          overrideContext.$scrollContext = scrollContext;
-
-          if (func === undefined) {
-            // Still reset `_calledGetMore` flag as if it was invoked
-            // though this should not happen as presence of infinite-scroll-next attribute
-            // will make the value at least be an empty string
-            // keeping this logic here for future enhancement/evolution
-            this._calledGetMore = false;
-            return null;
-          } else if (typeof func === 'string') {
-            const bindingContext = overrideContext.bindingContext;
-            const getMoreFuncName = (firstView.firstChild as Element).getAttribute(scrollNextAttrName);
-            const funcCall = bindingContext[getMoreFuncName];
-
-            if (typeof funcCall === 'function') {
-              const result = funcCall.call(bindingContext, topIndex, isAtBottom, isAtTop);
-              if (!(result instanceof Promise)) {
-                // Reset for the next time
-                this._calledGetMore = false;
-              } else {
-                return result.then(() => {
-                  // Reset for the next time
-                  this._calledGetMore = false;
-                });
-              }
-            } else {
-              throw new Error(`'${scrollNextAttrName}' must be a function or evaluate to one`);
-            }
-          } else if (func.sourceExpression) {
-            // Reset for the next time
-            this._calledGetMore = false;
-            return func.sourceExpression.evaluate(this.scope);
-          } else {
-            throw new Error(`'${scrollNextAttrName}' must be a function or evaluate to one`);
-          }
-          return null;
-        };
-
-        // use micro task so it will be executed before next frame
-        // can help avoid doing double work for handling scroll
-        // in case of mutation
-        this.taskQueue.queueMicroTask(executeGetMore);
-      }
-    }
-  }
-
-  /**
-   * On scroll event:
-   * - Set flags based on internal values of first view index, previous view index
-   * - Determines scrolling state, scroll direction, switching scroll direction
-   * @internal
-   */
-  _checkScrolling(): void {
-    const { _first, _scrollingUp, _scrollingDown, _previousFirst } = this;
-
-    let isScrolling = false;
-    let isScrollingDown = _scrollingDown;
-    let isScrollingUp = _scrollingUp;
-    let isSwitchedDirection = false;
-
-    if (_first > _previousFirst
-      // && (this._bottomBufferHeight > 0 || !this.isLastIndex)
-    ) {
-      if (!_scrollingDown) {
-        isScrollingDown = true;
-        isScrollingUp = false;
-        isSwitchedDirection = true;
-      } else {
-        isSwitchedDirection = false;
-      }
-      isScrolling = true;
-    }
-    // todo: remove if
-    // keep for checking old behavior
-    else if (_first < _previousFirst
-      // && (this._topBufferHeight >= 0 || !this._isAtTop)
-    ) {
-      if (!_scrollingUp) {
-        isScrollingDown = false;
-        isScrollingUp = true;
-        isSwitchedDirection = true;
-      } else {
-        isSwitchedDirection = false;
-      }
-      isScrolling = true;
-    }
-    this._isScrolling = isScrolling;
-    this._scrollingDown = isScrollingDown;
-    this._scrollingUp = isScrollingUp;
-    this._switchedDirection = isSwitchedDirection;
   }
 
   /**@internal */
@@ -1156,44 +878,6 @@ export class VirtualRepeat extends AbstractRepeater {
     return this.view(this.viewCount() - 1);
   }
 
-  /**
-   * Move views based on scrolling direction and number of views to move
-   * Must only be invoked only to move views while scrolling
-   * @internal
-   */
-  _moveViews(viewsCount: number): number {
-    const isScrollingDown = this._scrollingDown;
-    const getNextIndex = isScrollingDown ? $plus : $minus;
-    const childrenCount = this.viewCount();
-    const viewIndex = isScrollingDown ? 0 : childrenCount - 1;
-    const items = this.items;
-    const currentIndex = isScrollingDown
-      ? this._lastViewIndex() + 1
-      : this._firstViewIndex() - 1;
-    let i = 0;
-    let nextIndex = 0;
-    let view: IView;
-    const viewToMoveLimit = viewsCount - (childrenCount * 2);
-    while (i < viewsCount && !this._isAtFirstOrLastIndex) {
-      view = this.view(viewIndex);
-      nextIndex = getNextIndex(currentIndex, i);
-      this._isLastIndex = nextIndex > items.length - 2;
-      this._isAtTop = nextIndex < 1;
-      if (!(this._isAtFirstOrLastIndex && childrenCount >= items.length)) {
-        if (i > viewToMoveLimit) {
-          rebindAndMoveView(this, view, nextIndex, isScrollingDown);
-        }
-        i++;
-      }
-    }
-    return viewsCount - (viewsCount - i);
-  }
-
-  /**@internal */
-  get _isAtFirstOrLastIndex(): boolean {
-    return !this._isScrolling || this._scrollingDown ? this._isLastIndex : this._isAtTop;
-  }
-
   /**@internal*/
   _firstViewIndex(): number {
     const firstView = this._firstView();
@@ -1205,7 +889,6 @@ export class VirtualRepeat extends AbstractRepeater {
     const lastView = this._lastView();
     return lastView === null ? -1 : lastView.overrideContext.$index;
   }
-
 
   /**
    * Observe scroller element to react upon sizing changes
@@ -1386,6 +1069,3 @@ export class VirtualRepeat extends AbstractRepeater {
     }
   }
 }
-
-const $minus = (index: number, i: number) => index - i;
-const $plus = (index: number, i: number) => index + i;

@@ -58,7 +58,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
 
   onAttached(repeat: VirtualRepeat): void {
     if (repeat.items.length < repeat.elementsInView) {
-      repeat._getMore2(0, /*is near top?*/true, this.isNearBottom(repeat, repeat._lastViewIndex()), /*force?*/true);
+      repeat._getMore(0, /*is near top?*/true, this.isNearBottom(repeat, repeat._lastViewIndex()), /*force?*/true);
     }
   }
 
@@ -424,15 +424,9 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
       }
       const newBotBufferItemCount = Math$max(0, newArraySize - newTopBufferItemCount - newViewCount);
 
-      // first update will be to mimic the behavior of a normal repeat mutation
-      // where real views are inserted, removed
-      // whenever there is a mutation, scroller variables will be updated
-      // can only start to correct views behavior after scroller has stabilized
-      repeat._isScrolling = false;
-      repeat._scrollingDown = repeat._scrollingUp = false;
       repeat._first = firstIndexAfterMutation;
-      repeat._previousFirst = firstIndex;
-      repeat._lastRebind = firstIndexAfterMutation + newViewCount;
+      // repeat._previousFirst = firstIndex;
+      // repeat._lastRebind = firstIndexAfterMutation + newViewCount;
       repeat._topBufferHeight = newTopBufferItemCount * itemHeight;
       repeat._bottomBufferHeight = newBotBufferItemCount * itemHeight;
       repeat._updateBufferElements(/*skip update?*/true);
@@ -478,42 +472,16 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     }
     const top_buffer_item_count_after_scroll_adjustment = first_index_after_scroll_adjustment;
     const bot_buffer_item_count_after_scroll_adjustment = Math$max(0, newArraySize - top_buffer_item_count_after_scroll_adjustment - newViewCount);
-    repeat._first
-      = repeat._lastRebind = first_index_after_scroll_adjustment;
-    repeat._previousFirst = firstIndex;
-    repeat._isAtTop = first_index_after_scroll_adjustment === 0;
-    repeat._isLastIndex = bot_buffer_item_count_after_scroll_adjustment === 0;
+    repeat._first = first_index_after_scroll_adjustment;
+    // repeat._previousFirst = firstIndex;
+    // repeat._isAtTop = first_index_after_scroll_adjustment === 0;
+    // repeat._isLastIndex = bot_buffer_item_count_after_scroll_adjustment === 0;
     repeat._topBufferHeight = top_buffer_item_count_after_scroll_adjustment * itemHeight;
     repeat._bottomBufferHeight = bot_buffer_item_count_after_scroll_adjustment * itemHeight;
-    repeat._handlingMutations = false;
+    // repeat._handlingMutations = false;
     // prevent scroller update
     repeat.revertScrollCheckGuard();
     repeat._updateBufferElements();
     updateAllViews(repeat, 0);
-  }
-
-  /**@internal */
-  _isIndexBeforeViewSlot(repeat: VirtualRepeat, viewSlot: ViewSlot, index: number): boolean {
-    const viewIndex = this._getViewIndex(repeat, viewSlot, index);
-    return viewIndex < 0;
-  }
-
-  /**@internal */
-  _isIndexAfterViewSlot(repeat: VirtualRepeat, viewSlot: ViewSlot, index: number): boolean {
-    const viewIndex = this._getViewIndex(repeat, viewSlot, index);
-    return viewIndex > repeat._viewsLength - 1;
-  }
-
-  /**
-   * @internal
-   * Calculate real index of a given index, based on existing buffer height and item height
-   */
-  _getViewIndex(repeat: VirtualRepeat, viewSlot: ViewSlot, index: number): number {
-    if (repeat.viewCount() === 0) {
-      return -1;
-    }
-
-    const topBufferItems = repeat._topBufferHeight / repeat.itemHeight;
-    return Math$floor(index - topBufferItems);
   }
 }
