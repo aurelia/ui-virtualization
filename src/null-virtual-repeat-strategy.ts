@@ -1,8 +1,26 @@
 import { NullRepeatStrategy, RepeatStrategy } from 'aurelia-templating-resources';
 import { VirtualRepeat } from './virtual-repeat';
-import { IVirtualRepeatStrategy, IView, VirtualizationCalculation } from './interfaces';
+import { IVirtualRepeatStrategy, IView, VirtualizationCalculation, IScrollerInfo } from './interfaces';
 
 export class NullVirtualRepeatStrategy extends NullRepeatStrategy implements IVirtualRepeatStrategy {
+
+  getViewRange(repeat: VirtualRepeat, scrollerInfo: IScrollerInfo): [number, number] {
+    throw new Error('Method not implemented.');
+  }
+
+  updateBuffers(repeat: VirtualRepeat, firstIndex: number): void {
+    throw new Error('Method not implemented.');
+  }
+
+  onAttached() {/*empty*/}
+
+  isNearTop(): boolean {
+    return false;
+  }
+
+  isNearBottom(): boolean {
+    return false;
+  }
 
   initCalculation(repeat: VirtualRepeat, items: any): VirtualizationCalculation {
     repeat.itemHeight
@@ -19,10 +37,14 @@ export class NullVirtualRepeatStrategy extends NullRepeatStrategy implements IVi
     return null;
   }
 
-  instanceMutated() {/**/}
+  instanceMutated() {/*empty*/}
 
   instanceChanged(repeat: VirtualRepeat): void {
     repeat.removeAllViews(/**return to cache?*/true, /**skip animation?*/false);
     repeat._resetCalculation();
+  }
+
+  remeasure(repeat: VirtualRepeat): void {
+    throw new Error('Method not implemented.');
   }
 }

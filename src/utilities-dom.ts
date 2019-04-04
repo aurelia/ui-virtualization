@@ -1,5 +1,6 @@
 import { Math$round, $isNaN } from './utilities';
 import { IView } from './interfaces';
+import { htmlElement } from './constants';
 
 /**
  * Walk up the DOM tree and determine what element will be scroller for an element
@@ -14,7 +15,7 @@ export const getScrollContainer = (element: Node): HTMLElement => {
     }
     current = current.parentNode as HTMLElement;
   }
-  return document.documentElement;
+  return htmlElement;
 };
 
 /**
@@ -22,9 +23,8 @@ export const getScrollContainer = (element: Node): HTMLElement => {
  */
 export const getElementDistanceToTopOfDocument = (element: Element): number => {
   let box = element.getBoundingClientRect();
-  let documentElement = document.documentElement;
   let scrollTop = window.pageYOffset;
-  let clientTop = documentElement.clientTop;
+  let clientTop = htmlElement.clientTop;
   let top  = box.top + scrollTop - clientTop;
   return Math$round(top);
 };
@@ -74,12 +74,7 @@ export const insertBeforeNode = (view: IView, bottomBuffer: Element): void => {
  * child.offsetTop - parent.offsetTop
  * There are steps in the middle to account for offsetParent but it's basically that
  */
-export const getDistanceToParent = (child: HTMLElement, parent: HTMLElement) => {
-  // optimizable case where child is the first child of parent
-  // and parent is the target parent to calculate
-  if (child.previousSibling === null && child.parentNode === parent) {
-    return 0;
-  }
+export const getDistanceToParent = (child: HTMLElement, parent: HTMLElement): number => {
   const offsetParent = child.offsetParent as HTMLElement;
   const childOffsetTop = child.offsetTop;
   // [el] <-- offset parent === parent

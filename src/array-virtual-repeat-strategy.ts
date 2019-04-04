@@ -1,7 +1,7 @@
 import { ICollectionObserverSplice, mergeSplice } from 'aurelia-binding';
 import { ViewSlot } from 'aurelia-templating';
 import { ArrayRepeatStrategy, createFullOverrideContext } from 'aurelia-templating-resources';
-import { IView, IVirtualRepeatStrategy, VirtualizationCalculation } from './interfaces';
+import { IView, IVirtualRepeatStrategy, VirtualizationCalculation, IScrollerInfo } from './interfaces';
 import {
   Math$abs,
   Math$floor,
@@ -11,10 +11,11 @@ import {
 } from './utilities';
 import { VirtualRepeat } from './virtual-repeat';
 import { getDistanceToParent, hasOverflowScroll, calcScrollHeight, calcOuterHeight } from './utilities-dom';
+import { htmlElement } from './constants';
 
 /**
-* A strategy for repeating a template over an array.
-*/
+ * A strategy for repeating a template over an array.
+ */
 export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements IVirtualRepeatStrategy {
 
   createFirstItem(repeat: VirtualRepeat): IView {
@@ -48,11 +49,76 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     repeat.itemHeight = itemHeight;
     const scroll_el_height = isFixedHeightContainer
       ? calcScrollHeight(containerEl)
-      : document.documentElement.clientHeight;
+      : innerHeight;
     // console.log({ scroll_el_height })
     const elementsInView = repeat.elementsInView = Math$floor(scroll_el_height / itemHeight) + 1;
     const viewsCount = repeat._viewsLength = elementsInView * 2;
     return VirtualizationCalculation.has_sizing | VirtualizationCalculation.observe_scroller;
+  }
+
+  onAttached(repeat: VirtualRepeat): void {
+    if (repeat.items.length < repeat.elementsInView) {
+      repeat._getMore2(0, /*is near top?*/true, this.isNearBottom(repeat, repeat._lastViewIndex()), /*force?*/true);
+    }
+  }
+
+  getViewRange(repeat: VirtualRepeat, scrollerInfo: IScrollerInfo): [number, number] {
+    const topBufferEl = repeat.topBufferEl;
+    const scrollerEl = repeat.scrollerEl;
+    const itemHeight = repeat.itemHeight;
+    let realScrollTop = 0;
+    const isFixedHeightContainer = scrollerInfo.scroller !== htmlElement;
+    if (isFixedHeightContainer) {
+      // If offset parent of top buffer is the scroll container
+      //    its actual offsetTop is just the offset top itself
+      // If not, then the offset top is calculated based on the parent offsetTop as well
+      const topBufferDistance = getDistanceToParent(topBufferEl, scrollerEl);
+      const scrollerScrollTop = scrollerInfo.scrollTop;
+      realScrollTop = Math$max(0, scrollerScrollTop - Math$abs(topBufferDistance));
+    } else {
+      realScrollTop = pageYOffset - repeat.distanceToTop;
+    }
+
+    const realViewCount = repeat._viewsLength;
+
+    // Calculate the index of first view
+    // Using Math floor to ensure it has correct space for both small and large calculation
+    let firstVisibleIndex = Math$max(0, itemHeight > 0 ? Math$floor(realScrollTop / itemHeight) : 0);
+    const lastVisibleIndex = Math.min(
+      repeat.items.length - 1,
+      firstVisibleIndex + (realViewCount - /*number of view count includes the first view, so minus 1*/1));
+    firstVisibleIndex = Math.max(
+      0,
+      Math.min(
+        firstVisibleIndex,
+        lastVisibleIndex - (realViewCount - /*number of view count includes the first view, so minus 1*/1)
+      )
+    );
+    return [firstVisibleIndex, lastVisibleIndex];
+  }
+
+  updateBuffers(repeat: VirtualRepeat, firstIndex: number): void {
+    const itemHeight = repeat.itemHeight;
+    const itemCount = repeat.items.length;
+    repeat._topBufferHeight = firstIndex * itemHeight;
+    repeat._bottomBufferHeight = (itemCount - firstIndex - repeat.viewCount()) * itemHeight;
+    repeat._updateBufferElements(/*skip update?*/true);
+  }
+
+  isNearTop(repeat: VirtualRepeat, firstIndex: number): boolean {
+    const itemCount = repeat.items.length;
+    return itemCount > 0
+      ? firstIndex <= repeat.edgeDistance
+      : false;
+  }
+
+  isNearBottom(repeat: VirtualRepeat, lastIndex: number): boolean {
+    const itemCount = repeat.items.length;
+    return lastIndex === -1
+      ? true
+      : itemCount > 0
+        ? lastIndex >= (itemCount - repeat.edgeDistance)
+        : false;
   }
 
   /**
@@ -379,6 +445,10 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     this._remeasure(repeat, itemHeight, newViewCount, newArraySize, firstIndexAfterMutation);
   }
 
+  remeasure(repeat: VirtualRepeat): void {
+    this._remeasure(repeat, repeat.itemHeight, repeat.viewCount(), repeat.items.length, repeat._firstViewIndex());
+  }
+
   /**
    * Unlike normal repeat, virtualization repeat employs "padding" elements. Those elements
    * often are just blank block with proper height/width to adjust the height/width/scroll feeling
@@ -391,7 +461,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
    *
    * @internal
    */
-  _remeasure(repeat: VirtualRepeat, itemHeight: number, newViewCount: number, newArraySize: number, firstIndexAfterMutation: number): void {
+  _remeasure(repeat: VirtualRepeat, itemHeight: number, newViewCount: number, newArraySize: number, firstIndex: number): void {
     const scrollerInfo = repeat.getScrollerInfo();
     const topBufferDistance = getDistanceToParent(repeat.topBufferEl, scrollerInfo.scroller);
     const realScrolltop = Math$max(0, scrollerInfo.scrollTop === 0
@@ -410,7 +480,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     const bot_buffer_item_count_after_scroll_adjustment = Math$max(0, newArraySize - top_buffer_item_count_after_scroll_adjustment - newViewCount);
     repeat._first
       = repeat._lastRebind = first_index_after_scroll_adjustment;
-    repeat._previousFirst = firstIndexAfterMutation;
+    repeat._previousFirst = firstIndex;
     repeat._isAtTop = first_index_after_scroll_adjustment === 0;
     repeat._isLastIndex = bot_buffer_item_count_after_scroll_adjustment === 0;
     repeat._topBufferHeight = top_buffer_item_count_after_scroll_adjustment * itemHeight;

@@ -1,6 +1,6 @@
 import { updateOverrideContext } from 'aurelia-templating-resources';
 import { VirtualRepeat } from './virtual-repeat';
-import { IView } from './interfaces';
+import { IView, VirtualiationScrollState, IScrollerInfo } from './interfaces';
 
 
 /**
@@ -30,7 +30,7 @@ export const updateAllViews = (repeat: VirtualRepeat, startIndex: number): void 
 
   const delta = Math$floor(repeat._topBufferHeight / repeat.itemHeight);
   let collectionIndex = 0;
-  let view;
+  let view: IView;
 
   for (; viewLength > startIndex; ++startIndex) {
     collectionIndex = startIndex + delta;
@@ -72,3 +72,32 @@ export const Math$round = Math.round;
 export const Math$ceil = Math.ceil;
 export const Math$floor = Math.floor;
 export const $isNaN = isNaN;
+
+/**
+ * On scroll event:
+ * - Set flags based on internal values of first view index, previous view index
+ * - Determines scrolling state, scroll direction, switching scroll direction
+ * @internal
+ */
+export const getScrollingState = (
+  previousState: VirtualiationScrollState,
+  currentScrollerInfo: IScrollerInfo,
+  prevScrollerInfo: IScrollerInfo
+): VirtualiationScrollState => {
+  const currTop = currentScrollerInfo.scrollTop;
+  const prevTop = prevScrollerInfo.scrollTop;
+  const isScrolling = currTop !== prevTop;
+  let scrollState = isScrolling ? VirtualiationScrollState.scrolling : 0;
+  let scrollingDown = currTop > prevTop;
+
+  scrollState |= scrollingDown
+    ? VirtualiationScrollState.scrollingDown
+    : VirtualiationScrollState.scrollingUp;
+
+  if ((scrollingDown && !(previousState & VirtualiationScrollState.scrollingDown))
+    || (!scrollingDown && (previousState & VirtualiationScrollState.scrollingDown))
+  ) {
+    scrollState |= VirtualiationScrollState.switchedDirection;
+  }
+  return scrollState;
+};

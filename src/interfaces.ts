@@ -58,6 +58,33 @@ export interface IVirtualRepeatStrategy extends RepeatStrategy {
   initCalculation(repeat: VirtualRepeat, items: number | any[] | Map<any, any> | Set<any>): VirtualizationCalculation;
 
   /**
+   * Handle special initialization if any, depends on different strategy
+   */
+  onAttached(repeat: VirtualRepeat): void;
+
+  /**
+   * Calculate the start and end index of a repeat based on its container current scroll position
+   */
+  getViewRange(repeat: VirtualRepeat, scrollerInfo: IScrollerInfo): [number, number];
+
+  /**
+   * Returns true if first index is approaching start of the collection
+   * Virtual repeat can use this to invoke infinite scroll next
+   */
+  isNearTop(repeat: VirtualRepeat, firstIndex: number): boolean;
+
+  /**
+   * Returns true if last index is approaching end of the collection
+   * Virtual repeat can use this to invoke infinite scroll next
+   */
+  isNearBottom(repeat: VirtualRepeat, lastIndex: number): boolean;
+
+  /**
+   * Update repeat buffers height based on repeat.items
+   */
+  updateBuffers(repeat: VirtualRepeat, firstIndex: number): void;
+
+  /**
    * Get the observer based on collection type of `items`
    */
   getCollectionObserver(observerLocator: ObserverLocator, items: any[] | Map<any, any> | Set<any>): InternalCollectionObserver;
@@ -79,6 +106,18 @@ export interface IVirtualRepeatStrategy extends RepeatStrategy {
    * @param splices Records of array changes.
    */
   instanceMutated(repeat: VirtualRepeat, array: any[], splices: ICollectionObserverSplice[]): void;
+
+  /**
+   * Unlike normal repeat, virtualization repeat employs "padding" elements. Those elements
+   * often are just blank block with proper height/width to adjust the height/width/scroll feeling
+   * of virtualized repeat.
+   *
+   * Because of this, either mutation or change of the collection of repeat will potentially require
+   * readjustment (or measurement) of those blank block, based on scroll position
+   *
+   * This is 2 phases scroll handle
+   */
+  remeasure(repeat: VirtualRepeat): void;
 }
 
 /**
@@ -156,6 +195,16 @@ export const enum VirtualizationCalculation {
   reset             = 0b0_00001,
   has_sizing        = 0b0_00010,
   observe_scroller  = 0b0_00100
+}
+
+export const enum VirtualiationScrollState {
+  none              = 0,
+  isAtTop           = 0b0_000001,
+  isAtBottom        = 0b0_000010,
+  scrolling         = 0b0_000100,
+  scrollingDown     = 0b0_001000,
+  scrollingUp       = 0b0_010000,
+  switchedDirection = 0b0_100000
 }
 
 /**

@@ -34,23 +34,11 @@ import { hasOverflowScroll } from './utilities-dom';
 export class ListTemplateStrategy extends DefaultTemplateStrategy implements ITemplateStrategy {
 
   /**@override */
-  getScrollContainer(element: Element): HTMLElement {
-    let listElement = this.getList(element);
-    return hasOverflowScroll(listElement)
-      ? listElement
-      : listElement.parentNode as HTMLElement;
-  }
-
-  /**@override */
   createBuffers(element: Element): [HTMLElement, HTMLElement] {
     const parent = element.parentNode;
     return [
       parent.insertBefore(DOM.createElement('li'), element),
       parent.insertBefore(DOM.createElement('li'), element.nextSibling)
     ];
-  }
-
-  private getList(element: Element): HTMLOListElement | HTMLUListElement {
-    return element.parentNode as HTMLOListElement | HTMLUListElement;
   }
 }
