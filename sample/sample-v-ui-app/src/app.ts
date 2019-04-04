@@ -58,7 +58,7 @@ export class App {
       // {
       //   route: 'issue-117',
       //   moduleId: PLATFORM.moduleName('./issue-117/sub-app'),
-      //   nav: 7,
+      //   nav: true,
       //   title: 'Issue 117'
       // },
       {

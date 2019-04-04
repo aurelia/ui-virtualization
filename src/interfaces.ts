@@ -197,16 +197,6 @@ export const enum VirtualizationCalculation {
   observe_scroller  = 0b0_00100
 }
 
-export const enum VirtualiationScrollState {
-  none              = 0,
-  isAtTop           = 0b0_000001,
-  isAtBottom        = 0b0_000010,
-  scrolling         = 0b0_000100,
-  scrollingDown     = 0b0_001000,
-  scrollingUp       = 0b0_010000,
-  switchedDirection = 0b0_100000
-}
-
 /**
  * List of events that can be used to notify virtual repeat that size has changed
  */

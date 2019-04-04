@@ -5,12 +5,10 @@ import { IVirtualRepeatStrategy, IView, VirtualizationCalculation, IScrollerInfo
 export class NullVirtualRepeatStrategy extends NullRepeatStrategy implements IVirtualRepeatStrategy {
 
   getViewRange(repeat: VirtualRepeat, scrollerInfo: IScrollerInfo): [number, number] {
-    throw new Error('Method not implemented.');
+    return [0, 0];
   }
 
-  updateBuffers(repeat: VirtualRepeat, firstIndex: number): void {
-    throw new Error('Method not implemented.');
-  }
+  updateBuffers(repeat: VirtualRepeat, firstIndex: number): void {/*empty*/}
 
   onAttached() {/*empty*/}
 
@@ -44,7 +42,5 @@ export class NullVirtualRepeatStrategy extends NullRepeatStrategy implements IVi
     repeat._resetCalculation();
   }
 
-  remeasure(repeat: VirtualRepeat): void {
-    throw new Error('Method not implemented.');
-  }
+  remeasure(repeat: VirtualRepeat): void {/*empty*/}
 }

@@ -25,17 +25,12 @@ import {
 import { DOM, PLATFORM } from 'aurelia-pal';
 import { TaskQueue } from 'aurelia-task-queue';
 import {
-  rebindAndMoveView,
-  Math$floor,
-  Math$max,
-  Math$abs,
-  getScrollingState
+  rebindAndMoveView
 } from './utilities';
 import {
   calcOuterHeight,
   getElementDistanceToTopOfDocument,
   hasOverflowScroll,
-  getDistanceToParent,
   calcScrollHeight
 } from './utilities-dom';
 import { VirtualRepeatStrategyLocator } from './virtual-repeat-strategy-locator';
@@ -48,8 +43,7 @@ import {
   IViewSlot,
   IScrollerInfo,
   VirtualizationCalculation,
-  VirtualizationEvents,
-  VirtualiationScrollState
+  VirtualizationEvents
 } from './interfaces';
 import {
   getResizeObserverClass,
