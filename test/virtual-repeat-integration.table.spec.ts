@@ -145,7 +145,7 @@ describe('vr-integration.table.spec.ts', () => {
           await bootstrapComponent();
           await waitForNextFrame();
 
-          expect(virtualRepeat['_fixedHeightContainer']).toBe(true);
+          expect(virtualRepeat['fixedHeightContainer']).toBe(true);
           expect(called).toBe(true, 'infinite-scroll-next called()');
           expect(viewModel.getNextPage).toHaveBeenCalledTimes(1);
         });
@@ -171,7 +171,7 @@ describe('vr-integration.table.spec.ts', () => {
           await bootstrapComponent();
           await waitForNextFrame();
 
-          expect(virtualRepeat['_fixedHeightContainer']).toBe(true);
+          expect(virtualRepeat['fixedHeightContainer']).toBe(true);
           expect(scrollContext).toBeDefined();
           expect(scrollContext.isAtTop).toBe(true);
           expect(scrollContext.isAtBottom).toBe(true, 'Expected is at bottom to be true, recevied:' + scrollContext.isAtBottom);
@@ -196,7 +196,7 @@ describe('vr-integration.table.spec.ts', () => {
 
           await bootstrapComponent();
 
-          expect(virtualRepeat['_fixedHeightContainer']).toBe(true);
+          expect(virtualRepeat['fixedHeightContainer']).toBe(true);
           expect(viewModel.getNextPage).not.toHaveBeenCalled();
         });
       });

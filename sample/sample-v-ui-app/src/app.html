@@ -17,8 +17,7 @@
     class="bg-white border shadow-lg d-flex flex-column"
     style="position: fixed; bottom: 0; right: 0; max-height: 80vh;">
     <let
-      virtual-repeat.bind='window.virtualRepeat'
-      view-count-same-max-views-required.bind="virtualRepeat.viewSlot.children.length === (virtualRepeat.minViewsRequired * 2)"></let>
+      virtual-repeat.bind='window.virtualRepeat'></let>
     <button
       class="btn btn-sm btn-block btn-info flex-shrink-0"
       click.trigger="minimizedMonitor = true">Minimize monitor</button>
@@ -42,11 +41,11 @@
         </tr>
         <tr>
           <td>Active views count</td>
-          <td class="table-${viewCountSameMaxViewsRequired ? 'success' : 'warning'}">${virtualRepeat.viewSlot.children.length}</td>
+          <td class="table-${virtualRepeat.viewSlot.children.length === virtualRepeat.minViewsRequired * 2 ? 'success' : 'warning'}">${virtualRepeat.viewSlot.children.length}</td>
         </tr>
         <tr>
           <td>Max views required</td>
-          <td class="table-${viewCountSameMaxViewsRequired ? 'success' : 'warning'}">${virtualRepeat.minViewsRequired * 2}</td>
+          <td class="table-${virtualRepeat.viewSlot.children.length === virtualRepeat.minViewsRequired * 2 ? 'success' : 'warning'}">${virtualRepeat.minViewsRequired * 2}</td>
         </tr>
         <!-- <tr>
           <td>Last Rebind</td><td>${virtualRepeat._lastRebind}</td> -->
@@ -55,16 +54,16 @@
           <td>${virtualRepeat.minViewsRequired}</td>
         </tr>
         <tr>
-          <td>First</td><td>${virtualRepeat._first}</td>
+          <td>First</td><td>${virtualRepeat.$first}</td>
         <!-- <tr>
           <td>Previous First</td><td>${virtualRepeat._previousFirst}</td> -->
         <tr>
           <td>Top Buffer height</td>
-          <td>${virtualRepeat._topBufferHeight}</td>
+          <td>${virtualRepeat.topBufferHeight}</td>
         </tr>
         <tr>
           <td>Bottom Buffer height</td>
-          <td>${virtualRepeat._bottomBufferHeight}</td>
+          <td>${virtualRepeat.bottomBufferHeight}</td>
         </tr>
         <tr>
           <td>Distance to top</td>

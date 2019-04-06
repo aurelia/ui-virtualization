@@ -1,7 +1,7 @@
 import { Binding, Scope, ICollectionObserverSplice, ObserverLocator, InternalCollectionObserver, OverrideContext } from 'aurelia-binding';
 import { TaskQueue } from 'aurelia-task-queue';
 import { View, ViewSlot, Controller } from 'aurelia-templating';
-import { RepeatStrategy } from 'aurelia-templating-resources';
+import { RepeatStrategy, AbstractRepeater } from 'aurelia-templating-resources';
 import { VirtualRepeat } from './virtual-repeat';
 
 export interface IScrollNextScrollContext {
@@ -41,6 +41,142 @@ declare module 'aurelia-templating' {
   interface Controller {
     boundProperties: { binding: Binding }[];
   }
+}
+
+export interface IVirtualRepeater extends AbstractRepeater {
+
+  items: any;
+
+  local?: string;
+
+  /**
+   * First view index, for proper follow up calculations
+   */
+  $first: number;
+
+  /**
+   * Defines how many items there should be for a given index to be considered at edge
+   */
+  edgeDistance: number;
+
+  /**
+   * Template handling strategy for this repeat.
+   */
+  templateStrategy: ITemplateStrategy;
+
+  /**
+   * Top buffer element, used to reflect the visualization of amount of items `before` the first visible item
+   * @internal
+   */
+  topBufferEl: HTMLElement;
+
+  /**
+   * Bot buffer element, used to reflect the visualization of amount of items `after` the first visible item
+   */
+  bottomBufferEl: HTMLElement;
+
+  /**
+   * Height of top buffer to properly push the visible rendered list items into right position
+   * Usually determined by `_first` visible index * `itemHeight`
+   */
+  topBufferHeight: number;
+
+  /**
+   * Height of bottom buffer to properly push the visible rendered list items into right position
+   */
+  bottomBufferHeight: number;
+
+  /**
+   * Height of each item. Calculated based on first item
+   */
+  itemHeight: number;
+
+  /**
+   * Calculate current scrolltop position
+   */
+  distanceToTop: number;
+
+  /**
+   * Number indicating minimum elements required to render to fill up the visible viewport
+   */
+  minViewsRequired: number;
+
+  /**
+   * Indicates whether virtual repeat attribute is inside a fixed height container with overflow
+   *
+   * This helps identifies place to add scroll event listener
+   */
+  fixedHeightContainer: boolean;
+
+  /**
+   * ViewSlot that encapsulates the repeater views operations in the template
+   */
+  readonly viewSlot: ViewSlot;
+
+  /**
+   * Aurelia change handler by convention for property `items`. Used to properly determine action
+   * needed when items value has been changed
+   */
+  itemsChanged(): void;
+
+  /**
+   * Get first visible view
+   */
+  firstView(): IView | null;
+
+  /**
+   * Get last visible view
+   */
+  lastView(): IView | null;
+
+  /**
+   * Get index of first visible view
+   */
+  firstViewIndex(): number;
+
+  /**
+   * Get index of last visible view
+   */
+  lastViewIndex(): number;
+
+  /**
+   * Invoke infinite scroll next function expression with currently bound scope of the repeater
+   */
+  getMore(topIndex: number, isNearTop: boolean, isNearBottom: boolean, force?: boolean): void;
+
+  /**
+   * Get the real scroller element of the DOM tree this repeat resides in
+   */
+  getScroller(): HTMLElement;
+
+  /**
+   * Get scrolling information of the real scroller element of the DOM tree this repeat resides in
+   */
+  getScrollerInfo(): IScrollerInfo;
+
+  /**
+   * Observe scroller element to react upon sizing changes
+   */
+  observeScroller(scrollerEl: HTMLElement): void;
+
+  /**
+   * Dispose scroller content size observer, if has
+   * Dispose all event listeners related to sizing of scroller, if any
+   */
+  unobserveScroller(): void;
+
+  /**
+   * Signal the repeater to reset all its internal calculation states.
+   * Typically used when items value is null, undefined, empty collection.
+   * Or the repeater has been detached
+   */
+  resetCalculation(): void;
+
+  /**
+   * Update buffer elements height/width with corresponding
+   * @param skipUpdate `true` to signal this repeater that the update won't trigger scroll event
+   */
+  updateBufferElements(skipUpdate?: boolean): void;
 }
 
 export interface IVirtualRepeatStrategy extends RepeatStrategy {

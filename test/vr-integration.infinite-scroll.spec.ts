@@ -308,8 +308,8 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
       await waitForFrames(2);
       expect(spy.calls.count()).toBe(1, '@scroll 1 start -> end');
       expect(viewModel.items.length).toBe(200, 'items.length 2');
-      let firstViewIndex = virtualRepeat._firstViewIndex();
-      let lastViewIndex = virtualRepeat._lastViewIndex();
+      let firstViewIndex = virtualRepeat.firstViewIndex();
+      let lastViewIndex = virtualRepeat.lastViewIndex();
       expect(firstViewIndex).toBeGreaterThanOrEqual(100 - (5 + 1) * 2, 'repeat._firstViewIndex() 1');
       expect(firstViewIndex).toBeLessThan(200 - (5 + 1) * 2, 'repeat._firstViewIndex < bottom');
       expect(lastViewIndex).toBeGreaterThanOrEqual(100, 'repeat._lastViewIndex() 1');
@@ -322,8 +322,8 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
       await waitForFrames(2);
       expect(spy.calls.count()).toBe(2, '@scroll 2 end -> start');
       expect(viewModel.items.length).toBe(300, 'items.length 3');
-      firstViewIndex = virtualRepeat._firstViewIndex();
-      lastViewIndex = virtualRepeat._lastViewIndex();
+      firstViewIndex = virtualRepeat.firstViewIndex();
+      lastViewIndex = virtualRepeat.lastViewIndex();
       expect(firstViewIndex).toBe(0, 'repeat._firstViewIndex() 2');
       expect(lastViewIndex).toBe(11, 'repeat._lastViewIndex() 2');
       validateScrolledState(virtualRepeat, viewModel, itemHeight);
@@ -365,9 +365,9 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
       await waitForFrames(2);
       expect(spy.calls.count()).toBe(1, '@scroll 1 start -> end');
       expect(viewModel.items.length).toBe(100, 'items.length 2');
-      let virtualRepeatFirst = virtualRepeat._first;
-      let firstViewIndex = virtualRepeat._firstViewIndex();
-      let lastViewIndex = virtualRepeat._lastViewIndex();
+      let virtualRepeatFirst = virtualRepeat.$first;
+      let firstViewIndex = virtualRepeat.firstViewIndex();
+      let lastViewIndex = virtualRepeat.lastViewIndex();
       expect(firstViewIndex).toBe(88, 'repeat._firstViewIndex() 1');
       // it depends on some condition, start index will be calculated differently.
       // todo: fix this to have deterministic behavior
@@ -388,9 +388,9 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
       await waitForFrames(2);
       expect(spy.calls.count()).toBe(2, '@scroll 2 end -> start');
       expect(viewModel.items.length).toBe(100, 'items.length 3');
-      virtualRepeatFirst = virtualRepeat._first;
-      firstViewIndex = virtualRepeat._firstViewIndex();
-      lastViewIndex = virtualRepeat._lastViewIndex();
+      virtualRepeatFirst = virtualRepeat.$first;
+      firstViewIndex = virtualRepeat.firstViewIndex();
+      lastViewIndex = virtualRepeat.lastViewIndex();
       expect(firstViewIndex).toBe(0, 'repeat._firstViewIndex() 2');
       expect(lastViewIndex).toBe(11, 'repeat._lastViewIndex() 2');
       validateScrolledState(virtualRepeat, viewModel, itemHeight);

@@ -85,7 +85,7 @@ export function validateScrolledState(virtualRepeat: VirtualRepeat, viewModel: I
   }
 
   if (!Array.isArray(viewModel.items) || viewModel.items.length < 0) {
-    expect(virtualRepeat._first).toBe(0, `${extraTitle}repeat._first === 0 <when 0 | null | undefined>`);
+    expect(virtualRepeat.$first).toBe(0, `${extraTitle}repeat._first === 0 <when 0 | null | undefined>`);
     expect(virtualRepeat.viewCount()).toBe(0, `${extraTitle}items.length === 0 | null | undefined`);
     return;
   }
@@ -160,14 +160,14 @@ export async function scrollToStart(virtualRepeat: VirtualRepeat, insuranceTime 
  * Scroll a virtual repeat scroller element to bottom
  */
 export async function scrollToEnd(virtualRepeat: VirtualRepeat, insuranceTime = 5): Promise<void> {
-  let element = virtualRepeat._fixedHeightContainer ? virtualRepeat.scrollerEl : (document.scrollingElement || document.documentElement);
+  let element = virtualRepeat.fixedHeightContainer ? virtualRepeat.scrollerEl : (document.scrollingElement || document.documentElement);
   element.scrollTop = element.scrollHeight;
   createScrollEvent(element);
   await ensureScrolled(insuranceTime);
 }
 
 export async function scrollToIndex(virtualRepeat: VirtualRepeat, itemIndex: number): Promise<void> {
-  let element = virtualRepeat._fixedHeightContainer ? virtualRepeat.scrollerEl : (document.scrollingElement || document.documentElement);
+  let element = virtualRepeat.fixedHeightContainer ? virtualRepeat.scrollerEl : (document.scrollingElement || document.documentElement);
   element.scrollTop = virtualRepeat.itemHeight * (itemIndex + 1);
   createScrollEvent(element);
   await ensureScrolled();

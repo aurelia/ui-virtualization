@@ -40,7 +40,7 @@ export class NullVirtualRepeatStrategy extends NullRepeatStrategy implements IVi
 
   instanceChanged(repeat: VirtualRepeat): void {
     repeat.removeAllViews(/**return to cache?*/true, /**skip animation?*/false);
-    repeat._resetCalculation();
+    repeat.resetCalculation();
   }
 
   remeasure(repeat: VirtualRepeat): void {/*empty*/}

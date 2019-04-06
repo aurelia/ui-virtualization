@@ -196,8 +196,8 @@ describe('vr-integration.scrolling.spec.ts', () => {
       for (let i = 0; 50 > i; i += 7) {
         scrollCtEl.scrollTop = secondRepeatStart + i;
         await waitForNextFrame();
-        expect(virtualRepeat._topBufferHeight).toEqual(100 * 50 - (500 / 50 + 1) * 2 * 50, 'height:repeat1.topBuffer');
-        expect(virtualRepeat._bottomBufferHeight).toEqual(0, 'height:repeat1.botBuffer');
+        expect(virtualRepeat.topBufferHeight).toEqual(100 * 50 - (500 / 50 + 1) * 2 * 50, 'height:repeat1.topBuffer');
+        expect(virtualRepeat.bottomBufferHeight).toEqual(0, 'height:repeat1.botBuffer');
         expect(secondRepeat.view(0).bindingContext.item).toEqual('item0');
         // todo: more validation of scrolled state here
       }
@@ -393,7 +393,7 @@ describe('vr-integration.scrolling.spec.ts', () => {
         const minViewsRequired = calcMinViewsRequired(scrollerHeight, itemHeight);
         const maxViewsRequired = minViewsRequired * 2;
         let expected_first_index = 100 - maxViewsRequired;
-        expect(virtualRepeat._first).toBe(expected_first_index, '@scroll bottom -> repeat._first 1');
+        expect(virtualRepeat.$first).toBe(expected_first_index, '@scroll bottom -> repeat._first 1');
 
         const maxScrollTop = scroller_el.scrollTop;
         // only minViewsRequired > i because by default
@@ -401,7 +401,7 @@ describe('vr-integration.scrolling.spec.ts', () => {
         for (let i = 0; minViewsRequired >= i; ++i) {
           scroller_el.scrollTop = maxScrollTop - i * itemHeight;
           await waitForNextFrame();
-          expect(virtualRepeat._first).toBe(expected_first_index, '@scroll ⬆ -> repeat._first 2:' + i);
+          expect(virtualRepeat.$first).toBe(expected_first_index, '@scroll ⬆ -> repeat._first 2:' + i);
         }
       });
     });

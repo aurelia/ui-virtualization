@@ -1,7 +1,7 @@
 import { ICollectionObserverSplice, mergeSplice } from 'aurelia-binding';
 import { ViewSlot } from 'aurelia-templating';
 import { ArrayRepeatStrategy, createFullOverrideContext } from 'aurelia-templating-resources';
-import { IView, IVirtualRepeatStrategy, VirtualizationCalculation, IScrollerInfo } from './interfaces';
+import { IView, IVirtualRepeatStrategy, VirtualizationCalculation, IScrollerInfo, IVirtualRepeater } from './interfaces';
 import {
   Math$abs,
   Math$floor,
@@ -14,17 +14,22 @@ import { VirtualRepeat } from './virtual-repeat';
 import { getDistanceToParent, hasOverflowScroll, calcScrollHeight, calcOuterHeight } from './utilities-dom';
 import { htmlElement } from './constants';
 
+interface IArrayVirtualRepeater extends IVirtualRepeater {
+  __queuedSplices: ICollectionObserverSplice[];
+  __array: any[];
+}
+
 /**
  * A strategy for repeating a template over an array.
  */
 export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements IVirtualRepeatStrategy {
 
-  createFirstRow(repeat: VirtualRepeat): IView {
+  createFirstRow(repeat: IVirtualRepeater): IView {
     const overrideContext = createFullOverrideContext(repeat, repeat.items[0], 0, 1);
     return repeat.addView(overrideContext.bindingContext, overrideContext);
   }
 
-  initCalculation(repeat: VirtualRepeat, items: any[]): VirtualizationCalculation {
+  initCalculation(repeat: IVirtualRepeater, items: any[]): VirtualizationCalculation {
     const itemCount = items.length;
     // when there is no item, bails immediately
     // and return false to notify calculation finished unsuccessfully
@@ -38,8 +43,8 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     if (itemCount > 0 && existingViewCount === 0) {
       this.createFirstRow(repeat);
     }
-    const isFixedHeightContainer = repeat._fixedHeightContainer = hasOverflowScroll(containerEl);
-    const firstView = repeat._firstView();
+    const isFixedHeightContainer = repeat.fixedHeightContainer = hasOverflowScroll(containerEl);
+    const firstView = repeat.firstView();
     const itemHeight = calcOuterHeight(firstView.firstChild as Element);
     // when item height is 0, bails immediately
     // and return false to notify calculation has finished unsuccessfully
@@ -57,9 +62,9 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     return VirtualizationCalculation.has_sizing | VirtualizationCalculation.observe_scroller;
   }
 
-  onAttached(repeat: VirtualRepeat): void {
+  onAttached(repeat: IVirtualRepeater): void {
     if (repeat.items.length < repeat.minViewsRequired) {
-      repeat._getMore(0, /*is near top?*/true, this.isNearBottom(repeat, repeat._lastViewIndex()), /*force?*/true);
+      repeat.getMore(0, /*is near top?*/true, this.isNearBottom(repeat, repeat.lastViewIndex()), /*force?*/true);
     }
   }
 
@@ -98,22 +103,22 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     return [firstVisibleIndex, lastVisibleIndex];
   }
 
-  updateBuffers(repeat: VirtualRepeat, firstIndex: number): void {
+  updateBuffers(repeat: IVirtualRepeater, firstIndex: number): void {
     const itemHeight = repeat.itemHeight;
     const itemCount = repeat.items.length;
-    repeat._topBufferHeight = firstIndex * itemHeight;
-    repeat._bottomBufferHeight = (itemCount - firstIndex - repeat.viewCount()) * itemHeight;
-    repeat._updateBufferElements(/*skip update?*/true);
+    repeat.topBufferHeight = firstIndex * itemHeight;
+    repeat.bottomBufferHeight = (itemCount - firstIndex - repeat.viewCount()) * itemHeight;
+    repeat.updateBufferElements(/*skip update?*/true);
   }
 
-  isNearTop(repeat: VirtualRepeat, firstIndex: number): boolean {
+  isNearTop(repeat: IVirtualRepeater, firstIndex: number): boolean {
     const itemCount = repeat.items.length;
     return itemCount > 0
       ? firstIndex <= repeat.edgeDistance
       : false;
   }
 
-  isNearBottom(repeat: VirtualRepeat, lastIndex: number): boolean {
+  isNearBottom(repeat: IVirtualRepeater, lastIndex: number): boolean {
     const itemCount = repeat.items.length;
     return lastIndex === -1
       ? true
@@ -129,9 +134,10 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
    * @param items The new array instance.
    * @param firstIndex The index of first active view. First is a required argument, only ? for valid poly
    */
-  instanceChanged(repeat: VirtualRepeat, items: any[], first?: number): void {
+  instanceChanged(repeat: IVirtualRepeater, items: any[], first?: number): void {
     if (this._inPlaceProcessItems(repeat, items, first)) {
-      this._remeasure(repeat, repeat.itemHeight, repeat.minViewsRequired * 2, items.length, repeat._first);
+      // using repeat._first instead of first from argument to use latest first index
+      this._remeasure(repeat, repeat.itemHeight, repeat.minViewsRequired * 2, items.length, repeat.$first);
     }
   }
 
@@ -142,7 +148,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
    * @param array The modified array.
    * @param splices Records of array changes.
    */
-  instanceMutated(repeat: VirtualRepeat, array: any[], splices: ICollectionObserverSplice[]): void {
+  instanceMutated(repeat: IVirtualRepeater, array: any[], splices: ICollectionObserverSplice[]): void {
     this._standardProcessInstanceMutated(repeat, array, splices);
   }
 
@@ -152,11 +158,12 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
    * @returns `false` to signal there should be no remeasurement
    * @internal
    */
-  _inPlaceProcessItems(repeat: VirtualRepeat, items: any[], firstIndex: number): boolean {
+  _inPlaceProcessItems($repeat: IVirtualRepeater, items: any[], firstIndex: number): boolean {
+    const repeat = $repeat as IArrayVirtualRepeater;
     const currItemCount = items.length;
     if (currItemCount === 0) {
       repeat.removeAllViews(/*return to cache?*/true, /*skip animation?*/false);
-      repeat._resetCalculation();
+      repeat.resetCalculation();
       repeat.__queuedSplices = repeat.__array = undefined;
       return false;
     }
@@ -189,7 +196,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
       firstIndex = Math$max(0, currItemCount - realViewsCount);
     }
 
-    repeat._first = firstIndex;
+    repeat.$first = firstIndex;
     // re-evaluate bindings on existing views.
     for (let i = 0; i < realViewsCount; i++) {
       const currIndex = i + firstIndex;
@@ -228,7 +235,8 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
   }
 
   /**@internal */
-  _standardProcessInstanceMutated(repeat: VirtualRepeat, array: Array<any>, splices: ICollectionObserverSplice[]): void {
+  _standardProcessInstanceMutated($repeat: IVirtualRepeater, array: Array<any>, splices: ICollectionObserverSplice[]): void {
+    const repeat = $repeat as IArrayVirtualRepeater;
     if (repeat.__queuedSplices) {
       for (let i = 0, ii = splices.length; i < ii; ++i) {
         const { index, removed, addedCount } = splices[i];
@@ -239,7 +247,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     }
     if (array.length === 0) {
       repeat.removeAllViews(/*return to cache?*/true, /*skip animation?*/false);
-      repeat._resetCalculation();
+      repeat.resetCalculation();
       repeat.__queuedSplices = repeat.__array = undefined;
       return;
     }
@@ -270,8 +278,8 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
    *  - Each add cause increase in buffer heights, or a real view insertion, based on index
    * @internal
    */
-  _runSplices(repeat: VirtualRepeat, newArray: any[], splices: ICollectionObserverSplice[]): any {
-    const firstIndex = repeat._first;
+  _runSplices(repeat: IVirtualRepeater, newArray: any[], splices: ICollectionObserverSplice[]): any {
+    const firstIndex = repeat.$first;
     // total remove count and total added count are used to determine original size of collection
     // before mutation happens, also can be used to determine some optmizable cases of mutation
     // such as case where all mutations happen after last visible view index
@@ -301,7 +309,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     // if all splices removal are followed by same amount of add,
     // optimise by just replacing affected visible views
     if (allSplicesAreInplace) {
-      const lastIndex = repeat._lastViewIndex();
+      const lastIndex = repeat.lastViewIndex();
       const repeatViewSlot = repeat.viewSlot;
       for (i = 0; spliceCount > i; i++) {
         splice = splices[i];
@@ -334,7 +342,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     // there is no base to calculate mutation
     // treat it like an instance changed and bail
     if (originalSize === 0 && itemHeight === 0) {
-      repeat._resetCalculation();
+      repeat.resetCalculation();
       repeat.itemsChanged();
       return;
     }
@@ -343,12 +351,12 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     // all splices happens after last index of the repeat, and the repeat has already filled up the viewport
     // in this case, no visible view is needed to be updated/moved/removed.
     // only need to update bottom buffer
-    const lastViewIndex = repeat._lastViewIndex();
+    const lastViewIndex = repeat.lastViewIndex();
     const all_splices_are_after_view_port = currViewCount > repeat.minViewsRequired && splices.every(s => s.index > lastViewIndex);
 
     if (all_splices_are_after_view_port) {
-      repeat._bottomBufferHeight = Math$max(0, newArraySize - firstIndex - currViewCount) * itemHeight;
-      repeat._updateBufferElements(true);
+      repeat.bottomBufferHeight = Math$max(0, newArraySize - firstIndex - currViewCount) * itemHeight;
+      repeat.updateBufferElements(true);
     }
     // mutation happens somewhere in middle of the visible viewport
     // or before the viewport. In any case, it will shift first index around
@@ -421,12 +429,12 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
       }
       const newBotBufferItemCount = Math$max(0, newArraySize - newTopBufferItemCount - newViewCount);
 
-      repeat._first = firstIndexAfterMutation;
+      repeat.$first = firstIndexAfterMutation;
       // repeat._previousFirst = firstIndex;
       // repeat._lastRebind = firstIndexAfterMutation + newViewCount;
-      repeat._topBufferHeight = newTopBufferItemCount * itemHeight;
-      repeat._bottomBufferHeight = newBotBufferItemCount * itemHeight;
-      repeat._updateBufferElements(/*skip update?*/true);
+      repeat.topBufferHeight = newTopBufferItemCount * itemHeight;
+      repeat.bottomBufferHeight = newBotBufferItemCount * itemHeight;
+      repeat.updateBufferElements(/*skip update?*/true);
     }
 
     // step 1 of mutation handling could shift the scroller scroll position
@@ -436,8 +444,8 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     this._remeasure(repeat, itemHeight, newViewCount, newArraySize, firstIndexAfterMutation);
   }
 
-  remeasure(repeat: VirtualRepeat): void {
-    this._remeasure(repeat, repeat.itemHeight, repeat.viewCount(), repeat.items.length, repeat._firstViewIndex());
+  remeasure(repeat: IVirtualRepeater): void {
+    this._remeasure(repeat, repeat.itemHeight, repeat.viewCount(), repeat.items.length, repeat.firstViewIndex());
   }
 
   /**
@@ -452,7 +460,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
    *
    * @internal
    */
-  _remeasure(repeat: VirtualRepeat, itemHeight: number, newViewCount: number, newArraySize: number, firstIndex: number): void {
+  _remeasure(repeat: IVirtualRepeater, itemHeight: number, newViewCount: number, newArraySize: number, firstIndex: number): void {
     const scrollerInfo = repeat.getScrollerInfo();
     const topBufferDistance = getDistanceToParent(repeat.topBufferEl, scrollerInfo.scroller);
     const realScrolltop = Math$max(0, scrollerInfo.scrollTop === 0
@@ -469,16 +477,16 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     }
     const top_buffer_item_count_after_scroll_adjustment = first_index_after_scroll_adjustment;
     const bot_buffer_item_count_after_scroll_adjustment = Math$max(0, newArraySize - top_buffer_item_count_after_scroll_adjustment - newViewCount);
-    repeat._first = first_index_after_scroll_adjustment;
+    repeat.$first = first_index_after_scroll_adjustment;
     // repeat._previousFirst = firstIndex;
     // repeat._isAtTop = first_index_after_scroll_adjustment === 0;
     // repeat._isLastIndex = bot_buffer_item_count_after_scroll_adjustment === 0;
-    repeat._topBufferHeight = top_buffer_item_count_after_scroll_adjustment * itemHeight;
-    repeat._bottomBufferHeight = bot_buffer_item_count_after_scroll_adjustment * itemHeight;
+    repeat.topBufferHeight = top_buffer_item_count_after_scroll_adjustment * itemHeight;
+    repeat.bottomBufferHeight = bot_buffer_item_count_after_scroll_adjustment * itemHeight;
     // repeat._handlingMutations = false;
-    // prevent scroller update
-    repeat.revertScrollCheckGuard();
-    repeat._updateBufferElements();
+    // ensure scroller scroll is handled
+    (repeat as VirtualRepeat).revertScrollCheckGuard();
+    repeat.updateBufferElements();
     updateAllViews(repeat, 0);
   }
 }

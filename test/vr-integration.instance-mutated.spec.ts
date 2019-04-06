@@ -240,7 +240,7 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
       expect(virtualRepeat.items.length).toEqual(24, 'virtualRepeat.items.length');
       expect(virtualRepeat.element.parentElement.scrollHeight).toEqual(100 * 24, 'scrollHeight 2');
       expect(virtualRepeat.element.parentElement.scrollTop).toEqual(100 * (24 - 5), 'scrollTop 2');
-      expect(virtualRepeat._first).toBe(1000 - (1000 - virtualRepeat.minViewsRequired * 2), 'virtualRepeat._first 1');
+      expect(virtualRepeat.$first).toBe(1000 - (1000 - virtualRepeat.minViewsRequired * 2), 'virtualRepeat._first 1');
       validateScrolledState(virtualRepeat, viewModel, itemHeight);
     });
 
@@ -329,7 +329,7 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
       await waitForNextFrame();
       expect(scrollCount).toBe(1, '@scroll 1');
       expect(virtualRepeat.element.parentElement.scrollTop).toBe(100 * 995, 'anchor.parent.scrollTop 1');
-      expect(virtualRepeat._first).toBe(988, 'repeat._first 1');
+      expect(virtualRepeat.$first).toBe(988, 'repeat._first 1');
 
       viewModel.items.splice(5, 990, {}, {});
       const hasValueConverter = extraResources.length > 0;
@@ -338,18 +338,18 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
         expect(virtualRepeat.element.parentElement.scrollHeight).toBe(100 * 12, '| vc >> scroller.scrollHeight 2');
         expect(virtualRepeat.element.parentElement.scrollTop).toBe(100 * (12 - 500 / 100), '| vc >> scroller.scrollTop 2');
         expect(scrollCount).toBeGreaterThanOrEqual(2, '| vc >> @scroll 3');
-        expect(virtualRepeat._first).toBe(0, '| vc >> repeat._first 2');
+        expect(virtualRepeat.$first).toBe(0, '| vc >> repeat._first 2');
         validateScrolledState(virtualRepeat, viewModel, itemHeight);
       } else {
         expect(scrollCount).toBe(1, '@scroll 2');
-        expect(virtualRepeat._first).toBe(988, 'repeat._first 2');
+        expect(virtualRepeat.$first).toBe(988, 'repeat._first 2');
         expect(virtualRepeat.items.length).toBe(12, 'items.length 1');
         expect(virtualRepeat.element.parentElement.scrollTop).toBe(100 * 995, 'scroller.scrollTop 1');
         await waitForNextFrame();
         expect(virtualRepeat.element.parentElement.scrollHeight).toBe(100 * 12, 'scroller.scrollHeight 2');
         expect(virtualRepeat.element.parentElement.scrollTop).toBe(100 * (12 - 500 / 100), 'scroller.scrollTop 2');
         expect(scrollCount).toBe(2, '@scroll 3');
-        expect(virtualRepeat._first).toBe(0, 'repeat._first 3');
+        expect(virtualRepeat.$first).toBe(0, 'repeat._first 3');
         validateScrolledState(virtualRepeat, viewModel, itemHeight);
       }
       virtualRepeat.element.parentElement.onscroll = null;
@@ -387,7 +387,7 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
         expect(virtualRepeat.element.parentElement.scrollHeight).toBe(100 * 13, '| vc >> scroller.scrollHeight 1');
         expect(virtualRepeat.element.parentElement.scrollTop).toBe(100 * (13 - 500 / 100), '| vc >> scroller.scrollTop 2');
 
-        expect(virtualRepeat._first).toBe(13 - (5 + 1) * 2, '| vc >> repeat._first 1');
+        expect(virtualRepeat.$first).toBe(13 - (5 + 1) * 2, '| vc >> repeat._first 1');
         validateScrolledState(virtualRepeat, viewModel, itemHeight);
       } else {
         expect(scrollCount).toBe(2, '@scroll 2');
