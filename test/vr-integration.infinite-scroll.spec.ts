@@ -274,7 +274,7 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
 
     it([
       title,
-      'Initial 30 items',
+      'Initial 100 items',
       ' -- scroll down + get 100 more',
       ' -- wait',
       ' -- scroll up + get 100 more',
@@ -310,9 +310,9 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
       expect(viewModel.items.length).toBe(200, 'items.length 2');
       let firstViewIndex = virtualRepeat._firstViewIndex();
       let lastViewIndex = virtualRepeat._lastViewIndex();
-      expect(firstViewIndex).toBeGreaterThanOrEqual(100 - 1 - 5, 'repeat._firstViewIndex() 1');
-      expect(firstViewIndex).toBeLessThan(200 - 1 - 5, 'repeat._firstViewIndex < bottom');
-      expect(lastViewIndex).toBeGreaterThanOrEqual(100 - 1 - 5 + 12, 'repeat._lastViewIndex() 1');
+      expect(firstViewIndex).toBeGreaterThanOrEqual(100 - (5 + 1) * 2, 'repeat._firstViewIndex() 1');
+      expect(firstViewIndex).toBeLessThan(200 - (5 + 1) * 2, 'repeat._firstViewIndex < bottom');
+      expect(lastViewIndex).toBeGreaterThanOrEqual(100, 'repeat._lastViewIndex() 1');
       validateScrolledState(virtualRepeat, viewModel, itemHeight);
 
       scrollRepeat(virtualRepeat, 'start');

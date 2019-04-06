@@ -43,14 +43,15 @@ import {
   IViewSlot,
   IScrollerInfo,
   VirtualizationCalculation,
-  VirtualizationEvents
+  VirtualizationEvents,
+  IElement
 } from './interfaces';
 import {
   getResizeObserverClass,
   ResizeObserver,
   DOMRectReadOnly
 } from './resize-observer';
-import { htmlElement } from './constants';
+import { htmlElement, $raf } from './constants';
 
 const enum VirtualRepeatCallContext {
   handleCollectionMutated = 'handleCollectionMutated',
@@ -212,11 +213,6 @@ export class VirtualRepeat extends AbstractRepeater {
   /**@internal */
   private isOneTime: boolean;
 
-  /**
-   * Snapshot of previous scroller info. Used to determine action against curr scroller info
-   * @internal
-   */
-  _prevScrollerInfo: IScrollerInfo;
 
   /**
    * Snapshot of current scroller info. Used to determine action against previous scroller info
@@ -348,7 +344,7 @@ export class VirtualRepeat extends AbstractRepeater {
     this.taskQueue = observerLocator.taskQueue;
     this.strategyLocator = collectionStrategyLocator;
     this.templateStrategyLocator = templateStrategyLocator;
-    this.edgeDistance = 5;
+    this.edgeDistance = 0;
     this.sourceExpression = getItemsSourceExpression(this.instruction, 'virtual-repeat.for');
     this.isOneTime = isOneTime(this.sourceExpression);
     this.itemHeight
@@ -381,7 +377,7 @@ export class VirtualRepeat extends AbstractRepeater {
     this.bottomBufferEl = bottomBufferEl;
     this.itemsChanged();
     // take a snapshot of current scrolling information
-    this._currScrollerInfo = this._prevScrollerInfo = this.getScrollerInfo();
+    this._currScrollerInfo = this.getScrollerInfo();
 
     if (isFixedHeightContainer) {
       containerEl.addEventListener('scroll', scrollListener);
@@ -499,7 +495,7 @@ export class VirtualRepeat extends AbstractRepeater {
       $clearInterval(this._sizeInterval);
       this._sizeInterval = $setInterval(() => {
         if (this.items) {
-          const firstView = this._firstView() || this.strategy.createFirstItem(this);
+          const firstView = this._firstView() || this.strategy.createFirstRow(this);
           const newCalcSize = calcOuterHeight(firstView.firstChild as Element);
           if (newCalcSize > 0) {
             $clearInterval(this._sizeInterval);
@@ -781,25 +777,29 @@ export class VirtualRepeat extends AbstractRepeater {
       if (!this._calledGetMore) {
         const executeGetMore = () => {
           this._calledGetMore = true;
+          const revertCalledGetMore = () => {
+            this._calledGetMore = false;
+          };
           const firstView = this._firstView();
+          if (firstView === null) {
+            revertCalledGetMore();
+            return;
+          }
+          const firstViewElement = firstView.firstChild as IElement;
           const scrollNextAttrName = 'infinite-scroll-next';
-          const func: string | (BindingExpression & { sourceExpression: Expression }) = (firstView
-            && firstView.firstChild
-            && firstView.firstChild.au
-            && firstView.firstChild.au[scrollNextAttrName])
-              ? firstView.firstChild.au[scrollNextAttrName].instruction.attributes[scrollNextAttrName]
+          const func: string | (BindingExpression & { sourceExpression: Expression }) =
+            firstViewElement
+            && firstViewElement.au
+            && firstViewElement.au[scrollNextAttrName]
+              ? firstViewElement.au[scrollNextAttrName].instruction.attributes[scrollNextAttrName]
               : undefined;
-          // const topIndex = this._first;
-          // const isAtBottom = this._bottomBufferHeight === 0;
-          // const isAtTop = this._isAtTop;
 
           if (func === undefined) {
             // Still reset `_calledGetMore` flag as if it was invoked
             // though this should not happen as presence of infinite-scroll-next attribute
             // will make the value at least be an empty string
             // keeping this logic here for future enhancement/evolution
-            this._calledGetMore = false;
-            return null;
+            revertCalledGetMore();
           } else {
             const scrollContext: IScrollNextScrollContext = {
               topIndex: topIndex,
@@ -814,14 +814,13 @@ export class VirtualRepeat extends AbstractRepeater {
               const funcCall = bindingContext[getMoreFuncName];
 
               if (typeof funcCall === 'function') {
+                revertCalledGetMore();
                 const result = funcCall.call(bindingContext, topIndex, isNearBottom, isNearTop);
-                if (!(result instanceof Promise)) {
-                  // Reset for the next time
-                  this._calledGetMore = false;
-                } else {
+                if (result instanceof Promise) {
+                  this._calledGetMore = true;
                   return result.then(() => {
                     // Reset for the next time
-                    this._calledGetMore = false;
+                    revertCalledGetMore();
                   });
                 }
               } else {
@@ -829,16 +828,15 @@ export class VirtualRepeat extends AbstractRepeater {
               }
             } else if (func.sourceExpression) {
               // Reset for the next time
-              this._calledGetMore = false;
+              revertCalledGetMore();
               return func.sourceExpression.evaluate(this.scope);
             } else {
               throw new Error(`'${scrollNextAttrName}' must be a function or evaluate to one`);
             }
-            return null;
           }
         };
 
-        requestAnimationFrame(executeGetMore);
+        $raf(executeGetMore);
       }
     }
   }
@@ -849,7 +847,7 @@ export class VirtualRepeat extends AbstractRepeater {
     this.bottomBufferEl.style.height = `${this._bottomBufferHeight}px`;
     if (skipUpdate) {
       this._ticking = true;
-      requestAnimationFrame(this.revertScrollCheckGuard);
+      $raf(this.revertScrollCheckGuard);
     }
   }
 
@@ -889,7 +887,6 @@ export class VirtualRepeat extends AbstractRepeater {
    * @internal
    */
   _observeScroller(scrollerEl: HTMLElement): void {
-    const $raf = requestAnimationFrame;
     // using `newRect` paramter to check if this size change handler is still the most recent update
     // only invoke items changed if it is
     // this is to ensure items changed calls are not invoked unncessarily

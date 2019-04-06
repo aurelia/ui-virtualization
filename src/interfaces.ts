@@ -1,6 +1,6 @@
 import { Binding, Scope, ICollectionObserverSplice, ObserverLocator, InternalCollectionObserver, OverrideContext } from 'aurelia-binding';
 import { TaskQueue } from 'aurelia-task-queue';
-import { View, ViewSlot } from 'aurelia-templating';
+import { View, ViewSlot, Controller } from 'aurelia-templating';
 import { RepeatStrategy } from 'aurelia-templating-resources';
 import { VirtualRepeat } from './virtual-repeat';
 
@@ -48,7 +48,7 @@ export interface IVirtualRepeatStrategy extends RepeatStrategy {
   /**
    * create first item to calculate the heights
    */
-  createFirstItem(repeat: VirtualRepeat): IView;
+  createFirstRow(repeat: VirtualRepeat): IView;
 
   /**
    * Calculate required variables for a virtual repeat instance to operate properly
@@ -195,6 +195,13 @@ export const enum VirtualizationCalculation {
   reset             = 0b0_00001,
   has_sizing        = 0b0_00010,
   observe_scroller  = 0b0_00100
+}
+
+export interface IElement {
+  au: {
+    controller: Controller;
+    [key: string]: any;
+  };
 }
 
 /**

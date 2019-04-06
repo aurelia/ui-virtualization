@@ -324,7 +324,7 @@ describe('vr-integration.spec.ts', () => {
 
   describe('value converters', () => {
     let component;
-    let virtualRepeat;
+    let virtualRepeat: VirtualRepeat;
     let viewModel;
     let create;
     let items;

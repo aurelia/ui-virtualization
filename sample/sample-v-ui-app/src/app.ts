@@ -1,5 +1,5 @@
 import { Router, RouterConfiguration } from 'aurelia-router';
-import { PLATFORM } from 'aurelia-framework';
+import { PLATFORM, View } from 'aurelia-framework';
 
 export class App {
   router: Router;
@@ -77,6 +77,10 @@ export class App {
 
     this.router = router;
     window['app'] = this;
+  }
+
+  created(_: any, view: View) {
+    window['view'] = view;
   }
 
   window = window;

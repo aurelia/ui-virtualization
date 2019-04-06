@@ -23,7 +23,8 @@ export class NullVirtualRepeatStrategy extends NullRepeatStrategy implements IVi
   initCalculation(repeat: VirtualRepeat, items: any): VirtualizationCalculation {
     repeat.itemHeight
       = repeat.elementsInView
-      = repeat._viewsLength = 0;
+      = repeat._viewsLength
+      = 0;
     // null/undefined virtual repeat strategy does not require any calculation
     // returning has_sizing to signal that
     return VirtualizationCalculation.has_sizing;
@@ -31,7 +32,7 @@ export class NullVirtualRepeatStrategy extends NullRepeatStrategy implements IVi
 
   // a violation of base contract, won't work in strict mode
   // todo: fix this API design
-  createFirstItem(): IView | null {
+  createFirstRow(): IView | null {
     return null;
   }
 

@@ -11,7 +11,9 @@
           </tr>
         </thead>
         <tbody>
-          <tr virtual-repeat.for="person of people" infinite-scroll-next.call="push30($scrollContext)">
+          <tr virtual-repeat.for="person of people"
+            infinite-scroll-next.call="push30($scrollContext)"
+            class="i-${$index}">
             <td>${$index}</td>
             <td>${person.fname}</td>
             <td>${person.lname}</td>

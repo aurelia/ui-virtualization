@@ -18,7 +18,7 @@ import { htmlElement } from './constants';
  */
 export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements IVirtualRepeatStrategy {
 
-  createFirstItem(repeat: VirtualRepeat): IView {
+  createFirstRow(repeat: VirtualRepeat): IView {
     const overrideContext = createFullOverrideContext(repeat, repeat.items[0], 0, 1);
     return repeat.addView(overrideContext.bindingContext, overrideContext);
   }
@@ -35,7 +35,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     const containerEl = repeat.getScroller();
     const existingViewCount = repeat.viewCount();
     if (itemCount > 0 && existingViewCount === 0) {
-      this.createFirstItem(repeat);
+      this.createFirstRow(repeat);
     }
     const isFixedHeightContainer = repeat._fixedHeightContainer = hasOverflowScroll(containerEl);
     const firstView = repeat._firstView();
@@ -117,7 +117,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     return lastIndex === -1
       ? true
       : itemCount > 0
-        ? lastIndex >= (itemCount - repeat.edgeDistance)
+        ? lastIndex >= (itemCount - 1 - repeat.edgeDistance)
         : false;
   }
 
@@ -349,6 +349,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     // only need to update bottom buffer
     const lastViewIndex = repeat._lastViewIndex();
     const all_splices_are_after_view_port = currViewCount > repeat.elementsInView && splices.every(s => s.index > lastViewIndex);
+
     if (all_splices_are_after_view_port) {
       repeat._bottomBufferHeight = Math$max(0, newArraySize - firstIndex - currViewCount) * itemHeight;
       repeat._updateBufferElements(true);
