@@ -22,6 +22,9 @@
     "type": "git",
     "url": "http://github.com/aurelia/ui-virtualization"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "cd sample/sample-v-ui-app && npm run dev",
     "build:demo": "cd sample/sample-v-ui-app && npm run build:demo",
