@@ -2,7 +2,6 @@ import { updateOverrideContext } from 'aurelia-templating-resources';
 import { VirtualRepeat } from './virtual-repeat';
 import { IView } from './interfaces';
 
-
 /**
 * Update the override context.
 * @param startIndex index in collection where to start updating.
@@ -60,9 +59,13 @@ export const rebindAndMoveView = (repeat: VirtualRepeat, view: IView, index: num
   }
 };
 
-
-export const getElementDistanceToBottomViewPort = (element: Element): number => {
-  return document.documentElement.clientHeight - element.getBoundingClientRect().bottom;
+/**
+ * Calculate min number of views required to fill up the viewport based on viewport height and item height
+ */
+export const calcMinViewsRequired = (scrollerHeight: number, itemHeight: number) => {
+  // extra 1 item to make sure it always fill up the viewport
+  // in case first item is scroll up but not enough to completely pushed out of the viewport
+  return Math$floor(scrollerHeight / itemHeight) + 1;
 };
 
 export const Math$abs = Math.abs;

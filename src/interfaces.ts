@@ -185,7 +185,7 @@ export interface IOverrideContext<T> extends OverrideContext {
  */
 export interface IScrollerInfo {
   scroller: HTMLElement;
-  scrollHeight: number;
+  // scrollHeight: number;
   scrollTop: number;
   height: number;
 }

@@ -7,7 +7,8 @@ import {
   Math$floor,
   Math$max,
   Math$min,
-  updateAllViews
+  updateAllViews,
+  calcMinViewsRequired
 } from './utilities';
 import { VirtualRepeat } from './virtual-repeat';
 import { getDistanceToParent, hasOverflowScroll, calcScrollHeight, calcOuterHeight } from './utilities-dom';
@@ -51,13 +52,13 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
       ? calcScrollHeight(containerEl)
       : innerHeight;
     // console.log({ scroll_el_height })
-    const elementsInView = repeat.elementsInView = Math$floor(scroll_el_height / itemHeight) + 1;
-    const viewsCount = repeat._viewsLength = elementsInView * 2;
+    const elementsInView = repeat.minViewsRequired = calcMinViewsRequired(scroll_el_height, itemHeight);
+    // const viewsCount = repeat._viewsLength = elementsInView * 2;
     return VirtualizationCalculation.has_sizing | VirtualizationCalculation.observe_scroller;
   }
 
   onAttached(repeat: VirtualRepeat): void {
-    if (repeat.items.length < repeat.elementsInView) {
+    if (repeat.items.length < repeat.minViewsRequired) {
       repeat._getMore(0, /*is near top?*/true, this.isNearBottom(repeat, repeat._lastViewIndex()), /*force?*/true);
     }
   }
@@ -79,7 +80,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
       realScrollTop = pageYOffset - repeat.distanceToTop;
     }
 
-    const realViewCount = repeat._viewsLength;
+    const realViewCount = repeat.minViewsRequired * 2;
 
     // Calculate the index of first view
     // Using Math floor to ensure it has correct space for both small and large calculation
@@ -130,7 +131,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
    */
   instanceChanged(repeat: VirtualRepeat, items: any[], first?: number): void {
     if (this._inPlaceProcessItems(repeat, items, first)) {
-      this._remeasure(repeat, repeat.itemHeight, repeat._viewsLength, items.length, repeat._first);
+      this._remeasure(repeat, repeat.itemHeight, repeat.minViewsRequired * 2, items.length, repeat._first);
     }
   }
 
@@ -159,13 +160,8 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
       repeat.__queuedSplices = repeat.__array = undefined;
       return false;
     }
-    /*
-      Get index of first view is looking at the view which is from the ViewSlot
-      The view slot has not yet been updated with the new list
-      New first has to be the calculated "first" in our view slot, so the first one that's going to be rendered
-        To figure out that one, we're going to have to know where we are in our scrolling so we can know how far down we've gone to show the first view
-        That "first" is calculated and passed into here
-    */
+
+   const max_views_count = repeat.minViewsRequired * 2;
 
     // if the number of items shrinks to less than number of active views
     // remove all unneeded views
@@ -177,11 +173,11 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     // there is situation when container height shrinks
     // the real views count will be greater than new maximum required view count
     // remove all unnecessary view
-    while (realViewsCount > repeat._viewsLength) {
+    while (realViewsCount > max_views_count) {
       realViewsCount--;
       repeat.removeView(realViewsCount, /*return to cache?*/true, /*skip animation?*/false);
     }
-    realViewsCount = Math$min(realViewsCount, repeat._viewsLength);
+    realViewsCount = Math$min(realViewsCount, max_views_count);
 
     const local = repeat.local;
     const lastIndex = currItemCount - 1;
@@ -223,7 +219,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
       repeat.updateBindings(view);
     }
     // add new views
-    const minLength = Math$min(repeat._viewsLength, currItemCount);
+    const minLength = Math$min(max_views_count, currItemCount);
     for (let i = realViewsCount; i < minLength; i++) {
       const overrideContext = createFullOverrideContext(repeat, items[i], i, currItemCount);
       repeat.addView(overrideContext.bindingContext, overrideContext);
@@ -348,7 +344,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     // in this case, no visible view is needed to be updated/moved/removed.
     // only need to update bottom buffer
     const lastViewIndex = repeat._lastViewIndex();
-    const all_splices_are_after_view_port = currViewCount > repeat.elementsInView && splices.every(s => s.index > lastViewIndex);
+    const all_splices_are_after_view_port = currViewCount > repeat.minViewsRequired && splices.every(s => s.index > lastViewIndex);
 
     if (all_splices_are_after_view_port) {
       repeat._bottomBufferHeight = Math$max(0, newArraySize - firstIndex - currViewCount) * itemHeight;
@@ -359,17 +355,17 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     // which requires recalculation of everything
     else {
 
-      let viewsRequiredCount = repeat._viewsLength;
+      let viewsRequiredCount = repeat.minViewsRequired * 2;
       // when max views count required is 0, it's a sign of previous state of this mutation
       // was either reseted, or in unstable state. Should recalculate min & max numbers of views required
       // before processing further
       if (viewsRequiredCount === 0) {
         const scrollerInfo = repeat.getScrollerInfo();
-        const minViewsRequired = Math$floor(scrollerInfo.height / itemHeight) + 1;
+        const minViewsRequired = calcMinViewsRequired(scrollerInfo.height, itemHeight);
         // reassign to min views required
-        repeat.elementsInView = minViewsRequired;
+        repeat.minViewsRequired = minViewsRequired;
         // reassign to max views required
-        viewsRequiredCount = repeat._viewsLength = minViewsRequired * 2;
+        viewsRequiredCount = minViewsRequired * 2;
       }
 
       for (i = 0; spliceCount > i; ++i) {
@@ -383,7 +379,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
       // if array size is less than or equal to number of elements in View
       // the nadjust first index to 0
       // and set view count to new array size as there are not enough item to fill more than required
-      if (newArraySize <= repeat.elementsInView) {
+      if (newArraySize <= repeat.minViewsRequired) {
         firstIndexAfterMutation = 0;
         newViewCount = newArraySize;
       }

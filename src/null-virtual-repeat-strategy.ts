@@ -22,8 +22,8 @@ export class NullVirtualRepeatStrategy extends NullRepeatStrategy implements IVi
 
   initCalculation(repeat: VirtualRepeat, items: any): VirtualizationCalculation {
     repeat.itemHeight
-      = repeat.elementsInView
-      = repeat._viewsLength
+      = repeat.minViewsRequired
+      // = repeat._viewsLength
       = 0;
     // null/undefined virtual repeat strategy does not require any calculation
     // returning has_sizing to signal that

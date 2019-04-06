@@ -356,8 +356,8 @@ describe('vr-integration.resizing.spec.ts', () => {
 
   function assertElementsInView(repeat: VirtualRepeat, ctHeight: number, itemHeight: number, extraTitle: string = ''): void {
     const itemsCount = Array.isArray(repeat.items) ? repeat.items.length : 0;
-    const elementsInView = itemsCount === 0 ? 0 : repeat.elementsInView;
-    const viewsLength = itemsCount === 0 ? 0 : repeat._viewsLength;
+    const elementsInView = itemsCount === 0 ? 0 : repeat.minViewsRequired;
+    const viewsLength = itemsCount === 0 ? 0 : repeat.minViewsRequired * 2;
     const expectedElementsInView = itemsCount === 0
       ? 0
       : itemHeight === 0

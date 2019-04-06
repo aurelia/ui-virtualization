@@ -193,7 +193,7 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
       );
 
       await waitForNextFrame();
-      expect(virtualRepeat._viewsLength).toBe(12, 'repeat._viewsLength');
+      expect(virtualRepeat.minViewsRequired).toBe(6, 'repeat.elementsInView');
       expect(spy.calls.count()).toBe(1, '3 items getNextPage() calls');
       // await waitForNextFrame();
       // expect(spy.calls.count()).toBe(1, '3 items - next frame -- getNextPage() calls');
@@ -217,7 +217,7 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
         $view
       ));
       await waitForNextFrame();
-      expect(virtualRepeat._viewsLength).toBe(12, 'repeat._viewsLength');
+      expect(virtualRepeat.minViewsRequired * 2).toBe(12, 'repeat._viewsLength');
       expect(spy.calls.count()).toBe(1, '4 items getNextPage() calls');
       [firstIndex, isAtBottom, isAtTop] = scrollNextArgs;
       expect(firstIndex).toBe(0, 'scrollNextArgs[0] 2');
@@ -239,7 +239,7 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
         $view
       ));
       await waitForNextFrame();
-      expect(virtualRepeat._viewsLength).toBe(12, 'repeat._viewsLength');
+      expect(virtualRepeat.minViewsRequired * 2).toBe(12, 'repeat._viewsLength');
       expect(spy.calls.count()).toBe(1, '5 items getNextPage() calls');
       [firstIndex, isAtBottom, isAtTop] = scrollNextArgs;
       expect(firstIndex).toBe(0, 'scrollNextArgs[0] 3');
@@ -261,7 +261,7 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
         $view
       ));
       await waitForNextFrame();
-      expect(virtualRepeat._viewsLength).toBe(12, 'repeat._viewsLength');
+      expect(virtualRepeat.minViewsRequired * 2).toBe(12, 'repeat._viewsLength');
       expect(spy.calls.count()).toBe(0, '6 items = 0 getNextPage() calls');
       [firstIndex, isAtBottom, isAtTop] = scrollNextArgs;
       expect(firstIndex).toBe(0, 'scrollNextArgs[0] 4');
@@ -295,7 +295,7 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
         extraResources,
         $view
       );
-      expect(virtualRepeat._viewsLength).toBe(12, 'repeat._viewsLength');
+      expect(virtualRepeat.minViewsRequired * 2).toBe(12, 'repeat._viewsLength');
       expect(spy.calls.count()).toBe(0, 'no getNextPage() calls');
 
       expect(viewModel.items.length).toBe(100, 'items.length 1');
@@ -351,7 +351,7 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
         $view
       );
       expect(scrollNextArgs).toBe(undefined, 'getNextPage() args[]');
-      expect(virtualRepeat._viewsLength).toBe(12, 'repeat._viewsLength');
+      expect(virtualRepeat.minViewsRequired * 2).toBe(12, 'repeat._viewsLength');
       expect(virtualRepeat.viewCount()).toBe(12, 'repeat.viewCount()');
       expect(spy.calls.count()).toBe(0, 'no getNextPage() calls');
 
@@ -431,7 +431,7 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
       );
 
       expect(scrollNextArgs).toBe(undefined, 'getNextPage() args[]');
-      expect(virtualRepeat._viewsLength).toBe(12, 'repeat._viewsLength');
+      expect(virtualRepeat.minViewsRequired * 2).toBe(12, 'repeat._viewsLength');
       expect(virtualRepeat.viewCount()).toBe(12, 'repeat.viewCount()');
       expect(spy.calls.count()).toBe(0, 'no getNextPage() calls 1');
 

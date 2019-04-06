@@ -18,7 +18,7 @@
     style="position: fixed; bottom: 0; right: 0; max-height: 80vh;">
     <let
       virtual-repeat.bind='window.virtualRepeat'
-      view-count-same-max-views-require.bind="virtualRepeat.viewSlot.children.length === (virtualRepeat.elementsInView * 2)"></let>
+      view-count-same-max-views-required.bind="virtualRepeat.viewSlot.children.length === (virtualRepeat.minViewsRequired * 2)"></let>
     <button
       class="btn btn-sm btn-block btn-info flex-shrink-0"
       click.trigger="minimizedMonitor = true">Minimize monitor</button>
@@ -42,17 +42,17 @@
         </tr>
         <tr>
           <td>Active views count</td>
-          <td class="table-${viewCountSameMaxViewsRequire ? 'success' : 'warning'}">${virtualRepeat.viewSlot.children.length}</td>
+          <td class="table-${viewCountSameMaxViewsRequired ? 'success' : 'warning'}">${virtualRepeat.viewSlot.children.length}</td>
         </tr>
         <tr>
-          <td>Max views</td>
-          <td class="table-${viewCountSameMaxViewsRequire ? 'success' : 'warning'}">${virtualRepeat.elementsInView * 2}</td>
+          <td>Max views required</td>
+          <td class="table-${viewCountSameMaxViewsRequired ? 'success' : 'warning'}">${virtualRepeat.minViewsRequired * 2}</td>
         </tr>
         <!-- <tr>
           <td>Last Rebind</td><td>${virtualRepeat._lastRebind}</td> -->
         <tr>
-          <td>Elements In view</td>
-          <td>${virtualRepeat.elementsInView}</td>
+          <td>Min Views Required</td>
+          <td>${virtualRepeat.minViewsRequired}</td>
         </tr>
         <tr>
           <td>First</td><td>${virtualRepeat._first}</td>

@@ -91,12 +91,12 @@ export class VirtualRepeat extends AbstractRepeater {
    */
   _first: number = 0;
 
-  /**
-   * Number of views required to fillup the viewport, and also enough to provide smooth scrolling
-   * Without showing blank space
-   * @internal
-   */
-  _viewsLength = 0;
+  // /**
+  //  * Number of views required to fillup the viewport, and also enough to provide smooth scrolling
+  //  * Without showing blank space
+  //  * @internal
+  //  */
+  // _viewsLength: number = 0;
 
   /**
    * Height of top buffer to properly push the visible rendered list items into right position
@@ -285,7 +285,7 @@ export class VirtualRepeat extends AbstractRepeater {
    * Number indicating minimum elements required to render to fill up the visible viewport
    * @internal
    */
-  elementsInView: number;
+  minViewsRequired: number;
 
   /**
    * collection repeating strategy
@@ -560,7 +560,7 @@ export class VirtualRepeat extends AbstractRepeater {
     const scroller = this.getScroller();
     return {
       scroller: scroller,
-      scrollHeight: scroller.scrollHeight,
+      // scrollHeight: scroller.scrollHeight,
       scrollTop: scroller.scrollTop,
       // height: calcScrollHeight(scroller)
       height: scroller === htmlElement
@@ -572,11 +572,11 @@ export class VirtualRepeat extends AbstractRepeater {
   /**@internal */
   _resetCalculation(): void {
     this._first
-      = this._viewsLength
+      // = this._viewsLength
       = this._topBufferHeight
       = this._bottomBufferHeight
       = this.itemHeight
-      = this.elementsInView = 0;
+      = this.minViewsRequired = 0;
     this._ignoreMutation
       = this._handlingMutations
       = this._ticking = false;
