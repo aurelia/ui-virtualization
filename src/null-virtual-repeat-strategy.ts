@@ -44,4 +44,6 @@ export class NullVirtualRepeatStrategy extends NullRepeatStrategy implements IVi
   }
 
   remeasure(repeat: VirtualRepeat): void {/*empty*/}
+
+  updateAllViews(): void {/*empty*/}
 }

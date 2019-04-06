@@ -1,14 +1,14 @@
 import { ICollectionObserverSplice, mergeSplice } from 'aurelia-binding';
 import { ViewSlot } from 'aurelia-templating';
 import { ArrayRepeatStrategy, createFullOverrideContext } from 'aurelia-templating-resources';
-import { IView, IVirtualRepeatStrategy, VirtualizationCalculation, IScrollerInfo, IVirtualRepeater } from './interfaces';
+import { IView, IVirtualRepeatStrategy, VirtualizationCalculation, IScrollerInfo, IVirtualRepeater, IViewSlot } from './interfaces';
 import {
   Math$abs,
   Math$floor,
   Math$max,
   Math$min,
-  updateAllViews,
-  calcMinViewsRequired
+  calcMinViewsRequired,
+  rebindView
 } from './utilities';
 import { VirtualRepeat } from './virtual-repeat';
 import { getDistanceToParent, hasOverflowScroll, calcScrollHeight, calcOuterHeight } from './utilities-dom';
@@ -444,6 +444,23 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     this._remeasure(repeat, itemHeight, newViewCount, newArraySize, firstIndexAfterMutation);
   }
 
+  updateAllViews(repeat: IVirtualRepeater, startIndex: number): void {
+    const views = (repeat.viewSlot as IViewSlot).children;
+    const viewLength = views.length;
+    const collection = repeat.items as any[];
+
+    const delta = Math$floor(repeat.topBufferHeight / repeat.itemHeight);
+    let collectionIndex = 0;
+    let view: IView;
+
+    for (; viewLength > startIndex; ++startIndex) {
+      collectionIndex = startIndex + delta;
+      view = repeat.view(startIndex);
+      rebindView(repeat, view, collectionIndex, collection);
+      repeat.updateBindings(view);
+    }
+  }
+
   remeasure(repeat: IVirtualRepeater): void {
     this._remeasure(repeat, repeat.itemHeight, repeat.viewCount(), repeat.items.length, repeat.firstViewIndex());
   }
@@ -487,6 +504,6 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     // ensure scroller scroll is handled
     (repeat as VirtualRepeat).revertScrollCheckGuard();
     repeat.updateBufferElements();
-    updateAllViews(repeat, 0);
+    this.updateAllViews(repeat, 0);
   }
 }

@@ -22,23 +22,6 @@ export const updateVirtualOverrideContexts = (repeat: IVirtualRepeater, startInd
   }
 };
 
-export const updateAllViews = (repeat: IVirtualRepeater, startIndex: number): void => {
-  const views = (repeat.viewSlot as IViewSlot).children;
-  const viewLength = views.length;
-  const collection = repeat.items;
-
-  const delta = Math$floor(repeat.topBufferHeight / repeat.itemHeight);
-  let collectionIndex = 0;
-  let view: IView;
-
-  for (; viewLength > startIndex; ++startIndex) {
-    collectionIndex = startIndex + delta;
-    view = repeat.view(startIndex);
-    rebindView(repeat, view, collectionIndex, collection);
-    repeat.updateBindings(view);
-  }
-};
-
 export const rebindView = (repeat: IVirtualRepeater, view: IView, collectionIndex: number, collection: any[]): void => {
   view.bindingContext[repeat.local] = collection[collectionIndex];
   updateOverrideContext(view.overrideContext, collectionIndex, collection.length);

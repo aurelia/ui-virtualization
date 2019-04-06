@@ -179,46 +179,45 @@ export interface IVirtualRepeater extends AbstractRepeater {
   updateBufferElements(skipUpdate?: boolean): void;
 }
 
-export interface IVirtualRepeatStrategy extends RepeatStrategy {
-
+export interface IVirtualRepeatStrategy {
   /**
    * create first item to calculate the heights
    */
-  createFirstRow(repeat: VirtualRepeat): IView;
+  createFirstRow(repeat: IVirtualRepeater): IView;
 
   /**
    * Calculate required variables for a virtual repeat instance to operate properly
    *
    * @returns `false` to notify that calculation hasn't been finished
    */
-  initCalculation(repeat: VirtualRepeat, items: number | any[] | Map<any, any> | Set<any>): VirtualizationCalculation;
+  initCalculation(repeat: IVirtualRepeater, items: number | any[] | Map<any, any> | Set<any>): VirtualizationCalculation;
 
   /**
    * Handle special initialization if any, depends on different strategy
    */
-  onAttached(repeat: VirtualRepeat): void;
+  onAttached(repeat: IVirtualRepeater): void;
 
   /**
    * Calculate the start and end index of a repeat based on its container current scroll position
    */
-  getViewRange(repeat: VirtualRepeat, scrollerInfo: IScrollerInfo): [number, number];
+  getViewRange(repeat: IVirtualRepeater, scrollerInfo: IScrollerInfo): [number, number];
 
   /**
    * Returns true if first index is approaching start of the collection
    * Virtual repeat can use this to invoke infinite scroll next
    */
-  isNearTop(repeat: VirtualRepeat, firstIndex: number): boolean;
+  isNearTop(repeat: IVirtualRepeater, firstIndex: number): boolean;
 
   /**
    * Returns true if last index is approaching end of the collection
    * Virtual repeat can use this to invoke infinite scroll next
    */
-  isNearBottom(repeat: VirtualRepeat, lastIndex: number): boolean;
+  isNearBottom(repeat: IVirtualRepeater, lastIndex: number): boolean;
 
   /**
    * Update repeat buffers height based on repeat.items
    */
-  updateBuffers(repeat: VirtualRepeat, firstIndex: number): void;
+  updateBuffers(repeat: IVirtualRepeater, firstIndex: number): void;
 
   /**
    * Get the observer based on collection type of `items`
@@ -232,7 +231,7 @@ export interface IVirtualRepeatStrategy extends RepeatStrategy {
    * @param items The new array instance.
    * @param firstIndex The index of first active view
    */
-  instanceChanged(repeat: VirtualRepeat, items: any[] | Map<any, any> | Set<any>, firstIndex?: number): void;
+  instanceChanged(repeat: IVirtualRepeater, items: any[] | Map<any, any> | Set<any>, firstIndex?: number): void;
 
   /**
    * @override
@@ -241,7 +240,7 @@ export interface IVirtualRepeatStrategy extends RepeatStrategy {
    * @param array The modified array.
    * @param splices Records of array changes.
    */
-  instanceMutated(repeat: VirtualRepeat, array: any[], splices: ICollectionObserverSplice[]): void;
+  instanceMutated(repeat: IVirtualRepeater, array: any[], splices: ICollectionObserverSplice[]): void;
 
   /**
    * Unlike normal repeat, virtualization repeat employs "padding" elements. Those elements
@@ -253,7 +252,12 @@ export interface IVirtualRepeatStrategy extends RepeatStrategy {
    *
    * This is 2 phases scroll handle
    */
-  remeasure(repeat: VirtualRepeat): void;
+  remeasure(repeat: IVirtualRepeater): void;
+
+  /**
+   * Update all visible views of a repeater, starting from given `startIndex`
+   */
+  updateAllViews(repeat: IVirtualRepeater, startIndex: number): void;
 }
 
 /**
