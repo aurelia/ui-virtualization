@@ -486,6 +486,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     let first_index_after_scroll_adjustment = realScrolltop === 0
       ? 0
       : Math$floor(realScrolltop / itemHeight);
+
     // if first index after scroll adjustment doesn't fit with number of possible view
     // it means the scroller has been too far down to the bottom and nolonger suitable to start from this index
     // rollback until all views fit into new collection, or until has enough collection item to render
@@ -500,7 +501,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     // repeat._isLastIndex = bot_buffer_item_count_after_scroll_adjustment === 0;
     repeat.topBufferHeight = top_buffer_item_count_after_scroll_adjustment * itemHeight;
     repeat.bottomBufferHeight = bot_buffer_item_count_after_scroll_adjustment * itemHeight;
-    // repeat._handlingMutations = false;
+    (repeat as VirtualRepeat)._handlingMutations = false;
     // ensure scroller scroll is handled
     (repeat as VirtualRepeat).revertScrollCheckGuard();
     repeat.updateBufferElements();
