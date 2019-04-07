@@ -55,12 +55,12 @@ export class App {
         nav: true,
         title: 'Issue 114'
       },
-      // {
-      //   route: 'issue-117',
-      //   moduleId: PLATFORM.moduleName('./issue-117/sub-app'),
-      //   nav: true,
-      //   title: 'Issue 117'
-      // },
+      {
+        route: 'issue-117',
+        moduleId: PLATFORM.moduleName('./issue-117/sub-app'),
+        nav: true,
+        title: 'Issue 117'
+      },
       {
         route: 'non-issues',
         moduleId: PLATFORM.moduleName('./non-issues/sub-app'),

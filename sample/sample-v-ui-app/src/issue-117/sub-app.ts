@@ -1,3 +1,5 @@
+import { BehaviorInstruction } from 'aurelia-framework';
+
 interface IScrollContext {
   isAtTop: boolean;
   isAtBottom: boolean;
@@ -17,7 +19,16 @@ const lNames = [
   // tslint:disable-next-line:max-line-length
   'Prefect', 'Dent', 'Astra', 'Adams', 'Baker', 'Clark', 'Davis', 'Evans', 'Frank', 'Ghosh', 'Hills', 'Irwin', 'Jones', 'Klein', 'Lopez', 'Mason', 'Nalty', 'Ochoa', 'Patel', 'Quinn', 'Reily', 'Smith', 'Trott', 'Usman', 'Valdo', 'White', 'Xiang', 'Yakub', 'Zafar'
 ];
+
 export class App {
+
+  static $resource = {
+    processContent: (_, __, ___, behaviorInstruction: BehaviorInstruction) => {
+      behaviorInstruction.inheritBindingContext = false;
+      return true;
+    }
+  };
+
   private people: Person[];
 
   constructor() {
@@ -27,6 +38,7 @@ export class App {
       { fname: fNames[2], lname: lNames[2] }
     ];
     this.push30(undefined, 5);
+    window['subapp'] = this;
   }
 
   public push30(scrollContext?: IScrollContext, count = 30) {

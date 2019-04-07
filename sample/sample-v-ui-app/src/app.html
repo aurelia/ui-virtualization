@@ -1,6 +1,7 @@
 <template>
   <require from='./nav-bar'></require>
   <require from='./checkbox.html'></require>
+  <let minimized-monitor.bind="true"></let>
   <div class="container">
     <nav-bar router.bind='router'></nav-bar>
     <main as-element='router-view'></main>
