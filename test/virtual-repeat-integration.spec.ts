@@ -2,7 +2,7 @@
 import './setup';
 import { StageComponent } from './component-tester';
 import { PLATFORM } from 'aurelia-pal';
-import { createAssertionQueue, validateState, validateScrolledState, AsyncQueue, waitForTimeout, ensureScrolled } from './utilities';
+import { createAssertionQueue, validateState, validateScrolledState, AsyncQueue, waitForTimeout } from './utilities';
 import { VirtualRepeat } from '../src/virtual-repeat';
 
 PLATFORM.moduleName('src/virtual-repeat');
@@ -30,26 +30,6 @@ describe('vr-integration.spec.ts', () => {
       window.requestAnimationFrame(() => {
         validateScrolledState(virtualRepeat, viewModel, itemHeight);
         done();
-      });
-    });
-  }
-
-  function validateScrollUp(virtualRepeat: VirtualRepeat, viewModel: any, done: Function, element?: string): void {
-    let elem = document.getElementById(element || 'scrollContainer');
-    let event = new Event('scroll');
-    elem.scrollTop = elem.scrollHeight / 2; // Scroll down but not far enough to reach bottom and call 'getNext'
-    elem.dispatchEvent(event);
-    window.setTimeout(() => {
-      window.requestAnimationFrame(() => {
-        let eventUp = new Event('scroll');
-        elem.scrollTop = 0;
-        elem.dispatchEvent(eventUp);
-        window.setTimeout(() => {
-          window.requestAnimationFrame(() => {
-            validateScrolledState(virtualRepeat, viewModel, itemHeight);
-            done();
-          });
-        });
       });
     });
   }
@@ -268,8 +248,28 @@ describe('vr-integration.spec.ts', () => {
       create.then(() => validatePop(virtualRepeat, viewModel, done));
     });
 
-    it('handles unshift', done => {
-      create.then(() => validateUnshift(virtualRepeat, viewModel, done));
+    it('handles unshift', async () => {
+      await create;
+      viewModel.items.unshift('z');
+      expect(virtualRepeat.view(0).bindingContext.item).toBe('item0', 'unshifting z 1');
+
+      await Promise.resolve();
+      expect(virtualRepeat.view(0).bindingContext.item).toBe('z', 'unshifted z 1');
+      validateScrolledState(virtualRepeat, viewModel, itemHeight);
+
+      viewModel.items.unshift('y', 'x');
+      expect(virtualRepeat.view(0).bindingContext.item).toBe('z', 'unshifting y,x 1');
+      await Promise.resolve();
+      expect(virtualRepeat.view(0).bindingContext.item).toBe('y', 'unshifted y,x 1');
+      expect(virtualRepeat.view(1).bindingContext.item).toBe('x', 'unshifted y,x 2');
+      validateScrolledState(virtualRepeat, viewModel, itemHeight);
+
+      // verify that unshifting undefined won't disrupt anything
+      viewModel.items.unshift();
+      expect(virtualRepeat.view(0).bindingContext.item).toBe('y', 'unshifting undefined 1');
+      await Promise.resolve();
+      expect(virtualRepeat.view(0).bindingContext.item).toBe('y', 'unshifted undefined 1');
+      validateScrolledState(virtualRepeat, viewModel, itemHeight);
     });
 
     it('handles shift', done => {

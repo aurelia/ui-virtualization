@@ -43,7 +43,9 @@ describe('vr-integration.table.spec.ts', () => {
 
   describe('<tr virtual-repeat.for>', () => {
     beforeEach(() => {
-      view = `<table><tr style="height: ${itemHeight}px;" virtual-repeat.for="item of items"><td>\${item}</td></tr></table>`;
+      view = `<table>
+        <tr style="height: ${itemHeight}px;" virtual-repeat.for="item of items"><td>\${item}</td></tr>
+      </table>`;
     });
 
     it('handles push', async (done) => {
@@ -54,10 +56,6 @@ describe('vr-integration.table.spec.ts', () => {
     it('handles array changes', async done => {
       await bootstrapComponent();
       validateArrayChange(virtualRepeat, viewModel, done);
-    });
-
-    it('works with static row', async done => {
-      done();
     });
   });
 
@@ -145,7 +143,6 @@ describe('vr-integration.table.spec.ts', () => {
           await bootstrapComponent();
           await waitForNextFrame();
 
-          expect(virtualRepeat['fixedHeightContainer']).toBe(true);
           expect(called).toBe(true, 'infinite-scroll-next called()');
           expect(viewModel.getNextPage).toHaveBeenCalledTimes(1);
         });
@@ -171,7 +168,6 @@ describe('vr-integration.table.spec.ts', () => {
           await bootstrapComponent();
           await waitForNextFrame();
 
-          expect(virtualRepeat['fixedHeightContainer']).toBe(true);
           expect(scrollContext).toBeDefined();
           expect(scrollContext.isAtTop).toBe(true);
           expect(scrollContext.isAtBottom).toBe(true, 'Expected is at bottom to be true, recevied:' + scrollContext.isAtBottom);
@@ -196,7 +192,6 @@ describe('vr-integration.table.spec.ts', () => {
 
           await bootstrapComponent();
 
-          expect(virtualRepeat['fixedHeightContainer']).toBe(true);
           expect(viewModel.getNextPage).not.toHaveBeenCalled();
         });
       });

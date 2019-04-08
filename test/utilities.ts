@@ -160,14 +160,14 @@ export async function scrollToStart(virtualRepeat: VirtualRepeat, insuranceTime 
  * Scroll a virtual repeat scroller element to bottom
  */
 export async function scrollToEnd(virtualRepeat: VirtualRepeat, insuranceTime = 5): Promise<void> {
-  let element = virtualRepeat.fixedHeightContainer ? virtualRepeat.scrollerEl : (document.scrollingElement || document.documentElement);
+  let element = virtualRepeat.scrollerEl;
   element.scrollTop = element.scrollHeight;
   createScrollEvent(element);
   await ensureScrolled(insuranceTime);
 }
 
 export async function scrollToIndex(virtualRepeat: VirtualRepeat, itemIndex: number): Promise<void> {
-  let element = virtualRepeat.fixedHeightContainer ? virtualRepeat.scrollerEl : (document.scrollingElement || document.documentElement);
+  let element = virtualRepeat.scrollerEl;
   element.scrollTop = virtualRepeat.itemHeight * (itemIndex + 1);
   createScrollEvent(element);
   await ensureScrolled();
