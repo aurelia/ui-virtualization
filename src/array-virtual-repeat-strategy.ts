@@ -278,7 +278,6 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
    */
   _runSplices(repeat: IVirtualRepeater, newArray: any[], splices: ICollectionObserverSplice[]): any {
     const firstIndex = repeat.$first;
-    // console.log('running splices', { firstIndex });
     // total remove count and total added count are used to determine original size of collection
     // before mutation happens, also can be used to determine some optmizable cases of mutation
     // such as case where all mutations happen after last visible view index
@@ -501,7 +500,6 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
   }
 
   remeasure(repeat: IVirtualRepeater): void {
-    // console.log('%cabstract remeasuring....', 'color:red');
     this._remeasure(repeat, repeat.itemHeight, repeat.viewCount(), repeat.items.length, repeat.firstViewIndex());
   }
 
@@ -527,18 +525,6 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
       let first_index_after_scroll_adjustment = real_scroll_top === 0
       ? 0
       : Math$floor(real_scroll_top / itemHeight);
-
-    // console.log('remeasuring array',
-    // {
-    //   top: repeat.topBufferHeight,
-    //   bot: repeat.bottomBufferHeight,
-    //   new_start: first_index_after_scroll_adjustment,
-    //   old_start: firstIndex,
-    //   view_count: newViewCount,
-    //   size: newArraySize,
-    //   real_scroll_top: real_scroll_top,
-    //   scroller_scroll_top: scroller_scroll_top
-    // });
 
     // if first index after scroll adjustment doesn't fit with number of possible view
     // it means the scroller has been too far down to the bottom and nolonger suitable to start from this index

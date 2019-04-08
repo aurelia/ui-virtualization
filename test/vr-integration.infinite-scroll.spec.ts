@@ -333,14 +333,21 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
       title,
       'passes the current index and location state',
       ' -- start 100',
-      ' -- scroll to end',
+      ' -- jump to end',
       ' -- wait and assert',
-      ' -- scroll to start',
+      ' -- jump to start',
       ' -- wait and assert'
     ].join('\n\t'), async () => {
-      let scrollNextArgs: [number, boolean, boolean];
+      let scrollNextArgs: [number, /*is near bottom*/boolean, /*is near top*/boolean];
       const spy = jasmine.createSpy('viewModel.getNextPage(): void', function(this: ITestAppInterface<string>, ...args: any[]) {
         scrollNextArgs = normalizeScrollNextArgs(args);
+        if (scrollNextArgs[2]) {
+          let itemLength = this.items.length;
+          for (let i = 0; i < 100; ++i) {
+            let itemNum = itemLength + i;
+            this.items.unshift('item' + itemNum);
+          }
+        }
       }).and.callThrough();
       const { virtualRepeat, viewModel } = await bootstrapComponent(
         {
@@ -369,8 +376,6 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
       let firstViewIndex = virtualRepeat.firstViewIndex();
       let lastViewIndex = virtualRepeat.lastViewIndex();
       expect(firstViewIndex).toBe(88, 'repeat._firstViewIndex() 1');
-      // it depends on some condition, start index will be calculated differently.
-      // todo: fix this to have deterministic behavior
       expect(virtualRepeatFirst).toBe(88, 'repeat._first 1 = 88');
       // expect(virtualRepeatFirst).toBe(94, 'repeat._first 1 <= 94');
       expect(lastViewIndex).toBe(99, 'repeat._lastViewIndex() 1');
@@ -387,7 +392,7 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
       expect(spy.calls.count()).toBe(1, '@scroll 2 end -> start');
       await waitForFrames(2);
       expect(spy.calls.count()).toBe(2, '@scroll 2 end -> start');
-      expect(viewModel.items.length).toBe(100, 'items.length 3');
+      expect(viewModel.items.length).toBe(200, 'items.length 3');
       virtualRepeatFirst = virtualRepeat.$first;
       firstViewIndex = virtualRepeat.firstViewIndex();
       lastViewIndex = virtualRepeat.lastViewIndex();
@@ -396,6 +401,87 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
       validateScrolledState(virtualRepeat, viewModel, itemHeight);
       [firstIndex, isAtBottom, isAtTop] = scrollNextArgs;
       expect(firstIndex).toBe(virtualRepeatFirst, 'scrollNextArgs[0] 2');
+      expect(isAtBottom).toBe(false, 'scrollNextArgs[1] -- isAtBottom 2');
+      expect(isAtTop).toBe(true, 'scrollNextArgs[2] -- isAtTop 2');
+    });
+
+    it([
+      title,
+      'passes the current index and location state',
+      ' -- start 100',
+      ' -- scroll down 20',
+      ' -- wait and assert',
+      ' -- scroll up',
+      ' -- wait and assert'
+    ].join('\n\t'), async () => {
+      let scrollNextArgs: [number, /*is near bottom*/boolean, /*is near top*/boolean];
+      const spy = jasmine.createSpy('viewModel.getNextPage(): void', function(this: ITestAppInterface<string>, ...args: any[]) {
+        scrollNextArgs = normalizeScrollNextArgs(args);
+        if (scrollNextArgs[2]) {
+          let itemLength = this.items.length;
+          for (let i = 0; i < 100; ++i) {
+            let itemNum = itemLength + i;
+            this.items.unshift('item' + itemNum);
+          }
+        }
+      }).and.callThrough();
+      const { virtualRepeat, viewModel } = await bootstrapComponent(
+        {
+          items: createItems(100),
+          getNextPage: spy
+        },
+        extraResources,
+        $view
+      );
+      expect(scrollNextArgs).toBe(undefined, 'getNextPage() args[]');
+      expect(virtualRepeat.minViewsRequired * 2).toBe(12, 'repeat._viewsLength');
+      expect(virtualRepeat.viewCount()).toBe(12, 'repeat.viewCount()');
+      expect(spy.calls.count()).toBe(0, 'no getNextPage() calls');
+
+      expect(viewModel.items.length).toBe(100, 'items.length 1');
+      validateScrolledState(virtualRepeat, viewModel, itemHeight);
+
+      scrollRepeat(virtualRepeat, 20 * itemHeight);
+      await waitForFrames(2);
+      expect(viewModel.items.length).toBe(100, 'items.length 2');
+      let virtualRepeatFirst = virtualRepeat.$first;
+      let firstViewIndex = virtualRepeat.firstViewIndex();
+      let lastViewIndex = virtualRepeat.lastViewIndex();
+      expect(firstViewIndex).toBe(20, 'repeat._firstViewIndex() 1');
+      expect(virtualRepeatFirst).toBe(20, 'repeat._first 1 = 88');
+      expect(lastViewIndex).toBe(20 + virtualRepeat.minViewsRequired * 2 - 1, 'repeat._lastViewIndex() 1');
+      validateScrolledState(virtualRepeat, viewModel, itemHeight);
+      expect(scrollNextArgs).toBe(undefined, 'scrollNextArgs is undefined');
+
+      for (let i = 0; 15 >= i; ++i) {
+        scrollRepeat(virtualRepeat, (20 - i) * itemHeight);
+        await waitForFrames(2);
+        virtualRepeatFirst = virtualRepeat.$first;
+        firstViewIndex = virtualRepeat.firstViewIndex();
+        lastViewIndex = virtualRepeat.lastViewIndex();
+        expect(firstViewIndex).toBe(20 - i, 'repeat._firstViewIndex() 2');
+        expect(lastViewIndex).toBe(20 - i + virtualRepeat.minViewsRequired * 2 - 1, 'repeat._lastViewIndex() 2');
+      }
+
+      scrollRepeat(virtualRepeat, 4 * itemHeight);
+      expect(spy.calls.count()).toBe(0, '@scroll 2 end -> start');
+      await waitForFrames(1);
+      expect(spy.calls.count()).toBe(0, '@scroll 2 end -> start');
+      await waitForFrames(2);
+      expect(spy.calls.count()).toBe(1, '@scroll 2 end -> start');
+      expect(viewModel.items.length).toBe(200, 'items.length 3');
+
+      let hasValueConverterInExpression = extraResources.length > 0;
+      virtualRepeatFirst = virtualRepeat.$first;
+      firstViewIndex = virtualRepeat.firstViewIndex();
+      lastViewIndex = virtualRepeat.lastViewIndex();
+
+      expect(firstViewIndex).toBe(hasValueConverterInExpression ? 4 : 104, 'repeat._firstViewIndex() 3');
+      expect(lastViewIndex).toBe((hasValueConverterInExpression ? 4 : 104) + virtualRepeat.minViewsRequired * 2 - 1, 'repeat._lastViewIndex() 3');
+      validateScrolledState(virtualRepeat, viewModel, itemHeight);
+
+      let [firstIndex, isAtBottom, isAtTop] = scrollNextArgs;
+      expect(firstIndex).toBe(4, 'scrollNextArgs[0] 2');
       expect(isAtBottom).toBe(false, 'scrollNextArgs[1] -- isAtBottom 2');
       expect(isAtTop).toBe(true, 'scrollNextArgs[2] -- isAtTop 2');
     });
