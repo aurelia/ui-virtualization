@@ -1,5 +1,4 @@
 import { ICollectionObserverSplice, mergeSplice } from 'aurelia-binding';
-import { ViewSlot } from 'aurelia-templating';
 import { ArrayRepeatStrategy, createFullOverrideContext } from 'aurelia-templating-resources';
 import { IView, IVirtualRepeatStrategy, VirtualizationCalculation, IScrollerInfo, IVirtualRepeater, IViewSlot } from './interfaces';
 import {
@@ -12,8 +11,8 @@ import {
   Math$ceil
 } from './utilities';
 import { VirtualRepeat } from './virtual-repeat';
-import { getDistanceToParent, hasOverflowScroll, calcScrollHeight, calcOuterHeight } from './utilities-dom';
-import { htmlElement, $raf, BrowserConstants } from './constants';
+import { getDistanceToParent, calcOuterHeight } from './utilities-dom';
+import { htmlElement } from './constants';
 
 interface IArrayVirtualRepeater extends IVirtualRepeater {
   __queuedSplices: ICollectionObserverSplice[];

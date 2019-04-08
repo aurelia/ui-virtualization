@@ -17,7 +17,3 @@ export {
   IScrollNextScrollContext,
   VirtualizationEvents
 } from './interfaces';
-
-export {
-  BrowserConstants
-} from './constants';
