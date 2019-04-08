@@ -65,6 +65,11 @@ export interface IVirtualRepeater extends AbstractRepeater {
   templateStrategy: ITemplateStrategy;
 
   /**
+   * The element hosting the scrollbar for this repeater
+   */
+  scrollerEl: HTMLElement;
+
+  /**
    * Top buffer element, used to reflect the visualization of amount of items `before` the first visible item
    * @internal
    */
@@ -101,12 +106,12 @@ export interface IVirtualRepeater extends AbstractRepeater {
    */
   minViewsRequired: number;
 
-  /**
-   * Indicates whether virtual repeat attribute is inside a fixed height container with overflow
-   *
-   * This helps identifies place to add scroll event listener
-   */
-  fixedHeightContainer: boolean;
+  // /**
+  //  * Indicates whether virtual repeat attribute is inside a fixed height container with overflow
+  //  *
+  //  * This helps identifies place to add scroll event listener
+  //  */
+  // fixedHeightContainer: boolean;
 
   /**
    * ViewSlot that encapsulates the repeater views operations in the template
@@ -138,6 +143,12 @@ export interface IVirtualRepeater extends AbstractRepeater {
    * Get index of last visible view
    */
   lastViewIndex(): number;
+
+  /**
+   * Virtual repeater normally employs scroll handling buffer for performance reasons.
+   * As syncing between scrolling state and visible views could be expensive.
+   */
+  enableScroll(): void;
 
   /**
    * Invoke infinite scroll next function expression with currently bound scope of the repeater
@@ -354,6 +365,14 @@ export const VirtualizationEvents = Object.assign(Object.create(null), {
   scrollerSizeChange: 'virtual-repeat-scroller-size-changed';
   itemSizeChange: 'virtual-repeat-item-size-changed';
 };
+
+export const enum ScrollingState {
+  none              = 0,
+  isScrollingDown   = 0b0_00001,
+  isScrollingUp     = 0b0_00010,
+  isNearTop         = 0b0_00100,
+  isNearBottom      = 0b0_01000
+}
 
 // export const enum IVirtualRepeatState {
 //   isAtTop = 0b0_000000_000,

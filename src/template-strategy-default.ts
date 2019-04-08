@@ -1,5 +1,5 @@
 import { IView, ITemplateStrategy } from './interfaces';
-import { insertBeforeNode, getScrollContainer } from './utilities-dom';
+import { insertBeforeNode, getScrollerElement } from './utilities-dom';
 import { DOM } from 'aurelia-pal';
 
 /**
@@ -8,7 +8,7 @@ import { DOM } from 'aurelia-pal';
 export class DefaultTemplateStrategy implements ITemplateStrategy {
 
   getScrollContainer(element: Element): HTMLElement {
-    return getScrollContainer(element);
+    return getScrollerElement(element);
   }
 
   moveViewFirst(view: IView, topBuffer: Element): void {

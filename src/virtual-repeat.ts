@@ -45,7 +45,8 @@ import {
   VirtualizationCalculation,
   VirtualizationEvents,
   IElement,
-  IVirtualRepeater
+  IVirtualRepeater,
+  ScrollingState
 } from './interfaces';
 import {
   getResizeObserverClass,
@@ -104,13 +105,13 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
    * Usually determined by `_first` visible index * `itemHeight`
    * @internal
    */
-  topBufferHeight = 0;
+  topBufferHeight: number;
 
   /**
    * Height of bottom buffer to properly push the visible rendered list items into right position
    * @internal
    */
-  bottomBufferHeight = 0;
+  bottomBufferHeight: number;
 
   /**@internal*/
   _isAttached = false;
@@ -118,19 +119,13 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
   /**@internal*/
   _ticking = false;
 
-  /**
-   * Indicates whether virtual repeat attribute is inside a fixed height container with overflow
-   *
-   * This helps identifies place to add scroll event listener
-   * @internal
-   */
-  fixedHeightContainer = false;
-
-  /**
-   * Indicate current scrolltop of scroller is 0 or less
-   * @internal
-   */
-  _isAtTop = true;
+  // /**
+  //  * Indicates whether virtual repeat attribute is inside a fixed height container with overflow
+  //  *
+  //  * This helps identifies place to add scroll event listener
+  //  * @internal
+  //  */
+  // fixedHeightContainer = false;
 
   /**@internal*/
   _calledGetMore = false;
@@ -345,10 +340,12 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
     this.taskQueue = observerLocator.taskQueue;
     this.strategyLocator = collectionStrategyLocator;
     this.templateStrategyLocator = templateStrategyLocator;
-    this.edgeDistance = 0;
+    this.edgeDistance = 5;
     this.sourceExpression = getItemsSourceExpression(this.instruction, 'virtual-repeat.for');
     this.isOneTime = isOneTime(this.sourceExpression);
-    this.itemHeight
+    this.topBufferHeight
+      = this.bottomBufferHeight
+      = this.itemHeight
       = this.distanceToTop
       = 0;
     this.revertScrollCheckGuard = () => {
@@ -368,9 +365,10 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
 
     const element = this.element;
     const templateStrategy = this.templateStrategy = this.templateStrategyLocator.getStrategy(element);
-    const containerEl = this.scrollerEl = templateStrategy.getScrollContainer(element);
+    const scrollerEl = this.scrollerEl = templateStrategy.getScrollContainer(element);
     const [topBufferEl, bottomBufferEl] = templateStrategy.createBuffers(element);
-    const isFixedHeightContainer = this.fixedHeightContainer = hasOverflowScroll(containerEl);
+    const isFixedHeightContainer = scrollerEl !== htmlElement;
+      // this.fixedHeightContainer = hasOverflowScroll(containerEl);
     // context bound listener
     const scrollListener = this._onScroll;
 
@@ -381,7 +379,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
     this._currScrollerInfo = this.getScrollerInfo();
 
     if (isFixedHeightContainer) {
-      containerEl.addEventListener('scroll', scrollListener);
+      scrollerEl.addEventListener('scroll', scrollListener);
     } else {
       const firstElement = templateStrategy.getFirstElement(topBufferEl, bottomBufferEl);
       this.distanceToTop = firstElement === null ? 0 : getElementDistanceToTopOfDocument(topBufferEl);
@@ -423,7 +421,8 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
     this.unobserveScroller();
     this._currScrollerContentRect = undefined;
     this._isAttached
-      = this.fixedHeightContainer = false;
+      // = this.fixedHeightContainer
+      = false;
     this._unsubscribeCollection();
     this.resetCalculation();
     this.templateStrategy.removeBuffers(this.element, this.topBufferEl, this.bottomBufferEl);
@@ -509,7 +508,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
     }
 
     if (calculationSignals & VirtualizationCalculation.observe_scroller) {
-      this.observeScroller(this.getScroller());
+      this.observeScroller(this.scrollerEl);
     }
   }
 
@@ -545,20 +544,24 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
     }
   }
 
+  enableScroll(): void {
+    this._ticking = false;
+    this._handlingMutations = false;
+    this._skipNextScrollHandle = false;
+  }
+
   /**
    * Get the real scroller element of the DOM tree this repeat resides in
    */
   getScroller(): HTMLElement {
-    return this.fixedHeightContainer
-      ? this.scrollerEl
-      : document.documentElement;
+    return this.scrollerEl;
   }
 
   /**
    * Get scrolling information of the real scroller element of the DOM tree this repeat resides in
    */
   getScrollerInfo(): IScrollerInfo {
-    const scroller = this.getScroller();
+    const scroller = this.scrollerEl;
     return {
       scroller: scroller,
       // scrollHeight: scroller.scrollHeight,
@@ -581,7 +584,6 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
     this._ignoreMutation
       = this._handlingMutations
       = this._ticking = false;
-    this._isAtTop = true;
     this.updateBufferElements(/*skip update?*/true);
   }
 
@@ -589,12 +591,12 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
   _onScroll(): void {
     const isHandlingMutations = this._handlingMutations;
     if (!this._ticking && !isHandlingMutations) {
-      const currentScrollerInfo = this.getScrollerInfo();
       const prevScrollerInfo = this._currScrollerInfo;
+      const currentScrollerInfo = this.getScrollerInfo();
       this._currScrollerInfo = currentScrollerInfo;
       this.taskQueue.queueMicroTask(() => {
-        this._handleScroll(currentScrollerInfo, prevScrollerInfo);
         this._ticking = false;
+        this._handleScroll(currentScrollerInfo, prevScrollerInfo);
       });
       this._ticking = true;
     }
@@ -613,6 +615,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
       this._skipNextScrollHandle = false;
       return;
     }
+    // todo: move this to repeat strategy
     const items = this.items;
     if (!items) {
       return;
@@ -623,6 +626,13 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
     const old_range_start_index = this.$first;
     const old_range_end_index = this.lastViewIndex();
     const [new_range_start_index, new_range_end_index] = strategy.getViewRange(this, currentScrollerInfo);
+
+    let scrolling_state: ScrollingState =
+      new_range_start_index > old_range_start_index
+        ? ScrollingState.isScrollingDown
+        : new_range_start_index < old_range_start_index
+          ? ScrollingState.isScrollingUp
+          : ScrollingState.none;
 
     // treating scrollbar like an axis, we have a few intersection types for two ranges
     // there are 6 range intersection types (inclusive)
@@ -671,14 +681,15 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
       // jump down, check if is close to bottom
       if (new_range_start_index >= old_range_start_index && old_range_end_index === new_range_end_index) {
         if (strategy.isNearBottom(this, new_range_end_index)) {
-          should_call_scroll_next = 1;
+          // should_call_scroll_next = 1;
+          scrolling_state |= ScrollingState.isNearBottom;
         }
       }
       // jump up. check if near top
       else if (strategy.isNearTop(this, new_range_start_index)) {
-        should_call_scroll_next = -1;
+        // should_call_scroll_next = -1;
+        scrolling_state |= ScrollingState.isNearTop;
       }
-      // return;
       // todo: fix the issues related to scroll smoothly to bottom not triggering scroll-next
     } else {
 
@@ -688,7 +699,10 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
         const views_to_move_count = new_range_start_index - old_range_start_index;
         this._moveViews(views_to_move_count, 1);
         didMovedViews = 1;
-        should_call_scroll_next = 1;
+        // should_call_scroll_next = 1;
+        if (strategy.isNearBottom(this, new_range_end_index)) {
+          scrolling_state |= ScrollingState.isNearBottom;
+        }
       }
       // intersection type 2: scrolling up but haven't reached top
       // this scenario requires move views from start of old range to end of new range
@@ -696,7 +710,10 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
         const views_to_move_count = old_range_end_index - new_range_end_index;
         this._moveViews(views_to_move_count, -1);
         didMovedViews = 1;
-        should_call_scroll_next = -1;
+        // should_call_scroll_next = -1;
+        if (strategy.isNearTop(this, new_range_start_index)) {
+          scrolling_state |= ScrollingState.isNearTop;
+        }
       }
       // intersection type 5 and type 6: scrolling with jumping behavior
       // this scenario requires only updating views
@@ -705,12 +722,14 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
         // jump down, check if is close to bottom
         if (old_range_end_index < new_range_start_index) {
           if (strategy.isNearBottom(this, new_range_end_index)) {
-            should_call_scroll_next = 1;
+            // should_call_scroll_next = 1;
+          scrolling_state |= ScrollingState.isNearBottom;
           }
         }
         // jump up. check if near top
         else if (strategy.isNearTop(this, new_range_start_index)) {
-          should_call_scroll_next = -1;
+          // should_call_scroll_next = -1;
+          scrolling_state |= ScrollingState.isNearTop;
         }
       }
       // catch invalid cases
@@ -730,8 +749,15 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
     // check if infinite scrollnext should be invoked
     // the following block cannot be nested inside didMoveViews condition
     // since there could be jumpy scrolling behavior causing infinite scrollnext
-    if (should_call_scroll_next !== 0) {
-      this.getMore(new_range_start_index, strategy.isNearTop(this, new_range_start_index), strategy.isNearBottom(this, new_range_end_index));
+    if (
+      (scrolling_state & (ScrollingState.isScrollingDown | ScrollingState.isNearBottom)) === (ScrollingState.isScrollingDown | ScrollingState.isNearBottom)
+      || (scrolling_state & (ScrollingState.isScrollingUp | ScrollingState.isNearTop)) === (ScrollingState.isScrollingUp | ScrollingState.isNearTop)
+    ) {
+      this.getMore(
+        new_range_start_index,
+        (scrolling_state & ScrollingState.isNearTop) > 0,
+        (scrolling_state & ScrollingState.isNearBottom) > 0
+      );
     }
   }
 
@@ -770,12 +796,23 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
     }
   }
 
+  /**
+   * A guard to track time between getMore execution to ensure it's not called too often
+   * Make it slightly more than an frame time for 60fps
+   * @internal
+   */
+  _lastGetMore: number = 0;
+
   /**@internal*/
   getMore(topIndex: number, isNearTop: boolean, isNearBottom: boolean, force?: boolean): void {
     if (isNearTop || isNearBottom || force) {
       // guard against too rapid fire when scrolling towards end/start
       if (!this._calledGetMore) {
-        const executeGetMore = () => {
+        const executeGetMore = (time: number) => {
+          if (time - this._lastGetMore < 16) {
+            return;
+          }
+          this._lastGetMore = time;
           this._calledGetMore = true;
           const revertCalledGetMore = () => {
             this._calledGetMore = false;

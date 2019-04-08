@@ -7,9 +7,9 @@ import { htmlElement } from './constants';
  *
  * If none is found, return `document.documentElement`
  */
-export const getScrollContainer = (element: Node): HTMLElement => {
-  let current = element.parentNode;
-  while (current !== null && current !== document) {
+export const getScrollerElement = (element: Node): HTMLElement => {
+  let current = element.parentNode as Element;
+  while (current !== null && current !== htmlElement) {
     if (hasOverflowScroll(current)) {
       return current as HTMLElement;
     }
@@ -32,7 +32,7 @@ export const getElementDistanceToTopOfDocument = (element: Element): number => {
 /**
  * Check if an element has style scroll/auto for overflow/overflowY
  */
-export const hasOverflowScroll = (element): boolean => {
+export const hasOverflowScroll = (element: Element): boolean => {
   const style = window.getComputedStyle(element);
   return style && (style.overflowY === 'scroll' || style.overflow === 'scroll' || style.overflowY === 'auto' || style.overflow === 'auto');
 };
@@ -45,7 +45,7 @@ export const getStyleValues = (element: Element, ...styles: string[]): number =>
   let value: number = 0;
   let styleValue: number = 0;
   for (let i = 0, ii = styles.length; ii > i; ++i) {
-    styleValue = parseInt(currentStyle[styles[i]], 10);
+    styleValue = parseFloat(currentStyle[styles[i]]);
     value += $isNaN(styleValue) ? 0 : styleValue;
   }
   return value;

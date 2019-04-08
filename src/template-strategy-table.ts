@@ -1,13 +1,13 @@
 import { DOM } from 'aurelia-pal';
 import { ITemplateStrategy } from './interfaces';
 import { DefaultTemplateStrategy } from './template-strategy-default';
-import { getScrollContainer } from './utilities-dom';
+import { getScrollerElement } from './utilities-dom';
 
 abstract class BaseTableTemplateStrategy extends DefaultTemplateStrategy implements ITemplateStrategy {
 
   /**@override */
   getScrollContainer(element: Element): HTMLElement {
-    return getScrollContainer(this.getTable(element));
+    return getScrollerElement(this.getTable(element));
   }
 
   createBuffers(element: Element): [HTMLElement, HTMLElement] {
