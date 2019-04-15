@@ -1,28 +1,35 @@
 import { ICollectionObserverSplice, mergeSplice } from 'aurelia-binding';
-import { ViewSlot } from 'aurelia-templating';
 import { ArrayRepeatStrategy, createFullOverrideContext } from 'aurelia-templating-resources';
-import { IView, IVirtualRepeatStrategy, VirtualizationCalculation } from './interfaces';
+import { IView, IVirtualRepeatStrategy, VirtualizationCalculation, IScrollerInfo, IVirtualRepeater, IViewSlot } from './interfaces';
 import {
   Math$abs,
   Math$floor,
   Math$max,
   Math$min,
-  updateAllViews
+  calcMinViewsRequired,
+  rebindView,
+  Math$ceil
 } from './utilities';
 import { VirtualRepeat } from './virtual-repeat';
-import { getDistanceToParent, hasOverflowScroll, calcScrollHeight, calcOuterHeight } from './utilities-dom';
+import { getDistanceToParent, calcOuterHeight } from './utilities-dom';
+import { htmlElement } from './constants';
+
+interface IArrayVirtualRepeater extends IVirtualRepeater {
+  __queuedSplices: ICollectionObserverSplice[];
+  __array: any[];
+}
 
 /**
-* A strategy for repeating a template over an array.
-*/
+ * A strategy for repeating a template over an array.
+ */
 export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements IVirtualRepeatStrategy {
 
-  createFirstItem(repeat: VirtualRepeat): IView {
+  createFirstRow(repeat: IVirtualRepeater): IView {
     const overrideContext = createFullOverrideContext(repeat, repeat.items[0], 0, 1);
     return repeat.addView(overrideContext.bindingContext, overrideContext);
   }
 
-  initCalculation(repeat: VirtualRepeat, items: any[]): VirtualizationCalculation {
+  initCalculation(repeat: IVirtualRepeater, items: any[]): VirtualizationCalculation {
     const itemCount = items.length;
     // when there is no item, bails immediately
     // and return false to notify calculation finished unsuccessfully
@@ -31,13 +38,14 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     }
     // before invoking instance changed, there needs to be basic calculation on how
     // the required vairables such as item height and elements required
-    const containerEl = repeat.getScroller();
+    const scrollerInfo = repeat.getScrollerInfo();
+    // const containerEl = repeat.getScroller();
     const existingViewCount = repeat.viewCount();
     if (itemCount > 0 && existingViewCount === 0) {
-      this.createFirstItem(repeat);
+      this.createFirstRow(repeat);
     }
-    const isFixedHeightContainer = repeat._fixedHeightContainer = hasOverflowScroll(containerEl);
-    const firstView = repeat._firstView();
+    // const isFixedHeightContainer = repeat.fixedHeightContainer = hasOverflowScroll(containerEl);
+    const firstView = repeat.firstView();
     const itemHeight = calcOuterHeight(firstView.firstChild as Element);
     // when item height is 0, bails immediately
     // and return false to notify calculation has finished unsuccessfully
@@ -46,13 +54,75 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
       return VirtualizationCalculation.none;
     }
     repeat.itemHeight = itemHeight;
-    const scroll_el_height = isFixedHeightContainer
-      ? calcScrollHeight(containerEl)
-      : document.documentElement.clientHeight;
-    // console.log({ scroll_el_height })
-    const elementsInView = repeat.elementsInView = Math$floor(scroll_el_height / itemHeight) + 1;
-    const viewsCount = repeat._viewsLength = elementsInView * 2;
+    const scroll_el_height = scrollerInfo.height;
+    const elementsInView = repeat.minViewsRequired = calcMinViewsRequired(scroll_el_height, itemHeight);
+    // const viewsCount = repeat._viewsLength = elementsInView * 2;
     return VirtualizationCalculation.has_sizing | VirtualizationCalculation.observe_scroller;
+  }
+
+  onAttached(repeat: IVirtualRepeater): void {
+    if (repeat.items.length < repeat.minViewsRequired) {
+      repeat.getMore(0, /*is near top?*/true, this.isNearBottom(repeat, repeat.lastViewIndex()), /*force?*/true);
+    }
+  }
+
+  getViewRange(repeat: IVirtualRepeater, scrollerInfo: IScrollerInfo): [number, number] {
+    const topBufferEl = repeat.topBufferEl;
+    const scrollerEl = repeat.scrollerEl;
+    const itemHeight = repeat.itemHeight;
+    let realScrollTop = 0;
+    const isFixedHeightContainer = scrollerInfo.scroller !== htmlElement;
+    if (isFixedHeightContainer) {
+      // If offset parent of top buffer is the scroll container
+      //    its actual offsetTop is just the offset top itself
+      // If not, then the offset top is calculated based on the parent offsetTop as well
+      const topBufferDistance = getDistanceToParent(topBufferEl, scrollerEl);
+      const scrollerScrollTop = scrollerInfo.scrollTop;
+      realScrollTop = Math$max(0, scrollerScrollTop - Math$abs(topBufferDistance));
+    } else {
+      realScrollTop = pageYOffset - repeat.distanceToTop;
+    }
+
+    const realViewCount = repeat.minViewsRequired * 2;
+
+    // Calculate the index of first view
+    // Using Math floor to ensure it has correct space for both small and large calculation
+    let firstVisibleIndex = Math$max(0, itemHeight > 0 ? Math$floor(realScrollTop / itemHeight) : 0);
+    const lastVisibleIndex = Math$min(
+      repeat.items.length - 1,
+      firstVisibleIndex + (realViewCount - /*number of view count includes the first view, so minus 1*/1));
+    firstVisibleIndex = Math$max(
+      0,
+      Math$min(
+        firstVisibleIndex,
+        lastVisibleIndex - (realViewCount - /*number of view count includes the first view, so minus 1*/1)
+      )
+    );
+    return [firstVisibleIndex, lastVisibleIndex];
+  }
+
+  updateBuffers(repeat: IVirtualRepeater, firstIndex: number): void {
+    const itemHeight = repeat.itemHeight;
+    const itemCount = repeat.items.length;
+    repeat.topBufferHeight = firstIndex * itemHeight;
+    repeat.bottomBufferHeight = (itemCount - firstIndex - repeat.viewCount()) * itemHeight;
+    repeat.updateBufferElements(/*skip update?*/true);
+  }
+
+  isNearTop(repeat: IVirtualRepeater, firstIndex: number): boolean {
+    const itemCount = repeat.items.length;
+    return itemCount > 0
+      ? firstIndex < repeat.edgeDistance
+      : false;
+  }
+
+  isNearBottom(repeat: IVirtualRepeater, lastIndex: number): boolean {
+    const itemCount = repeat.items.length;
+    return lastIndex === -1
+      ? true
+      : itemCount > 0
+        ? lastIndex > (itemCount - repeat.edgeDistance)
+        : false;
   }
 
   /**
@@ -62,9 +132,10 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
    * @param items The new array instance.
    * @param firstIndex The index of first active view. First is a required argument, only ? for valid poly
    */
-  instanceChanged(repeat: VirtualRepeat, items: any[], first?: number): void {
+  instanceChanged(repeat: IVirtualRepeater, items: any[], first?: number): void {
     if (this._inPlaceProcessItems(repeat, items, first)) {
-      this._remeasure(repeat, repeat.itemHeight, repeat._viewsLength, items.length, repeat._first);
+      // using repeat._first instead of first from argument to use latest first index
+      this._remeasure(repeat, repeat.itemHeight, repeat.minViewsRequired * 2, items.length, repeat.$first);
     }
   }
 
@@ -75,7 +146,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
    * @param array The modified array.
    * @param splices Records of array changes.
    */
-  instanceMutated(repeat: VirtualRepeat, array: any[], splices: ICollectionObserverSplice[]): void {
+  instanceMutated(repeat: IVirtualRepeater, array: any[], splices: ICollectionObserverSplice[]): void {
     this._standardProcessInstanceMutated(repeat, array, splices);
   }
 
@@ -85,21 +156,17 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
    * @returns `false` to signal there should be no remeasurement
    * @internal
    */
-  _inPlaceProcessItems(repeat: VirtualRepeat, items: any[], firstIndex: number): boolean {
+  _inPlaceProcessItems($repeat: IVirtualRepeater, items: any[], firstIndex: number): boolean {
+    const repeat = $repeat as IArrayVirtualRepeater;
     const currItemCount = items.length;
     if (currItemCount === 0) {
       repeat.removeAllViews(/*return to cache?*/true, /*skip animation?*/false);
-      repeat._resetCalculation();
+      repeat.resetCalculation();
       repeat.__queuedSplices = repeat.__array = undefined;
       return false;
     }
-    /*
-      Get index of first view is looking at the view which is from the ViewSlot
-      The view slot has not yet been updated with the new list
-      New first has to be the calculated "first" in our view slot, so the first one that's going to be rendered
-        To figure out that one, we're going to have to know where we are in our scrolling so we can know how far down we've gone to show the first view
-        That "first" is calculated and passed into here
-    */
+
+   const max_views_count = repeat.minViewsRequired * 2;
 
     // if the number of items shrinks to less than number of active views
     // remove all unneeded views
@@ -111,11 +178,11 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     // there is situation when container height shrinks
     // the real views count will be greater than new maximum required view count
     // remove all unnecessary view
-    while (realViewsCount > repeat._viewsLength) {
+    while (realViewsCount > max_views_count) {
       realViewsCount--;
       repeat.removeView(realViewsCount, /*return to cache?*/true, /*skip animation?*/false);
     }
-    realViewsCount = Math$min(realViewsCount, repeat._viewsLength);
+    realViewsCount = Math$min(realViewsCount, max_views_count);
 
     const local = repeat.local;
     const lastIndex = currItemCount - 1;
@@ -127,7 +194,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
       firstIndex = Math$max(0, currItemCount - realViewsCount);
     }
 
-    repeat._first = firstIndex;
+    repeat.$first = firstIndex;
     // re-evaluate bindings on existing views.
     for (let i = 0; i < realViewsCount; i++) {
       const currIndex = i + firstIndex;
@@ -157,7 +224,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
       repeat.updateBindings(view);
     }
     // add new views
-    const minLength = Math$min(repeat._viewsLength, currItemCount);
+    const minLength = Math$min(max_views_count, currItemCount);
     for (let i = realViewsCount; i < minLength; i++) {
       const overrideContext = createFullOverrideContext(repeat, items[i], i, currItemCount);
       repeat.addView(overrideContext.bindingContext, overrideContext);
@@ -166,7 +233,8 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
   }
 
   /**@internal */
-  _standardProcessInstanceMutated(repeat: VirtualRepeat, array: Array<any>, splices: ICollectionObserverSplice[]): void {
+  _standardProcessInstanceMutated($repeat: IVirtualRepeater, array: Array<any>, splices: ICollectionObserverSplice[]): void {
+    const repeat = $repeat as IArrayVirtualRepeater;
     if (repeat.__queuedSplices) {
       for (let i = 0, ii = splices.length; i < ii; ++i) {
         const { index, removed, addedCount } = splices[i];
@@ -177,7 +245,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     }
     if (array.length === 0) {
       repeat.removeAllViews(/*return to cache?*/true, /*skip animation?*/false);
-      repeat._resetCalculation();
+      repeat.resetCalculation();
       repeat.__queuedSplices = repeat.__array = undefined;
       return;
     }
@@ -208,8 +276,8 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
    *  - Each add cause increase in buffer heights, or a real view insertion, based on index
    * @internal
    */
-  _runSplices(repeat: VirtualRepeat, newArray: any[], splices: ICollectionObserverSplice[]): any {
-    const firstIndex = repeat._first;
+  _runSplices(repeat: IVirtualRepeater, newArray: any[], splices: ICollectionObserverSplice[]): any {
+    const firstIndex = repeat.$first;
     // total remove count and total added count are used to determine original size of collection
     // before mutation happens, also can be used to determine some optmizable cases of mutation
     // such as case where all mutations happen after last visible view index
@@ -239,15 +307,11 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     // if all splices removal are followed by same amount of add,
     // optimise by just replacing affected visible views
     if (allSplicesAreInplace) {
-      const lastIndex = repeat._lastViewIndex();
+      const lastIndex = repeat.lastViewIndex();
       const repeatViewSlot = repeat.viewSlot;
       for (i = 0; spliceCount > i; i++) {
         splice = splices[i];
         for (let collectionIndex = splice.index; collectionIndex < splice.index + splice.addedCount; collectionIndex++) {
-          // if (!this._isIndexBeforeViewSlot(repeat, repeatViewSlot, collectionIndex)
-          //   && !this._isIndexAfterViewSlot(repeat, repeatViewSlot, collectionIndex)
-          // ) {
-          //   const viewIndex = this._getViewIndex(repeat, repeatViewSlot, collectionIndex);
           if (collectionIndex >= firstIndex && collectionIndex <= lastIndex) {
             const viewIndex = collectionIndex - firstIndex;
             const overrideContext = createFullOverrideContext(repeat, newArray[collectionIndex], collectionIndex, newArraySize);
@@ -272,37 +336,82 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     // there is no base to calculate mutation
     // treat it like an instance changed and bail
     if (originalSize === 0 && itemHeight === 0) {
-      repeat._resetCalculation();
+      repeat.resetCalculation();
       repeat.itemsChanged();
       return;
     }
 
     // Optimizable case 2:
+    // all splices happens before viewport, and are all positive splices (splices with only adds)
+    // in this case, only need to adjust top buffer and let scroll handler takecare of next step
+    const all_splices_are_positive_and_before_view_port = totalRemovedCount === 0
+      && totalAddedCount > 0
+      && splices.every(splice => splice.index <= firstIndex);
+
+    if (all_splices_are_positive_and_before_view_port) {
+      repeat.$first = firstIndex + totalAddedCount - 1;
+      repeat.topBufferHeight += totalAddedCount * itemHeight;
+      // 1. ensure that change in scroll position will not be ignored
+      repeat.enableScroll();
+
+      // 2. check if it's currently at the original first index
+      // assume it's safe to manually adjust scrollbar top position if so
+      const scrollerInfo = repeat.getScrollerInfo();
+      const scroller_scroll_top = scrollerInfo.scrollTop;
+      const top_buffer_distance = getDistanceToParent(repeat.topBufferEl, scrollerInfo.scroller);
+      const real_scroll_top = Math$max(0, scroller_scroll_top === 0
+        ? 0
+        : (scroller_scroll_top - top_buffer_distance));
+      let first_index_after_scroll_adjustment = real_scroll_top === 0
+        ? 0
+        : Math$floor(real_scroll_top / itemHeight);
+
+      if (
+        // if scroller is not at top most
+        scroller_scroll_top > top_buffer_distance
+        // and current firts index is the same with first index calculated from scroll position
+        && first_index_after_scroll_adjustment === firstIndex
+      ) {
+        repeat.updateBufferElements(/*skip update?*/false);
+        repeat.scrollerEl.scrollTop = real_scroll_top + totalAddedCount * itemHeight;
+        this._remeasure(repeat, itemHeight, newViewCount, newArraySize, firstIndex);
+        return;
+      }
+      // if it's not the same, it's an interesting case
+      // where multiple repeats are in the same container
+      // -- and their collections get mutated at the same time
+      // -- and this state reflects a repeat that does not have any visible view
+    }
+
+    // Optimizable case 3:
     // all splices happens after last index of the repeat, and the repeat has already filled up the viewport
     // in this case, no visible view is needed to be updated/moved/removed.
     // only need to update bottom buffer
-    const lastViewIndex = repeat._lastViewIndex();
-    const all_splices_are_after_view_port = currViewCount > repeat.elementsInView && splices.every(s => s.index > lastViewIndex);
+    const lastViewIndex = repeat.lastViewIndex();
+    const all_splices_are_after_view_port =
+      currViewCount > repeat.minViewsRequired
+      && splices.every(s => s.index > lastViewIndex);
+
     if (all_splices_are_after_view_port) {
-      repeat._bottomBufferHeight = Math$max(0, newArraySize - firstIndex - currViewCount) * itemHeight;
-      repeat._updateBufferElements(true);
+      repeat.bottomBufferHeight = Math$max(0, newArraySize - firstIndex - currViewCount) * itemHeight;
+      repeat.updateBufferElements(true);
     }
     // mutation happens somewhere in middle of the visible viewport
     // or before the viewport. In any case, it will shift first index around
     // which requires recalculation of everything
     else {
 
-      let viewsRequiredCount = repeat._viewsLength;
+      let viewsRequiredCount = repeat.minViewsRequired * 2;
       // when max views count required is 0, it's a sign of previous state of this mutation
       // was either reseted, or in unstable state. Should recalculate min & max numbers of views required
       // before processing further
       if (viewsRequiredCount === 0) {
         const scrollerInfo = repeat.getScrollerInfo();
-        const minViewsRequired = Math$floor(scrollerInfo.height / itemHeight) + 1;
+        const minViewsRequired = calcMinViewsRequired(scrollerInfo.height, itemHeight);
         // reassign to min views required
-        repeat.elementsInView = minViewsRequired;
+        repeat.minViewsRequired = minViewsRequired;
         // reassign to max views required
-        viewsRequiredCount = repeat._viewsLength = minViewsRequired * 2;
+        viewsRequiredCount = minViewsRequired * 2;
       }
 
       for (i = 0; spliceCount > i; ++i) {
@@ -316,7 +425,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
       // if array size is less than or equal to number of elements in View
       // the nadjust first index to 0
       // and set view count to new array size as there are not enough item to fill more than required
-      if (newArraySize <= repeat.elementsInView) {
+      if (newArraySize <= repeat.minViewsRequired) {
         firstIndexAfterMutation = 0;
         newViewCount = newArraySize;
       }
@@ -358,18 +467,12 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
       }
       const newBotBufferItemCount = Math$max(0, newArraySize - newTopBufferItemCount - newViewCount);
 
-      // first update will be to mimic the behavior of a normal repeat mutation
-      // where real views are inserted, removed
-      // whenever there is a mutation, scroller variables will be updated
-      // can only start to correct views behavior after scroller has stabilized
-      repeat._isScrolling = false;
-      repeat._scrollingDown = repeat._scrollingUp = false;
-      repeat._first = firstIndexAfterMutation;
-      repeat._previousFirst = firstIndex;
-      repeat._lastRebind = firstIndexAfterMutation + newViewCount;
-      repeat._topBufferHeight = newTopBufferItemCount * itemHeight;
-      repeat._bottomBufferHeight = newBotBufferItemCount * itemHeight;
-      repeat._updateBufferElements(/*skip update?*/true);
+      repeat.$first = firstIndexAfterMutation;
+      // repeat._previousFirst = firstIndex;
+      // repeat._lastRebind = firstIndexAfterMutation + newViewCount;
+      repeat.topBufferHeight = newTopBufferItemCount * itemHeight;
+      repeat.bottomBufferHeight = newBotBufferItemCount * itemHeight;
+      repeat.updateBufferElements(/*skip update?*/true);
     }
 
     // step 1 of mutation handling could shift the scroller scroll position
@@ -377,6 +480,27 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     // need to recalcuate first index based on scroll position, as this is the simplest form
     // of syncing with browser implementation
     this._remeasure(repeat, itemHeight, newViewCount, newArraySize, firstIndexAfterMutation);
+  }
+
+  updateAllViews(repeat: IVirtualRepeater, startIndex: number): void {
+    const views = (repeat.viewSlot as IViewSlot).children;
+    const viewLength = views.length;
+    const collection = repeat.items as any[];
+
+    const delta = Math$floor(repeat.topBufferHeight / repeat.itemHeight);
+    let collectionIndex = 0;
+    let view: IView;
+
+    for (; viewLength > startIndex; ++startIndex) {
+      collectionIndex = startIndex + delta;
+      view = repeat.view(startIndex);
+      rebindView(repeat, view, collectionIndex, collection);
+      repeat.updateBindings(view);
+    }
+  }
+
+  remeasure(repeat: IVirtualRepeater): void {
+    this._remeasure(repeat, repeat.itemHeight, repeat.viewCount(), repeat.items.length, repeat.firstViewIndex());
   }
 
   /**
@@ -391,15 +515,17 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
    *
    * @internal
    */
-  _remeasure(repeat: VirtualRepeat, itemHeight: number, newViewCount: number, newArraySize: number, firstIndexAfterMutation: number): void {
+  _remeasure(repeat: IVirtualRepeater, itemHeight: number, newViewCount: number, newArraySize: number, firstIndex: number): void {
     const scrollerInfo = repeat.getScrollerInfo();
-    const topBufferDistance = getDistanceToParent(repeat.topBufferEl, scrollerInfo.scroller);
-    const realScrolltop = Math$max(0, scrollerInfo.scrollTop === 0
+    const scroller_scroll_top = scrollerInfo.scrollTop;
+    const top_buffer_distance = getDistanceToParent(repeat.topBufferEl, scrollerInfo.scroller);
+    const real_scroll_top = Math$max(0, scroller_scroll_top === 0
       ? 0
-      : (scrollerInfo.scrollTop - topBufferDistance));
-    let first_index_after_scroll_adjustment = realScrolltop === 0
+      : (scroller_scroll_top - top_buffer_distance));
+      let first_index_after_scroll_adjustment = real_scroll_top === 0
       ? 0
-      : Math$floor(realScrolltop / itemHeight);
+      : Math$floor(real_scroll_top / itemHeight);
+
     // if first index after scroll adjustment doesn't fit with number of possible view
     // it means the scroller has been too far down to the bottom and nolonger suitable to start from this index
     // rollback until all views fit into new collection, or until has enough collection item to render
@@ -408,42 +534,16 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     }
     const top_buffer_item_count_after_scroll_adjustment = first_index_after_scroll_adjustment;
     const bot_buffer_item_count_after_scroll_adjustment = Math$max(0, newArraySize - top_buffer_item_count_after_scroll_adjustment - newViewCount);
-    repeat._first
-      = repeat._lastRebind = first_index_after_scroll_adjustment;
-    repeat._previousFirst = firstIndexAfterMutation;
-    repeat._isAtTop = first_index_after_scroll_adjustment === 0;
-    repeat._isLastIndex = bot_buffer_item_count_after_scroll_adjustment === 0;
-    repeat._topBufferHeight = top_buffer_item_count_after_scroll_adjustment * itemHeight;
-    repeat._bottomBufferHeight = bot_buffer_item_count_after_scroll_adjustment * itemHeight;
-    repeat._handlingMutations = false;
-    // prevent scroller update
-    repeat.revertScrollCheckGuard();
-    repeat._updateBufferElements();
-    updateAllViews(repeat, 0);
-  }
-
-  /**@internal */
-  _isIndexBeforeViewSlot(repeat: VirtualRepeat, viewSlot: ViewSlot, index: number): boolean {
-    const viewIndex = this._getViewIndex(repeat, viewSlot, index);
-    return viewIndex < 0;
-  }
-
-  /**@internal */
-  _isIndexAfterViewSlot(repeat: VirtualRepeat, viewSlot: ViewSlot, index: number): boolean {
-    const viewIndex = this._getViewIndex(repeat, viewSlot, index);
-    return viewIndex > repeat._viewsLength - 1;
-  }
-
-  /**
-   * @internal
-   * Calculate real index of a given index, based on existing buffer height and item height
-   */
-  _getViewIndex(repeat: VirtualRepeat, viewSlot: ViewSlot, index: number): number {
-    if (repeat.viewCount() === 0) {
-      return -1;
-    }
-
-    const topBufferItems = repeat._topBufferHeight / repeat.itemHeight;
-    return Math$floor(index - topBufferItems);
+    repeat.$first = first_index_after_scroll_adjustment;
+    // repeat._previousFirst = firstIndex;
+    // repeat._isAtTop = first_index_after_scroll_adjustment === 0;
+    // repeat._isLastIndex = bot_buffer_item_count_after_scroll_adjustment === 0;
+    repeat.topBufferHeight = top_buffer_item_count_after_scroll_adjustment * itemHeight;
+    repeat.bottomBufferHeight = bot_buffer_item_count_after_scroll_adjustment * itemHeight;
+    (repeat as VirtualRepeat)._handlingMutations = false;
+    // ensure scroller scroll is handled
+    (repeat as VirtualRepeat).revertScrollCheckGuard();
+    repeat.updateBufferElements();
+    this.updateAllViews(repeat, 0);
   }
 }

@@ -1,6 +1,7 @@
 <template>
   <require from='./nav-bar'></require>
   <require from='./checkbox.html'></require>
+  <let minimized-monitor.bind="true"></let>
   <div class="container">
     <nav-bar router.bind='router'></nav-bar>
     <main as-element='router-view'></main>
@@ -17,8 +18,7 @@
     class="bg-white border shadow-lg d-flex flex-column"
     style="position: fixed; bottom: 0; right: 0; max-height: 80vh;">
     <let
-      virtual-repeat.bind='window.virtualRepeat'
-      view-count-same-max-views-require.bind="virtualRepeat.viewSlot.children.length === virtualRepeat._viewsLength"></let>
+      virtual-repeat.bind='window.virtualRepeat'></let>
     <button
       class="btn btn-sm btn-block btn-info flex-shrink-0"
       click.trigger="minimizedMonitor = true">Minimize monitor</button>
@@ -41,50 +41,50 @@
           <td>${virtualRepeat.items.length * virtualRepeat.itemHeight}</td>
         </tr>
         <tr>
-          <td>Total views count</td>
-          <td class="table-${viewCountSameMaxViewsRequire ? 'success' : 'warning'}">${virtualRepeat.viewSlot.children.length}</td>
+          <td>Active views count</td>
+          <td class="table-${virtualRepeat.viewSlot.children.length === virtualRepeat.minViewsRequired * 2 ? 'success' : 'warning'}">${virtualRepeat.viewSlot.children.length}</td>
         </tr>
         <tr>
-          <td>Real views count</td>
-          <td class="table-${viewCountSameMaxViewsRequire ? 'success' : 'warning'}">${virtualRepeat._viewsLength}</td>
+          <td>Max views required</td>
+          <td class="table-${virtualRepeat.viewSlot.children.length === virtualRepeat.minViewsRequired * 2 ? 'success' : 'warning'}">${virtualRepeat.minViewsRequired * 2}</td>
+        </tr>
+        <!-- <tr>
+          <td>Last Rebind</td><td>${virtualRepeat._lastRebind}</td> -->
+        <tr>
+          <td>Min Views Required</td>
+          <td>${virtualRepeat.minViewsRequired}</td>
         </tr>
         <tr>
-          <td>Last Rebind</td><td>${virtualRepeat._lastRebind}</td>
-        <tr>
-          <td>Elements In view</td>
-          <td>${virtualRepeat.elementsInView}</td>
-        </tr>
-        <tr>
-          <td>First</td><td>${virtualRepeat._first}</td>
-        <tr>
-          <td>Previous First</td><td>${virtualRepeat._previousFirst}</td>
+          <td>First</td><td>${virtualRepeat.$first}</td>
+        <!-- <tr>
+          <td>Previous First</td><td>${virtualRepeat._previousFirst}</td> -->
         <tr>
           <td>Top Buffer height</td>
-          <td>${virtualRepeat._topBufferHeight}</td>
+          <td>${virtualRepeat.topBufferHeight}</td>
         </tr>
         <tr>
           <td>Bottom Buffer height</td>
-          <td>${virtualRepeat._bottomBufferHeight}</td>
+          <td>${virtualRepeat.bottomBufferHeight}</td>
         </tr>
         <tr>
           <td>Distance to top</td>
           <td>${virtualRepeat.distanceToTop}</td>
         </tr>
-        <tr>
+        <!-- <tr>
           <td>Scrolling Down</td>
           <td><checkbox checked.bind=virtualRepeat._scrollingDown></checkbox></td>
-        </tr>
-        <tr>
+        </tr> -->
+        <!-- <tr>
           <td>Scrolling Up</td>
           <td><checkbox checked.bind=virtualRepeat._scrollingUp></checkbox></td>
-        </tr>
-        <tr>
+        </tr> -->
+        <!-- <tr>
           <td>Is First or last</td>
-          <td><checkbox checked.bind=virtualRepeat._isAtFirstOrLastIndex></checkbox></td>
-        <tr>
+          <td><checkbox checked.bind=virtualRepeat._isAtFirstOrLastIndex></checkbox></td> -->
+        <!-- <tr>
           <td>Switched Direction</td>
           <td><checkbox checked.bind=virtualRepeat._switchedDirection></checkbox></td>
-        </tr>
+        </tr> -->
         <tr>
           <td>Is Attached</td>
           <td><checkbox checked.bind=virtualRepeat._isAttached></checkbox></td>
@@ -95,16 +95,17 @@
         <tr>
           <td>Fixed height Container</td>
           <td><checkbox checked.bind=virtualRepeat._fixedHeightContainer></checkbox></td>
-        <tr>
-          <td>Has Calculated Size</td><td><checkbox checked.bind=virtualRepeat._hasCalculatedSizes></checkbox></td>
-        <tr>
+        <!-- <tr>
+          <td>Has Calculated Size</td>
+          <td><checkbox checked.bind=virtualRepeat._hasCalculatedSizes></checkbox></td> -->
+        <!-- <tr>
           <td>Is At top</td>
           <td><checkbox checked.bind=virtualRepeat._isAtTop></checkbox></td>
-        </tr>
-        <tr>
+        </tr> -->
+        <!-- <tr>
           <td>Is Last Index</td>
           <td><checkbox checked.bind=virtualRepeat.isLastIndex></checkbox></td>
-        </tr>
+        </tr> -->
         <tr>
           <td>Called Get More</td>
           <td><checkbox checked.bind=virtualRepeat._calledGetMore></checkbox></td>
@@ -117,10 +118,10 @@
           <td>Handling Mutation</td>
           <td><checkbox checked.bind=virtualRepeat._handlingMutations></checkbox></td>
         </tr>
-        <tr>
+        <!-- <tr>
           <td>Is Scrolling</td>
           <td><checkbox checked.bind=virtualRepeat._isScrolling></checkbox></td>
-        </tr>
+        </tr> -->
       </table>
     </div>
   </div>

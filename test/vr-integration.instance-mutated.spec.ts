@@ -1,6 +1,6 @@
 import './setup';
 import { PLATFORM } from 'aurelia-pal';
-import { validateScrolledState, scrollToEnd, waitForNextFrame, waitForFrames } from './utilities';
+import { validateScrolledState, scrollToEnd, waitForNextFrame, waitForFrames, scrollRepeat } from './utilities';
 import { VirtualRepeat } from '../src/virtual-repeat';
 import { StageComponent, ComponentTester } from 'aurelia-testing';
 import { bootstrap } from 'aurelia-bootstrapper';
@@ -150,7 +150,8 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
   function runTestsCases(title: string, $view: string, extraResources: any[] = []): void {
     it([
       title,
-      '\thandles splice when scrolled to end'
+      '\thandles splice when scrolled to end',
+      ''
     ].join('\n'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
       await scrollToEnd(virtualRepeat);
@@ -166,7 +167,8 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
 
     it([
       title,
-      '\thandles splice removing non-consecutive when scrolled to end'
+      '\thandles splice removing non-consecutive when scrolled to end',
+      ''
     ].join('\n'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({
         items: items,
@@ -197,7 +199,8 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
       '\thandles splice non-consecutive when scrolled to end',
       '\t1000 items',
       '\t-- 12 max views',
-      '\t-- splice to 840 (every 10 increment, remove 3 add i, 80 times)'
+      '\t-- splice to 840 (every 10 increment, remove 3 add i, 80 times)',
+      ''
     ].join('\n'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
       await scrollToEnd(virtualRepeat);
@@ -223,32 +226,34 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
       '\thandles splice removing many',
       '\t1000 items',
       '\t-- 12 max views',
-      '\t-- splice to 24'
+      '\t-- splice to 24',
+      ''
     ].join('\n'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
       await scrollToEnd(virtualRepeat);
-      expect(virtualRepeat._viewsLength).toBe(12, 'virtualRepeat.viewsLength');
+      expect(virtualRepeat.minViewsRequired * 2).toBe(12, 'virtualRepeat.viewsLength');
       expect(virtualRepeat.element.parentElement.scrollTop).toEqual(100 * 995, 'scrollTop 1');
       // more items remaining than viewslot capacity
-      viewModel.items.splice(5, 1000 - virtualRepeat._viewsLength - 12);
+      viewModel.items.splice(5, 1000 - virtualRepeat.minViewsRequired * 2 - 12);
 
       await waitForNextFrame();
       expect(virtualRepeat.items.length).toEqual(24, 'virtualRepeat.items.length');
       expect(virtualRepeat.element.parentElement.scrollHeight).toEqual(100 * 24, 'scrollHeight 2');
       expect(virtualRepeat.element.parentElement.scrollTop).toEqual(100 * (24 - 5), 'scrollTop 2');
-      expect(virtualRepeat._first).toBe(1000 - (1000 - virtualRepeat._viewsLength), 'virtualRepeat._first 1');
+      expect(virtualRepeat.$first).toBe(1000 - (1000 - virtualRepeat.minViewsRequired * 2), 'virtualRepeat._first 1');
       validateScrolledState(virtualRepeat, viewModel, itemHeight);
     });
 
     it([
       title,
-      '\thandles splice removing more'
+      '\thandles splice removing more',
+      ''
     ].join('\n'), async () => {
       // number of items remaining exactly as viewslot capacity
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
       await scrollToEnd(virtualRepeat);
 
-      viewModel.items.splice(5, 1000 - virtualRepeat._viewsLength);
+      viewModel.items.splice(5, 1000 - virtualRepeat.minViewsRequired * 2);
 
       await waitForNextFrame();
 
@@ -259,12 +264,13 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
     // less items remaining than viewslot capacity
     it([
       title,
-      '\thandles splice removing even more'
+      '\thandles splice removing even more',
+      ''
     ].join('\n'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
       await scrollToEnd(virtualRepeat);
 
-      viewModel.items.splice(5, 1000 - virtualRepeat._viewsLength + 10);
+      viewModel.items.splice(5, 1000 - virtualRepeat.minViewsRequired * 2 + 10);
 
       await waitForNextFrame();
 
@@ -274,7 +280,8 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
 
     it([
       title,
-      '\thandles splice removing non-consecutive'
+      '\thandles splice removing non-consecutive',
+      ''
     ].join('\n'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
       await scrollToEnd(virtualRepeat);
@@ -289,7 +296,8 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
 
     it([
       title,
-      '\thandles splice non-consecutive'
+      '\thandles splice non-consecutive',
+      ''
     ].join('\n'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
       await scrollToEnd(virtualRepeat);
@@ -307,7 +315,8 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
       '\thandles splice removing many + add',
       '\t-- 1000 items',
       '\t-- 12 max views',
-      '\t-- spliced to 12'
+      '\t-- spliced to 12',
+      ''
     ].join('\n'), async () => {
       let scrollCount = 0;
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
@@ -315,11 +324,12 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
         scrollCount++;
       };
 
-      expect(virtualRepeat._viewsLength).toBe(12, 'repeat._viewsLength');
-      await scrollToEnd(virtualRepeat, 50);
-      expect(scrollCount).toBe(2, '@scroll 1');
+      expect(virtualRepeat.minViewsRequired * 2).toBe(12, 'repeat._viewsLength');
+      scrollRepeat(virtualRepeat, 'end');
+      await waitForNextFrame();
+      expect(scrollCount).toBe(1, '@scroll 1');
       expect(virtualRepeat.element.parentElement.scrollTop).toBe(100 * 995, 'anchor.parent.scrollTop 1');
-      expect(virtualRepeat._first).toBe(988, 'repeat._first 1');
+      expect(virtualRepeat.$first).toBe(988, 'repeat._first 1');
 
       viewModel.items.splice(5, 990, {}, {});
       const hasValueConverter = extraResources.length > 0;
@@ -328,18 +338,18 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
         expect(virtualRepeat.element.parentElement.scrollHeight).toBe(100 * 12, '| vc >> scroller.scrollHeight 2');
         expect(virtualRepeat.element.parentElement.scrollTop).toBe(100 * (12 - 500 / 100), '| vc >> scroller.scrollTop 2');
         expect(scrollCount).toBeGreaterThanOrEqual(2, '| vc >> @scroll 3');
-        expect(virtualRepeat._first).toBe(6, '| vc >> repeat._first 2');
+        expect(virtualRepeat.$first).toBe(0, '| vc >> repeat._first 2');
         validateScrolledState(virtualRepeat, viewModel, itemHeight);
       } else {
-        expect(scrollCount).toBe(2, '@scroll 2');
-        expect(virtualRepeat._first).toBe(988, 'repeat._first 2');
+        expect(scrollCount).toBe(1, '@scroll 2');
+        expect(virtualRepeat.$first).toBe(988, 'repeat._first 2');
         expect(virtualRepeat.items.length).toBe(12, 'items.length 1');
         expect(virtualRepeat.element.parentElement.scrollTop).toBe(100 * 995, 'scroller.scrollTop 1');
         await waitForNextFrame();
         expect(virtualRepeat.element.parentElement.scrollHeight).toBe(100 * 12, 'scroller.scrollHeight 2');
         expect(virtualRepeat.element.parentElement.scrollTop).toBe(100 * (12 - 500 / 100), 'scroller.scrollTop 2');
-        expect(scrollCount).toBe(3, '@scroll 3');
-        expect(virtualRepeat._first).toBe(6, 'repeat._first 3');
+        expect(scrollCount).toBe(2, '@scroll 3');
+        expect(virtualRepeat.$first).toBe(0, 'repeat._first 3');
         validateScrolledState(virtualRepeat, viewModel, itemHeight);
       }
       virtualRepeat.element.parentElement.onscroll = null;
@@ -353,7 +363,8 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
       '\thandles splice removing many + add',
       '\t1000 items',
       '\t-- 12 max views',
-      '\t-- spliced to 13'
+      '\t-- spliced to 13',
+      ''
     ].join('\n'), async () => {
       let scrollCount = 0;
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
@@ -361,7 +372,7 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
         scrollCount++;
       };
 
-      expect(virtualRepeat._viewsLength).toBe(12, 'repeat._viewsLength');
+      expect(virtualRepeat.minViewsRequired * 2).toBe(12, 'repeat._viewsLength');
       await scrollToEnd(virtualRepeat);
       expect(scrollCount).toBe(2, '@scroll 1');
       expect(virtualRepeat.element.parentElement.scrollTop).toBe(100 * 995);
@@ -376,7 +387,7 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
         expect(virtualRepeat.element.parentElement.scrollHeight).toBe(100 * 13, '| vc >> scroller.scrollHeight 1');
         expect(virtualRepeat.element.parentElement.scrollTop).toBe(100 * (13 - 500 / 100), '| vc >> scroller.scrollTop 2');
 
-        expect(virtualRepeat._first).toBe(7, '| vc >> repeat._first 1');
+        expect(virtualRepeat.$first).toBe(13 - (5 + 1) * 2, '| vc >> repeat._first 1');
         validateScrolledState(virtualRepeat, viewModel, itemHeight);
       } else {
         expect(scrollCount).toBe(2, '@scroll 2');
@@ -392,7 +403,8 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
 
     it([
       title,
-      '\thandles splice remove remaining + add'
+      '\thandles splice remove remaining + add',
+      ''
     ].join('\n'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
       await scrollToEnd(virtualRepeat);

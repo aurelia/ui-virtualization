@@ -3,7 +3,7 @@
     <a
       repeat.for="nav of router.navigation"
       href.bind='nav.href'
-      class='btn btn-sm btn-primary text-white mr-2'>${nav.title}</a>
+      class="btn btn-sm btn-${nav.isActive ? '' : 'outline-'}primary mr-2">${nav.title}</a>
   </div>
   <router-view></router-view>
 </template>

@@ -1,14 +1,13 @@
 import { updateOverrideContext } from 'aurelia-templating-resources';
 import { VirtualRepeat } from './virtual-repeat';
-import { IView } from './interfaces';
-
+import { IView, IVirtualRepeater, IViewSlot } from './interfaces';
 
 /**
 * Update the override context.
 * @param startIndex index in collection where to start updating.
 */
-export const updateVirtualOverrideContexts = (repeat: VirtualRepeat, startIndex: number): void => {
-  const views = repeat.viewSlot.children;
+export const updateVirtualOverrideContexts = (repeat: IVirtualRepeater, startIndex: number): void => {
+  const views = (repeat.viewSlot as IViewSlot).children;
   const viewLength = views.length;
   const collectionLength = repeat.items.length;
 
@@ -16,38 +15,21 @@ export const updateVirtualOverrideContexts = (repeat: VirtualRepeat, startIndex:
     startIndex = startIndex - 1;
   }
 
-  const delta = repeat._topBufferHeight / repeat.itemHeight;
+  const delta = repeat.topBufferHeight / repeat.itemHeight;
 
   for (; viewLength > startIndex; ++startIndex) {
     updateOverrideContext(views[startIndex].overrideContext, startIndex + delta, collectionLength);
   }
 };
 
-export const updateAllViews = (repeat: VirtualRepeat, startIndex: number): void => {
-  const views = repeat.viewSlot.children;
-  const viewLength = views.length;
-  const collection = repeat.items;
-
-  const delta = Math$floor(repeat._topBufferHeight / repeat.itemHeight);
-  let collectionIndex = 0;
-  let view;
-
-  for (; viewLength > startIndex; ++startIndex) {
-    collectionIndex = startIndex + delta;
-    view = repeat.view(startIndex);
-    rebindView(repeat, view, collectionIndex, collection);
-    repeat.updateBindings(view);
-  }
-};
-
-export const rebindView = (repeat: VirtualRepeat, view: IView, collectionIndex: number, collection: any[]): void => {
+export const rebindView = (repeat: IVirtualRepeater, view: IView, collectionIndex: number, collection: any[]): void => {
   view.bindingContext[repeat.local] = collection[collectionIndex];
   updateOverrideContext(view.overrideContext, collectionIndex, collection.length);
 };
 
-export const rebindAndMoveView = (repeat: VirtualRepeat, view: IView, index: number, moveToBottom: boolean): void => {
+export const rebindAndMoveView = (repeat: IVirtualRepeater, view: IView, index: number, moveToBottom: boolean): void => {
   const items = repeat.items;
-  const viewSlot = repeat.viewSlot;
+  const viewSlot = repeat.viewSlot as IViewSlot;
 
   updateOverrideContext(view.overrideContext, index, items.length);
   view.bindingContext[repeat.local] = items[index];
@@ -60,9 +42,13 @@ export const rebindAndMoveView = (repeat: VirtualRepeat, view: IView, index: num
   }
 };
 
-
-export const getElementDistanceToBottomViewPort = (element: Element): number => {
-  return document.documentElement.clientHeight - element.getBoundingClientRect().bottom;
+/**
+ * Calculate min number of views required to fill up the viewport based on viewport height and item height
+ */
+export const calcMinViewsRequired = (scrollerHeight: number, itemHeight: number) => {
+  // extra 1 item to make sure it always fill up the viewport
+  // in case first item is scroll up but not enough to completely pushed out of the viewport
+  return Math$floor(scrollerHeight / itemHeight) + 1;
 };
 
 export const Math$abs = Math.abs;

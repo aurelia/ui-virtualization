@@ -1,6 +1,11 @@
-import { RouterConfiguration, Router } from "aurelia-router";
-import { PLATFORM } from "aurelia-pal";
+import { RouterConfiguration, Router } from 'aurelia-router';
+import { PLATFORM } from 'aurelia-pal';
+import { processContent, BehaviorInstruction } from 'aurelia-framework';
 
+@processContent((_: any, __: any, ___: any, behaviorInstuction: BehaviorInstruction) => {
+  behaviorInstuction.inheritBindingContext = false;
+  return true;
+})
 export class PromiseGetMoreApp {
 
   router: Router;

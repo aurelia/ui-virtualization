@@ -71,7 +71,7 @@ export class MyVirtualList {
 }
 ```
 
-With a surrounding fixed height container with overflow scroll. Note that `overflow: scroll` styling needs to be inline on the elemenet.
+With a surrounding fixed height container with overflow scroll. Note that `overflow: scroll` styling is inlined on the elemenet. It can also be applied from CSS.
 
 ```html
 <template>
@@ -92,17 +92,17 @@ If you are running the plugin in the `skeleton-naviagion` project, make sure to 
     ${$index} ${item}
   </div>
 </template>
-```  
+```
 ```javascript
 export class MyVirtualList {
-    items = ['Foo', 'Bar', 'Baz'];
-    getMore(topIndex, isAtBottom, isAtTop) {
-        for(let i = 0; i < 100; ++i) {
-            this.items.push('item' + i);
-        }
+  items = ['Foo', 'Bar', 'Baz'];
+  getMore(topIndex, isAtBottom, isAtTop) {
+    for(let i = 0; i < 100; ++i) {
+      this.items.push('item' + i);
     }
+  }
 }
-```  
+```
 
 Or to use an expression, use `.call` as shown below.
 ```html
@@ -111,23 +111,24 @@ Or to use an expression, use `.call` as shown below.
     ${$index} ${item}
   </div>
 </template>
-```  
+```
 ```javascript
 export class MyVirtualList {
-    items = ['Foo', 'Bar', 'Baz'];
-    getMore(scrollContext) {
-        for(let i = 0; i < 100; ++i) {
-            this.items.push('item' + i);
-        }
+  items = ['Foo', 'Bar', 'Baz'];
+  getMore(scrollContext) {
+    for(let i = 0; i < 100; ++i) {
+      this.items.push('item' + i);
     }
+  }
 }
-```  
+```
 
-The `infinite-scroll-next` attribute can accept a function, a promise, or a function that returns a promise.  
-The bound function will be called when the scroll container has reached a point where there are no more items to move into the DOM (i.e. when it reaches the end of a list, either from the top or the bottom).  
-There are three parameters that are passed to the function (`getMore(topIndex, isAtBottom, isAtTop)`) which helps determine the behavior or amount of items to get during scrolling.    
-1. `topIndex` - A integer value that represents the current item that exists at the top of the rendered items in the DOM.  
-2. `isAtBottom` - A boolean value that indicates whether the list has been scrolled to the bottom of the items list.  
+The `infinite-scroll-next` attribute can accept a function, a promise, or a function that returns a promise.
+The bound function will be called when the scroll container has reached a point where there are no more items to move into the DOM (i.e. when it reaches the end of a list, either from the top or the bottom).
+
+There are three parameters that are passed to the function (`getMore(topIndex, isAtBottom, isAtTop)`) which helps determine the behavior or amount of items to get during scrolling.
+1. `topIndex` - A integer value that represents the current item that exists at the top of the rendered items in the DOM.
+2. `isAtBottom` - A boolean value that indicates whether the list has been scrolled to the bottom of the items list.
 3. `isAtTop` - A boolean value that indicates whether the list has been scrolled to the top of the items list.
 
 

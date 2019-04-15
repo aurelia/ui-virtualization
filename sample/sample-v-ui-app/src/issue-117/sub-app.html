@@ -1,6 +1,45 @@
 <template>
-  <div class="">
-    <div class="d-flex justify-content-around">
+  <!-- start with fixed height container -->
+  <let mode.bind='2'></let>
+  <div scrollbar='x' class='px-1'>
+    <button
+      class="btn btn-${mode === 1 ? '' : 'outline-'}primary btn-sm"
+      click.trigger="mode = 1">Full page scrolling</button>
+    <button
+      class="btn btn-${mode === 2 ? '' : 'outline-'}primary btn-sm"
+      click.trigger="mode = 2">Fixed height container</button>
+    <button
+      class="btn btn-${mode === 3 ? '' : 'outline-'}primary btn-sm"
+      click.trigger="mode = 3">Fixed height + Piped through value converter</button>
+  </div>
+  <div if.bind="mode === 1">
+    <table class="table table-striped table-sm">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>First Name</th>
+          <th>Last Name</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          virtual-repeat.for="person of people"
+          infinite-scroll-next.call="push30($scrollContext)"
+          class="i-${$index}">
+          <td>${$index}</td>
+          <td>${person.fname}</td>
+          <td>${person.lname}</td>
+          <td>
+            <button type="button" class="btn btn-link"><i class="far fa-edit"></i></button>
+            <button type="button" class="btn btn-link"><i class="far fa-trash-alt"></i></button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div if.bind="mode === 2">
+    <div class="scrollbar-y" style="height: 600px;">
       <table class="table table-striped table-sm">
         <thead>
           <tr>
@@ -11,7 +50,38 @@
           </tr>
         </thead>
         <tbody>
-          <tr virtual-repeat.for="person of people" infinite-scroll-next.call="push30($scrollContext)">
+          <tr
+            virtual-repeat.for="person of people"
+            infinite-scroll-next.call="push30($scrollContext)"
+            class="i-${$index}">
+            <td>${$index}</td>
+            <td>${person.fname}</td>
+            <td>${person.lname}</td>
+            <td>
+              <button type="button" class="btn btn-link"><i class="far fa-edit"></i></button>
+              <button type="button" class="btn btn-link"><i class="far fa-trash-alt"></i></button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div if.bind="mode === 3">
+    <div class="scrollbar-y" style="height: 600px;">
+      <table class="table table-striped table-sm">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            virtual-repeat.for="person of people | identity"
+            infinite-scroll-next.call="push30($scrollContext)"
+            class="i-${$index}">
             <td>${$index}</td>
             <td>${person.fname}</td>
             <td>${person.lname}</td>

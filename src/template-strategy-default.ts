@@ -1,11 +1,14 @@
 import { IView, ITemplateStrategy } from './interfaces';
-import { insertBeforeNode, getScrollContainer } from './utilities-dom';
+import { insertBeforeNode, getScrollerElement } from './utilities-dom';
 import { DOM } from 'aurelia-pal';
 
+/**
+ * A template strategy for any virtual repeat usage that is not placed on tr, tbody, li, dd
+ */
 export class DefaultTemplateStrategy implements ITemplateStrategy {
 
   getScrollContainer(element: Element): HTMLElement {
-    return getScrollContainer(element);
+    return getScrollerElement(element);
   }
 
   moveViewFirst(view: IView, topBuffer: Element): void {

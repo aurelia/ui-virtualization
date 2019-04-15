@@ -1,20 +1,21 @@
 import { Math$round, $isNaN } from './utilities';
 import { IView } from './interfaces';
+import { htmlElement } from './constants';
 
 /**
  * Walk up the DOM tree and determine what element will be scroller for an element
  *
  * If none is found, return `document.documentElement`
  */
-export const getScrollContainer = (element: Node): HTMLElement => {
-  let current = element.parentNode;
-  while (current !== null && current !== document) {
+export const getScrollerElement = (element: Node): HTMLElement => {
+  let current = element.parentNode as Element;
+  while (current !== null && current !== htmlElement) {
     if (hasOverflowScroll(current)) {
       return current as HTMLElement;
     }
     current = current.parentNode as HTMLElement;
   }
-  return document.documentElement;
+  return htmlElement;
 };
 
 /**
@@ -22,9 +23,8 @@ export const getScrollContainer = (element: Node): HTMLElement => {
  */
 export const getElementDistanceToTopOfDocument = (element: Element): number => {
   let box = element.getBoundingClientRect();
-  let documentElement = document.documentElement;
   let scrollTop = window.pageYOffset;
-  let clientTop = documentElement.clientTop;
+  let clientTop = htmlElement.clientTop;
   let top  = box.top + scrollTop - clientTop;
   return Math$round(top);
 };
@@ -32,7 +32,7 @@ export const getElementDistanceToTopOfDocument = (element: Element): number => {
 /**
  * Check if an element has style scroll/auto for overflow/overflowY
  */
-export const hasOverflowScroll = (element): boolean => {
+export const hasOverflowScroll = (element: Element): boolean => {
   const style = window.getComputedStyle(element);
   return style && (style.overflowY === 'scroll' || style.overflow === 'scroll' || style.overflowY === 'auto' || style.overflow === 'auto');
 };
@@ -45,7 +45,7 @@ export const getStyleValues = (element: Element, ...styles: string[]): number =>
   let value: number = 0;
   let styleValue: number = 0;
   for (let i = 0, ii = styles.length; ii > i; ++i) {
-    styleValue = parseInt(currentStyle[styles[i]], 10);
+    styleValue = parseFloat(currentStyle[styles[i]]);
     value += $isNaN(styleValue) ? 0 : styleValue;
   }
   return value;
@@ -74,12 +74,7 @@ export const insertBeforeNode = (view: IView, bottomBuffer: Element): void => {
  * child.offsetTop - parent.offsetTop
  * There are steps in the middle to account for offsetParent but it's basically that
  */
-export const getDistanceToParent = (child: HTMLElement, parent: HTMLElement) => {
-  // optimizable case where child is the first child of parent
-  // and parent is the target parent to calculate
-  if (child.previousSibling === null && child.parentNode === parent) {
-    return 0;
-  }
+export const getDistanceToParent = (child: HTMLElement, parent: HTMLElement): number => {
   const offsetParent = child.offsetParent as HTMLElement;
   const childOffsetTop = child.offsetTop;
   // [el] <-- offset parent === parent

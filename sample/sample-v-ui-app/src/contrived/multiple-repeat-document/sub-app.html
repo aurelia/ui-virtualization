@@ -1,0 +1,46 @@
+<template>
+  <div ref="parentElement">
+    <h1 style="color: #fff; background-color:#ed2b88">First List</h1>
+    <div virtual-repeat.for="item of objectArray" class="contact-list-item ${item.name}">
+      <div class="contact-item">
+        <div class="avatar" click.delegate="click()" css="background-color: ${item.color}">
+          ${item.firstLetter}
+        </div>
+        <div class="name">${$index} ${item.name} </div>
+        <div class="content">
+          <strong>Phone:</strong> ${item.phone} <br>
+          <strong>Country:</strong> ${item.country} <br> </div>
+      </div>
+    </div>
+    <h1 class="py-4" style="color: #fff; background-color:#ed2b88">Second List</h1>
+    <div virtual-repeat.for="item of objectArray" class="contact-list-item ${item.name}">
+      <div class="contact-item">
+        <div class="avatar" click.delegate="click()" css="background-color: ${item.color}">${item.firstLetter}
+        </div>
+        <div class="name"> ${$index} ${item.name} </div>
+        <div class="content">
+          <strong>Phone:</strong> ${item.phone} <br>
+          <strong>Country:</strong> ${item.country} <br>
+        </div>
+      </div>
+    </div>
+    <h1 class="py-4" style="color: #fff; background-color:#ed2b88">Third List</h1>
+    <div virtual-repeat.for="item of objectArray" class="contact-list-item ${item.name}">
+      <div class="contact-item">
+        <div class="avatar" click.delegate="click()" css="background-color: ${item.color}">${item.firstLetter}
+        </div>
+        <div class="name">${$index} ${item.name} </div>
+        <div class="content">
+          <strong>Phone:</strong> ${item.phone} <br>
+          <strong>Country:</strong> ${item.country} <br>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div
+    class="bg-white shadow-lg p-2 border"
+    style="position: fixed; bottom: 0; right: 250px">
+    Item Count: ${itemsCount}<br>
+    DOM elements Count: ${childrenCount - 3}<br>
+  </div>
+</template>
