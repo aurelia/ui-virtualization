@@ -89,27 +89,17 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
 
   /**
    * First view index, for proper follow up calculations
-   * @internal
    */
   $first: number = 0;
-
-  // /**
-  //  * Number of views required to fillup the viewport, and also enough to provide smooth scrolling
-  //  * Without showing blank space
-  //  * @internal
-  //  */
-  // _viewsLength: number = 0;
 
   /**
    * Height of top buffer to properly push the visible rendered list items into right position
    * Usually determined by `_first` visible index * `itemHeight`
-   * @internal
    */
   topBufferHeight: number;
 
   /**
    * Height of bottom buffer to properly push the visible rendered list items into right position
-   * @internal
    */
   bottomBufferHeight: number;
 
@@ -158,12 +148,6 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
   key: any;
   value: any;
 
-  // Array repeat specific properties
-  /**@internal*/
-  __queuedSplices: any[];
-  /**@internal*/
-  __array: any[];
-
   /**
    * @bindable
    */
@@ -177,7 +161,6 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
   /**@internal */
   scope: Scope;
 
-  /**@internal */
   viewSlot: IViewSlot;
 
   readonly viewFactory: BoundViewFactory;
@@ -221,7 +204,6 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
    * Usually determined by template strategy.
    *
    * The scrolling container may vary based on different position of `virtual-repeat` attribute
-   * @internal
    */
   scrollerEl: HTMLElement;
 
@@ -237,7 +219,6 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
 
   /**
    * Defines how many items there should be for a given index to be considered at edge
-   * @internal
    */
   edgeDistance: number;
 
@@ -250,25 +231,21 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
 
   /**
    * Template handling strategy for this repeat.
-   * @internal
    */
   templateStrategy: ITemplateStrategy;
 
   /**
    * Top buffer element, used to reflect the visualization of amount of items `before` the first visible item
-   * @internal
    */
   topBufferEl: HTMLElement;
 
   /**
    * Bot buffer element, used to reflect the visualization of amount of items `after` the first visible item
-   * @internal
    */
   bottomBufferEl: HTMLElement;
 
   /**
    * Height of each item. Calculated based on first item
-   * @internal
    */
   itemHeight: number;
 
@@ -279,7 +256,6 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
 
   /**
    * Number indicating minimum elements required to render to fill up the visible viewport
-   * @internal
    */
   minViewsRequired: number;
 
@@ -573,7 +549,6 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
     };
   }
 
-  /**@internal */
   resetCalculation(): void {
     this.$first
       // = this._viewsLength
@@ -803,7 +778,6 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
    */
   _lastGetMore: number = 0;
 
-  /**@internal*/
   getMore(topIndex: number, isNearTop: boolean, isNearBottom: boolean, force?: boolean): void {
     if (isNearTop || isNearBottom || force) {
       // guard against too rapid fire when scrolling towards end/start
@@ -878,7 +852,6 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
     }
   }
 
-  /**@internal */
   updateBufferElements(skipUpdate?: boolean): void {
     this.topBufferEl.style.height = `${this.topBufferHeight}px`;
     this.bottomBufferEl.style.height = `${this.bottomBufferHeight}px`;
@@ -897,23 +870,19 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
     }
   }
 
-  /**@internal */
   firstView(): IView | null {
     return this.view(0);
   }
 
-  /**@internal */
   lastView(): IView | null {
     return this.view(this.viewCount() - 1);
   }
 
-  /**@internal*/
   firstViewIndex(): number {
     const firstView = this.firstView();
     return firstView === null ? -1 : firstView.overrideContext.$index;
   }
 
-  /**@internal*/
   lastViewIndex(): number {
     const lastView = this.lastView();
     return lastView === null ? -1 : lastView.overrideContext.$index;
@@ -921,7 +890,6 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
 
   /**
    * Observe scroller element to react upon sizing changes
-   * @internal
    */
   observeScroller(scrollerEl: HTMLElement): void {
     // using `newRect` paramter to check if this size change handler is still the most recent update
@@ -980,7 +948,6 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
   /**
    * Dispose scroller content size observer, if has
    * Dispose all event listeners related to sizing of scroller, if any
-   * @internal
    */
   unobserveScroller(): void {
     const observer = this._scrollerResizeObserver;
