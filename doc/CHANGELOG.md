@@ -1,3 +1,12 @@
+# [1.0.0-beta.7](https://github.com/aurelia/ui-virtualization/compare/1.0.0-beta.6...1.0.0-beta.7) (2019-05-06)
+
+
+### Bug Fixes
+
+* **repeat:** ensure revert mutation handling ([869bc34](https://github.com/aurelia/ui-virtualization/commit/869bc34))
+
+
+
 # [1.0.0-beta.6](https://github.com/aurelia/ui-virtualization/compare/1.0.0-beta.5...1.0.0-beta.6) (2019-03-28)
 
 

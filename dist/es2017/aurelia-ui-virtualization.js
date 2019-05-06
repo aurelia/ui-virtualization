@@ -4,20 +4,6 @@ import { updateOverrideContext, ArrayRepeatStrategy, createFullOverrideContext, 
 import { DOM, PLATFORM } from 'aurelia-pal';
 import { Container } from 'aurelia-dependency-injection';
 
-const updateAllViews = (repeat, startIndex) => {
-    const views = repeat.viewSlot.children;
-    const viewLength = views.length;
-    const collection = repeat.items;
-    const delta = Math$floor(repeat._topBufferHeight / repeat.itemHeight);
-    let collectionIndex = 0;
-    let view;
-    for (; viewLength > startIndex; ++startIndex) {
-        collectionIndex = startIndex + delta;
-        view = repeat.view(startIndex);
-        rebindView(repeat, view, collectionIndex, collection);
-        repeat.updateBindings(view);
-    }
-};
 const rebindView = (repeat, view, collectionIndex, collection) => {
     view.bindingContext[repeat.local] = collection[collectionIndex];
     updateOverrideContext(view.overrideContext, collectionIndex, collection.length);
@@ -36,6 +22,9 @@ const rebindAndMoveView = (repeat, view, index, moveToBottom) => {
         repeat.templateStrategy.moveViewFirst(view, repeat.topBufferEl);
     }
 };
+const calcMinViewsRequired = (scrollerHeight, itemHeight) => {
+    return Math$floor(scrollerHeight / itemHeight) + 1;
+};
 const Math$abs = Math.abs;
 const Math$max = Math.max;
 const Math$min = Math.min;
@@ -43,21 +32,24 @@ const Math$round = Math.round;
 const Math$floor = Math.floor;
 const $isNaN = isNaN;
 
-const getScrollContainer = (element) => {
+const doc = document;
+const htmlElement = doc.documentElement;
+const $raf = requestAnimationFrame;
+
+const getScrollerElement = (element) => {
     let current = element.parentNode;
-    while (current !== null && current !== document) {
+    while (current !== null && current !== htmlElement) {
         if (hasOverflowScroll(current)) {
             return current;
         }
         current = current.parentNode;
     }
-    return document.documentElement;
+    return htmlElement;
 };
 const getElementDistanceToTopOfDocument = (element) => {
     let box = element.getBoundingClientRect();
-    let documentElement = document.documentElement;
     let scrollTop = window.pageYOffset;
-    let clientTop = documentElement.clientTop;
+    let clientTop = htmlElement.clientTop;
     let top = box.top + scrollTop - clientTop;
     return Math$round(top);
 };
@@ -70,7 +62,7 @@ const getStyleValues = (element, ...styles) => {
     let value = 0;
     let styleValue = 0;
     for (let i = 0, ii = styles.length; ii > i; ++i) {
-        styleValue = parseInt(currentStyle[styles[i]], 10);
+        styleValue = parseFloat(currentStyle[styles[i]]);
         value += $isNaN(styleValue) ? 0 : styleValue;
     }
     return value;
@@ -89,9 +81,6 @@ const insertBeforeNode = (view, bottomBuffer) => {
     bottomBuffer.parentNode.insertBefore(view.lastChild, bottomBuffer);
 };
 const getDistanceToParent = (child, parent) => {
-    if (child.previousSibling === null && child.parentNode === parent) {
-        return 0;
-    }
     const offsetParent = child.offsetParent;
     const childOffsetTop = child.offsetTop;
     if (offsetParent === null || offsetParent === parent) {
@@ -108,7 +97,7 @@ const getDistanceToParent = (child, parent) => {
 };
 
 class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
-    createFirstItem(repeat) {
+    createFirstRow(repeat) {
         const overrideContext = createFullOverrideContext(repeat, repeat.items[0], 0, 1);
         return repeat.addView(overrideContext.bindingContext, overrideContext);
     }
@@ -117,57 +106,101 @@ class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
         if (!(itemCount > 0)) {
             return 1;
         }
-        const containerEl = repeat.getScroller();
+        const scrollerInfo = repeat.getScrollerInfo();
         const existingViewCount = repeat.viewCount();
         if (itemCount > 0 && existingViewCount === 0) {
-            this.createFirstItem(repeat);
+            this.createFirstRow(repeat);
         }
-        const isFixedHeightContainer = repeat._fixedHeightContainer = hasOverflowScroll(containerEl);
-        const firstView = repeat._firstView();
+        const firstView = repeat.firstView();
         const itemHeight = calcOuterHeight(firstView.firstChild);
         if (itemHeight === 0) {
             return 0;
         }
         repeat.itemHeight = itemHeight;
-        const scroll_el_height = isFixedHeightContainer
-            ? calcScrollHeight(containerEl)
-            : document.documentElement.clientHeight;
-        const elementsInView = repeat.elementsInView = Math$floor(scroll_el_height / itemHeight) + 1;
-        const viewsCount = repeat._viewsLength = elementsInView * 2;
+        const scroll_el_height = scrollerInfo.height;
+        const elementsInView = repeat.minViewsRequired = calcMinViewsRequired(scroll_el_height, itemHeight);
         return 2 | 4;
+    }
+    onAttached(repeat) {
+        if (repeat.items.length < repeat.minViewsRequired) {
+            repeat.getMore(0, true, this.isNearBottom(repeat, repeat.lastViewIndex()), true);
+        }
+    }
+    getViewRange(repeat, scrollerInfo) {
+        const topBufferEl = repeat.topBufferEl;
+        const scrollerEl = repeat.scrollerEl;
+        const itemHeight = repeat.itemHeight;
+        let realScrollTop = 0;
+        const isFixedHeightContainer = scrollerInfo.scroller !== htmlElement;
+        if (isFixedHeightContainer) {
+            const topBufferDistance = getDistanceToParent(topBufferEl, scrollerEl);
+            const scrollerScrollTop = scrollerInfo.scrollTop;
+            realScrollTop = Math$max(0, scrollerScrollTop - Math$abs(topBufferDistance));
+        }
+        else {
+            realScrollTop = pageYOffset - repeat.distanceToTop;
+        }
+        const realViewCount = repeat.minViewsRequired * 2;
+        let firstVisibleIndex = Math$max(0, itemHeight > 0 ? Math$floor(realScrollTop / itemHeight) : 0);
+        const lastVisibleIndex = Math$min(repeat.items.length - 1, firstVisibleIndex + (realViewCount - 1));
+        firstVisibleIndex = Math$max(0, Math$min(firstVisibleIndex, lastVisibleIndex - (realViewCount - 1)));
+        return [firstVisibleIndex, lastVisibleIndex];
+    }
+    updateBuffers(repeat, firstIndex) {
+        const itemHeight = repeat.itemHeight;
+        const itemCount = repeat.items.length;
+        repeat.topBufferHeight = firstIndex * itemHeight;
+        repeat.bottomBufferHeight = (itemCount - firstIndex - repeat.viewCount()) * itemHeight;
+        repeat.updateBufferElements(true);
+    }
+    isNearTop(repeat, firstIndex) {
+        const itemCount = repeat.items.length;
+        return itemCount > 0
+            ? firstIndex < repeat.edgeDistance
+            : false;
+    }
+    isNearBottom(repeat, lastIndex) {
+        const itemCount = repeat.items.length;
+        return lastIndex === -1
+            ? true
+            : itemCount > 0
+                ? lastIndex > (itemCount - repeat.edgeDistance)
+                : false;
     }
     instanceChanged(repeat, items, first) {
         if (this._inPlaceProcessItems(repeat, items, first)) {
-            this._remeasure(repeat, repeat.itemHeight, repeat._viewsLength, items.length, repeat._first);
+            this._remeasure(repeat, repeat.itemHeight, repeat.minViewsRequired * 2, items.length, repeat.$first);
         }
     }
     instanceMutated(repeat, array, splices) {
         this._standardProcessInstanceMutated(repeat, array, splices);
     }
-    _inPlaceProcessItems(repeat, items, firstIndex) {
+    _inPlaceProcessItems($repeat, items, firstIndex) {
+        const repeat = $repeat;
         const currItemCount = items.length;
         if (currItemCount === 0) {
             repeat.removeAllViews(true, false);
-            repeat._resetCalculation();
+            repeat.resetCalculation();
             repeat.__queuedSplices = repeat.__array = undefined;
             return false;
         }
+        const max_views_count = repeat.minViewsRequired * 2;
         let realViewsCount = repeat.viewCount();
         while (realViewsCount > currItemCount) {
             realViewsCount--;
             repeat.removeView(realViewsCount, true, false);
         }
-        while (realViewsCount > repeat._viewsLength) {
+        while (realViewsCount > max_views_count) {
             realViewsCount--;
             repeat.removeView(realViewsCount, true, false);
         }
-        realViewsCount = Math$min(realViewsCount, repeat._viewsLength);
+        realViewsCount = Math$min(realViewsCount, max_views_count);
         const local = repeat.local;
         const lastIndex = currItemCount - 1;
         if (firstIndex + realViewsCount > lastIndex) {
             firstIndex = Math$max(0, currItemCount - realViewsCount);
         }
-        repeat._first = firstIndex;
+        repeat.$first = firstIndex;
         for (let i = 0; i < realViewsCount; i++) {
             const currIndex = i + firstIndex;
             const view = repeat.view(i);
@@ -191,14 +224,15 @@ class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
             overrideContext.$even = !odd;
             repeat.updateBindings(view);
         }
-        const minLength = Math$min(repeat._viewsLength, currItemCount);
+        const minLength = Math$min(max_views_count, currItemCount);
         for (let i = realViewsCount; i < minLength; i++) {
             const overrideContext = createFullOverrideContext(repeat, items[i], i, currItemCount);
             repeat.addView(overrideContext.bindingContext, overrideContext);
         }
         return true;
     }
-    _standardProcessInstanceMutated(repeat, array, splices) {
+    _standardProcessInstanceMutated($repeat, array, splices) {
+        const repeat = $repeat;
         if (repeat.__queuedSplices) {
             for (let i = 0, ii = splices.length; i < ii; ++i) {
                 const { index, removed, addedCount } = splices[i];
@@ -209,7 +243,7 @@ class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
         }
         if (array.length === 0) {
             repeat.removeAllViews(true, false);
-            repeat._resetCalculation();
+            repeat.resetCalculation();
             repeat.__queuedSplices = repeat.__array = undefined;
             return;
         }
@@ -228,7 +262,7 @@ class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
         }
     }
     _runSplices(repeat, newArray, splices) {
-        const firstIndex = repeat._first;
+        const firstIndex = repeat.$first;
         let totalRemovedCount = 0;
         let totalAddedCount = 0;
         let splice;
@@ -247,7 +281,7 @@ class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
             }
         }
         if (allSplicesAreInplace) {
-            const lastIndex = repeat._lastViewIndex();
+            const lastIndex = repeat.lastViewIndex();
             const repeatViewSlot = repeat.viewSlot;
             for (i = 0; spliceCount > i; i++) {
                 splice = splices[i];
@@ -268,23 +302,48 @@ class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
         const currViewCount = repeat.viewCount();
         let newViewCount = currViewCount;
         if (originalSize === 0 && itemHeight === 0) {
-            repeat._resetCalculation();
+            repeat.resetCalculation();
             repeat.itemsChanged();
             return;
         }
-        const lastViewIndex = repeat._lastViewIndex();
-        const all_splices_are_after_view_port = currViewCount > repeat.elementsInView && splices.every(s => s.index > lastViewIndex);
+        const all_splices_are_positive_and_before_view_port = totalRemovedCount === 0
+            && totalAddedCount > 0
+            && splices.every(splice => splice.index <= firstIndex);
+        if (all_splices_are_positive_and_before_view_port) {
+            repeat.$first = firstIndex + totalAddedCount - 1;
+            repeat.topBufferHeight += totalAddedCount * itemHeight;
+            repeat.enableScroll();
+            const scrollerInfo = repeat.getScrollerInfo();
+            const scroller_scroll_top = scrollerInfo.scrollTop;
+            const top_buffer_distance = getDistanceToParent(repeat.topBufferEl, scrollerInfo.scroller);
+            const real_scroll_top = Math$max(0, scroller_scroll_top === 0
+                ? 0
+                : (scroller_scroll_top - top_buffer_distance));
+            let first_index_after_scroll_adjustment = real_scroll_top === 0
+                ? 0
+                : Math$floor(real_scroll_top / itemHeight);
+            if (scroller_scroll_top > top_buffer_distance
+                && first_index_after_scroll_adjustment === firstIndex) {
+                repeat.updateBufferElements(false);
+                repeat.scrollerEl.scrollTop = real_scroll_top + totalAddedCount * itemHeight;
+                this._remeasure(repeat, itemHeight, newViewCount, newArraySize, firstIndex);
+                return;
+            }
+        }
+        const lastViewIndex = repeat.lastViewIndex();
+        const all_splices_are_after_view_port = currViewCount > repeat.minViewsRequired
+            && splices.every(s => s.index > lastViewIndex);
         if (all_splices_are_after_view_port) {
-            repeat._bottomBufferHeight = Math$max(0, newArraySize - firstIndex - currViewCount) * itemHeight;
-            repeat._updateBufferElements(true);
+            repeat.bottomBufferHeight = Math$max(0, newArraySize - firstIndex - currViewCount) * itemHeight;
+            repeat.updateBufferElements(true);
         }
         else {
-            let viewsRequiredCount = repeat._viewsLength;
+            let viewsRequiredCount = repeat.minViewsRequired * 2;
             if (viewsRequiredCount === 0) {
                 const scrollerInfo = repeat.getScrollerInfo();
-                const minViewsRequired = Math$floor(scrollerInfo.height / itemHeight) + 1;
-                repeat.elementsInView = minViewsRequired;
-                viewsRequiredCount = repeat._viewsLength = minViewsRequired * 2;
+                const minViewsRequired = calcMinViewsRequired(scrollerInfo.height, itemHeight);
+                repeat.minViewsRequired = minViewsRequired;
+                viewsRequiredCount = minViewsRequired * 2;
             }
             for (i = 0; spliceCount > i; ++i) {
                 const { addedCount, removed: { length: removedCount }, index: spliceIndex } = splices[i];
@@ -294,7 +353,7 @@ class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
                 }
             }
             newViewCount = 0;
-            if (newArraySize <= repeat.elementsInView) {
+            if (newArraySize <= repeat.minViewsRequired) {
                 firstIndexAfterMutation = 0;
                 newViewCount = newArraySize;
             }
@@ -325,75 +384,83 @@ class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
                 }
             }
             const newBotBufferItemCount = Math$max(0, newArraySize - newTopBufferItemCount - newViewCount);
-            repeat._isScrolling = false;
-            repeat._scrollingDown = repeat._scrollingUp = false;
-            repeat._first = firstIndexAfterMutation;
-            repeat._previousFirst = firstIndex;
-            repeat._lastRebind = firstIndexAfterMutation + newViewCount;
-            repeat._topBufferHeight = newTopBufferItemCount * itemHeight;
-            repeat._bottomBufferHeight = newBotBufferItemCount * itemHeight;
-            repeat._updateBufferElements(true);
+            repeat.$first = firstIndexAfterMutation;
+            repeat.topBufferHeight = newTopBufferItemCount * itemHeight;
+            repeat.bottomBufferHeight = newBotBufferItemCount * itemHeight;
+            repeat.updateBufferElements(true);
         }
         this._remeasure(repeat, itemHeight, newViewCount, newArraySize, firstIndexAfterMutation);
     }
-    _remeasure(repeat, itemHeight, newViewCount, newArraySize, firstIndexAfterMutation) {
+    updateAllViews(repeat, startIndex) {
+        const views = repeat.viewSlot.children;
+        const viewLength = views.length;
+        const collection = repeat.items;
+        const delta = Math$floor(repeat.topBufferHeight / repeat.itemHeight);
+        let collectionIndex = 0;
+        let view;
+        for (; viewLength > startIndex; ++startIndex) {
+            collectionIndex = startIndex + delta;
+            view = repeat.view(startIndex);
+            rebindView(repeat, view, collectionIndex, collection);
+            repeat.updateBindings(view);
+        }
+    }
+    remeasure(repeat) {
+        this._remeasure(repeat, repeat.itemHeight, repeat.viewCount(), repeat.items.length, repeat.firstViewIndex());
+    }
+    _remeasure(repeat, itemHeight, newViewCount, newArraySize, firstIndex) {
         const scrollerInfo = repeat.getScrollerInfo();
-        const topBufferDistance = getDistanceToParent(repeat.topBufferEl, scrollerInfo.scroller);
-        const realScrolltop = Math$max(0, scrollerInfo.scrollTop === 0
+        const scroller_scroll_top = scrollerInfo.scrollTop;
+        const top_buffer_distance = getDistanceToParent(repeat.topBufferEl, scrollerInfo.scroller);
+        const real_scroll_top = Math$max(0, scroller_scroll_top === 0
             ? 0
-            : (scrollerInfo.scrollTop - topBufferDistance));
-        let first_index_after_scroll_adjustment = realScrolltop === 0
+            : (scroller_scroll_top - top_buffer_distance));
+        let first_index_after_scroll_adjustment = real_scroll_top === 0
             ? 0
-            : Math$floor(realScrolltop / itemHeight);
+            : Math$floor(real_scroll_top / itemHeight);
         if (first_index_after_scroll_adjustment + newViewCount >= newArraySize) {
             first_index_after_scroll_adjustment = Math$max(0, newArraySize - newViewCount);
         }
         const top_buffer_item_count_after_scroll_adjustment = first_index_after_scroll_adjustment;
         const bot_buffer_item_count_after_scroll_adjustment = Math$max(0, newArraySize - top_buffer_item_count_after_scroll_adjustment - newViewCount);
-        repeat._first
-            = repeat._lastRebind = first_index_after_scroll_adjustment;
-        repeat._previousFirst = firstIndexAfterMutation;
-        repeat._isAtTop = first_index_after_scroll_adjustment === 0;
-        repeat._isLastIndex = bot_buffer_item_count_after_scroll_adjustment === 0;
-        repeat._topBufferHeight = top_buffer_item_count_after_scroll_adjustment * itemHeight;
-        repeat._bottomBufferHeight = bot_buffer_item_count_after_scroll_adjustment * itemHeight;
+        repeat.$first = first_index_after_scroll_adjustment;
+        repeat.topBufferHeight = top_buffer_item_count_after_scroll_adjustment * itemHeight;
+        repeat.bottomBufferHeight = bot_buffer_item_count_after_scroll_adjustment * itemHeight;
         repeat._handlingMutations = false;
         repeat.revertScrollCheckGuard();
-        repeat._updateBufferElements();
-        updateAllViews(repeat, 0);
-    }
-    _isIndexBeforeViewSlot(repeat, viewSlot, index) {
-        const viewIndex = this._getViewIndex(repeat, viewSlot, index);
-        return viewIndex < 0;
-    }
-    _isIndexAfterViewSlot(repeat, viewSlot, index) {
-        const viewIndex = this._getViewIndex(repeat, viewSlot, index);
-        return viewIndex > repeat._viewsLength - 1;
-    }
-    _getViewIndex(repeat, viewSlot, index) {
-        if (repeat.viewCount() === 0) {
-            return -1;
-        }
-        const topBufferItems = repeat._topBufferHeight / repeat.itemHeight;
-        return Math$floor(index - topBufferItems);
+        repeat.updateBufferElements();
+        this.updateAllViews(repeat, 0);
     }
 }
 
 class NullVirtualRepeatStrategy extends NullRepeatStrategy {
+    getViewRange(repeat, scrollerInfo) {
+        return [0, 0];
+    }
+    updateBuffers(repeat, firstIndex) { }
+    onAttached() { }
+    isNearTop() {
+        return false;
+    }
+    isNearBottom() {
+        return false;
+    }
     initCalculation(repeat, items) {
         repeat.itemHeight
-            = repeat.elementsInView
-                = repeat._viewsLength = 0;
+            = repeat.minViewsRequired
+                = 0;
         return 2;
     }
-    createFirstItem() {
+    createFirstRow() {
         return null;
     }
     instanceMutated() { }
     instanceChanged(repeat) {
         repeat.removeAllViews(true, false);
-        repeat._resetCalculation();
+        repeat.resetCalculation();
     }
+    remeasure(repeat) { }
+    updateAllViews() { }
 }
 
 class VirtualRepeatStrategyLocator {
@@ -420,7 +487,7 @@ class VirtualRepeatStrategyLocator {
 
 class DefaultTemplateStrategy {
     getScrollContainer(element) {
-        return getScrollContainer(element);
+        return getScrollerElement(element);
     }
     moveViewFirst(view, topBuffer) {
         insertBeforeNode(view, DOM.nextElementSibling(topBuffer));
@@ -454,7 +521,7 @@ class DefaultTemplateStrategy {
 
 class BaseTableTemplateStrategy extends DefaultTemplateStrategy {
     getScrollContainer(element) {
-        return this.getTable(element).parentNode;
+        return getScrollerElement(this.getTable(element));
     }
     createBuffers(element) {
         const parent = element.parentNode;
@@ -476,21 +543,12 @@ class TableRowStrategy extends BaseTableTemplateStrategy {
 }
 
 class ListTemplateStrategy extends DefaultTemplateStrategy {
-    getScrollContainer(element) {
-        let listElement = this.getList(element);
-        return hasOverflowScroll(listElement)
-            ? listElement
-            : listElement.parentNode;
-    }
     createBuffers(element) {
         const parent = element.parentNode;
         return [
             parent.insertBefore(DOM.createElement('li'), element),
             parent.insertBefore(DOM.createElement('li'), element.nextSibling)
         ];
-    }
-    getList(element) {
-        return element.parentNode;
     }
 }
 
@@ -532,23 +590,13 @@ class VirtualRepeat extends AbstractRepeater {
             local: 'item',
             viewsRequireLifecycle: viewsRequireLifecycle(viewFactory)
         });
-        this._first = 0;
-        this._previousFirst = 0;
-        this._viewsLength = 0;
-        this._lastRebind = 0;
-        this._topBufferHeight = 0;
-        this._bottomBufferHeight = 0;
-        this._isScrolling = false;
-        this._scrollingDown = false;
-        this._scrollingUp = false;
-        this._switchedDirection = false;
+        this.$first = 0;
         this._isAttached = false;
         this._ticking = false;
-        this._fixedHeightContainer = false;
-        this._isAtTop = true;
         this._calledGetMore = false;
         this._skipNextScrollHandle = false;
         this._handlingMutations = false;
+        this._lastGetMore = 0;
         this.element = element;
         this.viewFactory = viewFactory;
         this.instruction = instruction;
@@ -558,15 +606,18 @@ class VirtualRepeat extends AbstractRepeater {
         this.taskQueue = observerLocator.taskQueue;
         this.strategyLocator = collectionStrategyLocator;
         this.templateStrategyLocator = templateStrategyLocator;
+        this.edgeDistance = 5;
         this.sourceExpression = getItemsSourceExpression(this.instruction, 'virtual-repeat.for');
         this.isOneTime = isOneTime(this.sourceExpression);
-        this.itemHeight
-            = this._prevItemsCount
-                = this.distanceToTop
-                    = 0;
+        this.topBufferHeight
+            = this.bottomBufferHeight
+                = this.itemHeight
+                    = this.distanceToTop
+                        = 0;
         this.revertScrollCheckGuard = () => {
             this._ticking = false;
         };
+        this._onScroll = this._onScroll.bind(this);
     }
     static inject() {
         return [
@@ -593,20 +644,18 @@ class VirtualRepeat extends AbstractRepeater {
     }
     attached() {
         this._isAttached = true;
-        this._prevItemsCount = this.items.length;
         const element = this.element;
         const templateStrategy = this.templateStrategy = this.templateStrategyLocator.getStrategy(element);
-        const scrollListener = this.scrollListener = () => {
-            this._onScroll();
-        };
-        const containerEl = this.scrollerEl = templateStrategy.getScrollContainer(element);
+        const scrollerEl = this.scrollerEl = templateStrategy.getScrollContainer(element);
         const [topBufferEl, bottomBufferEl] = templateStrategy.createBuffers(element);
-        const isFixedHeightContainer = this._fixedHeightContainer = hasOverflowScroll(containerEl);
+        const isFixedHeightContainer = scrollerEl !== htmlElement;
+        const scrollListener = this._onScroll;
         this.topBufferEl = topBufferEl;
         this.bottomBufferEl = bottomBufferEl;
         this.itemsChanged();
+        this._currScrollerInfo = this.getScrollerInfo();
         if (isFixedHeightContainer) {
-            containerEl.addEventListener('scroll', scrollListener);
+            scrollerEl.addEventListener('scroll', scrollListener);
         }
         else {
             const firstElement = templateStrategy.getFirstElement(topBufferEl, bottomBufferEl);
@@ -617,43 +666,42 @@ class VirtualRepeat extends AbstractRepeater {
                 const currDistanceToTop = getElementDistanceToTopOfDocument(topBufferEl);
                 this.distanceToTop = currDistanceToTop;
                 if (prevDistanceToTop !== currDistanceToTop) {
-                    this._handleScroll();
+                    const currentScrollerInfo = this.getScrollerInfo();
+                    const prevScrollerInfo = this._currScrollerInfo;
+                    this._currScrollerInfo = currentScrollerInfo;
+                    this._handleScroll(currentScrollerInfo, prevScrollerInfo);
                 }
             }, 500);
         }
-        if (this.items.length < this.elementsInView) {
-            this._getMore(true);
-        }
+        this.strategy.onAttached(this);
     }
     call(context, changes) {
         this[context](this.items, changes);
     }
     detached() {
         const scrollCt = this.scrollerEl;
-        const scrollListener = this.scrollListener;
+        const scrollListener = this._onScroll;
         if (hasOverflowScroll(scrollCt)) {
             scrollCt.removeEventListener('scroll', scrollListener);
         }
         else {
             DOM.removeEventListener('scroll', scrollListener, false);
         }
-        this._unobserveScrollerSize();
-        this._currScrollerContentRect
-            = this._isLastIndex = undefined;
+        this.unobserveScroller();
+        this._currScrollerContentRect = undefined;
         this._isAttached
-            = this._fixedHeightContainer = false;
+            = false;
         this._unsubscribeCollection();
-        this._resetCalculation();
+        this.resetCalculation();
         this.templateStrategy.removeBuffers(this.element, this.topBufferEl, this.bottomBufferEl);
-        this.topBufferEl = this.bottomBufferEl = this.scrollerEl = this.scrollListener = null;
+        this.topBufferEl = this.bottomBufferEl = this.scrollerEl = null;
         this.removeAllViews(true, false);
         const $clearInterval = PLATFORM.global.clearInterval;
         $clearInterval(this._calcDistanceToTopInterval);
         $clearInterval(this._sizeInterval);
-        this._prevItemsCount
-            = this.distanceToTop
-                = this._sizeInterval
-                    = this._calcDistanceToTopInterval = 0;
+        this.distanceToTop
+            = this._sizeInterval
+                = this._calcDistanceToTopInterval = 0;
     }
     unbind() {
         this.scope = null;
@@ -673,16 +721,16 @@ class VirtualRepeat extends AbstractRepeater {
             this._observeCollection();
         }
         const calculationSignals = strategy.initCalculation(this, items);
-        strategy.instanceChanged(this, items, this._first);
+        strategy.instanceChanged(this, items, this.$first);
         if (calculationSignals & 1) {
-            this._resetCalculation();
+            this.resetCalculation();
         }
         if ((calculationSignals & 2) === 0) {
             const { setInterval: $setInterval, clearInterval: $clearInterval } = PLATFORM.global;
             $clearInterval(this._sizeInterval);
             this._sizeInterval = $setInterval(() => {
                 if (this.items) {
-                    const firstView = this._firstView() || this.strategy.createFirstItem(this);
+                    const firstView = this.firstView() || this.strategy.createFirstRow(this);
                     const newCalcSize = calcOuterHeight(firstView.firstChild);
                     if (newCalcSize > 0) {
                         $clearInterval(this._sizeInterval);
@@ -695,7 +743,7 @@ class VirtualRepeat extends AbstractRepeater {
             }, 500);
         }
         if (calculationSignals & 4) {
-            this._observeScroller(this.getScroller());
+            this.observeScroller(this.scrollerEl);
         }
     }
     handleCollectionMutated(collection, changes) {
@@ -703,7 +751,6 @@ class VirtualRepeat extends AbstractRepeater {
             return;
         }
         this._handlingMutations = true;
-        this._prevItemsCount = collection.length;
         this.strategy.instanceMutated(this, collection, changes);
     }
     handleInnerCollectionMutated(collection, changes) {
@@ -720,47 +767,44 @@ class VirtualRepeat extends AbstractRepeater {
             this.items = newItems;
         }
     }
+    enableScroll() {
+        this._ticking = false;
+        this._handlingMutations = false;
+        this._skipNextScrollHandle = false;
+    }
     getScroller() {
-        return this._fixedHeightContainer
-            ? this.scrollerEl
-            : document.documentElement;
+        return this.scrollerEl;
     }
     getScrollerInfo() {
-        const scroller = this.getScroller();
+        const scroller = this.scrollerEl;
         return {
             scroller: scroller,
-            scrollHeight: scroller.scrollHeight,
             scrollTop: scroller.scrollTop,
-            height: calcScrollHeight(scroller)
+            height: scroller === htmlElement
+                ? innerHeight
+                : calcScrollHeight(scroller)
         };
     }
-    _resetCalculation() {
-        this._first
-            = this._previousFirst
-                = this._viewsLength
-                    = this._lastRebind
-                        = this._topBufferHeight
-                            = this._bottomBufferHeight
-                                = this._prevItemsCount
-                                    = this.itemHeight
-                                        = this.elementsInView = 0;
-        this._isScrolling
-            = this._scrollingDown
-                = this._scrollingUp
-                    = this._switchedDirection
-                        = this._ignoreMutation
-                            = this._handlingMutations
-                                = this._ticking
-                                    = this._isLastIndex = false;
-        this._isAtTop = true;
-        this._updateBufferElements(true);
+    resetCalculation() {
+        this.$first
+            = this.topBufferHeight
+                = this.bottomBufferHeight
+                    = this.itemHeight
+                        = this.minViewsRequired = 0;
+        this._ignoreMutation
+            = this._handlingMutations
+                = this._ticking = false;
+        this.updateBufferElements(true);
     }
     _onScroll() {
         const isHandlingMutations = this._handlingMutations;
         if (!this._ticking && !isHandlingMutations) {
+            const prevScrollerInfo = this._currScrollerInfo;
+            const currentScrollerInfo = this.getScrollerInfo();
+            this._currScrollerInfo = currentScrollerInfo;
             this.taskQueue.queueMicroTask(() => {
-                this._handleScroll();
                 this._ticking = false;
+                this._handleScroll(currentScrollerInfo, prevScrollerInfo);
             });
             this._ticking = true;
         }
@@ -768,7 +812,7 @@ class VirtualRepeat extends AbstractRepeater {
             this._handlingMutations = false;
         }
     }
-    _handleScroll() {
+    _handleScroll(currentScrollerInfo, prevScrollerInfo) {
         if (!this._isAttached) {
             return;
         }
@@ -780,179 +824,158 @@ class VirtualRepeat extends AbstractRepeater {
         if (!items) {
             return;
         }
-        const topBufferEl = this.topBufferEl;
-        const scrollerEl = this.scrollerEl;
-        const itemHeight = this.itemHeight;
-        let realScrollTop = 0;
-        const isFixedHeightContainer = this._fixedHeightContainer;
-        if (isFixedHeightContainer) {
-            const topBufferDistance = getDistanceToParent(topBufferEl, scrollerEl);
-            const scrollerScrollTop = scrollerEl.scrollTop;
-            realScrollTop = Math$max(0, scrollerScrollTop - Math$abs(topBufferDistance));
+        const strategy = this.strategy;
+        const old_range_start_index = this.$first;
+        const old_range_end_index = this.lastViewIndex();
+        const [new_range_start_index, new_range_end_index] = strategy.getViewRange(this, currentScrollerInfo);
+        let scrolling_state = new_range_start_index > old_range_start_index
+            ? 1
+            : new_range_start_index < old_range_start_index
+                ? 2
+                : 0;
+        let didMovedViews = 0;
+        if (new_range_start_index >= old_range_start_index && old_range_end_index === new_range_end_index
+            || new_range_end_index === old_range_end_index && old_range_end_index >= new_range_end_index) {
+            if (new_range_start_index >= old_range_start_index && old_range_end_index === new_range_end_index) {
+                if (strategy.isNearBottom(this, new_range_end_index)) {
+                    scrolling_state |= 8;
+                }
+            }
+            else if (strategy.isNearTop(this, new_range_start_index)) {
+                scrolling_state |= 4;
+            }
         }
         else {
-            realScrollTop = pageYOffset - this.distanceToTop;
-        }
-        const elementsInView = this.elementsInView;
-        let firstIndex = Math$max(0, itemHeight > 0 ? Math$floor(realScrollTop / itemHeight) : 0);
-        const currLastReboundIndex = this._lastRebind;
-        if (firstIndex > items.length - elementsInView) {
-            firstIndex = Math$max(0, items.length - elementsInView);
-        }
-        this._first = firstIndex;
-        this._checkScrolling();
-        const isSwitchedDirection = this._switchedDirection;
-        const currentTopBufferHeight = this._topBufferHeight;
-        const currentBottomBufferHeight = this._bottomBufferHeight;
-        if (this._scrollingDown) {
-            let viewsToMoveCount = firstIndex - currLastReboundIndex;
-            if (isSwitchedDirection) {
-                viewsToMoveCount = this._isAtTop
-                    ? firstIndex
-                    : (firstIndex - currLastReboundIndex);
-            }
-            this._isAtTop = false;
-            this._lastRebind = firstIndex;
-            const movedViewsCount = this._moveViews(viewsToMoveCount);
-            const adjustHeight = movedViewsCount < viewsToMoveCount
-                ? currentBottomBufferHeight
-                : itemHeight * movedViewsCount;
-            if (viewsToMoveCount > 0) {
-                this._getMore();
-            }
-            this._switchedDirection = false;
-            this._topBufferHeight = currentTopBufferHeight + adjustHeight;
-            this._bottomBufferHeight = Math$max(currentBottomBufferHeight - adjustHeight, 0);
-            this._updateBufferElements(true);
-        }
-        else if (this._scrollingUp) {
-            const isLastIndex = this._isLastIndex;
-            let viewsToMoveCount = currLastReboundIndex - firstIndex;
-            const initialScrollState = isLastIndex === undefined;
-            if (isSwitchedDirection) {
-                if (isLastIndex) {
-                    viewsToMoveCount = items.length - firstIndex - elementsInView;
-                }
-                else {
-                    viewsToMoveCount = currLastReboundIndex - firstIndex;
+            if (new_range_start_index > old_range_start_index && old_range_end_index >= new_range_start_index && new_range_end_index >= old_range_end_index) {
+                const views_to_move_count = new_range_start_index - old_range_start_index;
+                this._moveViews(views_to_move_count, 1);
+                didMovedViews = 1;
+                if (strategy.isNearBottom(this, new_range_end_index)) {
+                    scrolling_state |= 8;
                 }
             }
-            this._isLastIndex = false;
-            this._lastRebind = firstIndex;
-            const movedViewsCount = this._moveViews(viewsToMoveCount);
-            const adjustHeight = movedViewsCount < viewsToMoveCount
-                ? currentTopBufferHeight
-                : itemHeight * movedViewsCount;
-            if (viewsToMoveCount > 0) {
-                const force = movedViewsCount === 0 && initialScrollState && firstIndex <= 0 ? true : false;
-                this._getMore(force);
+            else if (old_range_start_index > new_range_start_index && old_range_start_index <= new_range_end_index && old_range_end_index >= new_range_end_index) {
+                const views_to_move_count = old_range_end_index - new_range_end_index;
+                this._moveViews(views_to_move_count, -1);
+                didMovedViews = 1;
+                if (strategy.isNearTop(this, new_range_start_index)) {
+                    scrolling_state |= 4;
+                }
             }
-            this._switchedDirection = false;
-            this._topBufferHeight = Math$max(currentTopBufferHeight - adjustHeight, 0);
-            this._bottomBufferHeight = currentBottomBufferHeight + adjustHeight;
-            this._updateBufferElements(true);
-        }
-        this._previousFirst = firstIndex;
-        this._isScrolling = false;
-    }
-    _getMore(force) {
-        if (this._isLastIndex || this._first === 0 || force === true) {
-            if (!this._calledGetMore) {
-                const executeGetMore = () => {
-                    this._calledGetMore = true;
-                    const firstView = this._firstView();
-                    const scrollNextAttrName = 'infinite-scroll-next';
-                    const func = (firstView
-                        && firstView.firstChild
-                        && firstView.firstChild.au
-                        && firstView.firstChild.au[scrollNextAttrName])
-                        ? firstView.firstChild.au[scrollNextAttrName].instruction.attributes[scrollNextAttrName]
-                        : undefined;
-                    const topIndex = this._first;
-                    const isAtBottom = this._bottomBufferHeight === 0;
-                    const isAtTop = this._isAtTop;
-                    const scrollContext = {
-                        topIndex: topIndex,
-                        isAtBottom: isAtBottom,
-                        isAtTop: isAtTop
-                    };
-                    const overrideContext = this.scope.overrideContext;
-                    overrideContext.$scrollContext = scrollContext;
-                    if (func === undefined) {
-                        this._calledGetMore = false;
-                        return null;
+            else if (old_range_end_index < new_range_start_index || old_range_start_index > new_range_end_index) {
+                strategy.remeasure(this);
+                if (old_range_end_index < new_range_start_index) {
+                    if (strategy.isNearBottom(this, new_range_end_index)) {
+                        scrolling_state |= 8;
                     }
-                    else if (typeof func === 'string') {
-                        const bindingContext = overrideContext.bindingContext;
-                        const getMoreFuncName = firstView.firstChild.getAttribute(scrollNextAttrName);
-                        const funcCall = bindingContext[getMoreFuncName];
-                        if (typeof funcCall === 'function') {
-                            const result = funcCall.call(bindingContext, topIndex, isAtBottom, isAtTop);
-                            if (!(result instanceof Promise)) {
-                                this._calledGetMore = false;
+                }
+                else if (strategy.isNearTop(this, new_range_start_index)) {
+                    scrolling_state |= 4;
+                }
+            }
+            else {
+                console.warn('Scroll intersection not handled');
+                strategy.remeasure(this);
+            }
+        }
+        if (didMovedViews === 1) {
+            this.$first = new_range_start_index;
+            strategy.updateBuffers(this, new_range_start_index);
+        }
+        if ((scrolling_state & (1 | 8)) === (1 | 8)
+            || (scrolling_state & (2 | 4)) === (2 | 4)) {
+            this.getMore(new_range_start_index, (scrolling_state & 4) > 0, (scrolling_state & 8) > 0);
+        }
+    }
+    _moveViews(viewsCount, direction) {
+        const repeat = this;
+        if (direction === -1) {
+            let startIndex = repeat.firstViewIndex();
+            while (viewsCount--) {
+                const view = repeat.lastView();
+                rebindAndMoveView(repeat, view, --startIndex, false);
+            }
+        }
+        else {
+            let lastIndex = repeat.lastViewIndex();
+            while (viewsCount--) {
+                const view = repeat.view(0);
+                rebindAndMoveView(repeat, view, ++lastIndex, true);
+            }
+        }
+    }
+    getMore(topIndex, isNearTop, isNearBottom, force) {
+        if (isNearTop || isNearBottom || force) {
+            if (!this._calledGetMore) {
+                const executeGetMore = (time) => {
+                    if (time - this._lastGetMore < 16) {
+                        return;
+                    }
+                    this._lastGetMore = time;
+                    this._calledGetMore = true;
+                    const revertCalledGetMore = () => {
+                        this._calledGetMore = false;
+                    };
+                    const firstView = this.firstView();
+                    if (firstView === null) {
+                        revertCalledGetMore();
+                        return;
+                    }
+                    const firstViewElement = firstView.firstChild;
+                    const scrollNextAttrName = 'infinite-scroll-next';
+                    const func = firstViewElement
+                        && firstViewElement.au
+                        && firstViewElement.au[scrollNextAttrName]
+                        ? firstViewElement.au[scrollNextAttrName].instruction.attributes[scrollNextAttrName]
+                        : undefined;
+                    if (func === undefined) {
+                        revertCalledGetMore();
+                    }
+                    else {
+                        const scrollContext = {
+                            topIndex: topIndex,
+                            isAtBottom: isNearBottom,
+                            isAtTop: isNearTop
+                        };
+                        const overrideContext = this.scope.overrideContext;
+                        overrideContext.$scrollContext = scrollContext;
+                        if (typeof func === 'string') {
+                            const bindingContext = overrideContext.bindingContext;
+                            const getMoreFuncName = firstView.firstChild.getAttribute(scrollNextAttrName);
+                            const funcCall = bindingContext[getMoreFuncName];
+                            if (typeof funcCall === 'function') {
+                                revertCalledGetMore();
+                                const result = funcCall.call(bindingContext, topIndex, isNearBottom, isNearTop);
+                                if (result instanceof Promise) {
+                                    this._calledGetMore = true;
+                                    return result.then(() => {
+                                        revertCalledGetMore();
+                                    });
+                                }
                             }
                             else {
-                                return result.then(() => {
-                                    this._calledGetMore = false;
-                                });
+                                throw new Error(`'${scrollNextAttrName}' must be a function or evaluate to one`);
                             }
+                        }
+                        else if (func.sourceExpression) {
+                            revertCalledGetMore();
+                            return func.sourceExpression.evaluate(this.scope);
                         }
                         else {
                             throw new Error(`'${scrollNextAttrName}' must be a function or evaluate to one`);
                         }
                     }
-                    else if (func.sourceExpression) {
-                        this._calledGetMore = false;
-                        return func.sourceExpression.evaluate(this.scope);
-                    }
-                    else {
-                        throw new Error(`'${scrollNextAttrName}' must be a function or evaluate to one`);
-                    }
-                    return null;
                 };
-                this.taskQueue.queueMicroTask(executeGetMore);
+                $raf(executeGetMore);
             }
         }
     }
-    _checkScrolling() {
-        const { _first, _scrollingUp, _scrollingDown, _previousFirst } = this;
-        let isScrolling = false;
-        let isScrollingDown = _scrollingDown;
-        let isScrollingUp = _scrollingUp;
-        let isSwitchedDirection = false;
-        if (_first > _previousFirst) {
-            if (!_scrollingDown) {
-                isScrollingDown = true;
-                isScrollingUp = false;
-                isSwitchedDirection = true;
-            }
-            else {
-                isSwitchedDirection = false;
-            }
-            isScrolling = true;
-        }
-        else if (_first < _previousFirst) {
-            if (!_scrollingUp) {
-                isScrollingDown = false;
-                isScrollingUp = true;
-                isSwitchedDirection = true;
-            }
-            else {
-                isSwitchedDirection = false;
-            }
-            isScrolling = true;
-        }
-        this._isScrolling = isScrolling;
-        this._scrollingDown = isScrollingDown;
-        this._scrollingUp = isScrollingUp;
-        this._switchedDirection = isSwitchedDirection;
-    }
-    _updateBufferElements(skipUpdate) {
-        this.topBufferEl.style.height = `${this._topBufferHeight}px`;
-        this.bottomBufferEl.style.height = `${this._bottomBufferHeight}px`;
+    updateBufferElements(skipUpdate) {
+        this.topBufferEl.style.height = `${this.topBufferHeight}px`;
+        this.bottomBufferEl.style.height = `${this.bottomBufferHeight}px`;
         if (skipUpdate) {
             this._ticking = true;
-            requestAnimationFrame(this.revertScrollCheckGuard);
+            $raf(this.revertScrollCheckGuard);
         }
     }
     _unsubscribeCollection() {
@@ -962,52 +985,21 @@ class VirtualRepeat extends AbstractRepeater {
             this.collectionObserver = this.callContext = null;
         }
     }
-    _firstView() {
+    firstView() {
         return this.view(0);
     }
-    _lastView() {
+    lastView() {
         return this.view(this.viewCount() - 1);
     }
-    _moveViews(viewsCount) {
-        const isScrollingDown = this._scrollingDown;
-        const getNextIndex = isScrollingDown ? $plus : $minus;
-        const childrenCount = this.viewCount();
-        const viewIndex = isScrollingDown ? 0 : childrenCount - 1;
-        const items = this.items;
-        const currentIndex = isScrollingDown
-            ? this._lastViewIndex() + 1
-            : this._firstViewIndex() - 1;
-        let i = 0;
-        let nextIndex = 0;
-        let view;
-        const viewToMoveLimit = viewsCount - (childrenCount * 2);
-        while (i < viewsCount && !this._isAtFirstOrLastIndex) {
-            view = this.view(viewIndex);
-            nextIndex = getNextIndex(currentIndex, i);
-            this._isLastIndex = nextIndex > items.length - 2;
-            this._isAtTop = nextIndex < 1;
-            if (!(this._isAtFirstOrLastIndex && childrenCount >= items.length)) {
-                if (i > viewToMoveLimit) {
-                    rebindAndMoveView(this, view, nextIndex, isScrollingDown);
-                }
-                i++;
-            }
-        }
-        return viewsCount - (viewsCount - i);
-    }
-    get _isAtFirstOrLastIndex() {
-        return !this._isScrolling || this._scrollingDown ? this._isLastIndex : this._isAtTop;
-    }
-    _firstViewIndex() {
-        const firstView = this._firstView();
+    firstViewIndex() {
+        const firstView = this.firstView();
         return firstView === null ? -1 : firstView.overrideContext.$index;
     }
-    _lastViewIndex() {
-        const lastView = this._lastView();
+    lastViewIndex() {
+        const lastView = this.lastView();
         return lastView === null ? -1 : lastView.overrideContext.$index;
     }
-    _observeScroller(scrollerEl) {
-        const $raf = requestAnimationFrame;
+    observeScroller(scrollerEl) {
         const sizeChangeHandler = (newRect) => {
             $raf(() => {
                 if (newRect === this._currScrollerContentRect) {
@@ -1044,7 +1036,7 @@ class VirtualRepeat extends AbstractRepeater {
         elEvents.subscribe(VirtualizationEvents.scrollerSizeChange, sizeChangeEventsHandler, false);
         elEvents.subscribe(VirtualizationEvents.itemSizeChange, sizeChangeEventsHandler, false);
     }
-    _unobserveScrollerSize() {
+    unobserveScroller() {
         const observer = this._scrollerResizeObserver;
         if (observer) {
             observer.disconnect();
@@ -1132,8 +1124,6 @@ class VirtualRepeat extends AbstractRepeater {
         }
     }
 }
-const $minus = (index, i) => index - i;
-const $plus = (index, i) => index + i;
 
 class InfiniteScrollNext {
     static $resource() {
