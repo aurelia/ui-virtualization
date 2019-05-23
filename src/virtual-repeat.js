@@ -124,6 +124,7 @@ export class VirtualRepeat extends AbstractRepeater {
 
   detached(): void {
     this.scrollContainer.removeEventListener('scroll', this.scrollListener);
+    document.removeEventListener('scroll', this.scrollListener);
     this._resetCalculation();
     this._isAttached = false;
     this.templateStrategy.removeBufferElements(this.element, this.topBuffer, this.bottomBuffer);
