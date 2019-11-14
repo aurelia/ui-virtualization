@@ -724,8 +724,10 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
     // check if infinite scrollnext should be invoked
     // the following block cannot be nested inside didMoveViews condition
     // since there could be jumpy scrolling behavior causing infinite scrollnext
+    const all_items_in_range = this.items.length <= this.minViewsRequired * 2;
+    const state_to_check = all_items_in_range ? ScrollingState.isNearBottom : (ScrollingState.isNearBottom | ScrollingState.isScrollingDown);
     if (
-      (scrolling_state & (ScrollingState.isScrollingDown | ScrollingState.isNearBottom)) === (ScrollingState.isScrollingDown | ScrollingState.isNearBottom)
+      (scrolling_state & state_to_check) === state_to_check
       || (scrolling_state & (ScrollingState.isScrollingUp | ScrollingState.isNearTop)) === (ScrollingState.isScrollingUp | ScrollingState.isNearTop)
     ) {
       this.getMore(
