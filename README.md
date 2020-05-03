@@ -156,7 +156,7 @@ There are three parameters that are passed to the function (`getMore(topIndex, i
     </div>
   </template>
   ```
-  4. Similar to (3), virtualization requires appropriate removing and inserting visible items, corresponding lifecycle of items view will also be triggered while inserting (`bind`, `attached`) or removing (`unbind`, `detached`)
+  4. Similar to (3), virtualization requires appropriate removing and inserting visible items, so not all views will have their lifecycle invoked repeatedly. Rather, their binding contexts will be updated accordingly when the virtual repeat reuses the view and view model. To work around this, you can have your components work in a reactive way, which is natural in an Aurelia application. An example is to handle changes in change handler callback.
 
 ## [Demo](https://aurelia-ui-virtualization.now.sh/)
 
