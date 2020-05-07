@@ -1,6 +1,6 @@
 import { Math$round, $isNaN } from './utilities';
 import { IView } from './interfaces';
-import { htmlElement } from './constants';
+import { htmlElement, doc } from './constants';
 
 /**
  * Walk up the DOM tree and determine what element will be scroller for an element
@@ -15,7 +15,7 @@ export const getScrollerElement = (element: Node): HTMLElement => {
     }
     current = current.parentNode as HTMLElement;
   }
-  return htmlElement;
+  return doc.scrollingElement as HTMLElement || htmlElement;
 };
 
 /**

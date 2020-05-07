@@ -367,11 +367,15 @@ export const VirtualizationEvents = Object.assign(Object.create(null), {
 };
 
 export const enum ScrollingState {
-  none              = 0,
-  isScrollingDown   = 0b0_00001,
-  isScrollingUp     = 0b0_00010,
-  isNearTop         = 0b0_00100,
-  isNearBottom      = 0b0_01000
+  none                          = 0,
+  isScrollingDown               = 0b0_00001,
+  isScrollingUp                 = 0b0_00010,
+  isNearTop                     = 0b0_00100,
+  isNearBottom                  = 0b0_01000,
+  /**@internal */
+  isScrollingDownAndNearBottom  = isScrollingDown | isNearBottom,
+  /**@internal */
+  isScrollingUpAndNearTop       = isScrollingUp | isNearTop
 }
 
 // export const enum IVirtualRepeatState {

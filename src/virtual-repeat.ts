@@ -600,7 +600,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
     // todo: use _firstViewIndex()
     const old_range_start_index = this.$first;
     const old_range_end_index = this.lastViewIndex();
-    const [new_range_start_index, new_range_end_index] = strategy.getViewRange(this, currentScrollerInfo);
+    const { 0: new_range_start_index, 1: new_range_end_index } = strategy.getViewRange(this, currentScrollerInfo);
 
     let scrolling_state: ScrollingState =
       new_range_start_index > old_range_start_index
@@ -670,7 +670,10 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
 
       // intersection type 1: scrolling down but haven't reached bot
       // needs to move bottom views from old range (range-2) to new range (range-1)
-      if (new_range_start_index > old_range_start_index && old_range_end_index >= new_range_start_index && new_range_end_index >= old_range_end_index) {
+      if (new_range_start_index > old_range_start_index
+        && old_range_end_index >= new_range_start_index
+        && new_range_end_index >= old_range_end_index
+      ) {
         const views_to_move_count = new_range_start_index - old_range_start_index;
         this._moveViews(views_to_move_count, 1);
         didMovedViews = 1;
@@ -681,7 +684,10 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
       }
       // intersection type 2: scrolling up but haven't reached top
       // this scenario requires move views from start of old range to end of new range
-      else if (old_range_start_index > new_range_start_index && old_range_start_index <= new_range_end_index && old_range_end_index >= new_range_end_index) {
+      else if (old_range_start_index > new_range_start_index
+        && old_range_start_index <= new_range_end_index
+        && old_range_end_index >= new_range_end_index
+      ) {
         const views_to_move_count = old_range_end_index - new_range_end_index;
         this._moveViews(views_to_move_count, -1);
         didMovedViews = 1;
@@ -725,10 +731,22 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
     // the following block cannot be nested inside didMoveViews condition
     // since there could be jumpy scrolling behavior causing infinite scrollnext
     const all_items_in_range = this.items.length <= this.minViewsRequired * 2;
-    const state_to_check = all_items_in_range ? ScrollingState.isNearBottom : (ScrollingState.isNearBottom | ScrollingState.isScrollingDown);
     if (
-      (scrolling_state & state_to_check) === state_to_check
-      || (scrolling_state & (ScrollingState.isScrollingUp | ScrollingState.isNearTop)) === (ScrollingState.isScrollingUp | ScrollingState.isNearTop)
+      (scrolling_state & ScrollingState.isScrollingDownAndNearBottom) === ScrollingState.isScrollingDownAndNearBottom
+      || (scrolling_state & ScrollingState.isScrollingUpAndNearTop) === ScrollingState.isScrollingUpAndNearTop
+      || all_items_in_range
+        // when all items in range, and somehow scroll handle is trigger
+        // but the scroll direction couldn't be derived from the view index (scroll too little etc...)
+        // then do check further to see if it's appropriate to load more
+        // via either:
+        // all items in range + not scrolling up + is near bottom
+        && ((scrolling_state & ScrollingState.isScrollingUp) === 0
+            && (scrolling_state & ScrollingState.isNearBottom) === ScrollingState.isNearBottom
+          // or
+          // all items in range + not scrolling down + is near top
+          || (scrolling_state & ScrollingState.isScrollingDown) === 0
+            && (scrolling_state & ScrollingState.isNearTop) === ScrollingState.isNearTop
+        )
     ) {
       this.getMore(
         new_range_start_index,
