@@ -730,13 +730,14 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
     // check if infinite scrollnext should be invoked
     // the following block cannot be nested inside didMoveViews condition
     // since there could be jumpy scrolling behavior causing infinite scrollnext
-    const all_items_in_range = this.items.length <= this.minViewsRequired * 2;
     if (
       (scrolling_state & ScrollingState.isScrollingDownAndNearBottom) === ScrollingState.isScrollingDownAndNearBottom
       || (scrolling_state & ScrollingState.isScrollingUpAndNearTop) === ScrollingState.isScrollingUpAndNearTop
-      || all_items_in_range
-        // when all items in range, and somehow scroll handle is trigger
-        // but the scroll direction couldn't be derived from the view index (scroll too little etc...)
+      // Are all items in range?
+      // when all items are in range, and somehow scroll handle is triggered
+      // but the scroll direction couldn't be derived from the view index
+      //    (forcefully calling _handleScroll, scrolled too little, browser bug, touchpad sensitivity issues etc...)
+      || strategy.count(items) <= this.minViewsRequired * 2
         // then do check further to see if it's appropriate to load more
         // via either:
         // all items in range + not scrolling up + is near bottom
