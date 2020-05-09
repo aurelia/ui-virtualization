@@ -29,6 +29,10 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     return repeat.addView(overrideContext.bindingContext, overrideContext);
   }
 
+  count(items: any[]): number {
+    return items.length;
+  }
+
   initCalculation(repeat: IVirtualRepeater, items: any[]): VirtualizationCalculation {
     const itemCount = items.length;
     // when there is no item, bails immediately

@@ -4,6 +4,16 @@ import { IVirtualRepeatStrategy, IView, VirtualizationCalculation, IScrollerInfo
 
 export class NullVirtualRepeatStrategy extends NullRepeatStrategy implements IVirtualRepeatStrategy {
 
+  // a violation of base contract, won't work in strict mode
+  // todo: fix this API design
+  createFirstRow(): IView | null {
+    return null;
+  }
+
+  count(items: any) {
+    return 0;
+  }
+
   getViewRange(repeat: VirtualRepeat, scrollerInfo: IScrollerInfo): [number, number] {
     return [0, 0];
   }
@@ -28,12 +38,6 @@ export class NullVirtualRepeatStrategy extends NullRepeatStrategy implements IVi
     // null/undefined virtual repeat strategy does not require any calculation
     // returning has_sizing to signal that
     return VirtualizationCalculation.has_sizing;
-  }
-
-  // a violation of base contract, won't work in strict mode
-  // todo: fix this API design
-  createFirstRow(): IView | null {
-    return null;
   }
 
   instanceMutated() {/*empty*/}
