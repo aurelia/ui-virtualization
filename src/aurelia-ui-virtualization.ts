@@ -15,5 +15,6 @@ export {
 
 export {
   IScrollNextScrollContext,
-  VirtualizationEvents
+  VirtualizationEvents,
+  RepeatableValue
 } from './interfaces';

@@ -258,7 +258,7 @@ export interface IVirtualRepeatStrategy<T extends RepeatableValue = RepeatableVa
    * @param items The modified array.
    * @param splices Records of array changes.
    */
-  instanceMutated(repeat: IVirtualRepeater, items: any[], splices: ICollectionObserverSplice[]): void;
+  instanceMutated(repeat: IVirtualRepeater, items: RepeatableValue, splices: ICollectionObserverSplice[]): void;
 
   /**
    * Unlike normal repeat, virtualization repeat employs "padding" elements. Those elements
