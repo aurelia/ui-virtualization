@@ -4,7 +4,7 @@ import {
   Expression,
   ICollectionObserverSplice,
   OverrideContext,
-  BindingExpression
+  BindingExpression,
 } from 'aurelia-binding';
 import {
   BoundViewFactory,
@@ -12,7 +12,7 @@ import {
   ViewResources,
   TargetInstruction,
   IStaticResourceConfig,
-  ElementEvents
+  ElementEvents,
 } from 'aurelia-templating';
 import {
   AbstractRepeater,
@@ -20,18 +20,18 @@ import {
   isOneTime,
   unwrapExpression,
   updateOneTimeBinding,
-  viewsRequireLifecycle
+  viewsRequireLifecycle,
 } from 'aurelia-templating-resources';
 import { DOM, PLATFORM } from 'aurelia-pal';
 import { TaskQueue } from 'aurelia-task-queue';
 import {
-  rebindAndMoveView
+  rebindAndMoveView,
 } from './utilities';
 import {
   calcOuterHeight,
   getElementDistanceToTopOfDocument,
   hasOverflowScroll,
-  calcScrollHeight
+  calcScrollHeight,
 } from './utilities-dom';
 import { VirtualRepeatStrategyLocator } from './virtual-repeat-strategy-locator';
 import { TemplateStrategyLocator } from './template-strategy-locator';
@@ -46,18 +46,18 @@ import {
   VirtualizationEvents,
   IElement,
   IVirtualRepeater,
-  ScrollingState
+  ScrollingState,
 } from './interfaces';
 import {
   getResizeObserverClass,
   ResizeObserver,
-  DOMRectReadOnly
+  DOMRectReadOnly,
 } from './resize-observer';
 import { htmlElement, $raf } from './constants';
 
 const enum VirtualRepeatCallContext {
   handleCollectionMutated = 'handleCollectionMutated',
-  handleInnerCollectionMutated = 'handleInnerCollectionMutated'
+  handleInnerCollectionMutated = 'handleInnerCollectionMutated',
 }
 
 export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater {
@@ -72,7 +72,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
       ViewResources,
       ObserverLocator,
       VirtualRepeatStrategyLocator,
-      TemplateStrategyLocator
+      TemplateStrategyLocator,
     ];
   }
 
@@ -83,7 +83,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
       name: 'virtual-repeat',
       templateController: true,
       // Wrong typings in templating
-      bindables: ['items', 'local'] as any
+      bindables: ['items', 'local'] as any,
     };
   }
 
@@ -304,7 +304,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
   ) {
     super({
       local: 'item',
-      viewsRequireLifecycle: viewsRequireLifecycle(viewFactory)
+      viewsRequireLifecycle: viewsRequireLifecycle(viewFactory),
     });
 
     this.element = element;
@@ -545,7 +545,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
       // height: calcScrollHeight(scroller)
       height: scroller === htmlElement
         ? innerHeight
-        : calcScrollHeight(scroller)
+        : calcScrollHeight(scroller),
     };
   }
 
@@ -582,7 +582,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
   }
 
   /**@internal */
-  _handleScroll(currentScrollerInfo: IScrollerInfo, prevScrollerInfo: IScrollerInfo): void {
+  _handleScroll(current_scroller_info: IScrollerInfo, prev_scroller_info: IScrollerInfo): void {
     if (!this._isAttached) {
       return;
     }
@@ -600,7 +600,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
     // todo: use _firstViewIndex()
     const old_range_start_index = this.$first;
     const old_range_end_index = this.lastViewIndex();
-    const { 0: new_range_start_index, 1: new_range_end_index } = strategy.getViewRange(this, currentScrollerInfo);
+    const { 0: new_range_start_index, 1: new_range_end_index } = strategy.getViewRange(this, current_scroller_info);
 
     let scrolling_state: ScrollingState =
       new_range_start_index > old_range_start_index
@@ -637,9 +637,14 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
     // 6: jump
     // range-1:            ==========
     // range-2: ========
+    //
+    // ------------------------------
+    // TODO: consider alwways use physical scroll position to determine scrolling scenarios
 
     let didMovedViews = 0;
     let should_call_scroll_next: -1 | 0 | 1 = 0;
+    /** for debugging purposes only */
+    let scroll_scenario: 0 | 1 | 2 | 3 | 4 | 5 | 6 = 0;
 
     // optimizable case: intersection type 3 & 4
     // nothing needs to be done. Check these 2 cases in advance to group other logic closer
@@ -653,27 +658,29 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
       // and updated correctly
       //
       // start checking whether scrollnext should be invoked
-      // jump down, check if is close to bottom
+      // scrolling down, check if is close to bottom
       if (new_range_start_index >= old_range_start_index && old_range_end_index === new_range_end_index) {
+        scroll_scenario = 3;
         if (strategy.isNearBottom(this, new_range_end_index)) {
           // should_call_scroll_next = 1;
           scrolling_state |= ScrollingState.isNearBottom;
         }
       }
-      // jump up. check if near top
+      // scrolling up. check if near top
       else if (strategy.isNearTop(this, new_range_start_index)) {
         // should_call_scroll_next = -1;
+        scroll_scenario = 4;
         scrolling_state |= ScrollingState.isNearTop;
       }
       // todo: fix the issues related to scroll smoothly to bottom not triggering scroll-next
     } else {
-
       // intersection type 1: scrolling down but haven't reached bot
       // needs to move bottom views from old range (range-2) to new range (range-1)
       if (new_range_start_index > old_range_start_index
         && old_range_end_index >= new_range_start_index
         && new_range_end_index >= old_range_end_index
       ) {
+        scroll_scenario = 1;
         const views_to_move_count = new_range_start_index - old_range_start_index;
         this._moveViews(views_to_move_count, 1);
         didMovedViews = 1;
@@ -688,6 +695,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
         && old_range_start_index <= new_range_end_index
         && old_range_end_index >= new_range_end_index
       ) {
+        scroll_scenario = 2;
         const views_to_move_count = old_range_end_index - new_range_end_index;
         this._moveViews(views_to_move_count, -1);
         didMovedViews = 1;
@@ -703,12 +711,14 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
         // jump down, check if is close to bottom
         if (old_range_end_index < new_range_start_index) {
           if (strategy.isNearBottom(this, new_range_end_index)) {
+            scroll_scenario = 5;
             // should_call_scroll_next = 1;
-          scrolling_state |= ScrollingState.isNearBottom;
+            scrolling_state |= ScrollingState.isNearBottom;
           }
         }
         // jump up. check if near top
         else if (strategy.isNearTop(this, new_range_start_index)) {
+          scroll_scenario = 6;
           // should_call_scroll_next = -1;
           scrolling_state |= ScrollingState.isNearTop;
         }
@@ -717,8 +727,16 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
       // these are cases that were not handled properly.
       // If happens, need to fix the above logic related to range check
       else {
-        console.warn('Scroll intersection not handled');
-        strategy.remeasure(this);
+        if (old_range_start_index !== new_range_start_index || old_range_end_index !== new_range_end_index) {
+          // (forcefully calling _handleScroll, scrolled too little, browser bug, touchpad sensitivity issues etc...)
+          console.log(`[!] Scroll intersection not handled. With indices: `
+            + `new [${new_range_start_index}, ${new_range_end_index}] / old [${old_range_start_index}, ${old_range_end_index}]`
+          );
+          strategy.remeasure(this);
+
+        } else {
+          console.log('[!] Scroll handled, and there\'s no changes');
+        }
       }
     }
 
@@ -733,27 +751,45 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
     if (
       (scrolling_state & ScrollingState.isScrollingDownAndNearBottom) === ScrollingState.isScrollingDownAndNearBottom
       || (scrolling_state & ScrollingState.isScrollingUpAndNearTop) === ScrollingState.isScrollingUpAndNearTop
-      // Are all items in range?
-      // when all items are in range, and somehow scroll handle is triggered
-      // but the scroll direction couldn't be derived from the view index
-      //    (forcefully calling _handleScroll, scrolled too little, browser bug, touchpad sensitivity issues etc...)
-      || strategy.count(items) <= this.minViewsRequired * 2
-        // then do check further to see if it's appropriate to load more
-        // via either:
-        // all items in range + not scrolling up + is near bottom
-        && ((scrolling_state & ScrollingState.isScrollingUp) === 0
-            && (scrolling_state & ScrollingState.isNearBottom) === ScrollingState.isNearBottom
-          // or
-          // all items in range + not scrolling down + is near top
-          || (scrolling_state & ScrollingState.isScrollingDown) === 0
-            && (scrolling_state & ScrollingState.isNearTop) === ScrollingState.isNearTop
-        )
     ) {
       this.getMore(
         new_range_start_index,
         (scrolling_state & ScrollingState.isNearTop) > 0,
         (scrolling_state & ScrollingState.isNearBottom) > 0
       );
+    }
+    else {
+      // it typically means there was no "semantic scrolling" happened.
+      // The scroll direction couldn't be derived from the view index
+      //    (forcefully calling _handleScroll, scrolled too little, browser bug, touchpad sensitivity issues etc...)
+      //
+      // Though there may be some physical scrolling,
+      // but it wasn't enough to actually shift the views around.
+      // So in here, use physical scrolling to determine the direction
+      const scroll_top_delta = current_scroller_info.scrollTop - prev_scroller_info.scrollTop;
+      scrolling_state = scroll_top_delta > 0
+        ? ScrollingState.isScrollingDown
+        : scroll_top_delta < 0
+          ? ScrollingState.isScrollingUp
+          : ScrollingState.none;
+
+      if (strategy.isNearTop(this, new_range_start_index)) {
+        scrolling_state |= ScrollingState.isNearTop;
+      }
+      if (strategy.isNearBottom(this, new_range_end_index)) {
+        scrolling_state |= ScrollingState.isNearBottom;
+      }
+
+      if (
+        (scrolling_state & ScrollingState.isScrollingDownAndNearBottom) === ScrollingState.isScrollingDownAndNearBottom
+        || (scrolling_state & ScrollingState.isScrollingUpAndNearTop) === ScrollingState.isScrollingUpAndNearTop
+      ) {
+        this.getMore(
+          new_range_start_index,
+          (scrolling_state & ScrollingState.isNearTop) > 0,
+          (scrolling_state & ScrollingState.isNearBottom) > 0
+        );
+      }
     }
   }
 
@@ -836,7 +872,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
             const scrollContext: IScrollNextScrollContext = {
               topIndex: topIndex,
               isAtBottom: isNearBottom,
-              isAtTop: isNearTop
+              isAtTop: isNearTop,
             };
             const overrideContext = this.scope.overrideContext;
             overrideContext.$scrollContext = scrollContext;

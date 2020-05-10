@@ -15,12 +15,12 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
   const resources = [
     'src/virtual-repeat',
     'src/infinite-scroll-next',
-    'test/noop-value-converter'
+    'test/noop-value-converter',
   ];
   class IdentityValueConverter {
     static $resource = {
       type: 'valueConverter',
-      name: 'identity'
+      name: 'identity',
     };
     toView(val: any[]) {
       return val;
@@ -29,7 +29,7 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
   class CloneArrayValueConverter {
     static $resource = {
       type: 'valueConverter',
-      name: 'cloneArray'
+      name: 'cloneArray',
     };
     toView(val: any[]) {
       return Array.isArray(val) ? val.slice() : val;
@@ -66,7 +66,7 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
             virtual-repeat.for="item of items ${repeatExpression}"
             ${scrollNextAttr}
             style="height: ${itemHeight}px;">\${item}</div>
-        </div>`
+        </div>`,
     },
     {
       desc: 'ul > li',
@@ -78,7 +78,7 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
             virtual-repeat.for="item of items ${repeatExpression}"
             ${scrollNextAttr}
             style="height: ${itemHeight}px;">\${item}</li>
-        </ul>`
+        </ul>`,
     },
     {
       desc: 'ol > li',
@@ -90,7 +90,7 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
             virtual-repeat.for="item of items ${repeatExpression}"
             ${scrollnextAttr}
             style="height: ${itemHeight}px;">\${item}</li>
-        </ol>`
+        </ol>`,
     },
     {
       desc: 'div > table > tr',
@@ -106,7 +106,7 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
               style="height: ${itemHeight}px;"><td>\${item}</td></tr>
           </table>
         </div>`;
-      }
+      },
     },
     {
       desc: 'div > table > tbody',
@@ -126,8 +126,8 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
             </tbody>
           </table>
         </div>`;
-      }
-    }
+      },
+    },
   ];
 
   const repeatScrollNextCombos: IRepeatScrollNextCombo[] = [
@@ -140,7 +140,7 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
     [' | cloneArray', 'infinite-scroll-next.call="getNextPage($scrollContext)"', [CloneArrayValueConverter]],
     [' | identity | cloneArray & toView', 'infinite-scroll-next="getNextPage"', [IdentityValueConverter, CloneArrayValueConverter]],
     [' | identity | cloneArray & toView', 'infinite-scroll-next.call="getNextPage($scrollContext)"', [IdentityValueConverter, CloneArrayValueConverter]],
-    [' | cloneArray & toView', 'infinite-scroll-next="getNextPage"', [CloneArrayValueConverter]]
+    [' | cloneArray & toView', 'infinite-scroll-next="getNextPage"', [CloneArrayValueConverter]],
 
     // cloneArray and two way creates infinite loop
     // [' | cloneArray & twoWay', 'infinite-scroll-next="getNextPage"', [CloneArrayValueConverter]]
@@ -172,7 +172,7 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
       'Initial 3 - 4 - 5 - 6 items',
       ' -- wait',
       ' -- assert get more',
-      ''
+      '',
     ].join('\n\t'), async () => {
       let scrollNextArgs: [number, boolean, boolean];
       const spy = jasmine.createSpy('viewModel.getNextPage(): void', function(this: ITestAppInterface<string>, ...args: any[]) {
@@ -186,7 +186,7 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
       let { component, virtualRepeat, viewModel } = await bootstrapComponent(
         {
           items: createItems(3),
-          getNextPage: spy
+          getNextPage: spy,
         },
         extraResources,
         $view
@@ -211,7 +211,7 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
       ({ component, virtualRepeat, viewModel } = await bootstrapComponent(
         {
           items: createItems(4),
-          getNextPage: spy
+          getNextPage: spy,
         },
         extraResources,
         $view
@@ -233,7 +233,7 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
       ({ component, virtualRepeat, viewModel } = await bootstrapComponent(
         {
           items: createItems(5),
-          getNextPage: spy
+          getNextPage: spy,
         },
         extraResources,
         $view
@@ -255,7 +255,7 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
       ({ component, virtualRepeat, viewModel } = await bootstrapComponent(
         {
           items: createItems(6),
-          getNextPage: spy
+          getNextPage: spy,
         },
         extraResources,
         $view
@@ -278,7 +278,7 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
       ' -- scroll down + get 100 more',
       ' -- wait',
       ' -- scroll up + get 100 more',
-      ''
+      '',
     ].join('\n\t'), async () => {
       const spy = jasmine.createSpy('viewModel.getNextPage(): void', function(this: ITestAppInterface<string>) {
         let itemLength = this.items.length;
@@ -290,7 +290,7 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent(
         {
           items: createItems(100),
-          getNextPage: spy
+          getNextPage: spy,
         },
         extraResources,
         $view
@@ -336,7 +336,7 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
       ' -- jump to end',
       ' -- wait and assert',
       ' -- jump to start',
-      ' -- wait and assert'
+      ' -- wait and assert',
     ].join('\n\t'), async () => {
       let scrollNextArgs: [number, /*is near bottom*/boolean, /*is near top*/boolean];
       const spy = jasmine.createSpy('viewModel.getNextPage(): void', function(this: ITestAppInterface<string>, ...args: any[]) {
@@ -352,7 +352,7 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent(
         {
           items: createItems(100),
-          getNextPage: spy
+          getNextPage: spy,
         },
         extraResources,
         $view
@@ -412,7 +412,7 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
       ' -- scroll down 20',
       ' -- wait and assert',
       ' -- scroll up',
-      ' -- wait and assert'
+      ' -- wait and assert',
     ].join('\n\t'), async () => {
       let scrollNextArgs: [number, /*is near bottom*/boolean, /*is near top*/boolean];
       const spy = jasmine.createSpy('viewModel.getNextPage(): void', function(this: ITestAppInterface<string>, ...args: any[]) {
@@ -428,7 +428,7 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent(
         {
           items: createItems(100),
-          getNextPage: spy
+          getNextPage: spy,
         },
         extraResources,
         $view
@@ -491,7 +491,7 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
       'handles getting next data set with promises',
       ' -- sroll to end',
       ' -- wait',
-      ' -- scroll to top'
+      ' -- scroll to top',
     ].join('\n\t'), async () => {
       let scrollNextArgs: [number, boolean, boolean];
       let currentPromise: Promise<any>;
@@ -510,7 +510,7 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
       let { component, virtualRepeat, viewModel } = await bootstrapComponent(
         {
           items: createItems(100),
-          getNextPage: spy
+          getNextPage: spy,
         },
         extraResources,
         $view
@@ -538,13 +538,84 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
       // loaded
       expect(viewModel.items.length).toBe(200, 'items.length 2 | promise resolved, loaded');
     });
+
+    it([
+      title,
+      'handles getting next data set with promises',
+      ' -- start 10 (smaller than min views required: 12)',
+      ' -- sroll 1px (no change in indices)',
+    ].join('\n\t'), async () => {
+      let scrollNextArgs: [number, boolean, boolean];
+      let currentPromise: Promise<any>;
+      const spy = jasmine.createSpy('viewModel.getNextPage(): void', function(this: ITestAppInterface<string>, ...args: any[]) {
+        let [_, isAtBottom] = scrollNextArgs = normalizeScrollNextArgs(args);
+        return new Promise(async (resolve) => {
+          await waitForFrames(2);
+          let itemLength = this.items.length;
+          for (let i = 0; i < 1; ++i) {
+            let itemNum = itemLength + i;
+            this.items.push('item' + itemNum);
+          }
+          resolve();
+        });
+      }).and.callThrough();
+      let { component, virtualRepeat, viewModel } = await bootstrapComponent(
+        {
+          items: createItems(10),
+          getNextPage: spy,
+        },
+        extraResources,
+        $view
+      );
+
+      expect(scrollNextArgs).toBe(undefined, 'getNextPage() args[]');
+      expect(virtualRepeat.minViewsRequired * 2).toBe(12, 'repeat._viewsLength');
+      expect(virtualRepeat.viewCount()).toBe(10, 'repeat.viewCount()');
+      expect(spy.calls.count()).toBe(0, 'no getNextPage() calls 1');
+
+      expect(viewModel.items.length).toBe(10, 'items.length 1');
+      validateScrolledState(virtualRepeat, viewModel, itemHeight);
+
+      scrollRepeat(virtualRepeat, 1);
+      // assert that nothing changed after
+      // 1 frame for scroll handler to start working
+      // 1 frame for getMore to be invoked
+      await waitForFrames(2);
+      assertScrollNextArgsEqual(scrollNextArgs, [0, true, true], 'scrollnextArgs 1');
+      // expect(scrollNextArgs).toEqual([/* first view index */0, true, false], 'scrollNextArgs 1');
+      expect(spy.calls.count()).toBe(1, '1 getNextPage() calls 2');
+
+      // not yet loaded
+      expect(viewModel.items.length).toBe(10, 'items.length 2 | promise started, not loaded');
+      await waitForFrames(2);
+      // loaded
+      expect(viewModel.items.length).toBe(11, 'items.length 2 | promise resolved, loaded');
+      validateScrolledState(virtualRepeat, viewModel, itemHeight);
+
+      // ========================
+      // try to scroll again, but back to 0 from 1px
+      scrollRepeat(virtualRepeat, 0);
+      // assert that nothing changed after
+      // 1 frame for scroll handler to start working
+      // 1 frame for getMore to be invoked
+      await waitForFrames(2);
+      assertScrollNextArgsEqual(scrollNextArgs, [0, true, true], 'scrollnextArgs 2');
+      expect(spy.calls.count()).toBe(2, '2 getNextPage() calls 3');
+
+      // not yet loaded
+      expect(viewModel.items.length).toBe(11, 'items.length 3 | promise started, not loaded');
+      await waitForFrames(2);
+      // loaded
+      expect(viewModel.items.length).toBe(12, 'items.length 3 | promise resolved, loaded');
+
+    });
   }
 
   async function bootstrapComponent<T>($viewModel?: ITestAppInterface<T>, extraResources?: any[], $view = view) {
     component = StageComponent
       .withResources([
         ...resources,
-        ...extraResources
+        ...extraResources,
       ])
       .inView($view)
       .boundTo($viewModel);
@@ -561,5 +632,14 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
     return typeof args[0] === 'number'
       ? [args[0], args[1], args[2]]
       : [args[0].topIndex, args[0].isAtBottom, args[0].isAtTop];
+  }
+
+  function assertScrollNextArgsEqual(scrollnextInfo: [number, boolean, boolean], expectedScrollnextInfo: [number, boolean, boolean], prefixMessage = ''): void {
+    expect(Array.isArray(scrollnextInfo)).toBe(true, `[${prefixMessage}] scroll next info should have been defined`);
+    const [actualTopIndex, actualIsNearBottom, actualIsNearTop] = scrollnextInfo;
+    const [expectedTopIndex, expectedIsNearBottom, expectedIsNearTop] = expectedScrollnextInfo;
+    expect(actualTopIndex).toBe(expectedTopIndex, `[${prefixMessage}] {top index(${actualTopIndex})} to be ${expectedTopIndex}`);
+    expect(actualIsNearBottom).toBe(expectedIsNearBottom, `[${prefixMessage}] {is near bottom(${actualIsNearBottom})} to be ${expectedIsNearBottom}`);
+    expect(actualIsNearTop).toBe(expectedIsNearTop, `[${prefixMessage}] {is near top (${actualIsNearTop})} to be ${expectedIsNearTop}`);
   }
 });
