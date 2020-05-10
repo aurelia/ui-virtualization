@@ -25,7 +25,7 @@ export class DefaultTemplateStrategy implements ITemplateStrategy {
     const parent = element.parentNode;
     return [
       parent.insertBefore(DOM.createElement('div'), element),
-      parent.insertBefore(DOM.createElement('div'), element.nextSibling)
+      parent.insertBefore(DOM.createElement('div'), element.nextSibling),
     ];
   }
 

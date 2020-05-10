@@ -10,11 +10,11 @@ export function configure(config: { globalResources(...args: any[]): any; }) {
 
 export {
   VirtualRepeat,
-  InfiniteScrollNext
+  InfiniteScrollNext,
 };
 
 export {
   IScrollNextScrollContext,
   VirtualizationEvents,
-  RepeatableValue
+  RepeatableValue,
 } from './interfaces';

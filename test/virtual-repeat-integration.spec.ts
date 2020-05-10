@@ -162,7 +162,7 @@ describe('vr-integration.spec.ts', () => {
       create = Promise.all([
         create,
         hiddenCreate,
-        containerCreate
+        containerCreate,
       ]);
     });
 

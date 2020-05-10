@@ -5,7 +5,7 @@ export class InfiniteScrollNext {
   static $resource() {
     return {
       type: 'attribute',
-      name: 'infinite-scroll-next'
+      name: 'infinite-scroll-next',
     };
   }
 }

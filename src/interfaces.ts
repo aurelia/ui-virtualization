@@ -352,7 +352,7 @@ export const enum VirtualizationCalculation {
   none              = 0b0_00000,
   reset             = 0b0_00001,
   has_sizing        = 0b0_00010,
-  observe_scroller  = 0b0_00100
+  observe_scroller  = 0b0_00100,
 }
 
 export interface IElement {
@@ -367,7 +367,7 @@ export interface IElement {
  */
 export const VirtualizationEvents = Object.assign(Object.create(null), {
   scrollerSizeChange: 'virtual-repeat-scroller-size-changed' as 'virtual-repeat-scroller-size-changed',
-  itemSizeChange: 'virtual-repeat-item-size-changed' as 'virtual-repeat-item-size-changed'
+  itemSizeChange: 'virtual-repeat-item-size-changed' as 'virtual-repeat-item-size-changed',
 }) as {
   scrollerSizeChange: 'virtual-repeat-scroller-size-changed';
   itemSizeChange: 'virtual-repeat-item-size-changed';
@@ -382,7 +382,7 @@ export const enum ScrollingState {
   /**@internal */
   isScrollingDownAndNearBottom  = isScrollingDown | isNearBottom,
   /**@internal */
-  isScrollingUpAndNearTop       = isScrollingUp | isNearTop
+  isScrollingUpAndNearTop       = isScrollingUp | isNearTop,
 }
 
 // export const enum IVirtualRepeatState {

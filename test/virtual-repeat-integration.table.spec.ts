@@ -26,7 +26,7 @@ describe('vr-integration.table.spec.ts', () => {
     viewModel = { items: items };
     resources = [
       'src/virtual-repeat',
-      'test/noop-value-converter'
+      'test/noop-value-converter',
     ];
   });
 

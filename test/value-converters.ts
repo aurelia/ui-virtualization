@@ -1,7 +1,7 @@
 export class IdentityValueConverter {
   static $resource = {
     type: 'valueConverter',
-    name: 'identity'
+    name: 'identity',
   };
   toView(val: any[]) {
     return val;
@@ -11,7 +11,7 @@ export class IdentityValueConverter {
 export class CloneArrayValueConverter {
   static $resource = {
     type: 'valueConverter',
-    name: 'cloneArray'
+    name: 'cloneArray',
   };
   toView(val: any[]) {
     return Array.isArray(val) ? val.slice() : val;

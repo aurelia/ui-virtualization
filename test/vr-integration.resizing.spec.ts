@@ -1,13 +1,12 @@
 import './setup';
 import { PLATFORM } from 'aurelia-pal';
-import { validateScrolledState, ensureScrolled, scrollToEnd, waitForNextFrame, validateState, waitForTimeout, waitForFrames } from './utilities';
+import { validateScrolledState, waitForFrames } from './utilities';
 import { VirtualRepeat } from '../src/virtual-repeat';
 import { StageComponent, ComponentTester } from 'aurelia-testing';
 import { bootstrap } from 'aurelia-bootstrapper';
 import { ITestAppInterface } from './interfaces';
-import { eachCartesianJoin, eachCartesianJoinAsync } from './lib';
+import { eachCartesianJoin } from './lib';
 import { ElementEvents } from 'aurelia-framework';
-import { getDistanceToParent } from '../src/utilities-dom';
 import { IdentityValueConverter, CloneArrayValueConverter } from './value-converters';
 
 PLATFORM.moduleName('src/virtual-repeat');

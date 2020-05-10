@@ -69,7 +69,14 @@
       true,
       {
         "singleline": "never",
-        "multiline": "never"
+        "multiline": {
+          "arrays": "always",
+          "objects": "always",
+          "imports": "always",
+          "exports": "always",
+          "typeLiterals": "always",
+          "functions": "never"
+        }
       }
     ],
     "triple-equals": [

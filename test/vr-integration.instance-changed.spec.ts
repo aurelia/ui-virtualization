@@ -23,7 +23,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
     // viewModel = { items: items };
     resources = [
       'src/virtual-repeat',
-      'test/noop-value-converter'
+      'test/noop-value-converter',
     ];
   });
 
@@ -110,7 +110,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
     it([
       'renders with 100 items',
       '  -- reduces to 30',
-      '  -- greater than (repeat._viewsLength)'
+      '  -- greater than (repeat._viewsLength)',
     ].join('\n\t'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
 
@@ -172,7 +172,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       'renders with 100 items',
       '  -- reduces to 16',
       '  -- lesser than (repeat._viewsLength)',
-      '  -- greater than (repeat.elementsInView)'
+      '  -- greater than (repeat.elementsInView)',
     ].join('\n\t'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
 
@@ -233,7 +233,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
     it([
       'renders with 100 items',
       '  -- reduces to 8',
-      '  -- lesser than (repeat.elementsInView)'
+      '  -- lesser than (repeat.elementsInView)',
     ].join('\n\t'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
 
@@ -298,7 +298,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       'renders with 100 items',
       '  -- reduces to 8',
       '  -- lesser than (repeat.elementsInView)',
-      '  -- increase to 30'
+      '  -- increase to 30',
     ].join('\n\t'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
 
@@ -350,7 +350,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       'renders with 100 items',
       '  -- reduces to 11',
       '  -- equal to (repeat.elementsInView)',
-      '  -- increase to 30'
+      '  -- increase to 30',
     ].join('\n\t'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
 
@@ -411,7 +411,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
 
     it([
       'tbody[repeat]',
-      'renders with 100 items'
+      'renders with 100 items',
     ].join('\n\t'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
 
@@ -463,7 +463,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       'tbody[repeat]',
       'renders with 100 items',
       '  -- reduces to 30',
-      '  -- greater than (repeat._viewsLength)'
+      '  -- greater than (repeat._viewsLength)',
     ].join('\n\t'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
 
@@ -524,7 +524,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       '  -- greater than (repeat._viewsLength)',
       '  -- reduces to null',
       '  -- increase to 50',
-      '  -- reduces to undefined'
+      '  -- reduces to undefined',
     ].join('\n\t'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
 
@@ -604,7 +604,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       'renders with 100 items',
       '  -- reduces to 16',
       '  -- lesser than (repeat._viewsLength)',
-      '  -- greater than (repeat.elementsInView)'
+      '  -- greater than (repeat.elementsInView)',
     ].join('\n\t'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
 
@@ -662,7 +662,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       'tbody[repeat]',
       'renders with 100 items',
       '  -- reduces to 8',
-      '  -- lesser than (repeat.elementsInView)'
+      '  -- lesser than (repeat.elementsInView)',
     ].join('\n\t'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
 
@@ -730,7 +730,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       'renders with 100 items',
       '  -- reduces to 11',
       '  -- equal to (repeat.elementsInView)',
-      '  -- increase to 30'
+      '  -- increase to 30',
     ].join('\n\t'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
 
@@ -833,7 +833,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
     it([
       'renders with 100 items',
       '  -- reduces to 30',
-      '  -- greater than (repeat._viewsLength)'
+      '  -- greater than (repeat._viewsLength)',
     ].join('\n\t'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
 
@@ -889,7 +889,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       'renders with 100 items',
       '  -- reduces to 16',
       '  -- lesser than (repeat._viewsLength)',
-      '  -- greater than (repeat.elementsInView)'
+      '  -- greater than (repeat.elementsInView)',
     ].join('\n\t'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
 
@@ -944,7 +944,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
     it([
       'renders with 100 items',
       '  -- reduces to 8',
-      '  -- lesser than (repeat.elementsInView)'
+      '  -- lesser than (repeat.elementsInView)',
     ].join('\n\t'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
 
@@ -1009,7 +1009,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
       'renders with 100 items',
       '  -- reduces to 11',
       '  -- equal to (repeat.elementsInView)',
-      '  -- increase to 30'
+      '  -- increase to 30',
     ].join('\n\t'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
 
@@ -1079,7 +1079,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
     function runTestSuit(title: string, $view: string) {
       it([
         title,
-        'renders with 100 items'
+        'renders with 100 items',
       ].join('\n\t'), async () => {
         const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items }, $view);
 
@@ -1136,7 +1136,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
         title,
         'renders with 100 items',
         '  -- reduces to 30',
-        '  -- greater than (repeat._viewsLength)'
+        '  -- greater than (repeat._viewsLength)',
       ].join('\n\t'), async () => {
         const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items }, $view);
 
@@ -1199,7 +1199,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
         '  -- greater than (repeat._viewsLength)',
         '  -- reduces to null',
         '  -- increase to 50',
-        '  -- reduces to undefined'
+        '  -- reduces to undefined',
       ].join('\n\t'), async () => {
         const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items }, $view);
 
@@ -1279,7 +1279,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
         'renders with 100 items',
         '  -- reduces to 16',
         '  -- lesser than (repeat._viewsLength)',
-        '  -- greater than (repeat.elementsInView)'
+        '  -- greater than (repeat.elementsInView)',
       ].join('\n\t'), async () => {
         const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items }, $view);
 
@@ -1337,7 +1337,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
         title,
         'renders with 100 items',
         '  -- reduces to 8',
-        '  -- lesser than (repeat.elementsInView)'
+        '  -- lesser than (repeat.elementsInView)',
       ].join('\n\t'), async () => {
         const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items }, $view);
 
@@ -1406,7 +1406,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
         'renders with 100 items',
         '  -- reduces to 11',
         '  -- equal to (repeat.elementsInView)',
-        '  -- increase to 30'
+        '  -- increase to 30',
       ].join('\n\t'), async () => {
         const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items }, $view);
 
@@ -1479,7 +1479,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
     function runTestSuit(title: string, $view: string) {
       it([
         title,
-        'renders with 100 items'
+        'renders with 100 items',
       ].join('\n\t'), async () => {
         const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items }, $view);
 
@@ -1541,7 +1541,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
         '  -- greater than (repeat._viewsLength)',
         '  -- reduces to null',
         '  -- increase to 50',
-        '  -- reduces to undefined'
+        '  -- reduces to undefined',
       ].join('\n\t'), async () => {
         const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items }, $view);
 
@@ -1622,7 +1622,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
         title,
         'renders with 100 items',
         '  -- reduces to 30',
-        '  -- greater than (repeat._viewsLength)'
+        '  -- greater than (repeat._viewsLength)',
       ].join('\n\t'), async () => {
         const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items }, $view);
 
@@ -1685,7 +1685,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
         'renders with 100 items',
         '  -- reduces to 16',
         '  -- lesser than (repeat._viewsLength)',
-        '  -- greater than (repeat.elementsInView)'
+        '  -- greater than (repeat.elementsInView)',
       ].join('\n\t'), async () => {
         const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items }, $view);
 
@@ -1741,7 +1741,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
         title,
         'renders with 100 items',
         '  -- reduces to 8',
-        '  -- lesser than (repeat.elementsInView)'
+        '  -- lesser than (repeat.elementsInView)',
       ].join('\n\t'), async () => {
         const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items }, $view);
 
