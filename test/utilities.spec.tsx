@@ -16,7 +16,7 @@ describe('utiltites - DOM', () => {
         </div>,
       spaceAssertions: [
         ['#child', '#parent', 500],
-        ['#topBuffer', '#parent', 0]
+        ['#topBuffer', '#parent', 0],
       ],
       assert: (ct) => {
         const parent = ct.querySelector('#parent') as HTMLElement;
@@ -26,7 +26,7 @@ describe('utiltites - DOM', () => {
         expect(getDistanceToParent(child, parent)).toEqual(1);
         ct.style.marginTop = '-50px';
         expect(getDistanceToParent(child, parent)).toEqual(1);
-      }
+      },
     },
     {
       title: 'container with scrolling + buffer + child',
@@ -36,7 +36,7 @@ describe('utiltites - DOM', () => {
           <div id='child'></div>
         </div>,
       spaceAssertions: [
-        ['#child', '#parent', 500]
+        ['#child', '#parent', 500],
       ],
       assert: ct => {
         const parent = ct.querySelector('#parent') as HTMLElement;
@@ -48,7 +48,7 @@ describe('utiltites - DOM', () => {
         expect(getDistanceToParent(child, parent)).toEqual(1);
         topBuffer.insertAdjacentElement('afterend', <div style='height: 500px'></div>);
         expect(getDistanceToParent(child, parent)).toEqual(501);
-      }
+      },
     },
     {
       title: 'parent[relative + scrolling] + buffer + child',
@@ -60,8 +60,8 @@ describe('utiltites - DOM', () => {
         </div>,
       spaceAssertions: [
         ['#child', '#parent', 700],
-        ['#topBuffer', '#parent', 300]
-      ]
+        ['#topBuffer', '#parent', 300],
+      ],
     },
     {
       title: 'scroller > table > row',
@@ -77,13 +77,13 @@ describe('utiltites - DOM', () => {
         </div>,
       spaceAssertions: [
         ['#child', '#parent', 1000],
-        ['#topBuffer', '#parent', 400]
+        ['#topBuffer', '#parent', 400],
       ],
       assert: ct => {
         ct.scrollTop = 600;
         assertDistance(ct, '#child', '#parent', 1000);
         assertDistance(ct, '#topBuffer', '#parent', 400);
-      }
+      },
     },
     {
       title: 'scroller > div[relative] > div > table > row',
@@ -103,13 +103,13 @@ describe('utiltites - DOM', () => {
         </div>,
       spaceAssertions: [
         ['#child', '#parent', 1000],
-        ['#topBuffer', '#parent', 400]
+        ['#topBuffer', '#parent', 400],
       ],
       assert: ct => {
         ct.scrollTop = 800;
         assertDistance(ct, '#child', '#parent', 1000);
         assertDistance(ct, '#topBuffer', '#parent', 400);
-      }
+      },
     },
     {
       title: 'scroller > #shadow-root > div',
@@ -135,14 +135,14 @@ describe('utiltites - DOM', () => {
         parent.scrollTop = 200;
         assertDistance(ct, child, parent, 400);
         assertDistance(ct, topBuffer, parent, 0);
-      }
+      },
     },
     {
       title: [
         'container',
         '\t-- table [border-spacing:0]',
         '\t-- --> buffer',
-        '\t-- --> row'
+        '\t-- --> row',
       ].join('\n'),
       template:
         <div id='parent'>
@@ -173,8 +173,8 @@ describe('utiltites - DOM', () => {
         assertDistance(ct, child, parent, 500 + 400);
         assertDistance(ct, topBuffer, parent, 0 + 400);
         assertDistance(ct, cell, parent, 500 + 400);
-      }
-    }
+      },
+    },
   ];
 
   interface ITestCase {

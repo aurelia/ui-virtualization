@@ -21,7 +21,7 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
     items = createItems(1000);
     resources = [
       'src/virtual-repeat',
-      'test/noop-value-converter'
+      'test/noop-value-converter',
     ];
   });
 
@@ -52,12 +52,12 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
       class {
         static $resource = {
           type: 'valueConverter',
-          name: 'identity'
+          name: 'identity',
         };
         toView(val: any[]) {
           return val;
         }
-      }
+      },
     ]
   );
 
@@ -70,12 +70,12 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
       class {
         static $resource = {
           type: 'valueConverter',
-          name: 'cloneArray'
+          name: 'cloneArray',
         };
         toView(val: any[]) {
           return Array.isArray(val) ? val.slice() : val;
         }
-      }
+      },
     ]
   );
 
@@ -88,7 +88,7 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
       class {
         static $resource = {
           type: 'valueConverter',
-          name: 'identity'
+          name: 'identity',
         };
         toView(val: any[]) {
           return val;
@@ -97,12 +97,12 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
       class {
         static $resource = {
           type: 'valueConverter',
-          name: 'cloneArray'
+          name: 'cloneArray',
         };
         toView(val: any[]) {
           return Array.isArray(val) ? val.slice() : val;
         }
-      }
+      },
     ]
   );
 
@@ -129,7 +129,7 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
       class {
         static $resource = {
           type: 'valueConverter',
-          name: 'identity'
+          name: 'identity',
         };
         toView(val: any[]) {
           return val;
@@ -138,12 +138,12 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
       class {
         static $resource = {
           type: 'valueConverter',
-          name: 'cloneArray'
+          name: 'cloneArray',
         };
         toView(val: any[]) {
           return Array.isArray(val) ? val.slice() : val;
         }
-      }
+      },
     ]
   );
 
@@ -151,7 +151,7 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
     it([
       title,
       '\thandles splice when scrolled to end',
-      ''
+      '',
     ].join('\n'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
       await scrollToEnd(virtualRepeat);
@@ -168,7 +168,7 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
     it([
       title,
       '\thandles splice removing non-consecutive when scrolled to end',
-      ''
+      '',
     ].join('\n'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({
         items: items,
@@ -178,7 +178,7 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
             let itemNum = itemLength + i;
             this.items.push('item' + itemNum);
           }
-        }
+        },
       });
       await scrollToEnd(virtualRepeat);
 
@@ -200,7 +200,7 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
       '\t1000 items',
       '\t-- 12 max views',
       '\t-- splice to 840 (every 10 increment, remove 3 add i, 80 times)',
-      ''
+      '',
     ].join('\n'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
       await scrollToEnd(virtualRepeat);
@@ -227,7 +227,7 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
       '\t1000 items',
       '\t-- 12 max views',
       '\t-- splice to 24',
-      ''
+      '',
     ].join('\n'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
       await scrollToEnd(virtualRepeat);
@@ -247,7 +247,7 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
     it([
       title,
       '\thandles splice removing more',
-      ''
+      '',
     ].join('\n'), async () => {
       // number of items remaining exactly as viewslot capacity
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
@@ -265,7 +265,7 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
     it([
       title,
       '\thandles splice removing even more',
-      ''
+      '',
     ].join('\n'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
       await scrollToEnd(virtualRepeat);
@@ -281,7 +281,7 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
     it([
       title,
       '\thandles splice removing non-consecutive',
-      ''
+      '',
     ].join('\n'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
       await scrollToEnd(virtualRepeat);
@@ -297,7 +297,7 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
     it([
       title,
       '\thandles splice non-consecutive',
-      ''
+      '',
     ].join('\n'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
       await scrollToEnd(virtualRepeat);
@@ -316,7 +316,7 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
       '\t-- 1000 items',
       '\t-- 12 max views',
       '\t-- spliced to 12',
-      ''
+      '',
     ].join('\n'), async () => {
       let scrollCount = 0;
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
@@ -364,7 +364,7 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
       '\t1000 items',
       '\t-- 12 max views',
       '\t-- spliced to 13',
-      ''
+      '',
     ].join('\n'), async () => {
       let scrollCount = 0;
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
@@ -394,7 +394,7 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
         expect(virtualRepeat.items.length).toBe(13, 'items.length 1');
         expect(virtualRepeat.element.parentElement.scrollTop).toBe(100 * 995);
 
-        await waitForNextFrame();
+        await waitForFrames(2);
         expect(scrollCount).toBe(3, '@scroll 3');
         validateScrolledState(virtualRepeat, viewModel, itemHeight);
       }
@@ -404,7 +404,7 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
     it([
       title,
       '\thandles splice remove remaining + add',
-      ''
+      '',
     ].join('\n'), async () => {
       const { virtualRepeat, viewModel } = await bootstrapComponent({ items: items });
       await scrollToEnd(virtualRepeat);
@@ -419,7 +419,7 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
       component = StageComponent
         .withResources([
           ...resources,
-          ...extraResources
+          ...extraResources,
         ])
         .inView($view)
         .boundTo($viewModel);

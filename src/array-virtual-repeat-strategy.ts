@@ -29,6 +29,10 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     return repeat.addView(overrideContext.bindingContext, overrideContext);
   }
 
+  count(items: any[]): number {
+    return items.length;
+  }
+
   initCalculation(repeat: IVirtualRepeater, items: any[]): VirtualizationCalculation {
     const itemCount = items.length;
     // when there is no item, bails immediately
@@ -121,7 +125,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     return lastIndex === -1
       ? true
       : itemCount > 0
-        ? lastIndex > (itemCount - repeat.edgeDistance)
+        ? lastIndex > (itemCount - 1 - repeat.edgeDistance)
         : false;
   }
 
@@ -522,7 +526,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     const real_scroll_top = Math$max(0, scroller_scroll_top === 0
       ? 0
       : (scroller_scroll_top - top_buffer_distance));
-      let first_index_after_scroll_adjustment = real_scroll_top === 0
+    let first_index_after_scroll_adjustment = real_scroll_top === 0
       ? 0
       : Math$floor(real_scroll_top / itemHeight);
 

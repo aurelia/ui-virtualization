@@ -1,3 +1,4 @@
+import 'aurelia-polyfills';
 import { Aurelia, PLATFORM } from 'aurelia-framework';
 
 declare const PRODUCTION: boolean;
@@ -11,13 +12,13 @@ export async function configure(aurelia: Aurelia) {
         class {
           static $resource = {
             type: 'valueConverter',
-            name: 'identity'
+            name: 'identity',
           };
 
           toView(val: any) {
             return val;
           }
-        }
+        },
       ] as any[]);
 
     if (!PRODUCTION) {

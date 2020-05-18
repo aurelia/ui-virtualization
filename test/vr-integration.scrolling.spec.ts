@@ -28,7 +28,7 @@ describe('vr-integration.scrolling.spec.ts', () => {
     // viewModel = { items: items };
     resources = [
       'src/virtual-repeat',
-      'test/noop-value-converter'
+      'test/noop-value-converter',
     ];
   });
 
@@ -167,7 +167,7 @@ describe('vr-integration.scrolling.spec.ts', () => {
       '\t[body rows] <-- h:50 each',
       '\t[separator row] <-- h:100',
       '\t[body rows] <-- h:50 each',
-      '\t-- scrollTop from 0 to 79 should not affect first row'
+      '\t-- scrollTop from 0 to 79 should not affect first row',
     ].join('\n'), async () => {
       const { viewModel, virtualRepeat } = await bootstrapComponent({ items: createItems(100) }, view);
       const scrollCtEl = document.querySelector('#scrollCtEl');
@@ -214,7 +214,7 @@ describe('vr-integration.scrolling.spec.ts', () => {
     [' | cloneArray', 'infinite-scroll-next.call="getNextPage($scrollContext)"', [CloneArrayValueConverter]],
     [' | identity | cloneArray & toView', 'infinite-scroll-next="getNextPage"', [IdentityValueConverter, CloneArrayValueConverter]],
     [' | identity | cloneArray & toView', 'infinite-scroll-next.call="getNextPage($scrollContext)"', [IdentityValueConverter, CloneArrayValueConverter]],
-    [' | cloneArray & toView', 'infinite-scroll-next="getNextPage"', [CloneArrayValueConverter]]
+    [' | cloneArray & toView', 'infinite-scroll-next="getNextPage"', [CloneArrayValueConverter]],
 
     // cloneArray and two way creates infinite loop
     // [' | cloneArray & twoWay', 'infinite-scroll-next="getNextPage"', [CloneArrayValueConverter]]
@@ -231,7 +231,7 @@ describe('vr-integration.scrolling.spec.ts', () => {
           '-- 100 items',
           `-- [theader row] <-- h:${topBufferOffset}`,
           `-- [tr rows] <-- h:${itemHeight} each`,
-          ''
+          '',
         ].join('\n\t'),
       createView: (itemHeight, scrollerHeight, topBufferOffset, repeatAttr) =>
         `<div style="height: ${scrollerHeight}px; overflow-y: auto">
@@ -247,7 +247,7 @@ describe('vr-integration.scrolling.spec.ts', () => {
               <td>\${item}</td>
             </tr>
           </table>
-        </div>`
+        </div>`,
     },
     {
       topBufferOffset: 30,
@@ -259,7 +259,7 @@ describe('vr-integration.scrolling.spec.ts', () => {
           '-- 100 items',
           `-- [theader row] <-- h:${topBufferOffset}`,
           `-- [tbody rows] <-- h:${itemHeight} each`,
-          ''
+          '',
         ].join('\n\t'),
       createView: (itemHeight, scrollerHeight, topBufferOffset, repeatAttr) =>
         `<div style="height: ${scrollerHeight}px; overflow-y: auto">
@@ -277,7 +277,7 @@ describe('vr-integration.scrolling.spec.ts', () => {
               </tr>
             </tbody>
           </table>
-        </div>`
+        </div>`,
     },
     {
       topBufferOffset: 0,
@@ -288,7 +288,7 @@ describe('vr-integration.scrolling.spec.ts', () => {
           `div[scroller h:${scrollerHeight}] > ol > li[repeat${repeatAttr}]`,
           '-- 100 items',
           `-- [li rows] <-- h:${itemHeight} each`,
-          ''
+          '',
         ].join('\n\t'),
       createView: (itemHeight, scrollerHeight, topBufferOffset, repeatAttr) =>
         `<div style="height: ${scrollerHeight}px; overflow-y: auto">
@@ -297,7 +297,7 @@ describe('vr-integration.scrolling.spec.ts', () => {
               \${$index}
             </li>
           </ol>
-        </div>`
+        </div>`,
     },
     {
       topBufferOffset: 0,
@@ -308,15 +308,15 @@ describe('vr-integration.scrolling.spec.ts', () => {
           `ol[scroller h:${scrollerHeight}] > li[repeat${repeatAttr}]`,
           '-- 100 items',
           `-- [li rows] <-- h:${itemHeight} each`,
-          ''
+          '',
         ].join('\n\t'),
       createView: (itemHeight, scrollerHeight, topBufferOffset, repeatAttr) =>
         `<ol style="height: ${scrollerHeight}px; overflow-y: auto; list-style: none; margin: 0;">
           <li virtual-repeat.for="item of items ${repeatAttr}" style="height: ${itemHeight}px;">
             \${$index}
           </li>
-        </ol>`
-    }
+        </ol>`,
+    },
   ];
 
   eachCartesianJoin(
@@ -339,7 +339,7 @@ describe('vr-integration.scrolling.spec.ts', () => {
     {
       itemHeight,
       scrollerHeight,
-      topBufferOffset
+      topBufferOffset,
     }: {
       itemHeight: number;
       scrollerHeight: number;
@@ -351,7 +351,7 @@ describe('vr-integration.scrolling.spec.ts', () => {
     describe(title, () => {
       it([
         '100 items',
-        `-- scrollTop from 0 to ${itemHeight - 1} should not affect first row`
+        `-- scrollTop from 0 to ${itemHeight - 1} should not affect first row`,
       ].join('\n\t'), async () => {
         const ITEM_COUNT = 100;
         const { viewModel, virtualRepeat } = await bootstrapComponent(
@@ -378,7 +378,7 @@ describe('vr-integration.scrolling.spec.ts', () => {
       it([
         `100 items`,
         `-- scroll to bottom`,
-        `-- scroll from bottom to index ${100 - calcMinViewsRequired(scrollerHeight, itemHeight)} should not affect first row`
+        `-- scroll from bottom to index ${100 - calcMinViewsRequired(scrollerHeight, itemHeight)} should not affect first row`,
       ].join('\n\t'), async () => {
         const ITEM_COUNT = 100;
         const { viewModel, virtualRepeat } = await bootstrapComponent(

@@ -17,7 +17,7 @@ abstract class BaseTableTemplateStrategy extends DefaultTemplateStrategy impleme
       // append tbody with empty row before the element
       parent.insertBefore(DOM.createElement('tr'), element),
       // append tbody with empty row after the element
-      parent.insertBefore(DOM.createElement('tr'), element.nextSibling)
+      parent.insertBefore(DOM.createElement('tr'), element.nextSibling),
     ];
   }
 

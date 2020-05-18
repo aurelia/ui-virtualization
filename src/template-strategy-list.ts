@@ -38,7 +38,7 @@ export class ListTemplateStrategy extends DefaultTemplateStrategy implements ITe
     const parent = element.parentNode;
     return [
       parent.insertBefore(DOM.createElement('li'), element),
-      parent.insertBefore(DOM.createElement('li'), element.nextSibling)
+      parent.insertBefore(DOM.createElement('li'), element.nextSibling),
     ];
   }
 }

@@ -190,18 +190,25 @@ export interface IVirtualRepeater extends AbstractRepeater {
   updateBufferElements(skipUpdate?: boolean): void;
 }
 
-export interface IVirtualRepeatStrategy {
+export type RepeatableValue = number | any[] | Map<any, any> | Set<any>;
+
+export interface IVirtualRepeatStrategy<T extends RepeatableValue = RepeatableValue> {
   /**
    * create first item to calculate the heights
    */
   createFirstRow(repeat: IVirtualRepeater): IView;
 
   /**
+   * Count the number of the items in the repeatable value `items`
+   */
+  count(items: T): number;
+
+  /**
    * Calculate required variables for a virtual repeat instance to operate properly
    *
    * @returns `false` to notify that calculation hasn't been finished
    */
-  initCalculation(repeat: IVirtualRepeater, items: number | any[] | Map<any, any> | Set<any>): VirtualizationCalculation;
+  initCalculation(repeat: IVirtualRepeater, items: T): VirtualizationCalculation;
 
   /**
    * Handle special initialization if any, depends on different strategy
@@ -233,7 +240,7 @@ export interface IVirtualRepeatStrategy {
   /**
    * Get the observer based on collection type of `items`
    */
-  getCollectionObserver(observerLocator: ObserverLocator, items: any[] | Map<any, any> | Set<any>): InternalCollectionObserver;
+  getCollectionObserver(observerLocator: ObserverLocator, items: T): InternalCollectionObserver;
 
   /**
    * @override
@@ -242,16 +249,16 @@ export interface IVirtualRepeatStrategy {
    * @param items The new array instance.
    * @param firstIndex The index of first active view
    */
-  instanceChanged(repeat: IVirtualRepeater, items: any[] | Map<any, any> | Set<any>, firstIndex?: number): void;
+  instanceChanged(repeat: IVirtualRepeater, items: T, firstIndex?: number): void;
 
   /**
    * @override
    * Handle the repeat's collection instance mutating.
    * @param repeat The virtual repeat instance.
-   * @param array The modified array.
+   * @param items The modified array.
    * @param splices Records of array changes.
    */
-  instanceMutated(repeat: IVirtualRepeater, array: any[], splices: ICollectionObserverSplice[]): void;
+  instanceMutated(repeat: IVirtualRepeater, items: RepeatableValue, splices: ICollectionObserverSplice[]): void;
 
   /**
    * Unlike normal repeat, virtualization repeat employs "padding" elements. Those elements
@@ -345,7 +352,7 @@ export const enum VirtualizationCalculation {
   none              = 0b0_00000,
   reset             = 0b0_00001,
   has_sizing        = 0b0_00010,
-  observe_scroller  = 0b0_00100
+  observe_scroller  = 0b0_00100,
 }
 
 export interface IElement {
@@ -360,18 +367,22 @@ export interface IElement {
  */
 export const VirtualizationEvents = Object.assign(Object.create(null), {
   scrollerSizeChange: 'virtual-repeat-scroller-size-changed' as 'virtual-repeat-scroller-size-changed',
-  itemSizeChange: 'virtual-repeat-item-size-changed' as 'virtual-repeat-item-size-changed'
+  itemSizeChange: 'virtual-repeat-item-size-changed' as 'virtual-repeat-item-size-changed',
 }) as {
   scrollerSizeChange: 'virtual-repeat-scroller-size-changed';
   itemSizeChange: 'virtual-repeat-item-size-changed';
 };
 
 export const enum ScrollingState {
-  none              = 0,
-  isScrollingDown   = 0b0_00001,
-  isScrollingUp     = 0b0_00010,
-  isNearTop         = 0b0_00100,
-  isNearBottom      = 0b0_01000
+  none                          = 0,
+  isScrollingDown               = 0b0_00001,
+  isScrollingUp                 = 0b0_00010,
+  isNearTop                     = 0b0_00100,
+  isNearBottom                  = 0b0_01000,
+  /**@internal */
+  isScrollingDownAndNearBottom  = isScrollingDown | isNearBottom,
+  /**@internal */
+  isScrollingUpAndNearTop       = isScrollingUp | isNearTop,
 }
 
 // export const enum IVirtualRepeatState {
