@@ -14,7 +14,7 @@
   "license": "MIT",
   "author": "Rob Eisenberg <rob@bluespire.com> (http://robeisenberg.com/)",
   "main": "dist/commonjs/aurelia-ui-virtualization.js",
-  "module": "dist/es2015/aurelia-ui-virtualization.js",
+  "module": "dist/native-modules/aurelia-ui-virtualization.js",
   "browser": "dist/umd/aurelia-ui-virtualization.js",
   "unpkg": "dist/umd-es2015/aurelia-ui-virtualization.js",
   "typings": "dist/aurelia-ui-virtualization.d.ts",
