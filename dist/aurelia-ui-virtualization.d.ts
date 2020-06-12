@@ -115,17 +115,22 @@ export interface IVirtualRepeater extends AbstractRepeater {
 	 */
 	updateBufferElements(skipUpdate?: boolean): void;
 }
-export interface IVirtualRepeatStrategy {
+export declare type RepeatableValue = number | any[] | Map<any, any> | Set<any>;
+export interface IVirtualRepeatStrategy<T extends RepeatableValue = RepeatableValue> {
 	/**
 	 * create first item to calculate the heights
 	 */
 	createFirstRow(repeat: IVirtualRepeater): IView;
 	/**
+	 * Count the number of the items in the repeatable value `items`
+	 */
+	count(items: T): number;
+	/**
 	 * Calculate required variables for a virtual repeat instance to operate properly
 	 *
 	 * @returns `false` to notify that calculation hasn't been finished
 	 */
-	initCalculation(repeat: IVirtualRepeater, items: number | any[] | Map<any, any> | Set<any>): VirtualizationCalculation;
+	initCalculation(repeat: IVirtualRepeater, items: T): VirtualizationCalculation;
 	/**
 	 * Handle special initialization if any, depends on different strategy
 	 */
@@ -151,7 +156,7 @@ export interface IVirtualRepeatStrategy {
 	/**
 	 * Get the observer based on collection type of `items`
 	 */
-	getCollectionObserver(observerLocator: ObserverLocator, items: any[] | Map<any, any> | Set<any>): InternalCollectionObserver;
+	getCollectionObserver(observerLocator: ObserverLocator, items: T): InternalCollectionObserver;
 	/**
 	 * @override
 	 * Handle the repeat's collection instance changing.
@@ -159,15 +164,15 @@ export interface IVirtualRepeatStrategy {
 	 * @param items The new array instance.
 	 * @param firstIndex The index of first active view
 	 */
-	instanceChanged(repeat: IVirtualRepeater, items: any[] | Map<any, any> | Set<any>, firstIndex?: number): void;
+	instanceChanged(repeat: IVirtualRepeater, items: T, firstIndex?: number): void;
 	/**
 	 * @override
 	 * Handle the repeat's collection instance mutating.
 	 * @param repeat The virtual repeat instance.
-	 * @param array The modified array.
+	 * @param items The modified array.
 	 * @param splices Records of array changes.
 	 */
-	instanceMutated(repeat: IVirtualRepeater, array: any[], splices: ICollectionObserverSplice[]): void;
+	instanceMutated(repeat: IVirtualRepeater, items: RepeatableValue, splices: ICollectionObserverSplice[]): void;
 	/**
 	 * Unlike normal repeat, virtualization repeat employs "padding" elements. Those elements
 	 * often are just blank block with proper height/width to adjust the height/width/scroll feeling

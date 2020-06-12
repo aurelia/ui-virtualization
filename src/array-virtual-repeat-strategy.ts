@@ -8,7 +8,6 @@ import {
   Math$min,
   calcMinViewsRequired,
   rebindView,
-  Math$ceil
 } from './utilities';
 import { VirtualRepeat } from './virtual-repeat';
 import { getDistanceToParent, calcOuterHeight } from './utilities-dom';

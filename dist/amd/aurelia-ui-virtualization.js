@@ -69,7 +69,7 @@ define(['exports', 'aurelia-binding', 'aurelia-templating', 'aurelia-templating-
             }
             current = current.parentNode;
         }
-        return htmlElement;
+        return doc.scrollingElement || htmlElement;
     };
     var getElementDistanceToTopOfDocument = function (element) {
         var box = element.getBoundingClientRect();
@@ -134,6 +134,9 @@ define(['exports', 'aurelia-binding', 'aurelia-templating', 'aurelia-templating-
             var overrideContext = aureliaTemplatingResources.createFullOverrideContext(repeat, repeat.items[0], 0, 1);
             return repeat.addView(overrideContext.bindingContext, overrideContext);
         };
+        ArrayVirtualRepeatStrategy.prototype.count = function (items) {
+            return items.length;
+        };
         ArrayVirtualRepeatStrategy.prototype.initCalculation = function (repeat, items) {
             var itemCount = items.length;
             if (!(itemCount > 0)) {
@@ -197,7 +200,7 @@ define(['exports', 'aurelia-binding', 'aurelia-templating', 'aurelia-templating-
             return lastIndex === -1
                 ? true
                 : itemCount > 0
-                    ? lastIndex > (itemCount - repeat.edgeDistance)
+                    ? lastIndex > (itemCount - 1 - repeat.edgeDistance)
                     : false;
         };
         ArrayVirtualRepeatStrategy.prototype.instanceChanged = function (repeat, items, first) {
@@ -473,6 +476,12 @@ define(['exports', 'aurelia-binding', 'aurelia-templating', 'aurelia-templating-
         function NullVirtualRepeatStrategy() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
+        NullVirtualRepeatStrategy.prototype.createFirstRow = function () {
+            return null;
+        };
+        NullVirtualRepeatStrategy.prototype.count = function (items) {
+            return 0;
+        };
         NullVirtualRepeatStrategy.prototype.getViewRange = function (repeat, scrollerInfo) {
             return [0, 0];
         };
@@ -489,9 +498,6 @@ define(['exports', 'aurelia-binding', 'aurelia-templating', 'aurelia-templating-
                 = repeat.minViewsRequired
                     = 0;
             return 2;
-        };
-        NullVirtualRepeatStrategy.prototype.createFirstRow = function () {
-            return null;
         };
         NullVirtualRepeatStrategy.prototype.instanceMutated = function () { };
         NullVirtualRepeatStrategy.prototype.instanceChanged = function (repeat) {
@@ -544,7 +550,7 @@ define(['exports', 'aurelia-binding', 'aurelia-templating', 'aurelia-templating-
             var parent = element.parentNode;
             return [
                 parent.insertBefore(aureliaPal.DOM.createElement('div'), element),
-                parent.insertBefore(aureliaPal.DOM.createElement('div'), element.nextSibling)
+                parent.insertBefore(aureliaPal.DOM.createElement('div'), element.nextSibling),
             ];
         };
         DefaultTemplateStrategy.prototype.removeBuffers = function (el, topBuffer, bottomBuffer) {
@@ -575,7 +581,7 @@ define(['exports', 'aurelia-binding', 'aurelia-templating', 'aurelia-templating-
             var parent = element.parentNode;
             return [
                 parent.insertBefore(aureliaPal.DOM.createElement('tr'), element),
-                parent.insertBefore(aureliaPal.DOM.createElement('tr'), element.nextSibling)
+                parent.insertBefore(aureliaPal.DOM.createElement('tr'), element.nextSibling),
             ];
         };
         return BaseTableTemplateStrategy;
@@ -610,7 +616,7 @@ define(['exports', 'aurelia-binding', 'aurelia-templating', 'aurelia-templating-
             var parent = element.parentNode;
             return [
                 parent.insertBefore(aureliaPal.DOM.createElement('li'), element),
-                parent.insertBefore(aureliaPal.DOM.createElement('li'), element.nextSibling)
+                parent.insertBefore(aureliaPal.DOM.createElement('li'), element.nextSibling),
             ];
         };
         return ListTemplateStrategy;
@@ -644,7 +650,7 @@ define(['exports', 'aurelia-binding', 'aurelia-templating', 'aurelia-templating-
 
     var VirtualizationEvents = Object.assign(Object.create(null), {
         scrollerSizeChange: 'virtual-repeat-scroller-size-changed',
-        itemSizeChange: 'virtual-repeat-item-size-changed'
+        itemSizeChange: 'virtual-repeat-item-size-changed',
     });
 
     var getResizeObserverClass = function () { return aureliaPal.PLATFORM.global.ResizeObserver; };
@@ -654,7 +660,7 @@ define(['exports', 'aurelia-binding', 'aurelia-templating', 'aurelia-templating-
         function VirtualRepeat(element, viewFactory, instruction, viewSlot, viewResources, observerLocator, collectionStrategyLocator, templateStrategyLocator) {
             var _this = _super.call(this, {
                 local: 'item',
-                viewsRequireLifecycle: aureliaTemplatingResources.viewsRequireLifecycle(viewFactory)
+                viewsRequireLifecycle: aureliaTemplatingResources.viewsRequireLifecycle(viewFactory),
             }) || this;
             _this.$first = 0;
             _this._isAttached = false;
@@ -695,7 +701,7 @@ define(['exports', 'aurelia-binding', 'aurelia-templating', 'aurelia-templating-
                 aureliaTemplating.ViewResources,
                 aureliaBinding.ObserverLocator,
                 VirtualRepeatStrategyLocator,
-                TemplateStrategyLocator
+                TemplateStrategyLocator,
             ];
         };
         VirtualRepeat.$resource = function () {
@@ -703,7 +709,7 @@ define(['exports', 'aurelia-binding', 'aurelia-templating', 'aurelia-templating-
                 type: 'attribute',
                 name: 'virtual-repeat',
                 templateController: true,
-                bindables: ['items', 'local']
+                bindables: ['items', 'local'],
             };
         };
         VirtualRepeat.prototype.bind = function (bindingContext, overrideContext) {
@@ -852,7 +858,7 @@ define(['exports', 'aurelia-binding', 'aurelia-templating', 'aurelia-templating-
                 scrollTop: scroller.scrollTop,
                 height: scroller === htmlElement
                     ? innerHeight
-                    : calcScrollHeight(scroller)
+                    : calcScrollHeight(scroller),
             };
         };
         VirtualRepeat.prototype.resetCalculation = function () {
@@ -883,7 +889,7 @@ define(['exports', 'aurelia-binding', 'aurelia-templating', 'aurelia-templating-
                 this._handlingMutations = false;
             }
         };
-        VirtualRepeat.prototype._handleScroll = function (currentScrollerInfo, prevScrollerInfo) {
+        VirtualRepeat.prototype._handleScroll = function (current_scroller_info, prev_scroller_info) {
             if (!this._isAttached) {
                 return;
             }
@@ -898,7 +904,7 @@ define(['exports', 'aurelia-binding', 'aurelia-templating', 'aurelia-templating-
             var strategy = this.strategy;
             var old_range_start_index = this.$first;
             var old_range_end_index = this.lastViewIndex();
-            var _a = strategy.getViewRange(this, currentScrollerInfo), new_range_start_index = _a[0], new_range_end_index = _a[1];
+            var _a = strategy.getViewRange(this, current_scroller_info), new_range_start_index = _a[0], new_range_end_index = _a[1];
             var scrolling_state = new_range_start_index > old_range_start_index
                 ? 1
                 : new_range_start_index < old_range_start_index
@@ -917,7 +923,9 @@ define(['exports', 'aurelia-binding', 'aurelia-templating', 'aurelia-templating-
                 }
             }
             else {
-                if (new_range_start_index > old_range_start_index && old_range_end_index >= new_range_start_index && new_range_end_index >= old_range_end_index) {
+                if (new_range_start_index > old_range_start_index
+                    && old_range_end_index >= new_range_start_index
+                    && new_range_end_index >= old_range_end_index) {
                     var views_to_move_count = new_range_start_index - old_range_start_index;
                     this._moveViews(views_to_move_count, 1);
                     didMovedViews = 1;
@@ -925,7 +933,9 @@ define(['exports', 'aurelia-binding', 'aurelia-templating', 'aurelia-templating-
                         scrolling_state |= 8;
                     }
                 }
-                else if (old_range_start_index > new_range_start_index && old_range_start_index <= new_range_end_index && old_range_end_index >= new_range_end_index) {
+                else if (old_range_start_index > new_range_start_index
+                    && old_range_start_index <= new_range_end_index
+                    && old_range_end_index >= new_range_end_index) {
                     var views_to_move_count = old_range_end_index - new_range_end_index;
                     this._moveViews(views_to_move_count, -1);
                     didMovedViews = 1;
@@ -945,17 +955,41 @@ define(['exports', 'aurelia-binding', 'aurelia-templating', 'aurelia-templating-
                     }
                 }
                 else {
-                    console.warn('Scroll intersection not handled');
-                    strategy.remeasure(this);
+                    if (old_range_start_index !== new_range_start_index || old_range_end_index !== new_range_end_index) {
+                        console.log("[!] Scroll intersection not handled. With indices: "
+                            + ("new [" + new_range_start_index + ", " + new_range_end_index + "] / old [" + old_range_start_index + ", " + old_range_end_index + "]"));
+                        strategy.remeasure(this);
+                    }
+                    else {
+                        console.log('[!] Scroll handled, and there\'s no changes');
+                    }
                 }
             }
             if (didMovedViews === 1) {
                 this.$first = new_range_start_index;
                 strategy.updateBuffers(this, new_range_start_index);
             }
-            if ((scrolling_state & (1 | 8)) === (1 | 8)
-                || (scrolling_state & (2 | 4)) === (2 | 4)) {
+            if ((scrolling_state & 9) === 9
+                || (scrolling_state & 6) === 6) {
                 this.getMore(new_range_start_index, (scrolling_state & 4) > 0, (scrolling_state & 8) > 0);
+            }
+            else {
+                var scroll_top_delta = current_scroller_info.scrollTop - prev_scroller_info.scrollTop;
+                scrolling_state = scroll_top_delta > 0
+                    ? 1
+                    : scroll_top_delta < 0
+                        ? 2
+                        : 0;
+                if (strategy.isNearTop(this, new_range_start_index)) {
+                    scrolling_state |= 4;
+                }
+                if (strategy.isNearBottom(this, new_range_end_index)) {
+                    scrolling_state |= 8;
+                }
+                if ((scrolling_state & 9) === 9
+                    || (scrolling_state & 6) === 6) {
+                    this.getMore(new_range_start_index, (scrolling_state & 4) > 0, (scrolling_state & 8) > 0);
+                }
             }
         };
         VirtualRepeat.prototype._moveViews = function (viewsCount, direction) {
@@ -1007,7 +1041,7 @@ define(['exports', 'aurelia-binding', 'aurelia-templating', 'aurelia-templating-
                             var scrollContext = {
                                 topIndex: topIndex,
                                 isAtBottom: isNearBottom,
-                                isAtTop: isNearTop
+                                isAtTop: isNearTop,
                             };
                             var overrideContext = _this.scope.overrideContext;
                             overrideContext.$scrollContext = scrollContext;
@@ -1205,7 +1239,7 @@ define(['exports', 'aurelia-binding', 'aurelia-templating', 'aurelia-templating-
         InfiniteScrollNext.$resource = function () {
             return {
                 type: 'attribute',
-                name: 'infinite-scroll-next'
+                name: 'infinite-scroll-next',
             };
         };
         return InfiniteScrollNext;

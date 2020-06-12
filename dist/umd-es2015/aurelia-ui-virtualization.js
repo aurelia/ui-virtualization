@@ -44,7 +44,7 @@
           }
           current = current.parentNode;
       }
-      return htmlElement;
+      return doc.scrollingElement || htmlElement;
   };
   const getElementDistanceToTopOfDocument = (element) => {
       let box = element.getBoundingClientRect();
@@ -100,6 +100,9 @@
       createFirstRow(repeat) {
           const overrideContext = aureliaTemplatingResources.createFullOverrideContext(repeat, repeat.items[0], 0, 1);
           return repeat.addView(overrideContext.bindingContext, overrideContext);
+      }
+      count(items) {
+          return items.length;
       }
       initCalculation(repeat, items) {
           const itemCount = items.length;
@@ -164,7 +167,7 @@
           return lastIndex === -1
               ? true
               : itemCount > 0
-                  ? lastIndex > (itemCount - repeat.edgeDistance)
+                  ? lastIndex > (itemCount - 1 - repeat.edgeDistance)
                   : false;
       }
       instanceChanged(repeat, items, first) {
@@ -434,6 +437,12 @@
   }
 
   class NullVirtualRepeatStrategy extends aureliaTemplatingResources.NullRepeatStrategy {
+      createFirstRow() {
+          return null;
+      }
+      count(items) {
+          return 0;
+      }
       getViewRange(repeat, scrollerInfo) {
           return [0, 0];
       }
@@ -450,9 +459,6 @@
               = repeat.minViewsRequired
                   = 0;
           return 2;
-      }
-      createFirstRow() {
-          return null;
       }
       instanceMutated() { }
       instanceChanged(repeat) {
@@ -501,7 +507,7 @@
           const parent = element.parentNode;
           return [
               parent.insertBefore(aureliaPal.DOM.createElement('div'), element),
-              parent.insertBefore(aureliaPal.DOM.createElement('div'), element.nextSibling)
+              parent.insertBefore(aureliaPal.DOM.createElement('div'), element.nextSibling),
           ];
       }
       removeBuffers(el, topBuffer, bottomBuffer) {
@@ -527,7 +533,7 @@
           const parent = element.parentNode;
           return [
               parent.insertBefore(aureliaPal.DOM.createElement('tr'), element),
-              parent.insertBefore(aureliaPal.DOM.createElement('tr'), element.nextSibling)
+              parent.insertBefore(aureliaPal.DOM.createElement('tr'), element.nextSibling),
           ];
       }
   }
@@ -547,7 +553,7 @@
           const parent = element.parentNode;
           return [
               parent.insertBefore(aureliaPal.DOM.createElement('li'), element),
-              parent.insertBefore(aureliaPal.DOM.createElement('li'), element.nextSibling)
+              parent.insertBefore(aureliaPal.DOM.createElement('li'), element.nextSibling),
           ];
       }
   }
@@ -579,7 +585,7 @@
 
   const VirtualizationEvents = Object.assign(Object.create(null), {
       scrollerSizeChange: 'virtual-repeat-scroller-size-changed',
-      itemSizeChange: 'virtual-repeat-item-size-changed'
+      itemSizeChange: 'virtual-repeat-item-size-changed',
   });
 
   const getResizeObserverClass = () => aureliaPal.PLATFORM.global.ResizeObserver;
@@ -588,7 +594,7 @@
       constructor(element, viewFactory, instruction, viewSlot, viewResources, observerLocator, collectionStrategyLocator, templateStrategyLocator) {
           super({
               local: 'item',
-              viewsRequireLifecycle: aureliaTemplatingResources.viewsRequireLifecycle(viewFactory)
+              viewsRequireLifecycle: aureliaTemplatingResources.viewsRequireLifecycle(viewFactory),
           });
           this.$first = 0;
           this._isAttached = false;
@@ -628,7 +634,7 @@
               aureliaTemplating.ViewResources,
               aureliaBinding.ObserverLocator,
               VirtualRepeatStrategyLocator,
-              TemplateStrategyLocator
+              TemplateStrategyLocator,
           ];
       }
       static $resource() {
@@ -636,7 +642,7 @@
               type: 'attribute',
               name: 'virtual-repeat',
               templateController: true,
-              bindables: ['items', 'local']
+              bindables: ['items', 'local'],
           };
       }
       bind(bindingContext, overrideContext) {
@@ -782,7 +788,7 @@
               scrollTop: scroller.scrollTop,
               height: scroller === htmlElement
                   ? innerHeight
-                  : calcScrollHeight(scroller)
+                  : calcScrollHeight(scroller),
           };
       }
       resetCalculation() {
@@ -812,7 +818,7 @@
               this._handlingMutations = false;
           }
       }
-      _handleScroll(currentScrollerInfo, prevScrollerInfo) {
+      _handleScroll(current_scroller_info, prev_scroller_info) {
           if (!this._isAttached) {
               return;
           }
@@ -827,7 +833,7 @@
           const strategy = this.strategy;
           const old_range_start_index = this.$first;
           const old_range_end_index = this.lastViewIndex();
-          const [new_range_start_index, new_range_end_index] = strategy.getViewRange(this, currentScrollerInfo);
+          const { 0: new_range_start_index, 1: new_range_end_index } = strategy.getViewRange(this, current_scroller_info);
           let scrolling_state = new_range_start_index > old_range_start_index
               ? 1
               : new_range_start_index < old_range_start_index
@@ -846,7 +852,9 @@
               }
           }
           else {
-              if (new_range_start_index > old_range_start_index && old_range_end_index >= new_range_start_index && new_range_end_index >= old_range_end_index) {
+              if (new_range_start_index > old_range_start_index
+                  && old_range_end_index >= new_range_start_index
+                  && new_range_end_index >= old_range_end_index) {
                   const views_to_move_count = new_range_start_index - old_range_start_index;
                   this._moveViews(views_to_move_count, 1);
                   didMovedViews = 1;
@@ -854,7 +862,9 @@
                       scrolling_state |= 8;
                   }
               }
-              else if (old_range_start_index > new_range_start_index && old_range_start_index <= new_range_end_index && old_range_end_index >= new_range_end_index) {
+              else if (old_range_start_index > new_range_start_index
+                  && old_range_start_index <= new_range_end_index
+                  && old_range_end_index >= new_range_end_index) {
                   const views_to_move_count = old_range_end_index - new_range_end_index;
                   this._moveViews(views_to_move_count, -1);
                   didMovedViews = 1;
@@ -874,17 +884,41 @@
                   }
               }
               else {
-                  console.warn('Scroll intersection not handled');
-                  strategy.remeasure(this);
+                  if (old_range_start_index !== new_range_start_index || old_range_end_index !== new_range_end_index) {
+                      console.log(`[!] Scroll intersection not handled. With indices: `
+                          + `new [${new_range_start_index}, ${new_range_end_index}] / old [${old_range_start_index}, ${old_range_end_index}]`);
+                      strategy.remeasure(this);
+                  }
+                  else {
+                      console.log('[!] Scroll handled, and there\'s no changes');
+                  }
               }
           }
           if (didMovedViews === 1) {
               this.$first = new_range_start_index;
               strategy.updateBuffers(this, new_range_start_index);
           }
-          if ((scrolling_state & (1 | 8)) === (1 | 8)
-              || (scrolling_state & (2 | 4)) === (2 | 4)) {
+          if ((scrolling_state & 9) === 9
+              || (scrolling_state & 6) === 6) {
               this.getMore(new_range_start_index, (scrolling_state & 4) > 0, (scrolling_state & 8) > 0);
+          }
+          else {
+              const scroll_top_delta = current_scroller_info.scrollTop - prev_scroller_info.scrollTop;
+              scrolling_state = scroll_top_delta > 0
+                  ? 1
+                  : scroll_top_delta < 0
+                      ? 2
+                      : 0;
+              if (strategy.isNearTop(this, new_range_start_index)) {
+                  scrolling_state |= 4;
+              }
+              if (strategy.isNearBottom(this, new_range_end_index)) {
+                  scrolling_state |= 8;
+              }
+              if ((scrolling_state & 9) === 9
+                  || (scrolling_state & 6) === 6) {
+                  this.getMore(new_range_start_index, (scrolling_state & 4) > 0, (scrolling_state & 8) > 0);
+              }
           }
       }
       _moveViews(viewsCount, direction) {
@@ -935,7 +969,7 @@
                           const scrollContext = {
                               topIndex: topIndex,
                               isAtBottom: isNearBottom,
-                              isAtTop: isNearTop
+                              isAtTop: isNearTop,
                           };
                           const overrideContext = this.scope.overrideContext;
                           overrideContext.$scrollContext = scrollContext;
@@ -1129,7 +1163,7 @@
       static $resource() {
           return {
               type: 'attribute',
-              name: 'infinite-scroll-next'
+              name: 'infinite-scroll-next',
           };
       }
   }

@@ -1,3 +1,15 @@
+# [1.0.0-rc1](https://github.com/aurelia/ui-virtualization/compare/1.0.0-beta.7...1.0.0-rc1) (2020-06-12)
+
+
+### Bug Fixes
+
+* **all:** change es2015 back to native-modules ([f20a86d](https://github.com/aurelia/ui-virtualization/commit/f20a86d))
+* **array-strategy:** correctly compare index against count ([3294d3f](https://github.com/aurelia/ui-virtualization/commit/3294d3f))
+* **repeat:** sometimes getMore is not called ([99bb972](https://github.com/aurelia/ui-virtualization/commit/99bb972))
+* **virtual-repeat:** handle getMore when there's no scroll and all items are in range ([7a60f54](https://github.com/aurelia/ui-virtualization/commit/7a60f54))
+
+
+
 # [1.0.0-beta.7](https://github.com/aurelia/ui-virtualization/compare/1.0.0-beta.6...1.0.0-beta.7) (2019-05-06)
 
 
