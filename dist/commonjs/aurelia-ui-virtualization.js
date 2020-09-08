@@ -67,7 +67,7 @@ var $isNaN = isNaN;
 
 var doc = document;
 var htmlElement = doc.documentElement;
-var $raf = requestAnimationFrame;
+var $raf = requestAnimationFrame.bind(window);
 
 var getScrollerElement = function (element) {
     var current = element.parentNode;

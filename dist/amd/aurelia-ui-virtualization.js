@@ -59,7 +59,7 @@ define(['exports', 'aurelia-binding', 'aurelia-templating', 'aurelia-templating-
 
     var doc = document;
     var htmlElement = doc.documentElement;
-    var $raf = requestAnimationFrame;
+    var $raf = requestAnimationFrame.bind(window);
 
     var getScrollerElement = function (element) {
         var current = element.parentNode;

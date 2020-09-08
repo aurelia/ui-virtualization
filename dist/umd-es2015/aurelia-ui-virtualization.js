@@ -34,7 +34,7 @@
 
   const doc = document;
   const htmlElement = doc.documentElement;
-  const $raf = requestAnimationFrame;
+  const $raf = requestAnimationFrame.bind(window);
 
   const getScrollerElement = (element) => {
       let current = element.parentNode;
