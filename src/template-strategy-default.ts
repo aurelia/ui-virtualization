@@ -31,8 +31,12 @@ export class DefaultTemplateStrategy implements ITemplateStrategy {
 
   removeBuffers(el: Element, topBuffer: Element, bottomBuffer: Element): void {
     const parent = el.parentNode;
-    parent.removeChild(topBuffer);
-    parent.removeChild(bottomBuffer);
+    if (parent.contains(topBuffer)) {
+      parent.removeChild(topBuffer);
+    }
+    if (parent.contains(bottomBuffer)) {
+      parent.removeChild(bottomBuffer);
+    }
   }
 
   getFirstElement(topBuffer: Element, bottomBuffer: Element): Element {
