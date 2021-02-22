@@ -10,10 +10,10 @@ This library is part of the [Aurelia](http://www.aurelia.io/) platform and conta
 
 ## Installation
 
-Install via JSPM
+Install via npm
 
 ```javascript
-jspm install aurelia-ui-virtualization
+npm install aurelia-ui-virtualization
 ```
 
 Load the plugin
