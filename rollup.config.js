@@ -1,15 +1,19 @@
-import typescript from 'rollup-plugin-typescript2';
+import typescript from '@rollup/plugin-typescript';
+import pkg from './package.json';
+
+const pkgName = pkg.name;
+const inputFileName = `src/${pkgName}.ts`;
 
 export default [
   {
-    input: 'src/aurelia-ui-virtualization.ts',
+    input: inputFileName,
     output: [
       {
-        file: 'dist/es2015/aurelia-ui-virtualization.js',
+        file: `dist/es2015/${pkgName}.js`,
         format: 'esm'
       },
       {
-        file: 'dist/umd-es2015/aurelia-ui-virtualization.js',
+        file: `dist/umd-es2015/${pkgName}.js`,
         format: 'umd',
         name: 'au.uiVirtualization',
         globals: {
@@ -23,57 +27,42 @@ export default [
     ],
     plugins: [
       typescript({
-        cacheRoot: '.rollupcache',
-        tsconfigOverride: {
-          compilerOptions: {
-            removeComments: true,
-          }
-        }
+        removeComments: true,
       })
     ]
   },
   {
-    input: 'src/aurelia-ui-virtualization.ts',
-    output: {
-      file: 'dist/es2017/aurelia-ui-virtualization.js',
+    input: inputFileName,
+    output: [{
+      file: `dist/es2017/${pkgName}.js`,
       format: 'esm'
-    },
+    }],
     plugins: [
       typescript({
-        cacheRoot: '.rollupcache',
-        tsconfigOverride: {
-          compilerOptions: {
-            target: 'es2017',
-            removeComments: true,
-          }
-        }
+        target: 'es2017',
+        removeComments: true,
       })
     ]
   },
   {
-    input: 'src/aurelia-ui-virtualization.ts',
+    input: inputFileName,
     output: [
-      { file: 'dist/amd/aurelia-ui-virtualization.js', format: 'amd', id: 'aurelia-ui-virtualization' },
-      { file: 'dist/commonjs/aurelia-ui-virtualization.js', format: 'cjs' },
-      { file: 'dist/system/aurelia-ui-virtualization.js', format: 'system' },
-      { file: 'dist/native-modules/aurelia-ui-virtualization.js', format: 'esm' },
+      { file: `dist/amd/${pkgName}.js`, format: 'amd', amd: { id: pkgName } },
+      { file: `dist/commonjs/${pkgName}.js`, format: 'cjs' },
+      { file: `dist/system/${pkgName}.js`, format: 'system' },
+      { file: `dist/native-modules/${pkgName}.js`, format: 'esm' },
     ],
     plugins: [
       typescript({
-        cacheRoot: '.rollupcache',
-        tsconfigOverride: {
-          compilerOptions: {
-            target: 'es5',
-            removeComments: true,
-          }
-        }
+        target: 'es5',
+        removeComments: true,
       })
     ]
   },
   {
-    input: 'src/aurelia-ui-virtualization.ts',
-    output: {
-      file: 'dist/umd/aurelia-ui-virtualization.js',
+    input: inputFileName,
+    output: [{
+      file: `dist/umd/${pkgName}.js`,
       format: 'umd',
       name: 'au.uiVirtualization',
       globals: {
@@ -83,16 +72,11 @@ export default [
         'aurelia-templating': 'au',
         'aurelia-templating-resources': 'au',
       }
-    },
+    }],
     plugins: [
       typescript({
-        cacheRoot: '.rollupcache',
-        tsconfigOverride: {
-          compilerOptions: {
-            target: 'es5',
-            removeComments: true,
-          }
-        }
+        target: 'es5',
+        removeComments: true,
       })
     ]
   },
@@ -104,5 +88,10 @@ export default [
     'aurelia-templating',
     'aurelia-templating-resources'
   ];
+  config.output.forEach(output => output.sourcemap = true);
+  config.onwarn = /** @param {import('rollup').RollupWarning} warning */ (warning, warn) => {
+    if (warning.code === 'CIRCULAR_DEPENDENCY') return;
+    warn(warning);
+  };
   return config;
 });
