@@ -23,21 +23,29 @@
     "url": "http://github.com/aurelia/ui-virtualization"
   },
   "files": [
-    "dist"
+    "dist",
+    "src",
+    "doc/CHANGELOG.md",
+    "LICENSE",
+    "README.md",
+    "typings.json"
   ],
   "scripts": {
     "dev": "cd sample/sample-v-ui-app && npm run dev",
     "build:demo": "cd sample/sample-v-ui-app && npm run build:demo",
-    "prebuild": "npm run rimraf",
-    "build": "rollup -c",
-    "build:dts": "dts-bundle-generator -o dist/aurelia-ui-virtualization.d.ts src/aurelia-ui-virtualization.ts --external-types",
-    "changelog": "node build/changelog.js",
-    "postbuild": "npm run build:dts",
     "test": "karma start --single-run",
     "test:watch": "karma start",
     "test:debugger": "karma start --browsers ChromeDebugging",
-    "lint": "tslint -c tslint.json 'src/**/*.ts'",
-    "rimraf": "rimraf dist"
+    "lint": "eslint .",
+    "build": "rollup -c",
+    "build:dts": "dts-bundle-generator -o dist/types/aurelia-ui-virtualization.d.ts src/aurelia-ui-virtualization.ts",
+    "postbuild": "npm run build:dts",
+    "typedoc": "typedoc src/aurelia-ui-virtualization.ts --json doc/api.json",
+    "posttypedoc": "node doc/cleanup.js",
+    "changelog": "standard-version -t \"\" -i doc/CHANGELOG.md -s --skip.commit --skip.tag",
+    "precut-release": "npm run test && npm run lint && npm run build",
+    "cut-release": "npm run changelog",
+    "postcut-release": "npm run typedoc"
   },
   "dependencies": {
     "aurelia-binding": "^2.1.7",
@@ -61,7 +69,7 @@
     "aurelia-router": "^1.7.1",
     "aurelia-templating-router": "^1.5.0",
     "aurelia-testing": "^1.0.0",
-    "aurelia-webpack-plugin": "^3.0.0",
+    "aurelia-webpack-plugin": "^4.0.0",
     "conventional-changelog": "^3.0.5",
     "dts-bundle-generator": "^6.7.0",
     "jasmine-core": "^4.1.0",
@@ -76,7 +84,6 @@
     "rollup": "^2.70.2",
     "ts-loader": "^5.3.3",
     "tslib": "^2.3.1",
-    "tslint": "^5.12.1",
     "typescript": "^3.3.3333",
     "webpack": "^4.28.4",
     "webpack-cli": "^3.2.1",
