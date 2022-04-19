@@ -48,14 +48,20 @@ describe('vr-integration.table.spec.ts', () => {
       </table>`;
     });
 
-    it('handles push', async (done) => {
-      await bootstrapComponent();
-      validatePush(virtualRepeat, viewModel, done);
+    it('handles push', done => {
+      bootstrapComponent()
+        .then(() => {
+          validatePush(virtualRepeat, viewModel, done);
+        })
+        .catch(done.fail);
     });
 
-    it('handles array changes', async done => {
-      await bootstrapComponent();
-      validateArrayChange(virtualRepeat, viewModel, done);
+    it('handles array changes', done => {
+      bootstrapComponent()
+        .then(() => {
+          validateArrayChange(virtualRepeat, viewModel, done);
+        })
+        .catch(done.fail);
     });
   });
 
@@ -77,19 +83,22 @@ describe('vr-integration.table.spec.ts', () => {
       expect(bottomBuffer.childNodes.length).toBe(0);
     });
 
-    it('works', async (done) => {
+    it('works', (done) => {
       view =
       `<table style="border-spacing: 0">
         <tbody virtual-repeat.for="item of items">
           <tr style="height: ${itemHeight}px;"><td>\${item}</td></tr>
         </tbody>
       </table>`;
-      await bootstrapComponent();
-      queue(() => validateState(component.viewModel, viewModel, itemHeight));
-      queue(() => done());
+      bootstrapComponent()
+        .then(() => {
+          queue(() => validateState(component.viewModel, viewModel, itemHeight));
+          queue(() => done());
+        })
+        .catch(done.fail);
     });
 
-    it('works with static row', async (done) => {
+    it('works with static row', (done) => {
       // there is a small border spacing between tbodies, rows that will add up
       // need to add border spacing 0 for testing purposes
       view =
@@ -100,13 +109,16 @@ describe('vr-integration.table.spec.ts', () => {
         </tbody>
       </table>`;
 
-      await bootstrapComponent();
-      const element = virtualRepeat['element'];
-      const table = element.parentNode;
-      expect(table.firstElementChild).toBe(virtualRepeat.topBufferEl.previousElementSibling);
-      expect(table.firstElementChild.innerHTML.trim()).toBe('<tr><td>Name</td></tr>');
-      queue(() => validateState(virtualRepeat, viewModel, itemHeight));
-      queue(() => validatePush(virtualRepeat, viewModel, done));
+      bootstrapComponent()
+        .then(() => {
+          const element = virtualRepeat['element'];
+          const table = element.parentNode;
+          expect(table.firstElementChild).toBe(virtualRepeat.topBufferEl.previousElementSibling);
+          expect(table.firstElementChild.innerHTML.trim()).toBe('<tr><td>Name</td></tr>');
+          queue(() => validateState(virtualRepeat, viewModel, itemHeight));
+          queue(() => validatePush(virtualRepeat, viewModel, done));
+        })
+        .catch(done.fail);
     });
 
     describe('with [infinite-scroll-next]', () => {
