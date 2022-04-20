@@ -1,6 +1,6 @@
 {
   "name": "aurelia-ui-virtualization",
-  "version": "1.0.0-rc2",
+  "version": "1.0.0-rc3",
   "description": "A plugin that provides a virtualized repeater and other virtualization services.",
   "keywords": [
     "aurelia",
@@ -17,7 +17,7 @@
   "module": "dist/native-modules/aurelia-ui-virtualization.js",
   "browser": "dist/umd/aurelia-ui-virtualization.js",
   "unpkg": "dist/umd-es2015/aurelia-ui-virtualization.js",
-  "typings": "dist/aurelia-ui-virtualization.d.ts",
+  "typings": "dist/types/aurelia-ui-virtualization.d.ts",
   "repository": {
     "type": "git",
     "url": "http://github.com/aurelia/ui-virtualization"

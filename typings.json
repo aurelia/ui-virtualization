@@ -1,4 +1,4 @@
 {
   "name": "aurelia-ui-virtualization",
-  "main": "dist/aurelia-ui-virtualization.d.ts"
+  "main": "dist/types/aurelia-ui-virtualization.d.ts"
 }

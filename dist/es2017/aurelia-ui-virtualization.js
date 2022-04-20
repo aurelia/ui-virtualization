@@ -121,7 +121,7 @@ class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
         }
         repeat.itemHeight = itemHeight;
         const scroll_el_height = scrollerInfo.height;
-        const elementsInView = repeat.minViewsRequired = calcMinViewsRequired(scroll_el_height, itemHeight);
+        repeat.minViewsRequired = calcMinViewsRequired(scroll_el_height, itemHeight);
         return 2 | 4;
     }
     onAttached(repeat) {
@@ -285,7 +285,6 @@ class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy {
         }
         if (allSplicesAreInplace) {
             const lastIndex = repeat.lastViewIndex();
-            const repeatViewSlot = repeat.viewSlot;
             for (i = 0; spliceCount > i; i++) {
                 splice = splices[i];
                 for (let collectionIndex = splice.index; collectionIndex < splice.index + splice.addedCount; collectionIndex++) {
@@ -467,6 +466,8 @@ class NullVirtualRepeatStrategy extends NullRepeatStrategy {
     }
     remeasure(repeat) { }
     updateAllViews() { }
+    getCollectionObserver(observerLocator, items) {
+    }
 }
 
 class VirtualRepeatStrategyLocator {
@@ -1172,4 +1173,5 @@ function configure(config) {
     config.globalResources(VirtualRepeat, InfiniteScrollNext);
 }
 
-export { configure, VirtualRepeat, InfiniteScrollNext, VirtualizationEvents };
+export { InfiniteScrollNext, VirtualRepeat, VirtualizationEvents, configure };
+//# sourceMappingURL=aurelia-ui-virtualization.js.map

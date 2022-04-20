@@ -1,3 +1,14 @@
+# Changelog
+
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
+## [1.0.0-rc3](https://github.com/aurelia/ui-virtualization/compare/1.0.0-rc2...1.0.0-rc3) (2022-04-20)
+
+
+### Bug Fixes
+
+* **deps:** resolve vulnerable deps, refactor build ([#237](https://github.com/aurelia/ui-virtualization/issues/237)) ([d92fc9d](https://github.com/aurelia/ui-virtualization/commit/d92fc9d48d977623d8bd441deb5f6e1acfdb3eeb))
+
 # [1.0.0-rc1](https://github.com/aurelia/ui-virtualization/compare/1.0.0-beta.7...1.0.0-rc1) (2020-06-12)
 
 
