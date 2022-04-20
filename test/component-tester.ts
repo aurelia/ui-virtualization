@@ -1,5 +1,5 @@
 import { bootstrap } from 'aurelia-bootstrapper';
-import { Aurelia } from 'aurelia-framework';
+import { Aurelia, View } from 'aurelia-framework';
 
 export const StageComponent = {
   withResources(resources): ComponentTester {
@@ -42,11 +42,12 @@ export class ComponentTester {
       return Promise.resolve(this._configure(aurelia)).then(() => {
         aurelia.use.globalResources(this._resources);
 
-        return aurelia.start().then(a => {
+        return aurelia.start().then(() => {
           let host = document.createElement('div');
           host.innerHTML = this._html;
           document.body.appendChild(host);
-          let x = aurelia.enhance(this._bindingContext, host);
+
+          aurelia.enhance(this._bindingContext, host);
           this.sut = aurelia.root.controllers[0].viewModel;
           this.viewModel = aurelia.root.bindingContext;
           this.element = host.firstElementChild;
@@ -54,5 +55,12 @@ export class ComponentTester {
         });
       });
     });
+  }
+}
+
+/** @internal */
+declare module 'aurelia-framework' {
+  interface Aurelia {
+    root: View;
   }
 }

@@ -2,7 +2,7 @@ import './setup';
 import { StageComponent, ComponentTester } from 'aurelia-testing';
 import { PLATFORM } from 'aurelia-pal';
 import { bootstrap } from 'aurelia-bootstrapper';
-import { createAssertionQueue, validateState, AsyncQueue, validateScroll, waitForNextFrame } from './utilities';
+import { createAssertionQueue, validateState, AsyncQueue, waitForNextFrame } from './utilities';
 import { VirtualRepeat } from '../src/virtual-repeat';
 import { IScrollNextScrollContext } from '../src/interfaces';
 
@@ -245,7 +245,7 @@ describe('vr-integration.table.spec.ts', () => {
     return { virtualRepeat, viewModel, component: component };
   }
 
-  function createItems(amount: number, name: string = 'item') {
+  function createItems(amount: number, name = 'item') {
     return Array.from({ length: amount }, (_, index) => name + index);
   }
 });

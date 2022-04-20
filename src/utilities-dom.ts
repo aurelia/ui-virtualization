@@ -42,8 +42,8 @@ export const hasOverflowScroll = (element: Element): boolean => {
  */
 export const getStyleValues = (element: Element, ...styles: string[]): number => {
   let currentStyle = window.getComputedStyle(element);
-  let value: number = 0;
-  let styleValue: number = 0;
+  let value = 0;
+  let styleValue = 0;
   for (let i = 0, ii = styles.length; ii > i; ++i) {
     styleValue = parseFloat(currentStyle[styles[i]]);
     value += $isNaN(styleValue) ? 0 : styleValue;

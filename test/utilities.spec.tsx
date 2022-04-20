@@ -2,6 +2,7 @@ import './setup';
 import { eachCartesianJoin } from './lib';
 import { getDistanceToParent } from '../src/utilities-dom';
 import { PLATFORM } from 'aurelia-pal';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { h } from './utilities';
 
 describe('utiltites - DOM', () => {

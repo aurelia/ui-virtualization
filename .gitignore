@@ -6,3 +6,4 @@ bower_components
 .rollupcache
 .buildcache
 build/reports
+.npmrc

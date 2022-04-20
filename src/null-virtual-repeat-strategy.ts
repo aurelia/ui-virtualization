@@ -1,4 +1,5 @@
-import { NullRepeatStrategy, RepeatStrategy } from 'aurelia-templating-resources';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { NullRepeatStrategy } from 'aurelia-templating-resources';
 import { VirtualRepeat } from './virtual-repeat';
 import { IVirtualRepeatStrategy, IView, VirtualizationCalculation, IScrollerInfo } from './interfaces';
 
@@ -50,4 +51,8 @@ export class NullVirtualRepeatStrategy extends NullRepeatStrategy implements IVi
   remeasure(repeat: VirtualRepeat): void {/*empty*/}
 
   updateAllViews(): void {/*empty*/}
+
+  getCollectionObserver(observerLocator: any, items: any): any {
+    // empty
+  }
 }

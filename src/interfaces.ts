@@ -1,8 +1,7 @@
 import { Binding, Scope, ICollectionObserverSplice, ObserverLocator, InternalCollectionObserver, OverrideContext } from 'aurelia-binding';
 import { TaskQueue } from 'aurelia-task-queue';
 import { View, ViewSlot, Controller } from 'aurelia-templating';
-import { RepeatStrategy, AbstractRepeater } from 'aurelia-templating-resources';
-import { VirtualRepeat } from './virtual-repeat';
+import { AbstractRepeater } from 'aurelia-templating-resources';
 
 export interface IScrollNextScrollContext {
   topIndex: number;
@@ -366,8 +365,8 @@ export interface IElement {
  * List of events that can be used to notify virtual repeat that size has changed
  */
 export const VirtualizationEvents = Object.assign(Object.create(null), {
-  scrollerSizeChange: 'virtual-repeat-scroller-size-changed' as 'virtual-repeat-scroller-size-changed',
-  itemSizeChange: 'virtual-repeat-item-size-changed' as 'virtual-repeat-item-size-changed',
+  scrollerSizeChange: 'virtual-repeat-scroller-size-changed' as const,
+  itemSizeChange: 'virtual-repeat-item-size-changed' as const,
 }) as {
   scrollerSizeChange: 'virtual-repeat-scroller-size-changed';
   itemSizeChange: 'virtual-repeat-item-size-changed';

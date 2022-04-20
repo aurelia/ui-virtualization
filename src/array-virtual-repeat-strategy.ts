@@ -58,6 +58,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     }
     repeat.itemHeight = itemHeight;
     const scroll_el_height = scrollerInfo.height;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const elementsInView = repeat.minViewsRequired = calcMinViewsRequired(scroll_el_height, itemHeight);
     // const viewsCount = repeat._viewsLength = elementsInView * 2;
     return VirtualizationCalculation.has_sizing | VirtualizationCalculation.observe_scroller;
@@ -311,7 +312,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
     // optimise by just replacing affected visible views
     if (allSplicesAreInplace) {
       const lastIndex = repeat.lastViewIndex();
-      const repeatViewSlot = repeat.viewSlot;
+      // const repeatViewSlot = repeat.viewSlot;
       for (i = 0; spliceCount > i; i++) {
         splice = splices[i];
         for (let collectionIndex = splice.index; collectionIndex < splice.index + splice.addedCount; collectionIndex++) {
@@ -518,6 +519,7 @@ export class ArrayVirtualRepeatStrategy extends ArrayRepeatStrategy implements I
    *
    * @internal
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _remeasure(repeat: IVirtualRepeater, itemHeight: number, newViewCount: number, newArraySize: number, firstIndex: number): void {
     const scrollerInfo = repeat.getScrollerInfo();
     const scroller_scroll_top = scrollerInfo.scrollTop;

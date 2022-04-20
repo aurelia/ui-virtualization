@@ -56,6 +56,7 @@ describe('vr-integration.spec.ts', () => {
     nq(() => done());
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   function validateUnshift(virtualRepeat, viewModel, done) {
     viewModel.items.unshift('z');
     nq(() => validateState(virtualRepeat, viewModel, itemHeight));

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { bootstrap } from 'aurelia-bootstrapper';
 import { PLATFORM } from 'aurelia-pal';
 import { ComponentTester, StageComponent } from 'aurelia-testing';
@@ -6,7 +7,7 @@ import { ITestAppInterface } from './interfaces';
 import './setup';
 import { AsyncQueue, createAssertionQueue, waitForNextFrame } from './utilities';
 import { CloneArrayValueConverter, IdentityValueConverter } from './value-converters';
-import { eachCartesianJoin, eachCartesianJoinAsync } from './lib';
+import { eachCartesianJoin } from './lib';
 import { calcMinViewsRequired as calcMinViewsRequired } from '../src/utilities';
 
 PLATFORM.moduleName('src/virtual-repeat');
@@ -431,7 +432,7 @@ describe('vr-integration.scrolling.spec.ts', () => {
     return { virtualRepeat: component.viewModel, viewModel: $viewModel, component: component };
   }
 
-  function createItems(amount: number, name: string = 'item') {
+  function createItems(amount: number, name = 'item') {
     return Array.from({ length: amount }, (_, index) => name + index);
   }
 });

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // tslint:disable
 import { View } from 'aurelia-templating';
 import { ITemplateStrategy } from '../src/interfaces';

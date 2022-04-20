@@ -1810,7 +1810,7 @@ describe('vr-integration.instance-changed.spec.ts', () => {
     return { virtualRepeat: component.viewModel, viewModel: $viewModel, component: component };
   }
 
-  function createItems(amount: number, name: string = 'item') {
+  function createItems(amount: number, name = 'item') {
     return Array.from({ length: amount }, (_, index) => name + index);
   }
 
