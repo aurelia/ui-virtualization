@@ -44,8 +44,7 @@
     "posttypedoc": "node doc/cleanup.js",
     "changelog": "standard-version -t \"\" -i doc/CHANGELOG.md -s --skip.commit --skip.tag",
     "precut-release": "npm run test && npm run lint && npm run build",
-    "cut-release": "npm run changelog",
-    "postcut-release": "npm run typedoc"
+    "cut-release": "npm run changelog"
   },
   "dependencies": {
     "aurelia-binding": "^2.1.7",
