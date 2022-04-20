@@ -2,7 +2,7 @@ import './setup';
 import { StageComponent, ComponentTester } from 'aurelia-testing';
 import { PLATFORM } from 'aurelia-pal';
 import { bootstrap } from 'aurelia-bootstrapper';
-import { validateScrolledState, scrollToEnd, scrollToStart, waitForNextFrame, waitForFrames, waitForTimeout, scrollRepeat } from './utilities';
+import { validateScrolledState, waitForNextFrame, waitForFrames, scrollRepeat } from './utilities';
 import { VirtualRepeat } from '../src/virtual-repeat';
 import { ITestAppInterface } from './interfaces';
 import { eachCartesianJoin } from './lib';
@@ -148,7 +148,7 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
 
   eachCartesianJoin(
     [repeatScrollNextCombos, testGroups],
-    ([repeatExpression, scrollNextAttr, extraResources], { title, createView }, callIndex) => {
+    ([repeatExpression, scrollNextAttr, extraResources], { title, createView }) => {
       runTestGroup(
         title(repeatExpression, scrollNextAttr),
         createView(repeatExpression, scrollNextAttr),
@@ -494,10 +494,10 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
       ' -- scroll to top',
     ].join('\n\t'), async () => {
       let scrollNextArgs: [number, boolean, boolean];
-      let currentPromise: Promise<any>;
       const spy = jasmine.createSpy('viewModel.getNextPage(): void', function(this: ITestAppInterface<string>, ...args: any[]) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         let [_, isAtBottom] = scrollNextArgs = normalizeScrollNextArgs(args);
-        return new Promise(async (resolve) => {
+        return new Promise<void>(async (resolve) => {
           await waitForFrames(2);
           let itemLength = this.items.length;
           for (let i = 0; i < 100; ++i) {
@@ -507,7 +507,7 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
           resolve();
         });
       }).and.callThrough();
-      let { component, virtualRepeat, viewModel } = await bootstrapComponent(
+      let { virtualRepeat, viewModel } = await bootstrapComponent(
         {
           items: createItems(100),
           getNextPage: spy,
@@ -546,10 +546,10 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
       ' -- sroll 1px (no change in indices)',
     ].join('\n\t'), async () => {
       let scrollNextArgs: [number, boolean, boolean];
-      let currentPromise: Promise<any>;
       const spy = jasmine.createSpy('viewModel.getNextPage(): void', function(this: ITestAppInterface<string>, ...args: any[]) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         let [_, isAtBottom] = scrollNextArgs = normalizeScrollNextArgs(args);
-        return new Promise(async (resolve) => {
+        return new Promise<void>(async (resolve) => {
           await waitForFrames(2);
           let itemLength = this.items.length;
           for (let i = 0; i < 1; ++i) {
@@ -559,7 +559,7 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
           resolve();
         });
       }).and.callThrough();
-      let { component, virtualRepeat, viewModel } = await bootstrapComponent(
+      let { virtualRepeat, viewModel } = await bootstrapComponent(
         {
           items: createItems(10),
           getNextPage: spy,
@@ -624,7 +624,7 @@ describe('vr-integration.infinite-scroll.spec.ts', () => {
     return { virtualRepeat: component.viewModel, viewModel: $viewModel, component: component };
   }
 
-  function createItems(amount: number, name: string = 'item') {
+  function createItems(amount: number, name = 'item') {
     return Array.from({ length: amount }, (_, index) => name + index);
   }
 

@@ -28,6 +28,7 @@ export function createAssertionQueue(): AsyncQueue {
  *
  * @param extraHeight height of static content that contributes to overall heigh. Happen in case of table
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function validateState(virtualRepeat: VirtualRepeat, viewModel: ITestAppInterface<any>, itemHeight: number, extraHeight?: number) {
   let views = virtualRepeat.viewSlot.children;
   let expectedHeight = viewModel.items.length * itemHeight;
@@ -178,7 +179,7 @@ export async function scrollToIndex(virtualRepeat: VirtualRepeat, itemIndex: num
  *
  * Default to 10
  */
-export async function ensureScrolled(time: number = 10): Promise<void> {
+export async function ensureScrolled(time = 10): Promise<void> {
   await waitForNextFrame();
   await waitForTimeout(time);
 }
@@ -233,7 +234,7 @@ export const h = (name: string, attrs: Record<string, string> | null, ...childre
 
   if (attrs !== null) {
     let value: string | string[] | object;
-    let len: number;
+
     for (const attr in attrs) {
       value = attrs[attr];
       // if attr is class or its alias
@@ -282,7 +283,6 @@ export const h = (name: string, attrs: Record<string, string> | null, ...childre
             (el as Element).setAttribute(`${parts[0]}.trigger`, value);
           }
         } else {
-          const len = attr.length;
           const parts = attr.split('$');
           if (parts.length === 1) {
             (el as Element).setAttribute(kebabCase(attr), value);

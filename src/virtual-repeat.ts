@@ -90,7 +90,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
   /**
    * First view index, for proper follow up calculations
    */
-  $first: number = 0;
+  $first = 0;
 
   /**
    * Height of top buffer to properly push the visible rendered list items into right position
@@ -130,7 +130,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
    * finish all the work it starts, no matter how user interact via scrolling
    * @internal
    */
-  _skipNextScrollHandle: boolean = false;
+  _skipNextScrollHandle = false;
 
   /**
    * While handling mutation, repeater and its strategies could/should modify scroll position
@@ -141,7 +141,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
    * scroll event should be ignored
    * @internal
    */
-  _handlingMutations: boolean = false;
+  _handlingMutations = false;
 
 
   // Inherited properties declaration
@@ -499,6 +499,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
   }
 
   /**@override */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   handleInnerCollectionMutated(collection: any[], changes: ICollectionObserverSplice[]): void {
     // guard against source expressions that have observable side-effects that could
     // cause an infinite loop- eg a value converter that mutates the source array.
@@ -642,6 +643,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
     // TODO: consider alwways use physical scroll position to determine scrolling scenarios
 
     let didMovedViews = 0;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let should_call_scroll_next: -1 | 0 | 1 = 0;
     /** for debugging purposes only */
     let scroll_scenario: 0 | 1 | 2 | 3 | 4 | 5 | 6 = 0;
@@ -718,6 +720,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
         }
         // jump up. check if near top
         else if (strategy.isNearTop(this, new_range_start_index)) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           scroll_scenario = 6;
           // should_call_scroll_next = -1;
           scrolling_state |= ScrollingState.isNearTop;
@@ -799,6 +802,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
    * @internal
    */
   _moveViews(viewsCount: number, direction: /*up*/-1 | /*down*/1): void {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const repeat = this;
     // move to top
     if (direction === -1) {
@@ -833,7 +837,7 @@ export class VirtualRepeat extends AbstractRepeater implements IVirtualRepeater 
    * Make it slightly more than an frame time for 60fps
    * @internal
    */
-  _lastGetMore: number = 0;
+  _lastGetMore = 0;
 
   getMore(topIndex: number, isNearTop: boolean, isNearBottom: boolean, force?: boolean): void {
     if (isNearTop || isNearBottom || force) {

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import './setup';
 import { PLATFORM } from 'aurelia-pal';
 import { validateScrolledState, waitForFrames } from './utilities';
@@ -353,7 +354,7 @@ describe('vr-integration.resizing.spec.ts', () => {
     }
   }
 
-  function assertElementsInView(repeat: VirtualRepeat, ctHeight: number, itemHeight: number, extraTitle: string = ''): void {
+  function assertElementsInView(repeat: VirtualRepeat, ctHeight: number, itemHeight: number, extraTitle = ''): void {
     const itemsCount = Array.isArray(repeat.items) ? repeat.items.length : 0;
     const elementsInView = itemsCount === 0 ? 0 : repeat.minViewsRequired;
     const viewsLength = itemsCount === 0 ? 0 : repeat.minViewsRequired * 2;
@@ -387,7 +388,7 @@ describe('vr-integration.resizing.spec.ts', () => {
     }
   }
 
-  function createItems(amount: number, name: string = 'item') {
+  function createItems(amount: number, name = 'item') {
     return Array.from({ length: amount }, (_, index) => name + index);
   }
 });

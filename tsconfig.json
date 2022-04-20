@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "strictBindCallApply": true,
     "target": "es2018",
     "module": "es2015",
     "experimentalDecorators": true,
@@ -7,6 +8,7 @@
     "moduleResolution": "node",
     "stripInternal": true,
     "declaration": false,
+    "sourceMap": true,
     "lib": ["es2015", "dom"],
     "jsx": "react",
     "jsxFactory": "h"

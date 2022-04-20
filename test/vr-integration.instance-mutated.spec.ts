@@ -14,7 +14,7 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
   let component: ComponentTester<VirtualRepeat>;
   let items: any[];
   let resources: any[];
-  let itemHeight: number = 100;
+  let itemHeight = 100;
 
   beforeEach(() => {
     component = undefined;
@@ -436,7 +436,7 @@ describe('vr-integration.instance-mutated.spec.ts', () => {
   //   assert: (component: ComponentTester, repeat: VirtualRepeat, viewModel: T) => void;
   // }
 
-  function createItems(amount: number, name: string = 'item') {
+  function createItems(amount: number, name = 'item') {
     return Array.from({ length: amount }, (_, index) => name + index);
   }
 });

@@ -9,7 +9,7 @@ PLATFORM.moduleName('src/virtual-repeat');
 PLATFORM.moduleName('test/noop-value-converter');
 PLATFORM.moduleName('src/infinite-scroll-next');
 
-describe('vr-integration.spec.ts', () => {
+describe('virtual-repeat-integration.spec.ts', () => {
 
   // async queue
   let nq: AsyncQueue = createAssertionQueue();
@@ -56,6 +56,7 @@ describe('vr-integration.spec.ts', () => {
     nq(() => done());
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   function validateUnshift(virtualRepeat, viewModel, done) {
     viewModel.items.unshift('z');
     nq(() => validateState(virtualRepeat, viewModel, itemHeight));
@@ -173,11 +174,13 @@ describe('vr-integration.spec.ts', () => {
     });
 
     describe('handles delete', () => {
-      it('can delete one at start', async done => {
+      it('can delete one at start', async () => {
         await create;
-        viewModel.items.splice(0, 1);
-        nq(() => validateState(virtualRepeat, viewModel, itemHeight));
-        nq(() => done());
+        await new Promise<void>(resolve => {
+          viewModel.items.splice(0, 1);
+          nq(() => validateState(virtualRepeat, viewModel, itemHeight));
+          nq(() => resolve());
+        });
       });
 
       it('can delete one at end', done => {
@@ -284,31 +287,35 @@ describe('vr-integration.spec.ts', () => {
       create.then(() => validateSplice(virtualRepeat, viewModel, done));
     });
 
-    it('handles displaying when initially hidden', async done => {
+    it('handles displaying when initially hidden', async () => {
       await hiddenCreate;
 
-      hiddenVirtualRepeat.scrollerEl.style.display = 'block';
-      window.requestAnimationFrame(() => {
-        window.setTimeout(() => {
-          validateState(hiddenVirtualRepeat, hiddenViewModel, itemHeight);
-          done();
-        }, 750);
+      await new Promise<void>(resolve => {
+        hiddenVirtualRepeat.scrollerEl.style.display = 'block';
+        window.requestAnimationFrame(() => {
+          window.setTimeout(() => {
+            validateState(hiddenVirtualRepeat, hiddenViewModel, itemHeight);
+            resolve();
+          }, 750);
+        });
       });
     });
 
-    it('does not invoke _onScroll after attached()', async done => {
+    it('does not invoke _onScroll after attached()', async () => {
       await containerCreate;
-      validateScroll(containerVirtualRepeat, containerViewModel, () => {
-        expect(containerVirtualRepeat._onScroll).not.toHaveBeenCalled();
-        done();
-      }, 'scrollContainer2');
+      await new Promise<void>(resolve => {
+        validateScroll(containerVirtualRepeat, containerViewModel, () => {
+          expect(containerVirtualRepeat._onScroll).not.toHaveBeenCalled();
+          resolve();
+        }, 'scrollContainer2');
+      });
     });
 
     it('handles array changes', done => {
       create.then(() => validateArrayChange(virtualRepeat, viewModel, done));
     });
 
-    it('handles array changes with null / undefined', async (done) => {
+    it('handles array changes with null / undefined', async () => {
       await create;
       viewModel.items = null;
       await waitForTimeout(50);
@@ -318,7 +325,9 @@ describe('vr-integration.spec.ts', () => {
 
       expect(topBufferHeight + bottomBufferHeight).toBe(0);
 
-      validateArrayChange(virtualRepeat, viewModel, done);
+      await new Promise<void>(resolve => {
+        validateArrayChange(virtualRepeat, viewModel, resolve);
+      });
     });
   });
 

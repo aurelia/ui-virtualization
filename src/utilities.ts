@@ -1,5 +1,4 @@
 import { updateOverrideContext } from 'aurelia-templating-resources';
-import { VirtualRepeat } from './virtual-repeat';
 import { IView, IVirtualRepeater, IViewSlot } from './interfaces';
 
 /**

@@ -1,7 +1,6 @@
 import { DefaultTemplateStrategy } from './template-strategy-default';
 import { ITemplateStrategy } from './interfaces';
 import { DOM } from 'aurelia-pal';
-import { hasOverflowScroll } from './utilities-dom';
 
 /**
  * Handle virtual repeat on a list item <li/> element
